@@ -396,7 +396,12 @@ function evExtras(a){
   if(a.wait&&a.wait.length) parts.push('<span class="xtra" title="Liste d\u2019attente">'+a.wait.length+' en attente</span>');
   const lig=(a.guests||[]).filter(id=>LIGNEE_IDS.has(id)).map(id=>byId.get(id)).filter(Boolean);
   if(lig.length) parts.push('<span class="xtra lig-in" title="Membres de ta lignée inscrits">Lignée inscrite : '+lig.map(m=>'<span class="lig-open" data-id="'+m.id+'">'+esc(m.name)+'</span>').join(', ')+'</span>');
-  if(a.link&&!isPast(a)) parts.push('<a class="xtra act" href="'+esc(a.link)+'" target="_blank" rel="noopener">Rejoindre la visio ↗</a>'+(a.pw?' <span class="xtra" title="Mot de passe visio">mdp : <b class="num">'+esc(a.pw)+'</b></span>':''));
+  if(a.link&&!isPast(a)){
+    // Le champ « lien » est en saisie libre : bouton seulement pour une vraie URL, sinon simple note (sauf mentions vides type « Zoom », « - »)
+    const lk=String(a.link).trim(), pwHtml=a.pw?' <span class="xtra" title="Mot de passe visio">mdp : <b class="num">'+esc(a.pw)+'</b></span>':'';
+    if(/^https?:\/\/[^\s]+$/i.test(lk)) parts.push('<a class="xtra act" href="'+esc(lk)+'" target="_blank" rel="noopener">Rejoindre la visio ↗</a>'+pwHtml);
+    else if(!/^(zoom( \w+)?|visio|teams|-|\.|\?|à définir|a definir)$/i.test(lk)) parts.push('<span class="xtra" title="Lien visio non renseigné sous forme d\u2019URL">Visio : '+esc(lk)+'</span>'+pwHtml);
+  }
   const st=a.siteId!=null?SITES[a.siteId]:null;
   if(st&&(st[2]||st[1])) parts.push('<a class="xtra act" href="'+esc(mapsUrl(st))+'" target="_blank" rel="noopener" title="'+esc([st[0],st[2],st[3],st[1]].filter(Boolean).join(', '))+'">Itinéraire ↗</a>');
   return parts.length?'<div class="xtras">'+parts.join(' ')+'</div>':'';
