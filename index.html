@@ -76,6 +76,13 @@ section.view.on{display:block}
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
 .filters:has(+ .filters-dates){margin-bottom:10px}
 .filters-dates{padding-top:10px;border-top:1px dashed var(--line)}
+.filters-dates .dlabel.plabel{font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.06em;font-size:12px;margin-right:2px}
+.welcome{background:linear-gradient(135deg,var(--accent-soft),var(--surface) 60%);display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.welcome .wtxt{flex:1;min-width:220px}
+.welcome h2{font-size:22px;font-weight:800;margin-bottom:4px}
+.welcome .wdate{font-size:13px;color:var(--ink-2);text-transform:capitalize;margin-bottom:6px}
+.welcome p{margin:0;color:var(--ink-2);font-size:15px}
+.welcome .wmark{font-size:38px;line-height:1}
 .filters input[type=search],.filters select{padding:9px 12px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14.5px}
 .filters input[type=search]{min-width:230px;flex:1;max-width:360px}
 .filters label.chk{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--ink-2);cursor:pointer}
@@ -226,14 +233,11 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
     <button data-v="for">Formations</button>
     <button data-v="evt">Événements</button>
     <button data-v="ann">Annuaire</button>
+    <button data-v="stats">Statistiques</button>
   </nav>
   <main>
     <section class="view on" id="v-home">
-      <div class="tiles" id="tiles"></div>
-      <div class="grid2">
-        <div class="panel"><h2>Inscriptions de membres par mois</h2><div id="chartIns"></div></div>
-        <div class="panel"><h2>Ateliers à venir par thématique</h2><div id="chartTh"></div></div>
-      </div>
+      <div class="panel welcome" id="welcome"></div>
       <div class="panel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
       <div class="panel"><h2>Anniversaires dans ta lignée <span class="badge-lig">14 jours</span></h2><div id="homeBd"></div></div>
     </section>
@@ -246,7 +250,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <label class="chk"><input type="checkbox" id="pdPast"> Inclure les passés</label>
       </div>
       <div class="filters filters-dates">
-        <span class="dlabel">Du</span><input type="date" id="pdFrom"><span class="dlabel">au</span><input type="date" id="pdTo">
+        <span class="dlabel plabel">Période</span><span class="dlabel">Du</span><input type="date" id="pdFrom"><span class="dlabel">au</span><input type="date" id="pdTo">
         <div class="daybtns" id="pdDays"></div>
       </div>
       <div class="count-line"><span class="vtoggle" data-vt="pd"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="pdCount"></span></div>
@@ -262,7 +266,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <label class="chk"><input type="checkbox" id="catPast"> Inclure les passés</label>
       </div>
       <div class="filters filters-dates">
-        <span class="dlabel">Du</span><input type="date" id="catFrom"><span class="dlabel">au</span><input type="date" id="catTo">
+        <span class="dlabel plabel">Période</span><span class="dlabel">Du</span><input type="date" id="catFrom"><span class="dlabel">au</span><input type="date" id="catTo">
         <div class="daybtns" id="catDays"></div>
       </div>
       <div class="chips" id="catChips"></div>
@@ -279,7 +283,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <label class="chk"><input type="checkbox" id="reuPast"> Inclure les passés</label>
       </div>
       <div class="filters filters-dates">
-        <span class="dlabel">Du</span><input type="date" id="reuFrom"><span class="dlabel">au</span><input type="date" id="reuTo">
+        <span class="dlabel plabel">Période</span><span class="dlabel">Du</span><input type="date" id="reuFrom"><span class="dlabel">au</span><input type="date" id="reuTo">
         <div class="daybtns" id="reuDays"></div>
       </div>
       <div class="count-line"><span class="vtoggle" data-vt="reu"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="reuCount"></span></div>
@@ -294,7 +298,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <label class="chk"><input type="checkbox" id="forPast"> Inclure les passés</label>
       </div>
       <div class="filters filters-dates">
-        <span class="dlabel">Du</span><input type="date" id="forFrom"><span class="dlabel">au</span><input type="date" id="forTo">
+        <span class="dlabel plabel">Période</span><span class="dlabel">Du</span><input type="date" id="forFrom"><span class="dlabel">au</span><input type="date" id="forTo">
         <div class="daybtns" id="forDays"></div>
       </div>
       <div class="count-line"><span class="vtoggle" data-vt="for"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="forCount"></span></div>
@@ -309,7 +313,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <label class="chk"><input type="checkbox" id="evtPast"> Inclure les passés</label>
       </div>
       <div class="filters filters-dates">
-        <span class="dlabel">Du</span><input type="date" id="evtFrom"><span class="dlabel">au</span><input type="date" id="evtTo">
+        <span class="dlabel plabel">Période</span><span class="dlabel">Du</span><input type="date" id="evtFrom"><span class="dlabel">au</span><input type="date" id="evtTo">
         <div class="daybtns" id="evtDays"></div>
       </div>
       <div class="count-line"><span class="vtoggle" data-vt="evt"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="evtCount"></span></div>
@@ -332,6 +336,14 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
           <tbody id="annBody"></tbody>
         </table>
         <div class="pager"><button id="pgPrev">←</button><span id="pgInfo" class="num"></span><button id="pgNext">→</button></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-stats">
+      <div class="tiles" id="tiles"></div>
+      <div class="grid2">
+        <div class="panel"><h2>Inscriptions de membres par mois</h2><div id="chartIns"></div></div>
+        <div class="panel"><h2>Ateliers à venir par thématique</h2><div id="chartTh"></div></div>
       </div>
     </section>
   </main>
@@ -499,6 +511,9 @@ document.getElementById('lockBtn').addEventListener('click',()=>{
 
 /* ---------- Accueil ---------- */
 function buildHome(){
+  const h=new Date().getHours(), salut = h<5?'Bonne nuit':h<18?'Bonjour':'Bonsoir';
+  const wEl=document.getElementById('welcome');
+  if(wEl) wEl.innerHTML='<div class="wmark">👋</div><div class="wtxt"><h2>'+salut+', bienvenue sur Kairos !</h2><div class="wdate">'+fmtDLong(todayIso)+'</div><p>Kairos, c\u2019est l\u2019art de reconnaître le bon moment — et d\u2019agir au moment juste. Bonne journée !</p></div>';
   const in7 = new Date(TODAY); in7.setDate(in7.getDate()+7);
   const iso7 = in7.toISOString().slice(0,10);
   const upcoming = A.filter(a=>a.start>=todayIso);

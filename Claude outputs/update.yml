@@ -1,0 +1,45 @@
+name: Mise à jour quotidienne
+
+on:
+  schedule:
+    - cron: '0 22 * * *'   # chaque nuit à 22h00 UTC (minuit Paris en été, 23h en hiver)
+  workflow_dispatch: {}     # permet aussi de lancer à la main depuis l'onglet Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: maj-quotidienne
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Dépendances
+        run: pip install --quiet requests cryptography
+
+      - name: Régénération des données
+        env:
+          PORTAL_PW: ${{ secrets.PORTAL_PW }}
+          API_BASE: ${{ secrets.API_BASE }}
+          LIGNEE: ${{ secrets.LIGNEE }}
+          LIGNEE_FILLEULS_DE: ${{ secrets.LIGNEE_FILLEULS_DE }}
+        run: python update.py
+
+      - name: Commit et publication
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && echo "Aucun changement" || {
+            git commit -m "Mise à jour quotidienne des données"
+            git push
+          }
