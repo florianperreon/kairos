@@ -189,6 +189,9 @@ tr.row:hover td{background:var(--surface-2)}
 .pill-list{display:flex;flex-wrap:wrap;gap:6px}
 .pill-list .link{font-size:13.5px;background:var(--surface-2);border-radius:14px;padding:3px 10px;text-decoration:none}
 .pill-list .link:hover{text-decoration:underline}
+.invites{font-size:13px;font-style:italic;color:var(--ink-3);margin-top:6px;line-height:1.5}
+.invites span[data-open2]{cursor:pointer}
+.invites span[data-open2]:hover{text-decoration:underline}
 
 /* Charts */
 .chart-tip{position:fixed;background:var(--ink);color:var(--ground);padding:5px 10px;border-radius:6px;font-size:12.5px;pointer-events:none;display:none;z-index:99;white-space:nowrap}
@@ -879,6 +882,16 @@ function openSheet(id){
   const sub=ALL.filter(o=>!isPast(o.a)&&(o.a.guests||[]).includes(m.id)).sort((p,q)=>p.a.start.localeCompare(q.a.start));
   const anim=ALL.filter(o=>!isPast(o.a)&&pilOf(o.a)).sort((p,q)=>p.a.start.localeCompare(q.a.start));
   const pastSub=ALL.filter(o=>isPast(o.a)&&(o.a.guests||[]).includes(m.id)), pastAnim=ALL.filter(o=>isPast(o.a)&&pilOf(o.a));
+  // Filleuls / managés : adhérents mis en avant, les autres en note grise « membres invités »
+  const relBlock=(label,list)=>{
+    const adh=list.filter(k=>ADH.has(k.id)), inv=list.filter(k=>!ADH.has(k.id));
+    if(!list.length) return '';
+    let h='<div class="sub-h">'+label+' ('+adh.length+')</div>';
+    h+= adh.length ? '<div class="pill-list">'+adh.slice(0,40).map(k=>'<span class="link" data-open2="'+k.id+'">'+esc(k.name)+'</span>').join('')+(adh.length>40?' <span style="color:var(--ink-3)">+'+(adh.length-40)+'</span>':'')+'</div>'
+                   : '<div class="invites">Aucun adhérent.</div>';
+    if(inv.length) h+='<div class="invites">Membres invités ('+inv.length+', sans adhésion à ce jour) : '+inv.slice(0,40).map(k=>'<span data-open2="'+k.id+'">'+esc(k.name)+'</span>').join(', ')+(inv.length>40?' +'+(inv.length-40):'')+'</div>';
+    return h;
+  };
   const evList=l=>'<div class="mini-list">'+l.slice(0,12).map(o=>'<div><b class="num">'+fmtD(o.a.start)+'</b> <a href="'+o.u+'" target="_blank" rel="noopener">'+esc(o.a.title)+'</a> <span style="color:var(--ink-3)">'+esc(o.a.lieu)+'</span></div>').join('')+(l.length>12?'<div style="color:var(--ink-3)">+'+(l.length-12)+'</div>':'')+'</div>';
   const card=document.getElementById('sheetCard');
   card.innerHTML='<button class="sheet-close" id="shClose">✕</button>'+
@@ -904,8 +917,7 @@ function openSheet(id){
     (anim.length?'<div class="sub-h">Anime prochainement ('+anim.length+')</div>'+evList(anim):'')+
     (pastAnim.length||pastSub.length?'<div class="sub-h">12 derniers mois</div><div class="meta" style="font-size:13.5px;color:var(--ink-2)">'+pastAnim.length+' atelier'+(pastAnim.length>1?'s':'')+' animé'+(pastAnim.length>1?'s':'')+' · '+pastSub.length+' participation'+(pastSub.length>1?'s':'')+'</div>':'')+
     (chain.length?'<div class="sub-h">Lignée ascendante (parrains)</div><ul class="tree"><li class="me">'+esc(m.name)+'</li>'+chain.map(p=>'<li>'+linkName(p.name)+'</li>').join('')+'</ul>':'')+
-    (kids.length?'<div class="sub-h">Filleuls ('+kids.length+')</div><div class="pill-list">'+kids.map(k=>'<span class="link" data-open2="'+k.id+'">'+esc(k.name)+'</span>').join('')+'</div>':'')+
-    (mans.length?'<div class="sub-h">Managés ('+mans.length+')</div><div class="pill-list">'+mans.slice(0,40).map(k=>'<span class="link" data-open2="'+k.id+'">'+esc(k.name)+'</span>').join('')+(mans.length>40?' <span style="color:var(--ink-3)">+'+(mans.length-40)+'</span>':'')+'</div>':'');
+    relBlock('Filleuls',kids)+relBlock('Managés',mans);
   document.getElementById('sheet').classList.add('on');
   document.getElementById('shClose').addEventListener('click',closeSheet);
   document.getElementById('shFav').addEventListener('click',e=>{ FAVS.has(m.id)?FAVS.delete(m.id):FAVS.add(m.id); saveFavs(); e.target.textContent=FAVS.has(m.id)?'★ Favori':'☆ Favori'; });
