@@ -165,8 +165,8 @@ tr.row:hover td{background:var(--surface-2)}
 .xtra.places.full{background:#FBE3E3;color:#9B2C2C}
 :root[data-theme="dark"] .xtra.places.full{background:#4A1D1D;color:#FCA5A5}
 .xtra.pub{background:var(--surface-2);border-radius:5px;padding:1px 7px;font-weight:600;color:var(--ink-2)}
-.xtra.pub.res{background:#FFF1DB;color:#8A4B00}
-:root[data-theme="dark"] .xtra.pub.res{background:#4A2E0F;color:#FBBF77}
+.xtra.pub.restreint{background:#FFF1DB;color:#8A4B00}
+:root[data-theme="dark"] .xtra.pub.restreint{background:#4A2E0F;color:#FBBF77}
 .xtra.lig-in{color:var(--gold-ink);background:var(--gold-soft);border-radius:5px;padding:1px 7px}
 .xtra.lig-in .lig-open{cursor:pointer;text-decoration:underline;font-weight:600}
 .xtra.act{color:var(--accent);font-weight:600;text-decoration:none}
@@ -563,8 +563,8 @@ const isPast = a => a.end < todayIso;
 const pubLabel = p => p===''?'Ouvert à tous':(p==='?'?'Public restreint':p+' et +');
 function evExtras(a){
   const parts=[];
-  if(a.pub!=null) parts.push('<span class="xtra pub'+(a.pub?' res':'')+'" title="Public visé (statut minimum requis)">'+esc(pubLabel(a.pub))+'</span>');
-  if(a.hab) parts.push('<span class="xtra pub res" title="Habilitation requise">Habilitation : '+esc(a.hab)+'</span>');
+  if(a.pub!=null) parts.push('<span class="xtra pub'+(a.pub?' restreint':'')+'" title="Public visé (statut minimum requis)">'+esc(pubLabel(a.pub))+'</span>');
+  if(a.hab) parts.push('<span class="xtra pub restreint" title="Habilitation requise">Habilitation : '+esc(a.hab)+'</span>');
   const isFull=x=>x.max>0&&x.total>=x.max;
   if(a.max>0){ const full=isFull(a); parts.push('<span class="xtra places'+(full?' full':'')+'" title="Inscrits / places">'+a.total+'/'+a.max+(full?' · complet':'')+'</span>');
     if(full&&!isPast(a)){
