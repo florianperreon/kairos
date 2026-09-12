@@ -179,16 +179,41 @@ def site_info(w, sites):
                       (st.get("gmap") or "").strip()]
     return sid
 
+# Statuts FORMAN du plus bas au plus haut (hors invités / anciens : GUEST, NOMAN, ONEMAN)
+STATUTS = ["NEOMAN", "BEMAN", "ADMAN", "MAN", "DEVMAN", "DXMAN", "XMAN"]
+
+def public(w):
+    """Public visé d'après `destined` (liste de rôles ROLE_*) : "" = ouvert à tous
+    (liste vide, ou qui contient les invités / NEOMAN), sinon le statut minimum requis
+    (ex. "ADMAN" = réservé aux ADMAN et plus)."""
+    d = {str(r).upper().replace("ROLE_", "") for r in (w.get("destined") or [])}
+    if not d or {"GUEST", "NOMAN", "ONEMAN", "NEOMAN"} & d:
+        return ""
+    for s in STATUTS:
+        if s in d:
+            return s
+    return "?"
+
+def habilitation(w):
+    """Habilitation(s) requise(s) (ex. « Agent lié ou CIF »), hors valeur « nothing »."""
+    out = []
+    for h in (w.get("habilitation") or []):
+        h = str(h).strip()
+        if h and h.lower() != "nothing" and h not in out:
+            out.append(h)
+    return ", ".join(out)
+
 def extras(w, sites):
     """Champs communs ajoutés à chaque atelier/réunion/formation/événement :
-    site, places max, inscrits, ids des inscrits, ids en liste d'attente, lien visio, mot de passe visio."""
+    site, places max, inscrits, ids des inscrits, ids en liste d'attente, lien visio, mot de passe visio,
+    public visé (statut minimum, "" = tous), habilitation requise."""
     guests = ids(w.get("guests"))
     total = w.get("totalGuests")
     if not isinstance(total, int):
         total = len(guests)
     return [site_info(w, sites), int(w.get("maxGuests") or 0), total, guests,
             ids(w.get("waitingZone")), (w.get("videoConferenceLink") or "").strip(),
-            (w.get("visioPassword") or "").strip()]
+            (w.get("visioPassword") or "").strip(), public(w), habilitation(w)]
 
 def norm(s):
     return "".join(c for c in unicodedata.normalize("NFD", (s or "").lower()) if unicodedata.category(c) != "Mn")

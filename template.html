@@ -164,6 +164,9 @@ tr.row:hover td{background:var(--surface-2)}
 .xtra.places{background:var(--surface-2);border-radius:5px;padding:1px 7px;font-weight:600}
 .xtra.places.full{background:#FBE3E3;color:#9B2C2C}
 :root[data-theme="dark"] .xtra.places.full{background:#4A1D1D;color:#FCA5A5}
+.xtra.pub{background:var(--surface-2);border-radius:5px;padding:1px 7px;font-weight:600;color:var(--ink-2)}
+.xtra.pub.res{background:#FFF1DB;color:#8A4B00}
+:root[data-theme="dark"] .xtra.pub.res{background:#4A2E0F;color:#FBBF77}
 .xtra.lig-in{color:var(--gold-ink);background:var(--gold-soft);border-radius:5px;padding:1px 7px}
 .xtra.lig-in .lig-open{cursor:pointer;text-decoration:underline;font-weight:600}
 .xtra.act{color:var(--accent);font-weight:600;text-decoration:none}
@@ -557,8 +560,11 @@ const isLigneePilote = str => { const n=norm(str||''); return LIGNEE.some(l=>n.i
 const allMoins = str => { const ps=(str||'').split(',').map(x=>x.trim()).filter(Boolean); return ps.length>0 && isMoins(ps[0]); };
 const mapsUrl = s => s[4] ? s[4] : 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent([s[2],s[3],s[1]].filter(Boolean).join(' '));
 const isPast = a => a.end < todayIso;
+const pubLabel = p => p===''?'Ouvert à tous':(p==='?'?'Public restreint':p+' et +');
 function evExtras(a){
   const parts=[];
+  if(a.pub!=null) parts.push('<span class="xtra pub'+(a.pub?' res':'')+'" title="Public visé (statut FORMAN minimum)">'+esc(pubLabel(a.pub))+'</span>');
+  if(a.hab) parts.push('<span class="xtra pub res" title="Habilitation requise">Habilitation : '+esc(a.hab)+'</span>');
   const isFull=x=>x.max>0&&x.total>=x.max;
   if(a.max>0){ const full=isFull(a); parts.push('<span class="xtra places'+(full?' full':'')+'" title="Inscrits / places">'+a.total+'/'+a.max+(full?' · complet':'')+'</span>');
     if(full&&!isPast(a)){
@@ -638,7 +644,8 @@ try{ FAVS = new Set(JSON.parse(localStorage.getItem('kairos_favs')||'[]')); }cat
 const saveFavs = ()=>{ try{ localStorage.setItem('kairos_favs', JSON.stringify([...FAVS])); }catch(e){} };
 
 let R=[], F=[], E=[], ADH=new Set(), SITES={}, EXTRA={}, LIGNEE_IDS=new Set(), byId=new Map(), SAME=new Map();
-const withExtras=(o,r,i)=>Object.assign(o,{siteId:r[i]??null, max:+(r[i+1]||0), total:+(r[i+2]||0), guests:r[i+3]||[], wait:r[i+4]||[], link:r[i+5]||'', pw:r[i+6]||''});
+// pub : public visé ('' = ouvert à tous, sinon statut minimum ex. 'ADMAN' ; null = inconnu, données anciennes) ; hab : habilitation requise
+const withExtras=(o,r,i)=>Object.assign(o,{siteId:r[i]??null, max:+(r[i+1]||0), total:+(r[i+2]||0), guests:r[i+3]||[], wait:r[i+4]||[], link:r[i+5]||'', pw:r[i+6]||'', pub:(r[i+7]===undefined?null:String(r[i+7]||'')), hab:r[i+8]||''});
 const mapEvt = r=>withExtras({id:r[0], title:r[1], start:r[2], end:r[3], lieu:r[4], pilotes:r[5], hor:r[6]},r,7);
 function boot(){
   A = DATA.ateliers.map(r=>withExtras({id:r[0], th:thKey(r[1]), thRaw:r[1], title:r[2], start:r[3], end:r[4], lieu:r[5], pilotes:r[6], hor:r[7]},r,8));
@@ -1298,4 +1305,4 @@ document.getElementById('modalDl').addEventListener('click',async ()=>{
 silentUnlock();
 </script>
 
-</body></html>
+</body></html>
