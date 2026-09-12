@@ -473,15 +473,15 @@ function boot(){
   SITES=DATA.sites||{}; EXTRA=DATA.extra||{};
   const AU = DATA.autres||{};
   R=(AU.reu||[]).map(mapEvt); F=(AU.for||[]).map(mapEvt); E=(AU.evt||[]).map(mapEvt);
+  ADH=new Set(DATA.adherentIds||[]);
+  const CFG=DATA.cfg||{};
+  LIGNEE=(CFG.lignee||[]).map(norm); MOINS=(CFG.moins||[]).map(norm);
+  BASE=CFG.base||''; TH_COLORS=CFG.th||{};
   // Même atelier / réunion / formation / événement à d'autres dates (titre normalisé) → « prochaines dates disponibles » quand c'est complet
   SAME=new Map();
   [[A,a=>urlAtelier(a.id)],[R,a=>BASE+'teamMeeting/detail/'+a.id],[F,a=>BASE+'formation/detail/'+a.id],[E,a=>BASE+'event/detail/'+a.id]].forEach(([list,url])=>{
     list.forEach(a=>{ a.url=url(a); const k=norm(a.title).replace(/[^a-z0-9]+/g,' ').trim(); a.tkey=k; if(!SAME.has(k)) SAME.set(k,[]); SAME.get(k).push(a); });
   });
-  ADH=new Set(DATA.adherentIds||[]);
-  const CFG=DATA.cfg||{};
-  LIGNEE=(CFG.lignee||[]).map(norm); MOINS=(CFG.moins||[]).map(norm);
-  BASE=CFG.base||''; TH_COLORS=CFG.th||{};
   (CFG.pdCats||[]).forEach(c=>{ CATN_G[c[0]]=c[1]; CATC_G[c[0]]=c[2]; PD_MAP[c[1]]=c[0]; });
   if(CFG.pdTab) document.getElementById('pdTabBtn').textContent=CFG.pdTab;
   document.getElementById('pdCat').innerHTML='<option value="">Toutes catégories</option>'+(CFG.pdCats||[]).map(c=>'<option value="'+c[0]+'">'+esc(c[1])+'</option>').join('');
