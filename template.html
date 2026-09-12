@@ -159,6 +159,9 @@ tr.row:hover td{background:var(--surface-2)}
 .xtra.lig-in .lig-open{cursor:pointer;text-decoration:underline;font-weight:600}
 .xtra.act{color:var(--accent);font-weight:600;text-decoration:none}
 .xtra.act:hover{text-decoration:underline}
+.xtra.alt{flex-basis:100%;color:var(--ink-2)}
+.xtra.alt a{color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap}
+.xtra.alt a:hover{text-decoration:underline}
 .mini-list{display:flex;flex-direction:column;gap:4px;font-size:13.5px}
 .mini-list a{text-decoration:none;font-weight:600}
 .mini-list a:hover{text-decoration:underline}
@@ -391,7 +394,14 @@ const mapsUrl = s => s[4] ? s[4] : 'https://www.google.com/maps/search/?api=1&qu
 const isPast = a => a.end < todayIso;
 function evExtras(a){
   const parts=[];
-  if(a.max>0){ const full=a.total>=a.max; parts.push('<span class="xtra places'+(full?' full':'')+'" title="Inscrits / places">'+a.total+'/'+a.max+(full?' · complet':'')+'</span>'); }
+  const isFull=x=>x.max>0&&x.total>=x.max;
+  if(a.max>0){ const full=isFull(a); parts.push('<span class="xtra places'+(full?' full':'')+'" title="Inscrits / places">'+a.total+'/'+a.max+(full?' · complet':'')+'</span>');
+    if(full&&!isPast(a)){
+      const alt=(SAME.get(a.tkey)||[]).filter(x=>x!==a&&x.start>a.start&&!isPast(x)&&!isFull(x)).sort((p,q)=>p.start.localeCompare(q.start)).slice(0,3);
+      if(alt.length) parts.push('<span class="xtra alt">Prochaines dates disponibles : '+alt.map(x=>'<a href="'+x.url+'" target="_blank" rel="noopener" title="'+esc(x.title+(x.hor?' · '+x.hor:'')+(x.lieu?' · '+x.lieu:''))+'">'+fmtD(x.start)+(x.lieu?' ('+esc(x.lieu)+')':'')+(x.max>0?' · '+x.total+'/'+x.max:'')+' ↗</a>').join(', ')+'</span>');
+      else parts.push('<span class="xtra" style="color:var(--ink-3)">Aucune autre date disponible</span>');
+    }
+  }
   else if(a.total>0) parts.push('<span class="xtra places" title="Inscrits">'+a.total+' inscrit'+(a.total>1?'s':'')+'</span>');
   if(a.wait&&a.wait.length) parts.push('<span class="xtra" title="Liste d\u2019attente">'+a.wait.length+' en attente</span>');
   const lig=(a.guests||[]).filter(id=>LIGNEE_IDS.has(id)).map(id=>byId.get(id)).filter(Boolean);
@@ -455,7 +465,7 @@ let A=[], M=[], byNormName=new Map(), children=new Map(), managed=new Map(), FAV
 try{ FAVS = new Set(JSON.parse(localStorage.getItem('kairos_favs')||'[]')); }catch(e){}
 const saveFavs = ()=>{ try{ localStorage.setItem('kairos_favs', JSON.stringify([...FAVS])); }catch(e){} };
 
-let R=[], F=[], E=[], ADH=new Set(), SITES={}, EXTRA={}, LIGNEE_IDS=new Set(), byId=new Map();
+let R=[], F=[], E=[], ADH=new Set(), SITES={}, EXTRA={}, LIGNEE_IDS=new Set(), byId=new Map(), SAME=new Map();
 const withExtras=(o,r,i)=>Object.assign(o,{siteId:r[i]??null, max:+(r[i+1]||0), total:+(r[i+2]||0), guests:r[i+3]||[], wait:r[i+4]||[], link:r[i+5]||'', pw:r[i+6]||''});
 const mapEvt = r=>withExtras({id:r[0], title:r[1], start:r[2], end:r[3], lieu:r[4], pilotes:r[5], hor:r[6]},r,7);
 function boot(){
@@ -463,6 +473,11 @@ function boot(){
   SITES=DATA.sites||{}; EXTRA=DATA.extra||{};
   const AU = DATA.autres||{};
   R=(AU.reu||[]).map(mapEvt); F=(AU.for||[]).map(mapEvt); E=(AU.evt||[]).map(mapEvt);
+  // Même atelier / réunion / formation / événement à d'autres dates (titre normalisé) → « prochaines dates disponibles » quand c'est complet
+  SAME=new Map();
+  [[A,a=>urlAtelier(a.id)],[R,a=>BASE+'teamMeeting/detail/'+a.id],[F,a=>BASE+'formation/detail/'+a.id],[E,a=>BASE+'event/detail/'+a.id]].forEach(([list,url])=>{
+    list.forEach(a=>{ a.url=url(a); const k=norm(a.title).replace(/[^a-z0-9]+/g,' ').trim(); a.tkey=k; if(!SAME.has(k)) SAME.set(k,[]); SAME.get(k).push(a); });
+  });
   ADH=new Set(DATA.adherentIds||[]);
   const CFG=DATA.cfg||{};
   LIGNEE=(CFG.lignee||[]).map(norm); MOINS=(CFG.moins||[]).map(norm);
