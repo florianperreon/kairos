@@ -2,7 +2,10 @@ name: Mise à jour quotidienne
 
 on:
   schedule:
-    - cron: '0 22 * * *'   # chaque nuit à 22h00 UTC (minuit Paris en été, 23h en hiver)
+    # Heures UTC, minute non ronde pour limiter les retards de GitHub (les crons à l'heure pile
+    # sont les plus chargés). Le script est idempotent : un 2e passage sans changement ne publie rien.
+    - cron: '17 22 * * *'   # 00h17 Paris en été (23h17 en hiver) : passage principal
+    - cron: '17 4 * * *'    # 06h17 Paris en été (05h17 en hiver) : filet de sécurité si le 1er est sauté
   workflow_dispatch: {}     # permet aussi de lancer à la main depuis l'onglet Actions
 
 permissions:

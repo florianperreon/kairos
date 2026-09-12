@@ -5,7 +5,7 @@ git reset -q -- contenu.enc 2>nul
 git ls-files --error-unmatch contenu.enc >nul 2>nul || git add contenu.enc
 git update-index -q --refresh
 for /f %%i in ('git stash list ^| find /c /v ""') do set N0=%%i
-git stash push -- index.html template.html update.py contenu.enc || goto err
+git stash push -- index.html template.html update.py contenu.enc .github/workflows/update.yml || goto err
 for /f %%i in ('git stash list ^| find /c /v ""') do set N1=%%i
 echo === git pull ===
 git pull --ff-only || goto err
@@ -13,7 +13,7 @@ if "%N1%"=="%N0%" (
   echo Aucun fichier prepare par Claude a reprendre.
 ) else (
   echo === Reprise des fichiers prepares par Claude ===
-  git checkout stash@{0} -- index.html template.html update.py contenu.enc || goto err
+  git checkout stash@{0} -- index.html template.html update.py contenu.enc .github/workflows/update.yml || goto err
   git stash drop
 )
 git rm -r -q --cached "Claude outputs" 2>nul
