@@ -1,15 +1,15 @@
-name: Mise à jour hebdomadaire
+name: Mise à jour quotidienne
 
 on:
   schedule:
-    - cron: '17 9 * * 0'   # chaque dimanche à 9h17 UTC (11h17 Paris été, 10h17 hiver)
+    - cron: '0 22 * * *'   # chaque nuit à 22h00 UTC (minuit Paris en été, 23h en hiver)
   workflow_dispatch: {}     # permet aussi de lancer à la main depuis l'onglet Actions
 
 permissions:
   contents: write
 
 concurrency:
-  group: maj-hebdo
+  group: maj-quotidienne
   cancel-in-progress: false
 
 jobs:
@@ -40,6 +40,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           git diff --cached --quiet && echo "Aucun changement" || {
-            git commit -m "Mise à jour hebdomadaire des données"
+            git commit -m "Mise à jour quotidienne des données"
             git push
           }

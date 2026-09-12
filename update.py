@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mise à jour hebdomadaire des données du portail.
+"""Mise à jour quotidienne des données du portail.
 
 Lit l'ancien payload chiffré dans index.html, récupère les données à jour,
 reconstruit le payload, le chiffre et régénère index.html à partir de template.html.
@@ -151,8 +151,10 @@ def dedup(items):
 def run():
     pw = os.environ["PORTAL_PW"].encode()
     api = os.environ["API_BASE"].rstrip("/")
-    today = datetime.datetime.now(PARIS).date()
+    now = datetime.datetime.now(PARIS)
+    today = now.date()
     today_iso = today.isoformat()
+    maj_iso = now.strftime("%Y-%m-%dT%H:%M")  # date + heure (Paris) de la mise à jour
 
     # Ancien payload (cfg + dates d'inscription connues)
     html = open("index.html", encoding="utf-8").read()
@@ -238,7 +240,7 @@ def run():
     if errs:
         raise RuntimeError("garde-fous: " + "; ".join(errs))
 
-    payload = {"meta": {"majAteliers": today_iso, "majAdherents": today_iso},
+    payload = {"meta": {"majAteliers": today_iso, "majAdherents": today_iso, "maj": maj_iso},
                "cfg": cfg, "ateliers": ateliers, "adherents": membres,
                "autres": autres, "adherentIds": adh_ids}
     enc_json = encrypt_payload(payload, pw)
