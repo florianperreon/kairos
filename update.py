@@ -21,6 +21,7 @@ import re
 import secrets
 import sys
 import time
+import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
@@ -139,6 +140,51 @@ def pilotes(w):
             out.append(p)
     return ", ".join(out)
 
+def ref_id(v):
+    """Identifiant d'une référence utilisateur (objet ou IRI /api/users/N)."""
+    if isinstance(v, dict):
+        return v.get("id")
+    if isinstance(v, str) and v.startswith("/api/users/"):
+        try:
+            return int(v.rsplit("/", 1)[1])
+        except ValueError:
+            return None
+    return None
+
+def ids(lst):
+    out = []
+    for x in (lst or []):
+        i = ref_id(x)
+        if i is not None and i not in out:
+            out.append(i)
+    return out
+
+def site_info(w, sites):
+    """Enregistre le site dans le dictionnaire partagé et renvoie son id."""
+    st = w.get("site")
+    if not isinstance(st, dict) or st.get("id") is None:
+        return None
+    sid = st["id"]
+    if sid not in sites:
+        sites[sid] = [(st.get("name") or "").strip(), (st.get("city") or "").strip(),
+                      (st.get("address") or "").strip(), (st.get("postalCode") or "").strip(),
+                      (st.get("gmap") or "").strip()]
+    return sid
+
+def extras(w, sites):
+    """Champs communs ajoutés à chaque atelier/réunion/formation/événement :
+    site, places max, inscrits, ids des inscrits, ids en liste d'attente, lien visio, mot de passe visio."""
+    guests = ids(w.get("guests"))
+    total = w.get("totalGuests")
+    if not isinstance(total, int):
+        total = len(guests)
+    return [site_info(w, sites), int(w.get("maxGuests") or 0), total, guests,
+            ids(w.get("waitingZone")), (w.get("videoConferenceLink") or "").strip(),
+            (w.get("visioPassword") or "").strip()]
+
+def norm(s):
+    return "".join(c for c in unicodedata.normalize("NFD", (s or "").lower()) if unicodedata.category(c) != "Mn")
+
 def dedup(items):
     seen, out = set(), []
     for x in items:
@@ -171,13 +217,17 @@ def run():
     if split(os.environ.get("LIGNEE_FILLEULS_DE")):
         cfg["ligneeRoots"] = split(os.environ.get("LIGNEE_FILLEULS_DE"))
 
+    # Historique : on remonte 12 mois en arrière (onglet « passés », statistiques par pilote)
+    since_iso = (today - datetime.timedelta(days=365)).isoformat()
+    sites = {}
+
     # Ateliers (publiés uniquement)
-    ws_list = dedup(list_all(api, "workshops", today_iso))
+    ws_list = dedup(list_all(api, "workshops", since_iso))
     ws_det = fetch_details(api, "workshops", [w["id"] for w in ws_list])
     ws = [w for w in (ws_det[i["id"]] for i in ws_list) if w.get("isPublish")]
     ateliers = [[w["id"], (w["thematic"] or "").strip(), (w["title"] or "").strip(),
                  pdate(w["startDate"]), pdate(w["endDate"]), lieu(w), pilotes(w),
-                 horaires(w, "workshopDates")] for w in ws]
+                 horaires(w, "workshopDates")] + extras(w, sites) for w in ws]
     ateliers.sort(key=lambda a: (a[3], a[0]))
 
     # Réunions, formations, événements (pas de filtre isPublish)
@@ -185,10 +235,11 @@ def run():
     for key, ep, dkey in [("reu", "team_meatings", "TeamMeatingDates"),
                           ("for", "formations", "formationDates"),
                           ("evt", "events", "eventDates")]:
-        lst = dedup(list_all(api, ep, today_iso))
+        lst = dedup(list_all(api, ep, since_iso))
         det = fetch_details(api, ep, [x["id"] for x in lst])
         tup = [[w["id"], (w["title"] or "").strip(), pdate(w["startDate"]), pdate(w["endDate"]),
-                lieu(w), pilotes(w), horaires(w, dkey)] for w in (det[x["id"]] for x in lst)]
+                lieu(w), pilotes(w), horaires(w, dkey)] + extras(w, sites)
+               for w in (det[x["id"]] for x in lst)]
         tup.sort(key=lambda a: (a[2], a[0]))
         autres[key] = tup
 
@@ -224,7 +275,39 @@ def run():
 
     membres = [[u["id"], name(u), u.get("phoneNumber") or "", u.get("email") or "",
                 old_dates.get(u["id"]) or new_dates.get(u["id"]) or "",
-                ref_name(u.get("godFather")), ref_name(u.get("manager"))] for u in users]
+                ref_name(u.get("godFather")), ref_name(u.get("manager")),
+                (u.get("city") or "").strip(), (u.get("postalCode") or "").strip()] for u in users]
+
+    # Lignée (mêmes règles que le navigateur : noms fixes + descendance des racines par parrainage)
+    lig_norm = [norm(x) for x in (cfg.get("lignee") or [])]
+    lig_ids = {u["id"] for u in users if any(l in norm(name(u)) for l in lig_norm)}
+    kids = {}
+    for u in users:
+        g = ref_name(u.get("godFather"))
+        if g and g != "Aucun":
+            kids.setdefault(norm(g), []).append(u)
+    for root in (cfg.get("ligneeRoots") or []):
+        queue, seen = [norm(root)], set()
+        while queue:
+            k = queue.pop()
+            if k in seen:
+                continue
+            seen.add(k)
+            for u in kids.get(k, []):
+                lig_ids.add(u["id"])
+                queue.append(norm(name(u)))
+
+    # Données complémentaires (fiche détaillée) pour les membres de la lignée : date d'anniversaire (jour-mois)
+    extra = {int(k): v for k, v in (old.get("extra") or {}).items()}
+    need = [i for i in sorted(lig_ids) if i not in extra]
+    if need:
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            futs = {ex.submit(get, f"{api}/api/users/{i}"): i for i in need}
+            for f in as_completed(futs):
+                d = f.result() or {}
+                bd = d.get("birthDay") or ""
+                extra[futs[f]] = {"bd": bd[5:10] if len(bd) >= 10 else ""}
+    extra = {k: v for k, v in extra.items() if k in lig_ids}
 
     # Adhérents : cotisation réglée depuis moins de 12 mois glissants
     limit = (today - datetime.timedelta(days=365)).isoformat()
@@ -242,7 +325,8 @@ def run():
 
     payload = {"meta": {"majAteliers": today_iso, "majAdherents": today_iso, "maj": maj_iso},
                "cfg": cfg, "ateliers": ateliers, "adherents": membres,
-               "autres": autres, "adherentIds": adh_ids}
+               "autres": autres, "adherentIds": adh_ids, "sites": sites,
+               "extra": {str(k): v for k, v in extra.items()}}
     enc_json = encrypt_payload(payload, pw)
 
     # Vérification aller-retour du chiffrement
@@ -278,7 +362,8 @@ def run():
     open("index.html", "w", encoding="utf-8").write(out)
     print(f"OK {today_iso} — ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
           f"formations {len(autres['for'])} | événements {len(autres['evt'])} | "
-          f"membres {len(membres)} (+{len(new_ids)}) | liste filtrée {len(adh_ids)}")
+          f"membres {len(membres)} (+{len(new_ids)}) | liste filtrée {len(adh_ids)} | "
+          f"lignée {len(lig_ids)} | sites {len(sites)}")
 
 if __name__ == "__main__":
     try:

@@ -74,6 +74,8 @@ section.view.on{display:block}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 @media(max-width:820px){.grid2{grid-template-columns:1fr}}
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.filters:has(+ .filters-dates){margin-bottom:10px}
+.filters-dates{padding-top:10px;border-top:1px dashed var(--line)}
 .filters input[type=search],.filters select{padding:9px 12px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14.5px}
 .filters input[type=search]{min-width:230px;flex:1;max-width:360px}
 .filters label.chk{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--ink-2);cursor:pointer}
@@ -141,6 +143,18 @@ tr.row:hover td{background:var(--surface-2)}
 .cal-ev.span{position:relative;z-index:2;width:calc(var(--n)*100% + (var(--n) - 1)*var(--calx));box-sizing:border-box;flex:none;border-radius:5px;background:color-mix(in srgb,var(--c) 26%,var(--surface));box-shadow:0 1px 2px rgba(23,26,43,.12)}
 .cal-ev.span:hover{background:color-mix(in srgb,var(--c) 40%,var(--surface))}
 .cal-more{font-size:10px;color:var(--ink-3)}
+.xtras{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:5px;font-size:12.5px;align-items:center}
+.xtra{color:var(--ink-2)}
+.xtra.places{background:var(--surface-2);border-radius:5px;padding:1px 7px;font-weight:600}
+.xtra.places.full{background:#FBE3E3;color:#9B2C2C}
+:root[data-theme="dark"] .xtra.places.full{background:#4A1D1D;color:#FCA5A5}
+.xtra.lig-in{color:var(--gold-ink);background:var(--gold-soft);border-radius:5px;padding:1px 7px}
+.xtra.lig-in .lig-open{cursor:pointer;text-decoration:underline;font-weight:600}
+.xtra.act{color:var(--accent);font-weight:600;text-decoration:none}
+.xtra.act:hover{text-decoration:underline}
+.mini-list{display:flex;flex-direction:column;gap:4px;font-size:13.5px}
+.mini-list a{text-decoration:none;font-weight:600}
+.mini-list a:hover{text-decoration:underline}
 @media(max-width:700px){.cal-grid{gap:2px;--calx:8px}.cal-day{min-height:54px;padding:3px 2px}.cal-ev{font-size:0;height:7px;padding:0;border-left:0;background:var(--c);border-radius:3px}.cal-ev.span{background:var(--c);box-shadow:none}}
 .ev:last-child{border-bottom:0}
 .ev .hor{color:var(--ink-3);font-size:13.5px;white-space:nowrap}
@@ -221,6 +235,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <div class="panel"><h2>Ateliers à venir par thématique</h2><div id="chartTh"></div></div>
       </div>
       <div class="panel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
+      <div class="panel"><h2>Anniversaires dans ta lignée <span class="badge-lig">14 jours</span></h2><div id="homeBd"></div></div>
     </section>
 
     <section class="view" id="v-pd">
@@ -228,6 +243,9 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <select id="pdCat"><option value="">Toutes catégories</option></select>
         <select id="pdLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="pdLig"> Pilotés par ma lignée</label>
+        <label class="chk"><input type="checkbox" id="pdPast"> Inclure les passés</label>
+      </div>
+      <div class="filters filters-dates">
         <span class="dlabel">Du</span><input type="date" id="pdFrom"><span class="dlabel">au</span><input type="date" id="pdTo">
         <div class="daybtns" id="pdDays"></div>
       </div>
@@ -241,6 +259,9 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <input type="search" id="catQ" placeholder="Rechercher un atelier, un animateur…">
         <select id="catNiv"><option value="">Tous niveaux</option></select>
         <select id="catLieu"><option value="">Tous lieux</option></select>
+        <label class="chk"><input type="checkbox" id="catPast"> Inclure les passés</label>
+      </div>
+      <div class="filters filters-dates">
         <span class="dlabel">Du</span><input type="date" id="catFrom"><span class="dlabel">au</span><input type="date" id="catTo">
         <div class="daybtns" id="catDays"></div>
       </div>
@@ -255,6 +276,9 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
       <div class="filters">
         <input type="search" id="reuQ" placeholder="Rechercher une réunion, un animateur…">
         <select id="reuLieu"><option value="">Tous lieux</option></select>
+        <label class="chk"><input type="checkbox" id="reuPast"> Inclure les passés</label>
+      </div>
+      <div class="filters filters-dates">
         <span class="dlabel">Du</span><input type="date" id="reuFrom"><span class="dlabel">au</span><input type="date" id="reuTo">
         <div class="daybtns" id="reuDays"></div>
       </div>
@@ -267,6 +291,9 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
       <div class="filters">
         <input type="search" id="forQ" placeholder="Rechercher une formation…">
         <select id="forLieu"><option value="">Tous lieux</option></select>
+        <label class="chk"><input type="checkbox" id="forPast"> Inclure les passés</label>
+      </div>
+      <div class="filters filters-dates">
         <span class="dlabel">Du</span><input type="date" id="forFrom"><span class="dlabel">au</span><input type="date" id="forTo">
         <div class="daybtns" id="forDays"></div>
       </div>
@@ -279,6 +306,9 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
       <div class="filters">
         <input type="search" id="evtQ" placeholder="Rechercher un événement…">
         <select id="evtLieu"><option value="">Tous lieux</option></select>
+        <label class="chk"><input type="checkbox" id="evtPast"> Inclure les passés</label>
+      </div>
+      <div class="filters filters-dates">
         <span class="dlabel">Du</span><input type="date" id="evtFrom"><span class="dlabel">au</span><input type="date" id="evtTo">
         <div class="daybtns" id="evtDays"></div>
       </div>
@@ -288,8 +318,9 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
     </section>
     <section class="view" id="v-ann">
       <div class="filters">
-        <input type="search" id="annQ" placeholder="Nom, email, téléphone, parrain…">
+        <input type="search" id="annQ" placeholder="Nom, email, téléphone, parrain, ville…">
         <select id="annYear"><option value="">Toutes années</option></select>
+        <select id="annDep"><option value="">Tous départements</option></select>
         <select id="annSort"><option value="name">Tri : nom</option><option value="dateDesc">Tri : inscription ↓</option><option value="dateAsc">Tri : inscription ↑</option><option value="id">Tri : ID</option></select>
         <label class="chk"><input type="checkbox" id="annAdh"> Adhérents</label>
         <label class="chk"><input type="checkbox" id="annFav"> ★ Favoris</label>
@@ -297,7 +328,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
       <div class="count-line"><span id="annCount"></span></div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th></th><th>Nom</th><th>Téléphone</th><th>Email</th><th>Inscription</th><th>Parrain</th><th>Manager</th></tr></thead>
+          <thead><tr><th></th><th>Nom</th><th>Téléphone</th><th>Email</th><th>Inscription</th><th>Ville</th><th>Parrain</th><th>Manager</th></tr></thead>
           <tbody id="annBody"></tbody>
         </table>
         <div class="pager"><button id="pgPrev">←</button><span id="pgInfo" class="num"></span><button id="pgNext">→</button></div>
@@ -341,6 +372,21 @@ const pilotesHtml = str => (str||'').split(',').map(x=>x.trim()).filter(Boolean)
   return esc(nme);
 }).join(', ');
 const isLigneePilote = str => { const n=norm(str||''); return LIGNEE.some(l=>n.includes(l)); };
+const mapsUrl = s => s[4] ? s[4] : 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent([s[2],s[3],s[1]].filter(Boolean).join(' '));
+const isPast = a => a.end < todayIso;
+function evExtras(a){
+  const parts=[];
+  if(a.max>0){ const full=a.total>=a.max; parts.push('<span class="xtra places'+(full?' full':'')+'" title="Inscrits / places">'+a.total+'/'+a.max+(full?' · complet':'')+'</span>'); }
+  else if(a.total>0) parts.push('<span class="xtra places" title="Inscrits">'+a.total+' inscrit'+(a.total>1?'s':'')+'</span>');
+  if(a.wait&&a.wait.length) parts.push('<span class="xtra" title="Liste d\u2019attente">'+a.wait.length+' en attente</span>');
+  const lig=(a.guests||[]).filter(id=>LIGNEE_IDS.has(id)).map(id=>byId.get(id)).filter(Boolean);
+  if(lig.length) parts.push('<span class="xtra lig-in" title="Membres de ta lignée inscrits">Lignée inscrite : '+lig.map(m=>'<span class="lig-open" data-id="'+m.id+'">'+esc(m.name)+'</span>').join(', ')+'</span>');
+  if(a.link&&!isPast(a)) parts.push('<a class="xtra act" href="'+esc(a.link)+'" target="_blank" rel="noopener">Rejoindre la visio ↗</a>'+(a.pw?' <span class="xtra" title="Mot de passe visio">mdp : <b class="num">'+esc(a.pw)+'</b></span>':''));
+  const st=a.siteId!=null?SITES[a.siteId]:null;
+  if(st&&(st[2]||st[1])) parts.push('<a class="xtra act" href="'+esc(mapsUrl(st))+'" target="_blank" rel="noopener" title="'+esc([st[0],st[2],st[3],st[1]].filter(Boolean).join(', '))+'">Itinéraire ↗</a>');
+  return parts.length?'<div class="xtras">'+parts.join(' ')+'</div>':'';
+}
+document.addEventListener('click',e=>{ const el=e.target.closest('.lig-open'); if(el) openSheet(+el.dataset.id); });
 const lieuHtml = l => (l==='Visio'||l==='Zoom') ? '<span class="lieu-visio">'+esc(l)+'</span>' : '<span class="lieu-ville">'+esc(l)+'</span>';
 const lieuKey = l => (l==='Visio'||l==='Zoom') ? 'Visio / Zoom' : l;
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
@@ -389,10 +435,12 @@ let A=[], M=[], byNormName=new Map(), children=new Map(), managed=new Map(), FAV
 try{ FAVS = new Set(JSON.parse(localStorage.getItem('kairos_favs')||'[]')); }catch(e){}
 const saveFavs = ()=>{ try{ localStorage.setItem('kairos_favs', JSON.stringify([...FAVS])); }catch(e){} };
 
-let R=[], F=[], E=[], ADH=new Set();
-const mapEvt = r=>({id:r[0], title:r[1], start:r[2], end:r[3], lieu:r[4], pilotes:r[5], hor:r[6]});
+let R=[], F=[], E=[], ADH=new Set(), SITES={}, EXTRA={}, LIGNEE_IDS=new Set(), byId=new Map();
+const withExtras=(o,r,i)=>Object.assign(o,{siteId:r[i]??null, max:+(r[i+1]||0), total:+(r[i+2]||0), guests:r[i+3]||[], wait:r[i+4]||[], link:r[i+5]||'', pw:r[i+6]||''});
+const mapEvt = r=>withExtras({id:r[0], title:r[1], start:r[2], end:r[3], lieu:r[4], pilotes:r[5], hor:r[6]},r,7);
 function boot(){
-  A = DATA.ateliers.map(r=>({id:r[0], th:thKey(r[1]), thRaw:r[1], title:r[2], start:r[3], end:r[4], lieu:r[5], pilotes:r[6], hor:r[7]}));
+  A = DATA.ateliers.map(r=>withExtras({id:r[0], th:thKey(r[1]), thRaw:r[1], title:r[2], start:r[3], end:r[4], lieu:r[5], pilotes:r[6], hor:r[7]},r,8));
+  SITES=DATA.sites||{}; EXTRA=DATA.extra||{};
   const AU = DATA.autres||{};
   R=(AU.reu||[]).map(mapEvt); F=(AU.for||[]).map(mapEvt); E=(AU.evt||[]).map(mapEvt);
   ADH=new Set(DATA.adherentIds||[]);
@@ -402,7 +450,8 @@ function boot(){
   (CFG.pdCats||[]).forEach(c=>{ CATN_G[c[0]]=c[1]; CATC_G[c[0]]=c[2]; PD_MAP[c[1]]=c[0]; });
   if(CFG.pdTab) document.getElementById('pdTabBtn').textContent=CFG.pdTab;
   document.getElementById('pdCat').innerHTML='<option value="">Toutes catégories</option>'+(CFG.pdCats||[]).map(c=>'<option value="'+c[0]+'">'+esc(c[1])+'</option>').join('');
-  M = DATA.adherents.map(r=>({id:r[0], name:r[1], tel:r[2], mail:r[3], date:r[4], parrain:r[5], mgr:r[6], nn:norm(r[1]), nm:norm(r[3]), nt:String(r[2]||'').replace(/\D/g,''), np:norm(r[5]), ng:norm(r[6])}));
+  M = DATA.adherents.map(r=>({id:r[0], name:r[1], tel:r[2], mail:r[3], date:r[4], parrain:r[5], mgr:r[6], city:r[7]||'', cp:r[8]||'', nn:norm(r[1]), nm:norm(r[3]), nt:String(r[2]||'').replace(/\D/g,''), np:norm(r[5]), ng:norm(r[6]), nc:norm(r[7]||'')}));
+  M.forEach(m=>byId.set(m.id,m));
   M.forEach(m=>{
     const k = norm(m.name);
     if(!byNormName.has(k)) byNormName.set(k, m);
@@ -418,9 +467,10 @@ function boot(){
       (children.get(k)||[]).forEach(c=>queue.push(norm(c.name)));
     }
   });
+  LIGNEE_IDS=new Set(M.filter(m=>LIGNEE.some(l=>m.nn.includes(l))).map(m=>m.id));
   document.getElementById('lock').style.display='none';
   document.getElementById('app').style.display='block';
-  document.getElementById('foot').textContent = 'Données '+(DATA.cfg&&DATA.cfg.src||'')+' — mise à jour le '+fmtMaj(DATA.meta)+' · '+M.length.toLocaleString('fr-FR')+' membres · '+ADH.size.toLocaleString('fr-FR')+' adhérents · '+(A.length+R.length+F.length+E.length)+' rendez-vous à venir';
+  document.getElementById('foot').textContent = 'Données '+(DATA.cfg&&DATA.cfg.src||'')+' — mise à jour le '+fmtMaj(DATA.meta)+' · '+M.length.toLocaleString('fr-FR')+' membres · '+ADH.size.toLocaleString('fr-FR')+' adhérents · '+[].concat(A,R,F,E).filter(a=>!isPast(a)).length+' rendez-vous à venir';
   document.getElementById('brandMaj').textContent = ' · Mise à jour le '+fmtMaj(DATA.meta);
   initCalToggles();
   buildHome(); buildPd(); buildCat(); buildAnn();
@@ -457,7 +507,7 @@ function buildHome(){
   const iso30 = d30.toISOString().slice(0,10);
   const news = M.filter(m=>m.date>=iso30);
   const tiles=[
-    ['Ateliers à venir', A.length, 'jusqu’au '+fmtD(A[A.length-1]?.start)],
+    ['Ateliers à venir', upcoming.length, 'jusqu’au '+fmtD(upcoming[upcoming.length-1]?.start)],
     ['Cette semaine', week.length, '7 prochains jours'],
     ['Membres', M.length.toLocaleString('fr-FR'), 'annuaire complet'],
     ['Adhérents', ADH.size.toLocaleString('fr-FR'), 'cotisation réglée'],
@@ -473,15 +523,24 @@ function buildHome(){
   drawBars('chartIns', months.map(k=>({label:k, value:byMonth[k]||0})), getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#4338CA');
 
   // Chart thématiques
-  const byTh={}; A.forEach(a=>{ byTh[a.th]=(byTh[a.th]||0)+1; });
+  const byTh={}; upcoming.forEach(a=>{ byTh[a.th]=(byTh[a.th]||0)+1; });
   const rows = Object.entries(byTh).sort((x,y)=>y[1]-x[1]);
   drawHBars('chartTh', rows.map(([k,v])=>({label:k, value:v, color:TH_COLORS[k]||'#7F8C8D'})));
 
   // Prochains ateliers lignée
   const lig = upcoming.filter(a=>isLigneePilote(a.pilotes)).slice(0,8);
   document.getElementById('homeLignee').innerHTML = lig.length ? lig.map(a=>
-    '<div class="ev"><div><b class="num">'+fmtD(a.start)+'</b></div><div class="hor num">'+esc(a.hor)+'</div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div></div></div>'
+    '<div class="ev"><div><b class="num">'+fmtD(a.start)+'</b></div><div class="hor num">'+esc(a.hor)+'</div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div>'+evExtras(a)+'</div></div>'
   ).join('') : '<p style="color:var(--ink-2)">Aucun atelier à venir piloté par ta lignée.</p>';
+
+  // Anniversaires de la lignée (14 prochains jours)
+  const bds=[];
+  const mmdd=d=>String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  for(let i=0;i<14;i++){ const d=new Date(TODAY); d.setDate(d.getDate()+i); const k=mmdd(d);
+    M.forEach(m=>{ const x=EXTRA[m.id]; if(x&&x.bd===k&&LIGNEE_IDS.has(m.id)) bds.push({m,d,i}); }); }
+  const bdEl=document.getElementById('homeBd');
+  if(bdEl) bdEl.innerHTML = bds.length ? '<div class="pill-list">'+bds.map(b=>'<span class="link lig-open" data-id="'+b.m.id+'">'+(b.i===0?'🎂 ':'')+esc(b.m.name)+' <span class="num" style="color:var(--ink-3)">'+(b.i===0?'aujourd\u2019hui':b.i===1?'demain':b.d.getDate()+' '+MOIS[b.d.getMonth()])+'</span></span>').join('')+'</div>'
+    : '<p style="color:var(--ink-2)">'+(Object.keys(EXTRA).length?'Aucun anniversaire dans les 14 prochains jours.':'Les dates d\u2019anniversaire arriveront à la prochaine mise à jour des données.')+'</p>';
 }
 
 /* ---------- Graphiques SVG ---------- */
@@ -554,8 +613,8 @@ function buildPd(){
   document.getElementById('pdLieu').innerHTML='<option value="">Tous lieux</option>'+lieux.map(l=>'<option>'+esc(l)+'</option>').join('');
   const render=()=>{
     const cat=document.getElementById('pdCat').value, lieu=document.getElementById('pdLieu').value, lig=document.getElementById('pdLig').checked;
-    const from=document.getElementById('pdFrom').value, to=document.getElementById('pdTo').value;
-    const rows=pds.filter(a=>(!cat||PD_CAT(a.title)===cat)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!lig||isLigneePilote(a.pilotes))&&dateMatch(a,from,to,pdDaySel));
+    const from=document.getElementById('pdFrom').value, to=document.getElementById('pdTo').value, past=document.getElementById('pdPast').checked;
+    const rows=pds.filter(a=>(past||!isPast(a))&&(!cat||PD_CAT(a.title)===cat)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!lig||isLigneePilote(a.pilotes))&&dateMatch(a,from,to,pdDaySel));
     document.getElementById('pdCount').textContent=rows.length+' session'+(rows.length>1?'s':'');
     window.__pdRows=rows; calUpdate('pd');
     const byDay={};
@@ -565,12 +624,12 @@ function buildPd(){
       const d=new Date(day+'T00:00:00'); const we=d.getDay()===0||d.getDay()===6;
       return '<div class="day"><div class="day-h'+(we?' we':'')+'"><span class="d">'+fmtDLong(day)+'</span></div>'+
         byDay[day].map(a=>{ const c=PD_CAT(a.title); const multi=a.start!==a.end?'<div class="multi num">jusqu\u2019au '+fmtD(a.end)+'</div>':'';
-          return '<div class="ev"><div><span class="chip" style="background:'+CATC[c]+'">'+CATN[c]+'</span></div><div><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div></div></div>';
+          return '<div class="ev"><div><span class="chip" style="background:'+CATC[c]+'">'+CATN[c]+'</span></div><div><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div>'+evExtras(a)+'</div></div>';
         }).join('')+'</div>';
     }).join('') || '<p style="color:var(--ink-2)">Aucune session ne correspond aux filtres.</p>';
   };
   const pdDaySel=setupDays('pdDays',()=>render());
-  ['pdCat','pdLieu','pdLig','pdFrom','pdTo'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+  ['pdCat','pdLieu','pdLig','pdFrom','pdTo','pdPast'].forEach(id=>document.getElementById(id).addEventListener('change',render));
   render();
 }
 
@@ -597,24 +656,24 @@ function buildCat(){
   const render=()=>{
     const q=norm(document.getElementById('catQ').value.trim());
     const niv=document.getElementById('catNiv').value, lieu=document.getElementById('catLieu').value;
-    const from=document.getElementById('catFrom').value, to=document.getElementById('catTo').value;
-    const rows=oth.filter(a=>sel.has(a.th)&&(!niv||nivOf(a.title)===niv)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,catDaySel));
+    const from=document.getElementById('catFrom').value, to=document.getElementById('catTo').value, past=document.getElementById('catPast').checked;
+    const rows=oth.filter(a=>(past||!isPast(a))&&sel.has(a.th)&&(!niv||nivOf(a.title)===niv)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,catDaySel));
     document.getElementById('catCount').textContent=rows.length+' atelier'+(rows.length>1?'s':'');
     window.__catRows=rows; calUpdate('cat');
     let html='', curMonth='';
-    rows.forEach(a=>{
+    rows.forEach((a,idx)=>{
       const mk=a.start.slice(0,7);
       if(mk!==curMonth){ curMonth=mk; const [y,m]=mk.split('-'); html+='<div class="month-h">'+MOIS[+m-1]+' '+y+'</div><div class="day">'; }
       const multi=a.start!==a.end?'<div class="multi num">jusqu\u2019au '+fmtD(a.end)+'</div>':'';
-      html+='<div class="ev"><div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div><b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div><span class="chip" style="background:'+(TH_COLORS[a.th]||'#7F8C8D')+'">'+esc(a.th)+'</span></div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div></div></div>';
-      const nextIdx=rows.indexOf(a)+1;
+      html+='<div class="ev"><div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div><b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div><span class="chip" style="background:'+(TH_COLORS[a.th]||'#7F8C8D')+'">'+esc(a.th)+'</span></div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div>'+evExtras(a)+'</div></div>';
+      const nextIdx=idx+1;
       if(nextIdx>=rows.length||rows[nextIdx].start.slice(0,7)!==mk) html+='</div>';
     });
     document.getElementById('catList').innerHTML=html||'<p style="color:var(--ink-2)">Aucun atelier ne correspond aux filtres.</p>';
   };
   const catDaySel=setupDays('catDays',()=>render());
   ['catQ','catNiv','catLieu'].forEach(id=>document.getElementById(id).addEventListener('input',render));
-  ['catFrom','catTo'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+  ['catFrom','catTo','catPast'].forEach(id=>document.getElementById(id).addEventListener('change',render));
   render();
 }
 
@@ -625,8 +684,8 @@ function buildSimple(p, items, urlFn, label){
   const render=()=>{
     const q=norm(document.getElementById(p+'Q').value.trim());
     const lieu=document.getElementById(p+'Lieu').value;
-    const from=document.getElementById(p+'From').value, to=document.getElementById(p+'To').value;
-    const rows=items.filter(a=>(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,daySel));
+    const from=document.getElementById(p+'From').value, to=document.getElementById(p+'To').value, past=document.getElementById(p+'Past').checked;
+    const rows=items.filter(a=>(past||!isPast(a))&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,daySel));
     document.getElementById(p+'Count').textContent=rows.length+' '+label+(rows.length>1?'s':'');
     window['__'+p+'Rows']=rows; calUpdate(p);
     let html='', cur='';
@@ -634,14 +693,14 @@ function buildSimple(p, items, urlFn, label){
       const mk=a.start.slice(0,7);
       if(mk!==cur){ if(cur) html+='</div>'; cur=mk; const parts=mk.split('-'); html+='<div class="month-h">'+MOIS[+parts[1]-1]+' '+parts[0]+'</div><div class="day">'; }
       const multi=a.start!==a.end?'<div class="multi num">jusqu\u2019au '+fmtD(a.end)+'</div>':'';
-      html+='<div class="ev ev2"><div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div><b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div class="body"><a class="t" href="'+urlFn(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div></div></div>';
+      html+='<div class="ev ev2"><div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div><b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div class="body"><a class="t" href="'+urlFn(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div>'+evExtras(a)+'</div></div>';
     });
     if(cur) html+='</div>';
     document.getElementById(p+'List').innerHTML=html||'<p style="color:var(--ink-2)">Aucun résultat ne correspond aux filtres.</p>';
   };
   const daySel=setupDays(p+'Days',()=>render());
   document.getElementById(p+'Q').addEventListener('input',render);
-  ['Lieu','From','To'].forEach(k=>document.getElementById(p+k).addEventListener('change',render));
+  ['Lieu','From','To','Past'].forEach(k=>document.getElementById(p+k).addEventListener('change',render));
   render();
 }
 
@@ -752,11 +811,12 @@ function buildAnn(){
       if(m.nm.includes(q)) return 2;
       if(qd.length>=4 && m.nt.includes(qd)) return 3;
       if(m.np.includes(q)||m.ng.includes(q)) return 4;
+      if(m.nc.includes(q)) return 5;
       return 9;
     };
     const yr=document.getElementById('annYear').value, fav=document.getElementById('annFav').checked, sort=document.getElementById('annSort').value;
-    const adh=document.getElementById('annAdh').checked;
-    annRows=M.filter(m=>score(m)<9&&(!yr||(m.date||'').startsWith(yr))&&(!fav||FAVS.has(m.id))&&(!adh||ADH.has(m.id)));
+    const adh=document.getElementById('annAdh').checked, dep=document.getElementById('annDep').value;
+    annRows=M.filter(m=>score(m)<9&&(!dep||m.cp.slice(0,2)===dep)&&(!yr||(m.date||'').startsWith(yr))&&(!fav||FAVS.has(m.id))&&(!adh||ADH.has(m.id)));
     if(sort==='name'&&q) annRows.sort((a,b)=>{const d=score(a)-score(b); return d!==0?d:(a.nn<b.nn?-1:1);});
     else if(sort==='name') annRows.sort((a,b)=>a.nn<b.nn?-1:1);
     else if(sort==='dateDesc') annRows.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
@@ -774,7 +834,7 @@ function buildAnn(){
       '<td><span class="link" data-open="'+m.id+'">'+esc(m.name)+'</span>'+(ADH.has(m.id)?' <span class="badge-lig">Adhérent</span>':'')+'</td>'+
       '<td class="num"><a href="tel:+33'+esc((m.tel||'').replace(/^0/,''))+'" style="text-decoration:none">'+fmtTel(m.tel)+'</a></td>'+
       '<td><a href="mailto:'+esc(m.mail)+'">'+esc(m.mail)+'</a></td>'+
-      '<td class="num">'+fmtD(m.date)+'</td><td>'+esc(m.parrain)+'</td><td>'+esc(m.mgr)+'</td></tr>').join('');
+      '<td class="num">'+fmtD(m.date)+'</td><td>'+esc(m.city)+'</td><td>'+esc(m.parrain)+'</td><td>'+esc(m.mgr)+'</td></tr>').join('');
     document.getElementById('pgInfo').textContent='Page '+(annPage+1)+' / '+maxP;
     document.getElementById('pgPrev').disabled=annPage===0;
     document.getElementById('pgNext').disabled=annPage>=maxP-1;
@@ -783,7 +843,9 @@ function buildAnn(){
   };
   document.getElementById('pgPrev').addEventListener('click',()=>{annPage--;renderPage();window.scrollTo({top:0});});
   document.getElementById('pgNext').addEventListener('click',()=>{annPage++;renderPage();window.scrollTo({top:0});});
-  ['annQ','annYear','annSort','annFav','annAdh'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+  const deps={}; M.forEach(m=>{ const d=m.cp.slice(0,2); if(/^\d\d$/.test(d)) deps[d]=(deps[d]||0)+1; });
+  document.getElementById('annDep').innerHTML='<option value="">Tous départements</option>'+Object.keys(deps).sort().map(d=>'<option value="'+d+'">'+d+' ('+deps[d]+')</option>').join('');
+  ['annQ','annYear','annSort','annFav','annAdh','annDep'].forEach(id=>document.getElementById(id).addEventListener('input',render));
   render();
 }
 
@@ -796,6 +858,13 @@ function openSheet(id){
   const kids=(children.get(norm(m.name))||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   const mans=(managed.get(norm(m.name))||[]);
   const isLig=LIGNEE.some(l=>norm(m.name).includes(l));
+  const x=EXTRA[m.id]||{}; const bd=x.bd?(+x.bd.slice(3,5))+' '+MOIS[+x.bd.slice(0,2)-1]:'';
+  const ALL=[].concat(A.map(a=>({a,u:urlAtelier(a.id)})),R.map(a=>({a,u:BASE+'teamMeeting/detail/'+a.id})),F.map(a=>({a,u:BASE+'formation/detail/'+a.id})),E.map(a=>({a,u:BASE+'event/detail/'+a.id})));
+  const pilOf=a=>norm(a.pilotes).includes(m.nn);
+  const sub=ALL.filter(o=>!isPast(o.a)&&(o.a.guests||[]).includes(m.id)).sort((p,q)=>p.a.start.localeCompare(q.a.start));
+  const anim=ALL.filter(o=>!isPast(o.a)&&pilOf(o.a)).sort((p,q)=>p.a.start.localeCompare(q.a.start));
+  const pastSub=ALL.filter(o=>isPast(o.a)&&(o.a.guests||[]).includes(m.id)), pastAnim=ALL.filter(o=>isPast(o.a)&&pilOf(o.a));
+  const evList=l=>'<div class="mini-list">'+l.slice(0,12).map(o=>'<div><b class="num">'+fmtD(o.a.start)+'</b> <a href="'+o.u+'" target="_blank" rel="noopener">'+esc(o.a.title)+'</a> <span style="color:var(--ink-3)">'+esc(o.a.lieu)+'</span></div>').join('')+(l.length>12?'<div style="color:var(--ink-3)">+'+(l.length-12)+'</div>':'')+'</div>';
   const card=document.getElementById('sheetCard');
   card.innerHTML='<button class="sheet-close" id="shClose">✕</button>'+
     '<div style="font-size:12px;color:var(--ink-3)" class="num">Membre #'+m.id+(ADH.has(m.id)?' · <span class="badge-lig">Adhérent</span>':'')+(isLig?' · <span class="badge-lig">Lignée</span>':'')+'</div>'+
@@ -813,7 +882,12 @@ function openSheet(id){
       '<div class="k">Inscription</div><div class="num">'+fmtD(m.date)+'</div>'+
       '<div class="k">Parrain</div><div>'+linkName(m.parrain)+'</div>'+
       '<div class="k">Manager</div><div>'+linkName(m.mgr)+'</div>'+
+      (m.city||m.cp?'<div class="k">Ville</div><div>'+esc([m.cp,m.city].filter(Boolean).join(' '))+'</div>':'')+
+      (bd?'<div class="k">Anniversaire</div><div>'+bd+'</div>':'')+
     '</div>'+
+    (sub.length?'<div class="sub-h">Inscrit prochainement ('+sub.length+')</div>'+evList(sub):'')+
+    (anim.length?'<div class="sub-h">Anime prochainement ('+anim.length+')</div>'+evList(anim):'')+
+    (pastAnim.length||pastSub.length?'<div class="sub-h">12 derniers mois</div><div class="meta" style="font-size:13.5px;color:var(--ink-2)">'+pastAnim.length+' atelier'+(pastAnim.length>1?'s':'')+' animé'+(pastAnim.length>1?'s':'')+' · '+pastSub.length+' participation'+(pastSub.length>1?'s':'')+'</div>':'')+
     (chain.length?'<div class="sub-h">Lignée ascendante (parrains)</div><ul class="tree"><li class="me">'+esc(m.name)+'</li>'+chain.map(p=>'<li>'+linkName(p.name)+'</li>').join('')+'</ul>':'')+
     (kids.length?'<div class="sub-h">Filleuls ('+kids.length+')</div><div class="pill-list">'+kids.map(k=>'<span class="link" data-open2="'+k.id+'">'+esc(k.name)+'</span>').join('')+'</div>':'')+
     (mans.length?'<div class="sub-h">Managés ('+mans.length+')</div><div class="pill-list">'+mans.slice(0,40).map(k=>'<span class="link" data-open2="'+k.id+'">'+esc(k.name)+'</span>').join('')+(mans.length>40?' <span style="color:var(--ink-3)">+'+(mans.length-40)+'</span>':'')+'</div>':'');
