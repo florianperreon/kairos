@@ -6,6 +6,10 @@ reconstruit le payload, le chiffre et régénère index.html à partir de templa
 Configuration via variables d'environnement (secrets du dépôt) :
   PORTAL_PW : mot de passe du portail (clé de chiffrement)
   API_BASE  : URL de base de l'API (ex. https://exemple.tld)
+  LIGNEE    : (optionnel) noms de la lignée, séparés par des virgules
+  LIGNEE_FILLEULS_DE : (optionnel) noms dont toute la descendance (filleuls,
+              filleuls de filleuls…) est ajoutée dynamiquement à la lignée
+              côté navigateur, à partir des données du jour
 Aucune donnée sensible ne doit apparaître dans ce fichier ni dans les logs.
 """
 import base64
@@ -157,6 +161,14 @@ def run():
         raise RuntimeError("bloc ENC introuvable dans index.html")
     old = decrypt_enc(json.loads(m.group(1)), pw)
 
+    # Configuration de la lignée (secrets du dépôt) : écrase l'ancienne si fournie
+    cfg = dict(old["cfg"])
+    split = lambda v: [x.strip() for x in (v or "").split(",") if x.strip()]
+    if split(os.environ.get("LIGNEE")):
+        cfg["lignee"] = split(os.environ.get("LIGNEE"))
+    if split(os.environ.get("LIGNEE_FILLEULS_DE")):
+        cfg["ligneeRoots"] = split(os.environ.get("LIGNEE_FILLEULS_DE"))
+
     # Ateliers (publiés uniquement)
     ws_list = dedup(list_all(api, "workshops", today_iso))
     ws_det = fetch_details(api, "workshops", [w["id"] for w in ws_list])
@@ -227,7 +239,7 @@ def run():
         raise RuntimeError("garde-fous: " + "; ".join(errs))
 
     payload = {"meta": {"majAteliers": today_iso, "majAdherents": today_iso},
-               "cfg": old["cfg"], "ateliers": ateliers, "adherents": membres,
+               "cfg": cfg, "ateliers": ateliers, "adherents": membres,
                "autres": autres, "adherentIds": adh_ids}
     enc_json = encrypt_payload(payload, pw)
 
@@ -248,7 +260,7 @@ def run():
         for tok in re.split(r"[.-]", part):
             if len(tok) > 3:
                 needles.add(tok.lower())
-    for full in (old["cfg"].get("lignee") or []) + (old["cfg"].get("moins") or []):
+    for full in (cfg.get("lignee") or []) + (cfg.get("ligneeRoots") or []) + (cfg.get("moins") or []):
         for tok in str(full).split():
             if len(tok) > 3:
                 needles.add(tok.lower())

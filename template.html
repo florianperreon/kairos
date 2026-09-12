@@ -292,7 +292,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <label class="chk"><input type="checkbox" id="annAdh"> Adhérents</label>
         <label class="chk"><input type="checkbox" id="annFav"> ★ Favoris</label>
       </div>
-      <div class="count-line"><span id="annCount"></span><button class="export-btn" id="annCsv">Exporter CSV</button></div>
+      <div class="count-line"><span id="annCount"></span></div>
       <div class="tbl-wrap">
         <table>
           <thead><tr><th></th><th>Nom</th><th>Téléphone</th><th>Email</th><th>Inscription</th><th>Parrain</th><th>Manager</th></tr></thead>
@@ -405,6 +405,15 @@ function boot(){
     if(!byNormName.has(k)) byNormName.set(k, m);
     const pk = norm(m.parrain); if(m.parrain && m.parrain!=='Aucun'){ if(!children.has(pk)) children.set(pk,[]); children.get(pk).push(m); }
     const mk = norm(m.mgr); if(m.mgr && m.mgr!=='Aucun'){ if(!managed.has(mk)) managed.set(mk,[]); managed.get(mk).push(m); }
+  });
+  // Lignée dynamique : ajoute toute la descendance (filleuls, filleuls de filleuls…) des racines configurées
+  (CFG.ligneeRoots||[]).forEach(root=>{
+    const seen=new Set(); const queue=[norm(root)];
+    while(queue.length){
+      const k=queue.shift(); if(seen.has(k)) continue; seen.add(k);
+      if(!LIGNEE.includes(k)) LIGNEE.push(k);
+      (children.get(k)||[]).forEach(c=>queue.push(norm(c.name)));
+    }
   });
   document.getElementById('lock').style.display='none';
   document.getElementById('app').style.display='block';
@@ -742,7 +751,6 @@ function buildAnn(){
   document.getElementById('pgPrev').addEventListener('click',()=>{annPage--;renderPage();window.scrollTo({top:0});});
   document.getElementById('pgNext').addEventListener('click',()=>{annPage++;renderPage();window.scrollTo({top:0});});
   ['annQ','annYear','annSort','annFav','annAdh'].forEach(id=>document.getElementById(id).addEventListener('input',render));
-  document.getElementById('annCsv').addEventListener('click',()=>exportCsv('annuaire_kairos.csv',['ID','Nom','Téléphone','Email','Inscription','Parrain','Manager','Profil'],annRows.map(m=>[m.id,m.name,m.tel,m.mail,m.date,m.parrain,m.mgr,urlProfil(m.id)])));
   render();
 }
 

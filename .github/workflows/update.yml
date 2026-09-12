@@ -30,6 +30,8 @@ jobs:
         env:
           PORTAL_PW: ${{ secrets.PORTAL_PW }}
           API_BASE: ${{ secrets.API_BASE }}
+          LIGNEE: ${{ secrets.LIGNEE }}
+          LIGNEE_FILLEULS_DE: ${{ secrets.LIGNEE_FILLEULS_DE }}
         run: python update.py
 
       - name: Commit et publication
