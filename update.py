@@ -1,0 +1,282 @@
+#!/usr/bin/env python3
+"""Mise à jour hebdomadaire des données du portail.
+
+Lit l'ancien payload chiffré dans index.html, récupère les données à jour,
+reconstruit le payload, le chiffre et régénère index.html à partir de template.html.
+Configuration via variables d'environnement (secrets du dépôt) :
+  PORTAL_PW : mot de passe du portail (clé de chiffrement)
+  API_BASE  : URL de base de l'API (ex. https://exemple.tld)
+Aucune donnée sensible ne doit apparaître dans ce fichier ni dans les logs.
+"""
+import base64
+import datetime
+import gzip
+import json
+import os
+import re
+import secrets
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
+
+import requests
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+PARIS = ZoneInfo("Europe/Paris")
+ITER = 300000
+
+# ---------------- crypto ----------------
+def derive(pw: bytes, salt: bytes, iterations: int) -> bytes:
+    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=iterations)
+    return kdf.derive(pw)
+
+def decrypt_enc(enc: dict, pw: bytes) -> dict:
+    key = derive(pw, base64.b64decode(enc["salt"]), enc["iter"])
+    pt = AESGCM(key).decrypt(base64.b64decode(enc["iv"]), base64.b64decode(enc["data"]), None)
+    return json.loads(gzip.decompress(pt).decode("utf-8"))
+
+def encrypt_payload(obj: dict, pw: bytes) -> str:
+    raw = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    gz = gzip.compress(raw, 9)
+    salt, iv = secrets.token_bytes(16), secrets.token_bytes(12)
+    ct = AESGCM(derive(pw, salt, ITER)).encrypt(iv, gz, None)
+    return json.dumps({"salt": base64.b64encode(salt).decode(),
+                       "iv": base64.b64encode(iv).decode(),
+                       "iter": ITER,
+                       "data": base64.b64encode(ct).decode()})
+
+# ---------------- HTTP ----------------
+S = requests.Session()
+S.headers.update({"Accept": "application/json"})
+
+def get(url, params=None, tries=4):
+    last = None
+    for i in range(tries):
+        try:
+            r = S.get(url, params=params, timeout=60)
+            if r.status_code == 200:
+                return r.json()
+            if r.status_code == 404:
+                return None
+            last = f"HTTP {r.status_code}"
+        except Exception as e:
+            last = type(e).__name__
+        time.sleep(1.5 * (i + 1))
+    raise RuntimeError(f"requête en échec ({last})")
+
+def list_all(api, endpoint, today_iso):
+    items, page = [], 1
+    while True:
+        d = get(f"{api}/api/{endpoint}",
+                params={"order[startDate]": "asc", "startDate[after]": today_iso, "page": page})
+        batch = d if isinstance(d, list) else d.get("hydra:member", [])
+        items.extend(batch)
+        if len(batch) < 30:
+            break
+        page += 1
+    return items
+
+def fetch_details(api, endpoint, ids):
+    out = {}
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        futs = {ex.submit(get, f"{api}/api/{endpoint}/{i}"): i for i in ids}
+        for f in as_completed(futs):
+            d = f.result()
+            if d:
+                out[d["id"]] = d
+    missing = [i for i in ids if i not in out]
+    if missing:
+        raise RuntimeError(f"{endpoint}: {len(missing)} détails manquants")
+    return out
+
+# ---------------- transformations ----------------
+def pdate(s):
+    return datetime.datetime.fromisoformat(s).astimezone(PARIS).date().isoformat()
+
+def name(u):
+    if not u or not isinstance(u, dict):
+        return ""
+    fn = (u.get("firstName") or "").replace("﻿", " ").strip()
+    ln = (u.get("lastName") or "").replace("﻿", " ").strip()
+    return f"{fn} {ln}".strip()
+
+def lieu(w):
+    if w.get("isVisio"):
+        return "Visio"
+    s = w.get("site")
+    if s:
+        c = (s.get("city") or "").strip()
+        if c:
+            return c
+        n = (s.get("name") or "").strip()
+        return "Zoom" if "zoom" in n.lower() else n
+    return ""
+
+def horaires(w, key):
+    for d in (w.get(key) or []):
+        if isinstance(d, dict) and d.get("dateAt") and d.get("endAt"):
+            return d["dateAt"][11:16] + " - " + d["endAt"][11:16]
+    return ""
+
+def pilotes(w):
+    parts = [name(w.get("former"))]
+    for c in (w.get("copilotApprouved") or []):
+        n = name(c)
+        if n:
+            parts.append(n)
+    seen, out = set(), []
+    for p in parts:
+        if p and p not in seen:
+            seen.add(p)
+            out.append(p)
+    return ", ".join(out)
+
+def dedup(items):
+    seen, out = set(), []
+    for x in items:
+        if x["id"] not in seen:
+            seen.add(x["id"])
+            out.append(x)
+    return out
+
+# ---------------- pipeline ----------------
+def run():
+    pw = os.environ["PORTAL_PW"].encode()
+    api = os.environ["API_BASE"].rstrip("/")
+    today = datetime.datetime.now(PARIS).date()
+    today_iso = today.isoformat()
+
+    # Ancien payload (cfg + dates d'inscription connues)
+    html = open("index.html", encoding="utf-8").read()
+    m = re.search(r"const ENC = (\{.*?\});", html, re.S)
+    if not m:
+        raise RuntimeError("bloc ENC introuvable dans index.html")
+    old = decrypt_enc(json.loads(m.group(1)), pw)
+
+    # Ateliers (publiés uniquement)
+    ws_list = dedup(list_all(api, "workshops", today_iso))
+    ws_det = fetch_details(api, "workshops", [w["id"] for w in ws_list])
+    ws = [w for w in (ws_det[i["id"]] for i in ws_list) if w.get("isPublish")]
+    ateliers = [[w["id"], (w["thematic"] or "").strip(), (w["title"] or "").strip(),
+                 pdate(w["startDate"]), pdate(w["endDate"]), lieu(w), pilotes(w),
+                 horaires(w, "workshopDates")] for w in ws]
+    ateliers.sort(key=lambda a: (a[3], a[0]))
+
+    # Réunions, formations, événements (pas de filtre isPublish)
+    autres = {}
+    for key, ep, dkey in [("reu", "team_meatings", "TeamMeatingDates"),
+                          ("for", "formations", "formationDates"),
+                          ("evt", "events", "eventDates")]:
+        lst = dedup(list_all(api, ep, today_iso))
+        det = fetch_details(api, ep, [x["id"] for x in lst])
+        tup = [[w["id"], (w["title"] or "").strip(), pdate(w["startDate"]), pdate(w["endDate"]),
+                lieu(w), pilotes(w), horaires(w, dkey)] for w in (det[x["id"]] for x in lst)]
+        tup.sort(key=lambda a: (a[2], a[0]))
+        autres[key] = tup
+
+    # Membres
+    users, page = [], 1
+    while True:
+        d = get(f"{api}/api/users/collection", params={"page": page, "pageSize": 500})
+        users.extend(d["items"])
+        if page >= d["pagination"]["totalPages"]:
+            break
+        page += 1
+    users = dedup(users)
+    users.sort(key=lambda u: u["id"])
+    id2name = {u["id"]: name(u) for u in users}
+
+    def ref_name(v):
+        if isinstance(v, dict):
+            return name(v) or "Aucun"
+        if isinstance(v, str) and v.startswith("/api/users/"):
+            try:
+                return id2name.get(int(v.rsplit("/", 1)[1]), "Aucun")
+            except ValueError:
+                return "Aucun"
+        return "Aucun"
+
+    old_dates = {mm[0]: mm[4] for mm in old["adherents"]}
+    new_ids = [u["id"] for u in users if u["id"] not in old_dates]
+    new_dates = {}
+    for i in new_ids:
+        d = get(f"{api}/api/users/{i}")
+        ca = (d or {}).get("createdAt")
+        new_dates[i] = pdate(ca) if ca else ""
+
+    membres = [[u["id"], name(u), u.get("phoneNumber") or "", u.get("email") or "",
+                old_dates.get(u["id"]) or new_dates.get(u["id"]) or "",
+                ref_name(u.get("godFather")), ref_name(u.get("manager"))] for u in users]
+
+    # Adhérents : cotisation réglée depuis moins de 12 mois glissants
+    limit = (today - datetime.timedelta(days=365)).isoformat()
+    adh_ids = sorted(u["id"] for u in users
+                     if u.get("adhesionPaidAt") and pdate(u["adhesionPaidAt"]) >= limit)
+
+    # Garde-fous : en cas d'échec, on sort en erreur SANS toucher à index.html
+    errs = []
+    if len(ateliers) < 100: errs.append(f"ateliers {len(ateliers)} < 100")
+    if len(membres) < 15000: errs.append(f"membres {len(membres)} < 15000")
+    if len(adh_ids) < 1000: errs.append(f"liste filtrée {len(adh_ids)} < 1000")
+    if len(membres) < 0.95 * len(old["adherents"]): errs.append("baisse membres > 5%")
+    if errs:
+        raise RuntimeError("garde-fous: " + "; ".join(errs))
+
+    payload = {"meta": {"majAteliers": today_iso, "majAdherents": today_iso},
+               "cfg": old["cfg"], "ateliers": ateliers, "adherents": membres,
+               "autres": autres, "adherentIds": adh_ids}
+    enc_json = encrypt_payload(payload, pw)
+
+    # Vérification aller-retour du chiffrement
+    if decrypt_enc(json.loads(enc_json), pw)["meta"]["majAteliers"] != today_iso:
+        raise RuntimeError("échec de la vérification de déchiffrement")
+
+    tpl = open("template.html", encoding="utf-8").read()
+    if tpl.count("__ENC__") != 1:
+        raise RuntimeError("template.html invalide")
+    out = tpl.replace("__ENC__", enc_json)
+
+    # Audit : rien de sensible en clair hors du bloc chiffré
+    outside = out.replace(enc_json, "")
+    needles = set()
+    host = urlparse(api).hostname or ""
+    for part in [host] + host.split(".") + host.split("."):
+        for tok in re.split(r"[.-]", part):
+            if len(tok) > 3:
+                needles.add(tok.lower())
+    for full in (old["cfg"].get("lignee") or []) + (old["cfg"].get("moins") or []):
+        for tok in str(full).split():
+            if len(tok) > 3:
+                needles.add(tok.lower())
+    low = outside.lower()
+    bad = [n for n in needles if n in low]
+    if re.search(r"[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}", low):
+        bad.append("email en clair")
+    if re.search(r"(?<!\d)0[1-9](?:[ .-]?\d\d){4}(?!\d)", outside):
+        bad.append("téléphone en clair")
+    if bad:
+        raise RuntimeError(f"audit de confidentialité en échec ({len(bad)} motif(s))")
+
+    open("index.html", "w", encoding="utf-8").write(out)
+    print(f"OK {today_iso} — ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
+          f"formations {len(autres['for'])} | événements {len(autres['evt'])} | "
+          f"membres {len(membres)} (+{len(new_ids)}) | liste filtrée {len(adh_ids)}")
+
+if __name__ == "__main__":
+    try:
+        run()
+    except Exception as e:
+        # logs publics : ne divulguer ni URL, ni noms, ni identifiants
+        msg = str(e)
+        for v in (os.environ.get("API_BASE", ""), os.environ.get("PORTAL_PW", "")):
+            if v:
+                msg = msg.replace(v, "***")
+                h = urlparse(v).hostname or ""
+                if h:
+                    msg = msg.replace(h, "***")
+        print("ECHEC:", type(e).__name__, "-", msg[:300])
+        sys.exit(1)
