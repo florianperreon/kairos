@@ -298,7 +298,10 @@ def run():
                 queue.append(norm(name(u)))
 
     # Données complémentaires (fiche détaillée) pour les membres de la lignée : date d'anniversaire (jour-mois)
-    extra = {int(k): v for k, v in (old.get("extra") or {}).items()}
+    # birthDay est un horodatage UTC (ex. 1994-05-23T22:00:00+00:00 = 24/05 à Paris) :
+    # convertir en Europe/Paris avant de garder MM-JJ. "v": 2 marque les entrées calculées ainsi
+    # (les anciennes, sans "v", sont recalculées une fois).
+    extra = {int(k): v for k, v in (old.get("extra") or {}).items() if isinstance(v, dict) and v.get("v") == 2}
     need = [i for i in sorted(lig_ids) if i not in extra]
     if need:
         with ThreadPoolExecutor(max_workers=8) as ex:
@@ -306,7 +309,11 @@ def run():
             for f in as_completed(futs):
                 d = f.result() or {}
                 bd = d.get("birthDay") or ""
-                extra[futs[f]] = {"bd": bd[5:10] if len(bd) >= 10 else ""}
+                try:
+                    mmdd = pdate(bd)[5:10] if bd else ""
+                except ValueError:
+                    mmdd = bd[5:10] if len(bd) >= 10 else ""
+                extra[futs[f]] = {"bd": mmdd, "v": 2}
     extra = {k: v for k, v in extra.items() if k in lig_ids}
 
     # Adhérents : cotisation réglée depuis moins de 12 mois glissants
