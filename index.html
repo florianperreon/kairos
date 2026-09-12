@@ -93,8 +93,6 @@ section.view.on{display:block}
 .lieu-ville{font-weight:700;color:var(--accent)}
 :root[data-theme="dark"] .lieu-ville{color:var(--accent)}
 .badge-lig{background:var(--gold-soft);color:var(--gold-ink);border-radius:5px;font-size:11px;font-weight:700;padding:1px 6px;letter-spacing:.03em}
-.export-btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer}
-.export-btn:hover{color:var(--ink)}
 table{width:100%;border-collapse:collapse;font-size:14.5px}
 th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
 td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -229,7 +227,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <span class="dlabel">Du</span><input type="date" id="pdFrom"><span class="dlabel">au</span><input type="date" id="pdTo">
         <div class="daybtns" id="pdDays"></div>
       </div>
-      <div class="count-line"><span class="vtoggle" data-vt="pd"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="pdCount"></span><button class="export-btn" id="pdCsv">Exporter CSV</button></div>
+      <div class="count-line"><span class="vtoggle" data-vt="pd"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="pdCount"></span></div>
       <div id="pdList"></div>
       <div id="pdCalWrap" hidden></div>
     </section>
@@ -243,7 +241,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <div class="daybtns" id="catDays"></div>
       </div>
       <div class="chips" id="catChips"></div>
-      <div class="count-line" style="margin-top:12px"><span class="vtoggle" data-vt="cat"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="catCount"></span><button class="export-btn" id="catCsv">Exporter CSV</button></div>
+      <div class="count-line" style="margin-top:12px"><span class="vtoggle" data-vt="cat"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="catCount"></span></div>
       <div id="catList"></div>
       <div id="catCalWrap" hidden></div>
     </section>
@@ -256,7 +254,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <span class="dlabel">Du</span><input type="date" id="reuFrom"><span class="dlabel">au</span><input type="date" id="reuTo">
         <div class="daybtns" id="reuDays"></div>
       </div>
-      <div class="count-line"><span class="vtoggle" data-vt="reu"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="reuCount"></span><button class="export-btn" id="reuCsv">Exporter CSV</button></div>
+      <div class="count-line"><span class="vtoggle" data-vt="reu"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="reuCount"></span></div>
       <div id="reuList"></div>
       <div id="reuCalWrap" hidden></div>
     </section>
@@ -268,7 +266,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <span class="dlabel">Du</span><input type="date" id="forFrom"><span class="dlabel">au</span><input type="date" id="forTo">
         <div class="daybtns" id="forDays"></div>
       </div>
-      <div class="count-line"><span class="vtoggle" data-vt="for"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="forCount"></span><button class="export-btn" id="forCsv">Exporter CSV</button></div>
+      <div class="count-line"><span class="vtoggle" data-vt="for"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="forCount"></span></div>
       <div id="forList"></div>
       <div id="forCalWrap" hidden></div>
     </section>
@@ -280,7 +278,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
         <span class="dlabel">Du</span><input type="date" id="evtFrom"><span class="dlabel">au</span><input type="date" id="evtTo">
         <div class="daybtns" id="evtDays"></div>
       </div>
-      <div class="count-line"><span class="vtoggle" data-vt="evt"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="evtCount"></span><button class="export-btn" id="evtCsv">Exporter CSV</button></div>
+      <div class="count-line"><span class="vtoggle" data-vt="evt"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="evtCount"></span></div>
       <div id="evtList"></div>
       <div id="evtCalWrap" hidden></div>
     </section>
@@ -568,7 +566,6 @@ function buildPd(){
   };
   const pdDaySel=setupDays('pdDays',()=>render());
   ['pdCat','pdLieu','pdLig','pdFrom','pdTo'].forEach(id=>document.getElementById(id).addEventListener('change',render));
-  document.getElementById('pdCsv').addEventListener('click',()=>exportCsv('parcours_kairos.csv',['Date','Fin','Horaires','Catégorie','Atelier','Lieu','Pilotes','Lien'],(window.__pdRows||[]).map(a=>[a.start,a.end,a.hor,PD_CAT(a.title),a.title,a.lieu,a.pilotes,urlAtelier(a.id)])));
   render();
 }
 
@@ -613,7 +610,6 @@ function buildCat(){
   const catDaySel=setupDays('catDays',()=>render());
   ['catQ','catNiv','catLieu'].forEach(id=>document.getElementById(id).addEventListener('input',render));
   ['catFrom','catTo'].forEach(id=>document.getElementById(id).addEventListener('change',render));
-  document.getElementById('catCsv').addEventListener('click',()=>exportCsv('ateliers_kairos.csv',['Date','Fin','Horaires','Thématique','Atelier','Lieu','Pilotes','Lien'],(window.__catRows||[]).map(a=>[a.start,a.end,a.hor,a.th,a.title,a.lieu,a.pilotes,urlAtelier(a.id)])));
   render();
 }
 
@@ -641,7 +637,6 @@ function buildSimple(p, items, urlFn, label){
   const daySel=setupDays(p+'Days',()=>render());
   document.getElementById(p+'Q').addEventListener('input',render);
   ['Lieu','From','To'].forEach(k=>document.getElementById(p+k).addEventListener('change',render));
-  document.getElementById(p+'Csv').addEventListener('click',()=>exportCsv(p+'_kairos.csv',['Date','Fin','Horaires','Titre','Lieu','Pilotes','Lien'],(window['__'+p+'Rows']||[]).map(a=>[a.start,a.end,a.hor,a.title,a.lieu,a.pilotes,urlFn(a.id)])));
   render();
 }
 
@@ -805,10 +800,6 @@ document.getElementById('sheet').addEventListener('click',e=>{ if(e.target.id===
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeSheet(); document.getElementById('modal').classList.remove('on'); } });
 
 /* ---------- Exports ---------- */
-function exportCsv(fname, headers, rows){
-  const csv=[headers].concat(rows).map(r=>r.map(c=>'"'+String(c??'').replace(/"/g,'""')+'"').join(';')).join('\n');
-  openModal(fname, '﻿'+csv);
-}
 let modalFname='';
 function openModal(fname, content){
   modalFname=fname;
