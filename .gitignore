@@ -1,0 +1,8 @@
+# Captures et fichiers de travail (ne pas publier)
+Claude outputs/
+
+# Fichiers temporaires
+*.tmp
+~$*
+Thumbs.db
+.DS_Store
