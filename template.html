@@ -191,6 +191,8 @@ tr.row:hover td{background:var(--surface-2)}
 .sheet-card h2{font-size:21px;font-weight:800;margin:2px 0 2px}
 .sheet-close{position:absolute;top:14px;right:14px;border:0;background:var(--surface-2);border-radius:7px;width:32px;height:32px;font-size:15px;cursor:pointer;color:var(--ink-2)}
 .kv{display:grid;grid-template-columns:110px 1fr;gap:7px 12px;font-size:14.5px;margin:16px 0}
+.kv.team-lv{grid-template-columns:150px 1fr;margin:8px 0 16px;font-size:14px}
+.kv.team-lv .tipn{cursor:help;border-bottom:1px dotted var(--ink-3)}
 .kv .k{color:var(--ink-2);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;padding-top:2px}
 .sheet-actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
 .sheet-actions a,.sheet-actions button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 12px;font-size:13.5px;cursor:pointer;text-decoration:none}
@@ -1192,6 +1194,12 @@ function openSheet(id){
   while(cur&&guard++<8){ const p=byNormName.get(norm(cur.parrain)); if(!p||chain.includes(p)||p===cur) break; chain.push(p); cur=p; }
   const kids=(children.get(norm(m.name))||[]).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   const mans=(managed.get(norm(m.name))||[]);
+  // Équipe = toute la descendance par parrainage (filleuls, filleuls de filleuls…) ; on compte les adhérents
+  const team=(()=>{ const seen=new Set([m.id]); let lvl=[m], lvlN=0, tot=0; const per=[];
+    while(lvl.length&&lvlN<12){ const next=[]; const who=[]; lvl.forEach(p=>(children.get(norm(p.name))||[]).forEach(k=>{ if(seen.has(k.id)) return; seen.add(k.id); next.push(k); if(ADH.has(k.id)){ tot++; who.push(k.name+' ('+p.name+')'); } })); if(next.length) per.push(who.sort((a,b)=>a.localeCompare(b,'fr'))); lvl=next; lvlN++; }
+    while(per.length&&!per[per.length-1].length) per.pop();   // on s'arrête au dernier niveau qui contient un adhérent
+    return {tot,per}; })();
+  const teamTip=who=>{ const MAXT=80; return (who.slice(0,MAXT).join('\n')+(who.length>MAXT?'\n… +'+(who.length-MAXT)+' autres':'')); };
   const isLig=LIGNEE.some(l=>norm(m.name).includes(l));
   const x=EXTRA[m.id]||{}; const bd=x.bd?(+x.bd.slice(3,5))+' '+MOIS[+x.bd.slice(0,2)-1]:'';
   const ALL=[].concat(A.map(a=>({a,u:urlAtelier(a.id)})),R.map(a=>({a,u:BASE+'teamMeeting/detail/'+a.id})),F.map(a=>({a,u:BASE+'formation/detail/'+a.id})),E.map(a=>({a,u:BASE+'event/detail/'+a.id})));
@@ -1234,6 +1242,7 @@ function openSheet(id){
     (anim.length?'<div class="sub-h">Anime prochainement ('+anim.length+')</div>'+evList(anim):'')+
     (pastAnim.length||pastSub.length?'<div class="sub-h">12 derniers mois</div><div class="meta" style="font-size:13.5px;color:var(--ink-2)">'+pastAnim.length+' atelier'+(pastAnim.length>1?'s':'')+' animé'+(pastAnim.length>1?'s':'')+' · '+pastSub.length+' participation'+(pastSub.length>1?'s':'')+'</div>':'')+
     (chain.length?'<div class="sub-h">Lignée ascendante (parrains)</div><ul class="tree"><li class="me">'+esc(m.name)+'</li>'+chain.map(p=>'<li>'+linkName(p.name)+'</li>').join('')+'</ul>':'')+
+    (kids.length?'<div class="sub-h">Équipe ('+team.tot+' adhérent'+(team.tot>1?'s':'')+')</div>'+(team.per.length?'<div class="kv team-lv">'+team.per.map((who,i)=>'<div class="k">'+(i===0?'Directs (niveau 1)':'Niveau '+(i+1))+'</div><div class="num"><span class="tipn" title="'+esc(teamTip(who))+'">'+who.length+'</span></div>').join('')+'</div>':'<div class="invites">Aucun adhérent dans son équipe.</div>'):'')+
     relBlock('Filleuls',kids)+relBlock('Managés',mans);
   document.getElementById('sheet').classList.add('on');
   document.getElementById('shClose').addEventListener('click',closeSheet);
