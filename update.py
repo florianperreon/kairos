@@ -44,6 +44,14 @@ def decrypt_enc(enc: dict, pw: bytes) -> dict:
     pt = AESGCM(key).decrypt(base64.b64decode(enc["iv"]), base64.b64decode(enc["data"]), None)
     return json.loads(gzip.decompress(pt).decode("utf-8"))
 
+def encrypt_with_salt(obj: dict, pw: bytes, salt_b64: str) -> str:
+    """Chiffre obj avec la clé dérivée du sel donné (pour partager la clé du bloc ENC)."""
+    raw = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    gz = gzip.compress(raw, 9)
+    salt, iv = base64.b64decode(salt_b64), secrets.token_bytes(12)
+    ct = AESGCM(derive(pw, salt, ITER)).encrypt(iv, gz, None)
+    return json.dumps({"iv": base64.b64encode(iv).decode(), "data": base64.b64encode(ct).decode()})
+
 def encrypt_payload(obj: dict, pw: bytes) -> str:
     raw = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     gz = gzip.compress(raw, 9)
@@ -336,17 +344,25 @@ def run():
                "extra": {str(k): v for k, v in extra.items()}}
     enc_json = encrypt_payload(payload, pw)
 
+    # Contenu éditorial (guide, FAQ, ressources) : contenu.enc est chiffré avec le mot de passe
+    # et son propre sel ; on le rechiffre ici avec la clé du bloc ENC (même sel, IV distinct)
+    # pour que le portail n'ait qu'une seule clé à dériver.
+    cenc_json = "null"
+    if os.path.exists("contenu.enc"):
+        cobj = decrypt_enc(json.load(open("contenu.enc", encoding="utf-8")), pw)
+        cenc_json = encrypt_with_salt(cobj, pw, json.loads(enc_json)["salt"])
+
     # Vérification aller-retour du chiffrement
     if decrypt_enc(json.loads(enc_json), pw)["meta"]["majAteliers"] != today_iso:
         raise RuntimeError("échec de la vérification de déchiffrement")
 
     tpl = open("template.html", encoding="utf-8").read()
-    if tpl.count("__ENC__") != 1:
+    if tpl.count("__ENC__") != 1 or tpl.count("__CENC__") != 1:
         raise RuntimeError("template.html invalide")
-    out = tpl.replace("__ENC__", enc_json)
+    out = tpl.replace("__ENC__", enc_json).replace("__CENC__", cenc_json)
 
-    # Audit : rien de sensible en clair hors du bloc chiffré
-    outside = out.replace(enc_json, "")
+    # Audit : rien de sensible en clair hors des blocs chiffrés
+    outside = out.replace(enc_json, "").replace(cenc_json, "")
     needles = set()
     host = urlparse(api).hostname or ""
     for part in [host] + host.split(".") + host.split("."):

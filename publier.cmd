@@ -1,11 +1,14 @@
 @echo off
 cd /d "%~dp0"
 echo === Mise de cote des fichiers modifies ===
-git stash push -- index.html template.html update.py || goto err
+git reset -q -- contenu.enc 2>nul
+git ls-files --error-unmatch contenu.enc >nul 2>nul || git add contenu.enc
+git update-index -q --refresh
+git stash push -- index.html template.html update.py contenu.enc || goto err
 echo === git pull ===
 git pull --ff-only || goto err
 echo === Reprise des fichiers prepares par Claude ===
-git checkout stash@{0} -- index.html template.html update.py || goto err
+git checkout stash@{0} -- index.html template.html update.py contenu.enc || goto err
 git stash drop
 git add -A
 git commit -m "Mise a jour du portail (Claude) %date% %time:~0,5%" || goto err
