@@ -563,7 +563,7 @@ const isPast = a => a.end < todayIso;
 const pubLabel = p => p===''?'Ouvert à tous':(p==='?'?'Public restreint':p+' et +');
 function evExtras(a){
   const parts=[];
-  if(a.pub!=null) parts.push('<span class="xtra pub'+(a.pub?' res':'')+'" title="Public visé (statut FORMAN minimum)">'+esc(pubLabel(a.pub))+'</span>');
+  if(a.pub!=null) parts.push('<span class="xtra pub'+(a.pub?' res':'')+'" title="Public visé (statut minimum requis)">'+esc(pubLabel(a.pub))+'</span>');
   if(a.hab) parts.push('<span class="xtra pub res" title="Habilitation requise">Habilitation : '+esc(a.hab)+'</span>');
   const isFull=x=>x.max>0&&x.total>=x.max;
   if(a.max>0){ const full=isFull(a); parts.push('<span class="xtra places'+(full?' full':'')+'" title="Inscrits / places">'+a.total+'/'+a.max+(full?' · complet':'')+'</span>');

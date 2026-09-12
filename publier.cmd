@@ -1,5 +1,7 @@
 @echo off
 cd /d "%~dp0"
+rem Le dossier .github est protege : Claude depose le workflow dans "Claude outputs", on le met en place ici
+if exist "Claude outputs\update.yml" move /y "Claude outputs\update.yml" ".github\workflows\update.yml" >nul
 echo === Mise de cote des fichiers modifies ===
 git reset -q -- contenu.enc 2>nul
 git ls-files --error-unmatch contenu.enc >nul 2>nul || git add contenu.enc
