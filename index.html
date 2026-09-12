@@ -242,7 +242,7 @@ footer{margin-top:40px;font-size:12.5px;color:var(--ink-3);text-align:center}
     <section class="view on" id="v-home">
       <div class="panel welcome" id="welcome"></div>
       <div class="panel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
-      <div class="panel"><h2>Anniversaires dans ta lignée <span class="badge-lig">14 jours</span></h2><div id="homeBd"></div></div>
+      <div class="panel"><h2>Anniversaires dans ta lignée <span class="badge-lig">Adhérents · 14 jours</span></h2><div id="homeBd"></div></div>
     </section>
 
     <section class="view" id="v-pd">
@@ -555,10 +555,10 @@ function buildHome(){
   const bds=[];
   const mmdd=d=>String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   for(let i=0;i<14;i++){ const d=new Date(TODAY); d.setDate(d.getDate()+i); const k=mmdd(d);
-    M.forEach(m=>{ const x=EXTRA[m.id]; if(x&&x.bd===k&&LIGNEE_IDS.has(m.id)) bds.push({m,d,i}); }); }
+    M.forEach(m=>{ const x=EXTRA[m.id]; if(x&&x.bd===k&&LIGNEE_IDS.has(m.id)&&ADH.has(m.id)) bds.push({m,d,i}); }); }
   const bdEl=document.getElementById('homeBd');
   if(bdEl) bdEl.innerHTML = bds.length ? '<div class="pill-list">'+bds.map(b=>'<span class="link lig-open" data-id="'+b.m.id+'">'+(b.i===0?'🎂 ':'')+esc(b.m.name)+' <span class="num" style="color:var(--ink-3)">'+(b.i===0?'aujourd\u2019hui':b.i===1?'demain':b.d.getDate()+' '+MOIS[b.d.getMonth()])+'</span></span>').join('')+'</div>'
-    : '<p style="color:var(--ink-2)">'+(Object.keys(EXTRA).length?'Aucun anniversaire dans les 14 prochains jours.':'Les dates d\u2019anniversaire arriveront à la prochaine mise à jour des données.')+'</p>';
+    : '<p style="color:var(--ink-2)">'+(Object.keys(EXTRA).length?'Aucun anniversaire d\u2019adhérent dans les 14 prochains jours.':'Les dates d\u2019anniversaire arriveront à la prochaine mise à jour des données.')+'</p>';
 }
 
 /* ---------- Graphiques SVG ---------- */
