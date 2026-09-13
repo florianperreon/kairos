@@ -95,6 +95,8 @@ section.view.on{display:block}
 .filters label.chk{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--ink-2);cursor:pointer}
 .filters input[type=date]{padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);font-size:13.5px}
 .filters .dlabel{font-size:13px;color:var(--ink-2)}
+.reset-btn{margin-left:auto;border:1px solid var(--line-2);background:var(--surface);color:var(--accent);border-radius:8px;padding:7px 11px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.reset-btn:hover{background:var(--accent-soft)}
 .daybtns{display:flex;gap:4px}
 .daybtns button{width:32px;height:34px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;padding:0}
 .daybtns button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -444,7 +446,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 .ck-it.on .t{color:var(--accent)}
 .ck-empty{padding:18px 16px;color:var(--ink-3);font-size:14px}
 .ck-foot{display:flex;gap:14px;padding:8px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3)}
-@media(max-width:640px){.icon-btn .kbd{display:none}#cmdk{padding:12px}.ck-it .s{display:none}.ck-foot{display:none}}
+@media(max-width:640px){.icon-btn .kbd{display:none}#linkBtn{font-size:12px;padding:7px 8px}#cmdk{padding:12px}.ck-it .s{display:none}.ck-foot{display:none}}
 
 /* ---------- Bandeau de fraîcheur ---------- */
 .fresh{display:flex;gap:10px;align-items:flex-start;background:#FBF2D5;color:#5C4400;border-left:3px solid #E0B341;border-radius:8px;padding:10px 12px;margin:0 0 14px;font-size:13.5px;line-height:1.45}
@@ -500,6 +502,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
     <div class="brand">KAIROS<small>Ressources partagées<span id="brandMaj"></span></small></div>
     <div class="top-actions">
       <button class="icon-btn" id="searchBtn" title="Rechercher partout (Ctrl K)">🔍 Rechercher<span class="kbd">Ctrl K</span></button>
+      <button class="icon-btn" id="linkBtn" title="Copier le lien de cette vue (onglet + filtres) pour le partager">🔗 Lien</button>
       <button class="icon-btn" id="installBtn" title="Installer Kairos comme une application" hidden>📲 Installer</button>
       <button class="icon-btn" id="themeBtn" title="Basculer clair/sombre">◐ Thème</button>
       <button class="icon-btn" id="lockBtn" title="Verrouiller">🔒 Verrouiller</button>
@@ -544,6 +547,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
         <label class="chk"><input type="checkbox" id="pdReco" checked> Ateliers recommandés</label>
         <label class="chk"><input type="checkbox" id="pdLig"> Pilotés par ma lignée</label>
         <label class="chk"><input type="checkbox" id="pdPast"> Inclure les passés</label>
+        <button type="button" class="reset-btn" data-reset="pd" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
         <span class="dlabel plabel">Période</span><span class="dlabel">Du</span><input type="date" id="pdFrom"><span class="dlabel">au</span><input type="date" id="pdTo">
@@ -560,6 +564,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
         <select id="catNiv"><option value="">Tous niveaux</option></select>
         <select id="catLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="catPast"> Inclure les passés</label>
+        <button type="button" class="reset-btn" data-reset="cat" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
         <span class="dlabel plabel">Période</span><span class="dlabel">Du</span><input type="date" id="catFrom"><span class="dlabel">au</span><input type="date" id="catTo">
@@ -577,6 +582,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
         <input type="search" id="reuQ" placeholder="Rechercher une réunion, un animateur…">
         <select id="reuLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="reuPast"> Inclure les passés</label>
+        <button type="button" class="reset-btn" data-reset="reu" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
         <span class="dlabel plabel">Période</span><span class="dlabel">Du</span><input type="date" id="reuFrom"><span class="dlabel">au</span><input type="date" id="reuTo">
@@ -592,6 +598,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
         <input type="search" id="forQ" placeholder="Rechercher une formation…">
         <select id="forLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="forPast"> Inclure les passés</label>
+        <button type="button" class="reset-btn" data-reset="for" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
         <span class="dlabel plabel">Période</span><span class="dlabel">Du</span><input type="date" id="forFrom"><span class="dlabel">au</span><input type="date" id="forTo">
@@ -607,6 +614,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
         <input type="search" id="evtQ" placeholder="Rechercher un événement…">
         <select id="evtLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="evtPast"> Inclure les passés</label>
+        <button type="button" class="reset-btn" data-reset="evt" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
         <span class="dlabel plabel">Période</span><span class="dlabel">Du</span><input type="date" id="evtFrom"><span class="dlabel">au</span><input type="date" id="evtTo">
@@ -623,6 +631,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
         <select id="annDep"><option value="">Tous départements</option></select>
         <label class="chk"><input type="checkbox" id="annAdh"> Adhérents</label>
         <label class="chk"><input type="checkbox" id="annFav"> ★ Favoris</label>
+        <button type="button" class="reset-btn" data-reset="ann" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="count-line"><span id="annCount"></span></div>
       <div class="tbl-wrap">
@@ -873,14 +882,76 @@ function showTab(v){
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
 }
 document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('click',()=>{
-  showTab(b.dataset.v);
-  if(location.hash.startsWith('#p/')) history.replaceState(null,'',' ');
+  showTab(b.dataset.v); curTab=b.dataset.v;
+  syncHash(true);
   window.scrollTo({top:0});
 }));
+
+/* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
+// Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
+const TABS=['home','veille','pd','cat','reu','for','evt','ann','stats'];
+// Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
+const TAB_SLUG={home:'accueil',veille:'veille',pd:'parcours-decouverte',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',stats:'statistiques'};
+const SLUG_TAB=Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k]));
+const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
+let curTab='home', APPLYING=false;
+const ctrlKey=(el,tab)=>(el.id.startsWith(tab)?el.id.slice(tab.length):el.id).toLowerCase();
+function tabState(tab){
+  const p=new URLSearchParams(); const sec=document.getElementById('v-'+tab); if(!sec) return p;
+  sec.querySelectorAll('.filters input[id], .filters select[id]').forEach(el=>{
+    const k=ctrlKey(el,tab);
+    if(el.type==='checkbox'){ if(el.checked!==el.defaultChecked) p.set(k, el.checked?'1':'0'); }
+    else if(el.value) p.set(k, el.value);
+  });
+  const days=[...sec.querySelectorAll('.daybtns button.on')].map(b=>b.dataset.d); if(days.length) p.set('j',days.join(','));
+  const chips=[...sec.querySelectorAll('.chips .chip')], on=chips.filter(c=>c.classList.contains('on'));
+  if(chips.length&&on.length<chips.length) p.set('th', on.map(c=>c.dataset.t).join('|'));
+  const vt=sec.querySelector('.vtoggle button.on'); if(vt&&vt.dataset.m!=='list') p.set('vue',vt.dataset.m);
+  sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ if(i.value) p.set('f_'+i.dataset.f,i.value); });
+  if(tab==='ann'&&typeof ANN_SORT!=='undefined'&&(ANN_SORT.col!=='date'||ANN_SORT.dir!=='desc')) p.set('tri',ANN_SORT.col+'.'+ANN_SORT.dir);
+  return p;
+}
+function hashFor(tab){ const q=tabState(tab).toString(); return '#'+(TAB_SLUG[tab]||tab)+(q?'?'+q:''); }
+function updateResetBtns(){ TABS.forEach(t=>{ const b=document.querySelector('.reset-btn[data-reset="'+t+'"]'); if(b) b.hidden = tabState(t).toString()===''; }); }
+document.querySelectorAll('.reset-btn').forEach(b=>b.addEventListener('click',()=>{ applyState(b.dataset.reset, new URLSearchParams()); syncHash(false); }));
+function syncHash(push){
+  if(APPLYING||!window.__booted||location.hash.startsWith('#p/')) return;
+  updateResetBtns();
+  const h=hashFor(curTab); if(location.hash===h) return;
+  try{ (push?history.pushState:history.replaceState).call(history,null,'',h); }catch(_){}
+}
+const fire=(el,types)=>types.forEach(t=>el.dispatchEvent(new Event(t,{bubbles:true})));
+function applyState(tab,p){
+  APPLYING=true;
+  try{
+    const sec=document.getElementById('v-'+tab); if(!sec) return;
+    sec.querySelectorAll('.filters input[id], .filters select[id]').forEach(el=>{
+      const k=ctrlKey(el,tab);
+      if(el.type==='checkbox'){ const want=p.has(k)?p.get(k)==='1':el.defaultChecked; if(el.checked!==want){ el.checked=want; fire(el,['change','input']); } }
+      else { const want=p.get(k)||''; if(el.value!==want){ el.value=want; fire(el,['input','change']); } }
+    });
+    const days=new Set((p.get('j')||'').split(',').filter(Boolean));
+    sec.querySelectorAll('.daybtns button').forEach(b=>{ if(b.classList.contains('on')!==days.has(b.dataset.d)) b.click(); });
+    const chips=[...sec.querySelectorAll('.chips .chip')];
+    if(chips.length){ const want=p.has('th')?new Set(p.get('th').split('|')):new Set(chips.map(c=>c.dataset.t));
+      for(let pass=0;pass<3;pass++){ let changed=false; chips.forEach(c=>{ if(c.classList.contains('on')!==want.has(c.dataset.t)){ c.click(); changed=true; } }); if(!changed) break; } }
+    const vue=p.get('vue')||'list'; const vb=sec.querySelector('.vtoggle button[data-m="'+vue+'"]'); if(vb&&!vb.classList.contains('on')) vb.click();
+    sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ const want=p.get('f_'+i.dataset.f)||''; if(i.value!==want){ i.value=want; fire(i,['input']); } });
+    if(tab==='ann'&&typeof ANN_SORT!=='undefined'){ const [c,d]=(p.get('tri')||'date.desc').split('.'); if(ANN_SORT.col!==c||ANN_SORT.dir!==d){ const th=document.querySelector('#annHead th[data-col="'+c+'"]'); if(th){ th.click(); if(ANN_SORT.dir!==d) th.click(); } } }
+  } finally { APPLYING=false; }
+  updateResetBtns();
+}
+// Toute manipulation d'un filtre met l'URL à jour (sans entrée d'historique)
+document.addEventListener('input',e=>{ if(e.target.closest('section.view')) setTimeout(()=>syncHash(false),0); });
+document.addEventListener('change',e=>{ if(e.target.closest('section.view')) setTimeout(()=>syncHash(false),0); });
+document.addEventListener('click',e=>{ if(e.target.closest('section.view .daybtns button, section.view .chips .chip, section.view .vtoggle button, #annHead th.sortable')) setTimeout(()=>syncHash(false),0); });
 function routeHash(){
   const h=location.hash||'';
-  if(h.startsWith('#p/')){ const slug=decodeURIComponent(h.slice(3)); if(CONTENU&&CONTENU.pages&&CONTENU.pages[slug]) showPage(slug); }
-  if(h==='#faq-apercu') buildFaq(true);
+  if(h.startsWith('#p/')){ const slug=decodeURIComponent(h.slice(3)); if(CONTENU&&CONTENU.pages&&CONTENU.pages[slug]) showPage(slug); return; }
+  if(h==='#faq-apercu'){ buildFaq(true); return; }
+  const m=h.match(/^#([a-z-]+)(?:\?(.*))?$/); const tab=m?tabFromSlug(m[1]):null;
+  if(tab){ const btn=document.querySelector('nav.tabs button[data-v="'+tab+'"]'); if(btn&&btn.hidden) return;
+    showTab(tab); curTab=tab; applyState(tab, new URLSearchParams(m[2]||'')); }
 }
 window.addEventListener('hashchange',()=>{ if(window.__booted) routeHash(); });
 window.addEventListener('popstate',()=>{ if(window.__booted) routeHash(); });
@@ -1048,7 +1119,7 @@ function freshBanner(p){
   const old=months>=6;
   return '<div class="fresh'+(old?' old':'')+'"><span>'+(old?'⚠️':'⏱')+'</span><div><b>Contenu daté — mis à jour en '+MOIS[mo-1]+' '+y+'.</b> '+(old?'Plus de '+months+' mois : les chiffres (frais, minimums, plafonds, allocations) ont pu changer — vérifie-les avant de les utiliser en rendez-vous.':'Les chiffres (frais, minimums, plafonds, allocations) évoluent : vérifie-les avant de les utiliser en rendez-vous.')+'</div></div>';
 }
-function closePage(){ const sh=document.getElementById('psheet'); sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); document.body.classList.remove('ps-open'); if(location.hash.startsWith('#p/')){ try{ history.replaceState(null,'',' '); }catch(_){} } }
+function closePage(){ const sh=document.getElementById('psheet'); sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); document.body.classList.remove('ps-open'); if(location.hash.startsWith('#p/')){ try{ history.replaceState(null,'',hashFor(curTab)); }catch(_){} } }
 document.getElementById('psheet').addEventListener('click',e=>{ if(e.target.id==='psheet') closePage(); });
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('psheet').classList.contains('on')) return;
@@ -1694,6 +1765,13 @@ function initObjections(card){
   };
   shuffle(); render(); renderList();
 }
+
+// Bouton « Lien » : copie l'URL courante (onglet + filtres) pour la partager à la lignée
+document.getElementById('linkBtn').addEventListener('click',async e=>{
+  if(!window.__booted) return; syncHash(false);
+  const url=location.href, b=e.currentTarget, ok=()=>{ b.textContent='Copié ✓'; setTimeout(()=>b.textContent='🔗 Lien',1500); };
+  try{ await navigator.clipboard.writeText(url); ok(); }catch(_){ openModal('lien-kairos.txt', url); }
+});
 
 /* ---------- Application installable (PWA) ---------- */
 let deferredInstall=null;
