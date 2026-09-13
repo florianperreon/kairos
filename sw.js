@@ -2,8 +2,8 @@
    Le portail est une page unique dont les données sont chiffrées ; le cache ne contient donc
    rien de lisible sans le mot de passe. Stratégie : la page (index.html) est demandée au réseau
    en priorité et le cache sert de secours (hors ligne) ; icônes, manifeste et polices en cache d'abord. */
-const VERSION = 'kairos-v3';
-const CORE = ['./', './index.html', './donnees.js', './contenu.js', './meta.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
+const VERSION = 'kairos-v4';
+const CORE = ['./', './index.html', './donnees.js', './contenu.js', './veille.js', './meta.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));

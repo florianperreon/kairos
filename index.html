@@ -110,6 +110,39 @@ section.view.on{display:block}
 .lieu-visio{color:var(--ink-3)}
 .lieu-ville{font-weight:700;color:var(--accent)}
 :root[data-theme="dark"] .lieu-ville{color:var(--accent)}
+.vhead-t{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}.vhead-t h2{margin:0}
+.vhead-s{font-size:14px;color:var(--ink-2);margin:2px 0}.vhead-m{font-size:12.5px;color:var(--ink-3);margin-top:6px}
+.vbreak{border-left:4px solid var(--line-2)}.vbreak.hot{border-left-color:var(--bad)}
+.vdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--line-2);margin-right:8px;vertical-align:middle}
+.vbreak.hot .vdot{background:var(--bad);box-shadow:0 0 0 4px rgba(214,69,69,.18)}
+.vbks{display:grid;gap:12px}
+.vbk{background:var(--surface-2);border-radius:10px;padding:12px 14px;font-size:14px}
+.vbk-h{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink-3);margin-bottom:4px;flex-wrap:wrap}
+.vbk-d{font-weight:700;color:var(--bad)}
+.vbk-ax{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:1px 8px}
+.vbk>b{font-family:"Sora";font-size:15px}.vbk p{margin:4px 0;color:var(--ink-2)}
+.vlast{border-top:4px solid var(--accent)}
+.vaxes{display:grid;gap:14px}@media(min-width:900px){.vaxes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.vax{background:var(--surface-2);border-radius:12px;padding:14px 16px}.vax.off{opacity:.55}
+.vax-h{display:flex;align-items:center;gap:8px;font-family:"Sora";font-size:15px;font-weight:700;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.vic{font-size:18px}
+.vtag{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700}
+.vsujet h3{font-family:"Sora";font-size:15.5px;font-weight:700;margin:4px 0}
+.vsujet p{font-size:14px;color:var(--ink-2);margin:4px 0}
+.vimp{display:block;background:var(--surface);border-left:3px solid var(--gold);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13.5px}
+.vimp b{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--gold-ink);margin-bottom:2px}
+.vimp-in{display:block;font-size:13px;color:var(--ok);margin-top:2px}
+.vsrcs{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.vsrc{font-size:12.5px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--surface);border-radius:20px;padding:2px 9px;display:inline-block}
+.vsrc:hover{border-color:var(--accent)}
+.vbr{margin-top:10px}
+.vbr-t{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:700;margin-bottom:4px}
+.vbr ul{margin:0;padding-left:18px;font-size:13.5px}.vbr li{margin:6px 0;color:var(--ink-2)}.vbr li b{color:var(--ink);font-weight:700}
+.vempty{font-size:14px;color:var(--ink-3);margin:0}
+details.vhist{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:10px;background:var(--surface)}
+details.vhist>summary{cursor:pointer;font-weight:600;font-size:14.5px}
+details.vhist[open]>summary{margin-bottom:12px;color:var(--accent)}
+.vhist-b .vax{background:var(--ground)}.vbks.arch{margin-top:12px}
 .badge-lig{background:var(--gold-soft);color:var(--gold-ink);border-radius:5px;font-size:11px;font-weight:700;padding:1px 6px;letter-spacing:.03em}
 table{width:100%;border-collapse:collapse;font-size:14.5px}
 th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
@@ -474,6 +507,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
   </header>
   <nav class="tabs">
     <button data-v="home" class="on">Accueil</button>
+    <button data-v="veille" hidden>Veille</button>
     <button data-v="pd" id="pdTabBtn">Parcours</button>
     <button data-v="cat">Ateliers</button>
     <button data-v="reu">Réunions d'équipe</button>
@@ -494,6 +528,13 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
       <div class="panel" id="homeRituelsPanel" hidden><h2>Les rituels de la lignée</h2><div class="rituels" id="homeRituels"></div></div>
       <div class="panel" id="homeFaqPanel" hidden><h2>Questions fréquentes <span class="badge-lig" id="faqCount"></span></h2><div class="faq-tools"><input type="search" id="faqQ" placeholder="Rechercher une question…"><span id="faqThemes"></span></div><div class="faq" id="faqList"></div></div>
       <div class="panel" id="homeResPanel" hidden><h2>Ressources utiles</h2><div class="res" id="homeRes"></div></div>
+    </section>
+
+    <section class="view" id="v-veille">
+      <div class="panel" id="veilleHead"></div>
+      <div class="panel vbreak" id="veilleBreak"></div>
+      <div id="veilleLast"></div>
+      <div class="panel" id="veilleHistoPanel" hidden><h2>Historique</h2><div id="veilleHisto"></div></div>
     </section>
 
     <section class="view" id="v-pd">
@@ -619,7 +660,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 // Chargés par balise <script> (et non fetch) pour fonctionner aussi en double-cliquant index.html (file://).
 const ENC_INLINE = null;
 const CENC_INLINE = null;
-let ENC = null, CENC = null, META = null, DATA = null, CONTENU = null;
+let ENC = null, CENC = null, VENC = null, META = null, DATA = null, CONTENU = null, VEILLE = null;
 const loadScript = f => new Promise((res, rej) => { const el = document.createElement('script'); el.src = f + (location.protocol === 'file:' ? '' : '?t=' + Date.now()); el.onload = () => res(); el.onerror = () => rej(new Error('CHARGEMENT ' + f)); document.head.appendChild(el); });
 const METAP = loadScript('meta.js').then(() => { META = window.KAIROS_META || null; showMeta(); }).catch(() => {});
 const BLOCKS = (async () => {
@@ -627,6 +668,7 @@ const BLOCKS = (async () => {
   await loadScript('donnees.js'); ENC = window.KAIROS_DONNEES;
   if (!ENC || !ENC.data) throw new Error('CHARGEMENT donnees.js');
   try { await loadScript('contenu.js'); CENC = window.KAIROS_CONTENU || null; } catch (e) { CENC = null; }
+  try { await loadScript('veille.js'); VENC = window.KAIROS_VEILLE || null; } catch (e) { VENC = null; }
 })();
 BLOCKS.catch(() => {});
 function showMeta(){
@@ -724,11 +766,15 @@ async function decryptWith(keys){
   if (CENC && CENC.data){
     try{ CONTENU = await decBlock(CENC, keys[CENC.salt||ENC.salt]); }catch(e){ CONTENU = null; }
   }
+  VEILLE = null;
+  if (VENC && VENC.data){
+    try{ VEILLE = await decBlock(VENC, keys[VENC.salt||ENC.salt]); }catch(e){ VEILLE = null; }
+  }
   return data;
 }
 async function keysFor(pw){
   const keys = {}; keys[ENC.salt] = await deriveKey(pw, ENC);
-  if(CENC && CENC.salt && CENC.salt!==ENC.salt) keys[CENC.salt] = await deriveKey(pw, CENC);
+  for(const blk of [CENC, VENC]) if(blk && blk.salt && !keys[blk.salt]) keys[blk.salt] = await deriveKey(pw, blk);
   return keys;
 }
 async function tryUnlock(pw){
@@ -747,6 +793,8 @@ async function silentUnlock(){
     const store = s.startsWith('{') ? JSON.parse(s) : {[ENC.salt]: s};   // ancien format : une seule clé brute
     const keys = {};
     for(const salt of [ENC.salt, (CENC&&CENC.salt)||ENC.salt]){ if(!store[salt]) return false; keys[salt] = await crypto.subtle.importKey('raw', b64(store[salt]), {name:'AES-GCM'}, false, ['decrypt']); }
+    const vsalt = VENC && VENC.salt;   // veille.js : facultatif (clé absente d'une session ouverte avant son arrivée)
+    if(vsalt && !keys[vsalt] && store[vsalt]) keys[vsalt] = await crypto.subtle.importKey('raw', b64(store[vsalt]), {name:'AES-GCM'}, false, ['decrypt']);
     DATA = await decryptWith(keys); boot(); return true;
   }catch(e){ try{localStorage.removeItem('kairos_k');}catch(_){} return false; }
 }
@@ -812,7 +860,7 @@ function boot(){
   document.getElementById('foot').innerHTML = 'Données '+esc(DATA.cfg&&DATA.cfg.src||'')+' — mise à jour le '+esc(fmtMaj(META&&META.maj?META:DATA.meta))+' · Fait avec <span class="heart">♥</span> par '+esc(DATA.cfg&&DATA.cfg.auteur||'');
   document.getElementById('brandMaj').textContent = ' · Mise à jour le '+fmtMaj(META&&META.maj?META:DATA.meta);
   initCalToggles();
-  buildHome(); buildPd(); buildCat(); buildAnn(); buildContenu(); buildWeek(); buildSearchIndex(); routeHash();
+  buildHome(); buildPd(); buildCat(); buildAnn(); buildContenu(); buildVeille(); buildWeek(); buildSearchIndex(); routeHash();
   buildSimple('reu', R, id=>BASE+'teamMeeting/detail/'+id, 'réunion');
   buildSimple('for', F, id=>BASE+'formation/detail/'+id, 'formation');
   buildSimple('evt', E, id=>BASE+'event/detail/'+id, 'événement');
@@ -1483,6 +1531,96 @@ function buildWeek(){
 }
 
 /* ---------- Recherche globale (Ctrl K) ---------- */
+/* ---------- Veille ---------- */
+// veille.js : bloc chiffré séparé (même mot de passe, sel de contenu.js), réécrit chaque semaine par
+// les tâches planifiées. VEILLE = {maj, axes[], editions[{sem,du,au,maj,items{axe:{sujet,breves[]}}}], breaking[]}
+const VAXD = [
+  {id:'fisca',    t:'Fiscalité & réglementation', ic:'⚖️'},
+  {id:'marches',  t:'Marchés & économie',         ic:'📈'},
+  {id:'produits', t:'Produits & solutions',       ic:'🧰'},
+  {id:'metier',   t:'Profession & concurrence',   ic:'🏛️'},
+  {id:'clients',  t:'Clients & prospection',      ic:'🎯'}
+];
+const vAxes = () => (VEILLE && VEILLE.axes && VEILLE.axes.length) ? VEILLE.axes : VAXD;
+const vAx = id => vAxes().find(a=>a.id===id) || {id:id, t:id, ic:'•'};
+const vMonday = iso => { const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.toISOString().slice(0,10); };
+const vAddDays = (iso,n) => { const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const vPeriode = (du,au) => {
+  if(!du||!au) return '';
+  const a=new Date(du+'T00:00:00'), b=new Date(au+'T00:00:00');
+  const sameM = a.getMonth()===b.getMonth() && a.getFullYear()===b.getFullYear();
+  return 'du '+a.getDate()+(sameM?'':' '+MOIS[a.getMonth()])+(a.getFullYear()===b.getFullYear()?'':' '+a.getFullYear())+' au '+b.getDate()+' '+MOIS[b.getMonth()]+' '+b.getFullYear();
+};
+const vLink = (u,t) => u ? '<a class="vsrc" href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(t||'source')+' ↗</a>' : '';
+const vSrcs = arr => (arr&&arr.length) ? '<div class="vsrcs">'+arr.map(s=>vLink(s.u,s.t)).join('')+'</div>' : '';
+const vImp = txt => txt ? '<div class="vimp"><b>Ce que ça change pour toi</b><span>'+esc(txt)+'</span></div>' : '';
+function vSujetHtml(s){
+  if(!s||!s.t) return '';
+  return '<div class="vsujet"><span class="vtag">Le sujet de la semaine</span><h3>'+esc(s.t)+'</h3>'
+    + (s.r?'<p>'+esc(s.r)+'</p>':'') + vImp(s.i) + vSrcs(s.src) + '</div>';
+}
+function vBrevesHtml(list){
+  if(!list||!list.length) return '';
+  return '<div class="vbr"><span class="vbr-t">En bref</span><ul>'+list.map(b=>'<li><b>'+esc(b.t)+'</b>'
+    +(b.r?' — '+esc(b.r):'')
+    +(b.i?'<span class="vimp-in">→ '+esc(b.i)+'</span>':'')
+    +(b.u?' '+vLink(b.u,b.s||'source'):'')+'</li>').join('')+'</ul></div>';
+}
+function vAxeHtml(ed, ax){
+  const it = (ed.items||{})[ax.id];
+  const body = it ? (vSujetHtml(it.sujet)+vBrevesHtml(it.breves)) : '<p class="vempty">Pas de veille publiée pour cet axe cette semaine.</p>';
+  return '<div class="vax'+(it?'':' off')+'"><div class="vax-h"><span class="vic">'+(ax.ic||'•')+'</span><b>'+esc(ax.t)+'</b></div>'+body+'</div>';
+}
+const vEditionHtml = ed => '<div class="vaxes">'+vAxes().map(a=>vAxeHtml(ed,a)).join('')+'</div>';
+function vBkHtml(b){
+  const ax = vAx(b.axe);
+  return '<div class="vbk"><div class="vbk-h"><span class="vbk-d">'+esc(fmtD(b.d))+'</span><span class="vbk-ax">'+(ax.ic||'•')+' '+esc(ax.t)+'</span></div>'
+    + '<b>'+esc(b.t)+'</b>' + (b.r?'<p>'+esc(b.r)+'</p>':'') + vImp(b.i) + vLink(b.u,b.s||'source') + '</div>';
+}
+function buildVeille(){
+  const btn = document.querySelector('nav.tabs button[data-v="veille"]');
+  if(!VEILLE || !VEILLE.editions){ if(btn) btn.hidden = true; return; }
+  if(btn) btn.hidden = false;
+  const eds = (VEILLE.editions||[]).slice().sort((a,b)=>(b.du||'').localeCompare(a.du||''));
+  const last = eds[0] || null;
+  const lundi = vMonday(todayIso);
+  const bk = (VEILLE.breaking||[]).filter(b=>b.d>=lundi).sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  document.getElementById('veilleHead').innerHTML =
+    '<div class="vhead-t"><h2>Veille patrimoniale</h2><span class="badge-lig">Hebdo · lundi 4 h</span></div>'
+    + '<p class="vhead-s">Cinq axes suivis chaque semaine : '+vAxes().map(a=>(a.ic||'')+' '+esc(a.t)).join(' · ')+'.</p>'
+    + (VEILLE.maj ? '<p class="vhead-m">Dernière mise à jour le '+esc(fmtD(VEILLE.maj.slice(0,10)))+' à '+esc(VEILLE.maj.slice(11,16).replace(':','h'))+'</p>' : '');
+  const bkEl = document.getElementById('veilleBreak');
+  bkEl.innerHTML = '<h2><span class="vdot"></span>Breaking news — semaine en cours</h2>'
+    + (bk.length ? '<div class="vbks">'+bk.map(vBkHtml).join('')+'</div>'
+                 : '<p class="vempty">Rien d’urgent depuis lundi. Le radar passe chaque matin du mardi au vendredi et n’ajoute une alerte que si elle change vraiment la donne.</p>');
+  bkEl.classList.toggle('hot', bk.length>0);
+  document.getElementById('veilleLast').innerHTML = last
+    ? '<div class="panel vlast"><div class="vhead-t"><h2>La semaine '+esc(vPeriode(last.du,last.au))+'</h2><span class="badge-lig">Semaine passée</span></div>'+vEditionHtml(last)+'</div>'
+    : '<div class="panel"><p class="vempty">Première édition attendue lundi matin à 4 h.</p></div>';
+  const hist = eds.slice(1);
+  document.getElementById('veilleHistoPanel').hidden = hist.length===0;
+  document.getElementById('veilleHisto').innerHTML = hist.map(ed=>{
+    const hbk = (VEILLE.breaking||[]).filter(b=>b.d>vAddDays(ed.au,0) && b.d<=vAddDays(ed.au,7)).sort((a,b)=>(a.d||'').localeCompare(b.d||''));
+    return '<details class="vhist"><summary>Semaine '+esc(vPeriode(ed.du,ed.au))+(hbk.length?' · '+hbk.length+' alerte'+(hbk.length>1?'s':''):'')+'</summary>'
+      + '<div class="vhist-b">'+vEditionHtml(ed)
+      + (hbk.length?'<div class="vbks arch"><span class="vbr-t">Alertes de la semaine suivante</span>'+hbk.map(vBkHtml).join('')+'</div>':'')
+      + '</div></details>';
+  }).join('');
+}
+function vSearchIndex(){
+  if(!VEILLE || !VEILLE.editions) return;
+  const go = () => { showTab('veille'); window.scrollTo({top:0}); };
+  VEILLE.editions.forEach(ed=>{
+    vAxes().forEach(ax=>{
+      const it=(ed.items||{})[ax.id]; if(!it) return;
+      const add=(t,r,i)=>{ if(t) SIDX.push({g:'Veille',ic:ax.ic||'📰',t:t,s:ax.t+' · '+vPeriode(ed.du,ed.au),k:norm(t),kx:norm((r||'')+' '+(i||'')),act:go}); };
+      if(it.sujet) add(it.sujet.t, it.sujet.r, it.sujet.i);
+      (it.breves||[]).forEach(b=>add(b.t,b.r,b.i));
+    });
+  });
+  (VEILLE.breaking||[]).forEach(b=>SIDX.push({g:'Veille',ic:'🔴',t:b.t,s:'Alerte du '+fmtD(b.d),k:norm(b.t),kx:norm((b.r||'')+' '+(b.i||'')),act:go}));
+}
+
 let SIDX=[]; let ckSel=0, ckRows=[];
 const strip=h=>(h||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
 function buildSearchIndex(){
@@ -1494,6 +1632,7 @@ function buildSearchIndex(){
   const ev=(list,g,ic,p)=>list.filter(a=>!isPast(a)).forEach(a=>SIDX.push({g,ic,t:a.title,s:fmtD(a.start)+(a.lieu?' · '+a.lieu:''),k:norm(a.title),kx:norm(a.pilotes+' '+a.lieu),act:()=>{ const tab=(p==='cat'&&a.th==='PARCOURS DECOUVERTE')?'pd':p; showTab(tab); const q=document.getElementById(p+'Q'); if(q&&tab!=='pd'){ q.value=a.title; q.dispatchEvent(new Event('input')); } window.scrollTo({top:0}); }}));
   ev(A,'Ateliers','🎓','cat'); ev(R,'Réunions d’équipe','👥','reu'); ev(F,'Formations','📚','for'); ev(E,'Événements','🎉','evt');
   (C.ressources||[]).forEach(r=>{ if(r.u) SIDX.push({g:'Ressources',ic:'🔗',t:r.t,s:r.k||'',k:norm(r.t),kx:norm(r.d||''),act:()=>window.open(r.u,'_blank','noopener')}); });
+  vSearchIndex();
 }
 function ckOpen(){ const el=document.getElementById('cmdk'); el.classList.add('on'); const q=document.getElementById('ckQ'); q.value=''; ckRender(''); setTimeout(()=>q.focus(),30); }
 function ckClose(){ document.getElementById('cmdk').classList.remove('on'); }
