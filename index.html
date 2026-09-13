@@ -542,6 +542,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .chk label small.auto{display:block;font-size:11.5px;font-weight:600;margin-top:2px}
 .chk label small.auto.ok{color:var(--gold-ink)}
 .chk label small.auto.att{color:var(--ink-3);font-weight:500;font-style:italic}
+.chk label small.auto.venir{color:var(--encours-ink)}
 .chk label.auto.attente span>b,.chk label.auto.attente>span{color:var(--ink-2)}
 
 /* Demandes d'accès */
@@ -1195,17 +1196,26 @@ function cleAuto(lib){
   return null;
 }
 const faitAuto = cle => (PARCOURS && PARCOURS.etapes && PARCOURS.etapes[cle]) || null;
+// validé = séance déjà passée, drapeau du réseau, ou objectifs tous atteints
+const estValide = f => !!(f && (f.d || f.ok));
 // État d'une case : l'API fait foi sur les étapes automatiques
 function caseCochee(k, lib){
   const cle = cleAuto(lib);
-  if(cle) return !!faitAuto(cle);
+  if(cle) return estValide(faitAuto(cle));
   return !!CHECK[k];
 }
 function autoMention(cle){
   const f = faitAuto(cle);
   if(!f) return SBUSER ? '<small class="auto att">Validé automatiquement par le réseau</small>'
                        : '<small class="auto att">Automatique — connecte-toi avec ton compte</small>';
-  return '<small class="auto ok">Validé par le réseau'+(f.d?' le '+esc(fmtD(f.d)):'')+'</small>';
+  if(estValide(f)){
+    if(f.d) return '<small class="auto ok">Validé par le réseau le '+esc(fmtD(f.d))+'</small>';
+    if(f.tot) return '<small class="auto ok">Validé par le réseau — '+f.n+' objectifs sur '+f.tot+'</small>';
+    return '<small class="auto ok">Validé par le réseau</small>';
+  }
+  if(f.f) return '<small class="auto venir">Inscrit pour le '+esc(fmtD(f.f))+' — validé après la séance</small>';
+  if(f.tot) return '<small class="auto venir">'+f.n+' objectif'+(f.n>1?'s':'')+' validé'+(f.n>1?'s':'')+' sur '+f.tot+'</small>';
+  return '<small class="auto att">Validé automatiquement par le réseau</small>';
 }
 async function chargerParcours(){
   if(!SB || !SBUSER){ PARCOURS = null; return false; }
@@ -2132,7 +2142,8 @@ async function buildDemandes(){
   const vide = {en_attente:'Aucune demande en attente.', refusee:'Aucune demande refusée.', validee:'Aucune demande validée.'}[DEM_STATUT];
   body.innerHTML = DEMANDES.length ? DEMANDES.map(d=>{
     const nom = d.nom || (d.email||'').split('@')[0];
-    const traite = d.traitee_le ? '<div class="dem-tr">'+(d.statut==='validee'?'Validée':'Refusée')+' le '+esc(fmtD(String(d.traitee_le).slice(0,10)))+'</div>' : '';
+    const par = d.traitee_par ? ' par '+esc((d.traitee_par||'').split('@')[0]) : '';
+    const traite = d.traitee_le ? '<div class="dem-tr">'+(d.statut==='validee'?'Validée':'Refusée')+' le '+esc(fmtD(String(d.traitee_le).slice(0,10)))+par+'</div>' : '';
     const act = d.statut==='en_attente'
       ? '<button class="dem-ok">Valider</button><button class="dem-no">Refuser</button>'
       : (d.statut==='refusee' ? '<button class="dem-ok">Valider finalement</button>' : '<button class="dem-no">Retirer l’accès</button>');

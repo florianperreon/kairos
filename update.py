@@ -283,7 +283,7 @@ ETAPES_ATELIERS = [
 ]
 ETAPES_FORMATIONS = [
     ("udp", ("udp",)),
-    ("udp", ("universite du patrimoine",)),
+    ("udp", ("universite",)),      # libellé réel : « Universités … »
 ]
 
 def _norm(s):
@@ -318,8 +318,27 @@ def _premiere(dates):
     d = sorted([x for x in dates if x])
     return d[0] if d else None
 
+_GOALS_PAR_NIVEAU = {}
+
+def goals_par_niveau(api):
+    """Nombre d'objectifs de PROMOTION par statut (mis en cache pour tout le passage)."""
+    if not _GOALS_PAR_NIVEAU:
+        d = get(f"{api}/api/goals")
+        items = d if isinstance(d, list) else (d or {}).get("hydra:member", [])
+        for g in items:
+            if str(g.get("type") or "").upper() == "PROMOTION":
+                niveau = _niveau(g.get("level"))
+                _GOALS_PAR_NIVEAU[niveau] = _GOALS_PAR_NIVEAU.get(niveau, 0) + 1
+    return _GOALS_PAR_NIVEAU
+
+def _niveau(level):
+    return _norm(level).replace("role ", "").strip()
+
 def parcours_membre(api, uid, membres, adh_ids):
-    """Étapes validées par le réseau pour un membre, avec la date du premier atelier concerné."""
+    """Étapes validées par le réseau pour un membre.
+    Chaque étape porte la date de la première séance DÉJÀ PASSÉE (d)
+    et, le cas échéant, la date de la prochaine séance à venir (f)."""
+    aujourdhui = datetime.datetime.now(PARIS).date().isoformat()
     u = get(f"{api}/api/users/{uid}") or {}
     ateliers = _pages(api, "workshops", {"guests.id": uid})
     formations = _pages(api, "formations", {"guests.id": uid})
@@ -331,8 +350,14 @@ def parcours_membre(api, uid, membres, adh_ids):
         if not cle:
             return
         d = _jour(date)
-        if cle not in faits or (d and (not faits[cle].get("d") or d < faits[cle]["d"])):
-            faits[cle] = {"d": d, "src": source}
+        f = faits.setdefault(cle, {"d": None, "f": None, "src": source})
+        if not d:
+            return
+        if d <= aujourdhui:
+            if not f["d"] or d < f["d"]:
+                f["d"] = d
+        elif not f["f"] or d < f["f"]:
+            f["f"] = d
 
     for a in ateliers:
         noter(_cle_etape(a.get("title"), ETAPES_ATELIERS), a.get("startDate"), "atelier")
@@ -341,52 +366,53 @@ def parcours_membre(api, uid, membres, adh_ids):
     for e in evenements:
         noter(_cle_etape(e.get("title"), ETAPES_ATELIERS + ETAPES_FORMATIONS), e.get("startDate"), "evenement")
 
-    # Onboarding : le drapeau du réseau fait foi ; la date vient de l'atelier si on l'a retrouvé
+    # Onboarding : le drapeau du réseau vaut validation même sans séance retrouvée
     for cle, champ in (("dm", "isJdEnded"), ("ad", "isDemarrageEnded"), ("trois_jours", "is3JREnded")):
         if u.get(champ):
-            if cle not in faits:
-                faits[cle] = {"d": None, "src": "statut"}
-        elif faits.get(cle) and faits[cle].get("src") != "statut":
-            pass   # inscrit à la session mais pas encore validé côté réseau : on garde la date
+            f = faits.setdefault(cle, {"d": None, "f": None, "src": "statut"})
+            f["ok"] = True
 
     # Adhésion à l'association
     if u.get("adhesionPaidAt"):
-        faits["adhesion"] = {"d": _jour(u["adhesionPaidAt"]), "src": "adhesion"}
+        faits["adhesion"] = {"d": _jour(u["adhesionPaidAt"]), "f": None, "src": "adhesion"}
 
-    # Objectifs officiels par statut : validés seulement si tous le sont
+    # Objectifs officiels : validés quand tous ceux du statut le sont
+    total = goals_par_niveau(api)
     par_niveau = {}
     for o in objectifs:
         g = o.get("goal") or {}
-        niveau = _norm(g.get("level") or o.get("level") or "")
-        if not niveau:
+        niveau = _niveau(g.get("level"))
+        if not niveau or not _norm(o.get("status")).startswith("valid"):
             continue
-        par_niveau.setdefault(niveau, []).append(o)
-    for niveau, liste in par_niveau.items():
-        valides = [o for o in liste if _norm(o.get("status")).startswith("valid")]
-        if liste and len(valides) == len(liste):
-            faits["objectifs_" + niveau] = {
-                "d": _premiere([_jour(o.get("updatedAt") or o.get("createdAt")) for o in valides]),
-                "src": "objectifs",
-            }
+        par_niveau.setdefault(niveau, []).append(_jour(o.get("validatedAt")))
+    for niveau, dates in par_niveau.items():
+        tot = total.get(niveau, 0)
+        complet = bool(tot) and len(dates) >= tot
+        faits["objectifs_" + niveau] = {
+            "d": (sorted([d for d in dates if d])[-1] if complet and any(dates) else None),
+            "f": None, "src": "objectifs", "n": len(dates), "tot": tot, "ok": complet,
+        }
 
-    # Première formation FORMAN réservée (même à venir)
-    if formations:
-        faits["formation_reservee"] = {"d": _premiere([_jour(f.get("startDate")) for f in formations]), "src": "formation"}
+    # Première formation réservée (même à venir) : on garde les deux dates
+    for f in formations:
+        noter("formation_reservee", f.get("startDate"), "formation")
 
     # Premier filleul devenu adhérent
     moi = _norm((u.get("firstName") or "") + " " + (u.get("lastName") or ""))
     filleuls = [m for m in membres if _norm(m[5]) == moi and m[0] in adh_ids and m[0] != uid]
     if filleuls:
         dates = []
-        for f in filleuls[:12]:
-            d = get(f"{api}/api/users/{f[0]}") or {}
-            dates.append(_jour(d.get("adhesionPaidAt")) or _jour(f[4]))
-        faits["filleul_adherent"] = {"d": _premiere(dates), "src": "parrainage"}
+        for fl in filleuls[:12]:
+            d = get(f"{api}/api/users/{fl[0]}") or {}
+            dates.append(_jour(d.get("adhesionPaidAt")) or _jour(fl[4]))
+        premiere = _premiere(dates)
+        faits["filleul_adherent"] = {"d": premiere, "f": None, "src": "parrainage"}
 
-    # Rythme : formations suivies par mois, sur les 12 derniers mois
-    mois = sorted({str(f.get("startDate"))[:7] for f in formations if f.get("startDate")})
+    mois = sorted({str(f.get("startDate"))[:7] for f in formations
+                   if f.get("startDate") and _jour(f.get("startDate")) <= aujourdhui})
     return {"etapes": faits, "formations_mois": mois[-12:],
-            "statut": (u.get("roles") or [None])[0], "maj": datetime.datetime.now(PARIS).strftime("%Y-%m-%dT%H:%M")}
+            "statut": (u.get("roles") or [None])[0],
+            "maj": datetime.datetime.now(PARIS).strftime("%Y-%m-%dT%H:%M")}
 
 def sync_parcours(api, membres, adh_ids):
     if not KAIROS_TOKEN:
