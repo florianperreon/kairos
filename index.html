@@ -603,17 +603,25 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 <div id="cmdk" role="dialog" aria-modal="true" aria-label="Recherche"><div class="ck-card"><div class="ck-in"><span class="ic">🔍</span><input type="search" id="ckQ" placeholder="Rechercher une page, une question, un atelier, un membre…" autocomplete="off"><span class="kbd">Échap</span></div><div class="ck-res" id="ckRes"></div><div class="ck-foot"><span>↑↓ naviguer</span><span>↵ ouvrir</span><span>Échap fermer</span></div></div></div>
 
 <script>
-// Blocs chiffrés : inclus dans la page (artefact) ou chargés depuis des fichiers séparés (site) :
-// donnees.enc = données du réseau (régénéré chaque nuit), contenu.enc = contenu éditorial. Chacun porte son sel.
+// Blocs chiffrés : inclus dans la page (artefact) ou chargés depuis des fichiers séparés (site ou fichier local) :
+// donnees.js = données du réseau (régénéré chaque nuit), contenu.js = contenu éditorial, meta.js = date de mise à jour (en clair).
+// Chargés par balise <script> (et non fetch) pour fonctionner aussi en double-cliquant index.html (file://).
 const ENC_INLINE = null;
 const CENC_INLINE = null;
-let ENC = null, CENC = null, DATA = null, CONTENU = null;
-const BLOCKS = (async()=>{
-  if(ENC_INLINE && ENC_INLINE.data){ ENC = ENC_INLINE; CENC = CENC_INLINE; return; }
-  const getJson = async f => { const r = await fetch(f, {cache:'no-cache'}); if(!r.ok) throw new Error(f+' '+r.status); return r.json(); };
-  ENC = await getJson('donnees.enc');
-  try{ CENC = await getJson('contenu.enc'); }catch(e){ CENC = null; }
+let ENC = null, CENC = null, META = null, DATA = null, CONTENU = null;
+const loadScript = f => new Promise((res, rej) => { const el = document.createElement('script'); el.src = f + (location.protocol === 'file:' ? '' : '?t=' + Date.now()); el.onload = () => res(); el.onerror = () => rej(new Error('CHARGEMENT ' + f)); document.head.appendChild(el); });
+const METAP = loadScript('meta.js').then(() => { META = window.KAIROS_META || null; showMeta(); }).catch(() => {});
+const BLOCKS = (async () => {
+  if (ENC_INLINE && ENC_INLINE.data) { ENC = ENC_INLINE; CENC = CENC_INLINE; return; }
+  await loadScript('donnees.js'); ENC = window.KAIROS_DONNEES;
+  if (!ENC || !ENC.data) throw new Error('CHARGEMENT donnees.js');
+  try { await loadScript('contenu.js'); CENC = window.KAIROS_CONTENU || null; } catch (e) { CENC = null; }
 })();
+BLOCKS.catch(() => {});
+function showMeta(){
+  const m = META && META.maj ? fmtMaj(META) : '';
+  if (window.__booted && m) { document.getElementById('brandMaj').textContent = ' · Mise à jour le ' + m; }
+}
 
 /* ---------- Constantes métier ---------- */
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -737,7 +745,9 @@ document.getElementById('unlockBtn').addEventListener('click', async ()=>{
   if(!pw){ err.textContent='Entre le mot de passe.'; return; }
   document.getElementById('unlockBtn').textContent='Déchiffrement…';
   try{ await tryUnlock(pw); }
-  catch(e){ err.textContent=(e&&/\.enc/.test(String(e.message)))?'Données introuvables — réessaie dans un instant.':'Mot de passe incorrect.'; document.getElementById('unlockBtn').textContent='Déverrouiller'; }
+  catch(e){ const m=String(e&&e.message||'');
+    err.textContent = /^CHARGEMENT/.test(m) ? 'Impossible de charger '+m.slice(11)+' — le fichier doit être à côté de index.html ; en ligne, vérifie la connexion et réessaie.' : 'Mot de passe incorrect.';
+    document.getElementById('unlockBtn').textContent='Déverrouiller'; }
 });
 document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('unlockBtn').click(); });
 
@@ -788,8 +798,8 @@ function boot(){
   LIGNEE_IDS=new Set(M.filter(m=>LIGNEE.some(l=>m.nn.includes(l))).map(m=>m.id));
   document.getElementById('lock').style.display='none';
   document.getElementById('app').style.display='block';
-  document.getElementById('foot').innerHTML = 'Données '+esc(DATA.cfg&&DATA.cfg.src||'')+' — mise à jour le '+esc(fmtMaj(DATA.meta))+' · Fait avec <span class="heart">♥</span> par '+esc(DATA.cfg&&DATA.cfg.auteur||'');
-  document.getElementById('brandMaj').textContent = ' · Mise à jour le '+fmtMaj(DATA.meta);
+  document.getElementById('foot').innerHTML = 'Données '+esc(DATA.cfg&&DATA.cfg.src||'')+' — mise à jour le '+esc(fmtMaj(META&&META.maj?META:DATA.meta))+' · Fait avec <span class="heart">♥</span> par '+esc(DATA.cfg&&DATA.cfg.auteur||'');
+  document.getElementById('brandMaj').textContent = ' · Mise à jour le '+fmtMaj(META&&META.maj?META:DATA.meta);
   initCalToggles();
   buildHome(); buildPd(); buildCat(); buildAnn(); buildContenu(); buildWeek(); buildSearchIndex(); routeHash();
   buildSimple('reu', R, id=>BASE+'teamMeeting/detail/'+id, 'réunion');
@@ -1524,7 +1534,7 @@ let deferredInstall=null;
 window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredInstall=e; const b=document.getElementById('installBtn'); if(b) b.hidden=false; });
 document.getElementById('installBtn').addEventListener('click',async()=>{ if(!deferredInstall) return; deferredInstall.prompt(); try{ await deferredInstall.userChoice; }catch(_){} deferredInstall=null; document.getElementById('installBtn').hidden=true; });
 window.addEventListener('appinstalled',()=>{ document.getElementById('installBtn').hidden=true; });
-if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !location.hostname.match(/^(localhost|127\.0\.0\.1)$/)){
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
 

@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html donnees.enc
+          git add index.html donnees.js meta.js
           git diff --cached --quiet && echo "Aucun changement" || {
             git commit -m "Mise à jour quotidienne des données"
             git push

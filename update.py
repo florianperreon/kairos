@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Mise à jour quotidienne des données du portail.
 
-Lit l'ancien payload chiffré dans donnees.enc (ou, à défaut, dans le bloc ENC d'un ancien index.html),
-récupère les données à jour, reconstruit le payload et le chiffre dans donnees.enc (sel conservé d'un
+Lit l'ancien payload chiffré dans donnees.js (ou, à défaut, dans le bloc ENC d'un ancien index.html),
+récupère les données à jour, reconstruit le payload et le chiffre dans donnees.js (sel conservé d'un
 jour à l'autre pour que « Rester déverrouillé » survive à la mise à jour). index.html est régénéré à
-partir de template.html sans aucune donnée : la page charge donnees.enc et contenu.enc au déverrouillage.
+partir de template.html sans aucune donnée : la page charge donnees.js, contenu.js et meta.js par balises <script>.
 Configuration via variables d'environnement (secrets du dépôt) :
   PORTAL_PW : mot de passe du portail (clé de chiffrement)
   API_BASE  : URL de base de l'API (ex. https://exemple.tld)
@@ -45,6 +45,14 @@ def decrypt_enc(enc: dict, pw: bytes) -> dict:
     key = derive(pw, base64.b64decode(enc["salt"]), enc["iter"])
     pt = AESGCM(key).decrypt(base64.b64decode(enc["iv"]), base64.b64decode(enc["data"]), None)
     return json.loads(gzip.decompress(pt).decode("utf-8"))
+
+def read_js(path: str) -> dict:
+    """Lit un fichier `window.X = {...};` et renvoie l'objet JSON."""
+    t = open(path, encoding="utf-8").read()
+    return json.loads(t[t.index("{"):t.rindex("}") + 1])
+
+def write_js(path: str, var: str, obj_json: str):
+    open(path, "w", encoding="utf-8").write(f"window.{var}={obj_json};\n")
 
 def encrypt_payload(obj: dict, pw: bytes, salt: bytes = None) -> str:
     raw = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
@@ -229,9 +237,9 @@ def run():
     today_iso = today.isoformat()
     maj_iso = now.strftime("%Y-%m-%dT%H:%M")  # date + heure (Paris) de la mise à jour
 
-    # Ancien payload (cfg + dates d'inscription connues) : donnees.enc, sinon bloc ENC d'un ancien index.html
-    if os.path.exists("donnees.enc"):
-        old_enc = json.load(open("donnees.enc", encoding="utf-8"))
+    # Ancien payload (cfg + dates d'inscription connues) : donnees.js, sinon bloc ENC d'un ancien index.html
+    if os.path.exists("donnees.js"):
+        old_enc = read_js("donnees.js")
     else:
         html = open("index.html", encoding="utf-8").read()
         m = re.search(r"const ENC = (\{.*?\});", html, re.S)
@@ -409,9 +417,10 @@ def run():
     # Vérification aller-retour du chiffrement
     if decrypt_enc(json.loads(enc_json), pw)["meta"]["majAteliers"] != today_iso:
         raise RuntimeError("échec de la vérification de déchiffrement")
-    # Le contenu éditorial (contenu.enc, sel propre) est servi tel quel : on vérifie juste qu'il s'ouvre
-    if os.path.exists("contenu.enc"):
-        decrypt_enc(json.load(open("contenu.enc", encoding="utf-8")), pw)
+    # Le contenu éditorial (contenu.js, sel propre) est servi tel quel : on vérifie juste qu'il s'ouvre
+    contenu_version = ""
+    if os.path.exists("contenu.js"):
+        contenu_version = str(decrypt_enc(read_js("contenu.js"), pw).get("version") or "")
 
     tpl = open("template.html", encoding="utf-8").read()
     if tpl.count("__ENC__") != 1 or tpl.count("__CENC__") != 1:
@@ -439,7 +448,9 @@ def run():
     if bad:
         raise RuntimeError(f"audit de confidentialité en échec ({len(bad)} motif(s))")
 
-    open("donnees.enc", "w", encoding="utf-8").write(enc_json)
+    write_js("donnees.js", "KAIROS_DONNEES", enc_json)
+    # meta.js (en clair) : date de mise à jour, variable du projet lisible sans mot de passe
+    write_js("meta.js", "KAIROS_META", json.dumps({"maj": maj_iso, "majDonnees": today_iso, "versionContenu": contenu_version}))
     open("index.html", "w", encoding="utf-8").write(out)
     print(f"OK {today_iso} — ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
           f"formations {len(autres['for'])} | événements {len(autres['evt'])} | "
