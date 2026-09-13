@@ -549,7 +549,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
       <button class="icon-btn" id="installBtn" title="Installer Kairos comme une application" hidden>📲 Installer</button>
       <button class="icon-btn acc-off" id="accBtn" title="Retrouver ma progression sur tous mes appareils" hidden>☁ Connexion</button>
       <button class="icon-btn" id="themeBtn" title="Basculer clair/sombre">◐ Thème</button>
-      <button class="icon-btn" id="lockBtn" title="Verrouiller">🔒 Verrouiller</button>
+      <button class="icon-btn" id="lockBtn" title="Fermer ma session">🚪 Déconnexion</button>
     </div>
   </header>
   <nav class="tabs">
@@ -1009,16 +1009,21 @@ document.getElementById('themeBtn').addEventListener('click',()=>{
   try{localStorage.setItem('kairos_theme', next);}catch(e){}
   if(window.__booted) buildHome();
 });
-document.getElementById('lockBtn').addEventListener('click',()=>{
+document.getElementById('lockBtn').addEventListener('click',async ()=>{
+  const b=document.getElementById('lockBtn');
+  b.disabled=true; b.textContent='…';
+  if(SYNC_T){ try{ await syncPush(); }catch(e){} }          // dernière sauvegarde avant de partir
+  if(SB && SBUSER){ try{ await SB.auth.signOut(); }catch(e){} }
   try{localStorage.removeItem('kairos_k');}catch(e){}
-  location.reload();
+  location.replace(location.pathname);
 });
 
 /* ---------- Accueil ---------- */
 function buildHome(){
   const h=new Date().getHours(), salut = h<5?'Bonne nuit':h<18?'Bonjour':'Bonsoir';
+  ACC_NOM_AFF = prenomUser();
   const wEl=document.getElementById('welcome');
-  if(wEl) wEl.innerHTML='<div class="wmark">👋</div><div class="wtxt"><h2>'+salut+', bienvenue sur Kairos !</h2><div class="wdate">'+fmtDLong(todayIso)+'</div><p>Kairos, c\u2019est l\u2019art de reconnaître le bon moment — et d\u2019agir au moment juste. Bonne journée !</p>'+(CONTENU&&CONTENU.accueil&&CONTENU.accueil.intro?'<p class="wintro">'+esc(CONTENU.accueil.intro)+'</p>':'')+'</div>';
+  if(wEl) wEl.innerHTML='<div class="wmark">👋</div><div class="wtxt"><h2>'+salut+(ACC_NOM_AFF?' '+esc(ACC_NOM_AFF):'')+', bienvenue sur Kairos !</h2><div class="wdate">'+fmtDLong(todayIso)+'</div><p>Kairos, c\u2019est l\u2019art de reconnaître le bon moment — et d\u2019agir au moment juste. Bonne journée !</p>'+(CONTENU&&CONTENU.accueil&&CONTENU.accueil.intro?'<p class="wintro">'+esc(CONTENU.accueil.intro)+'</p>':'')+'</div>';
   const in7 = new Date(TODAY); in7.setDate(in7.getDate()+7);
   const iso7 = in7.toISOString().slice(0,10);
   const upcoming = A.filter(a=>a.start>=todayIso);
@@ -1838,6 +1843,16 @@ const AUTH_MAIL = false;   // connexion par code e-mail : nécessite un SMTP ext
 let SB=null, SBUSER=null, SYNC_T=null, SYNC_FAIT=false;
 
 const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK] });
+let ACC_NOM_AFF = null;
+// Prénom de la personne connectée (Google), pour personnaliser l'accueil
+function prenomUser(){
+  if(!SBUSER) return '';
+  const m = SBUSER.user_metadata || {};
+  let n = m.given_name || m.first_name || m.name || m.full_name || '';
+  n = String(n).trim().split(/[\s,]+/)[0] || '';
+  if(!n) return '';
+  return n.charAt(0).toLocaleUpperCase('fr-FR') + n.slice(1);
+}
 const accEl = id=>document.getElementById(id);
 
 function accErr(m){ const e=accEl('accErr'); if(e) e.textContent=m||''; }
@@ -1852,10 +1867,14 @@ function accMsg(e){
 }
 function accMaj(){
   const mw=accEl('accMailWrap'); if(mw) mw.hidden=!AUTH_MAIL;
+  if(window.__booted && ACC_NOM_AFF!==null && ACC_NOM_AFF!==prenomUser()){ try{ buildHome(); }catch(e){} }
+  const lb=document.getElementById('lockBtn');
+  if(lb && !lb.disabled) lb.title = SBUSER ? ('Fermer ma session — '+(SBUSER.email||'')) : 'Fermer ma session';
   const b=accEl('accBtn'); if(!b) return;
-  b.textContent = SBUSER ? '☁ Synchronisé' : '☁ Connexion';
-  b.classList.toggle('acc-off', !SBUSER);
-  b.title = SBUSER ? 'Ta progression est enregistrée sur ton compte' : 'Retrouver ma progression sur tous mes appareils';
+  b.hidden = !SB || !!SBUSER;
+  b.textContent = '☁ Connexion';
+  b.classList.add('acc-off');
+  b.title = 'Retrouver ma progression sur tous mes appareils';
   const i=accEl('accIn'), o=accEl('accOut');
   if(i) i.hidden=!!SBUSER;
   if(o) o.hidden=!SBUSER;
@@ -1914,7 +1933,6 @@ async function initSync(){
     if(!SBUSER) SYNC_FAIT=false;
   });
   try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }
-  const b=accEl('accBtn'); if(b) b.hidden=false;
   accMaj();
   if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
   return !!SBUSER;
