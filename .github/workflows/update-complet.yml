@@ -34,13 +34,16 @@ jobs:
           API_BASE: ${{ secrets.API_BASE }}
           LIGNEE: ${{ secrets.LIGNEE }}
           LIGNEE_FILLEULS_DE: ${{ secrets.LIGNEE_FILLEULS_DE }}
+          KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
+          KAIROS_FICHIER: ${{ vars.KAIROS_FICHIER }}
         run: python update.py --complet
 
       - name: Commit et publication
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html donnees.js meta.js
+          git add index.html meta.js
+          if [ -f donnees.js ]; then git add donnees.js; fi
           git diff --cached --quiet && echo "Aucun changement" || {
             git commit -m "Mise à jour complète des données"
             git push

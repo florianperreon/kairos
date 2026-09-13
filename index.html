@@ -747,7 +747,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 // Blocs chiffrés : inclus dans la page (artefact) ou chargés depuis des fichiers séparés (site ou fichier local) :
 // donnees.js = données du réseau (régénéré chaque nuit), contenu.js = contenu éditorial, meta.js = date de mise à jour (en clair).
 // Chargés par balise <script> (et non fetch) pour fonctionner aussi en double-cliquant index.html (file://).
-const ENC_INLINE = __ENC__;
+const ENC_INLINE = null;
 const CENC_INLINE = null;
 let MDP = '';
 let ENC = null, CENC = null, META = null, DATA = null, CONTENU = null, VEILLE = null;
