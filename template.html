@@ -263,7 +263,7 @@ tr.colf input:focus{outline:2px solid var(--accent);outline-offset:0}
 .day-h .d{font-family:"Sora";font-weight:700;font-size:15px}
 .day-h .n{color:var(--ink-3);font-size:13px}
 .day-h.we .d{color:var(--gold-ink)}
-.ev{display:grid;grid-template-columns:120px 132px 1fr;gap:8px 16px;padding:10px 16px;border-bottom:1px solid var(--line);align-items:baseline}
+.ev{display:grid;grid-template-columns:120px 132px 1fr;gap:8px 16px;padding:10px 44px 10px 16px;border-bottom:1px solid var(--line);align-items:baseline}
 #pdList .ev{grid-template-columns:160px 120px 1fr}
 .ev.ev2{grid-template-columns:150px 1fr}
 .ev>div{min-width:0}
@@ -693,10 +693,16 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .cnt-wys:focus{outline:2px solid var(--accent);outline-offset:-2px}
 .cnt-wys:empty::before{content:"Écris ici…";color:var(--ink-3)}
 
-/* Surveillance de sessions */
-.surv-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:5px;padding:1px 8px;font-size:12px;cursor:pointer;font-family:inherit}
-.surv-btn:hover{border-color:var(--accent);color:var(--accent)}
-.surv-btn.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
+/* Sessions enregistrées */
+.ev{position:relative}
+.ev .surv-btn{position:absolute;top:7px;right:8px;z-index:2}
+.surv-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border:0;border-radius:8px;background:none;color:var(--ink-3);opacity:.55;cursor:pointer;transition:opacity .12s,color .12s,background .12s}
+.surv-btn svg{width:17px;height:17px;display:block}
+.surv-btn:hover{opacity:1;color:var(--accent);background:var(--accent-soft)}
+.surv-btn:focus-visible{opacity:1;outline:2px solid var(--accent);outline-offset:1px}
+.surv-btn.on{opacity:1;color:var(--accent)}
+.ev:hover .surv-btn{opacity:1}
+@media(hover:none){.surv-btn{opacity:1}}
 .surv-p{font-weight:700;border-radius:5px;padding:1px 8px}
 .surv-p.ok{background:var(--gold-soft);color:var(--gold-ink)}
 .surv-p.tendu{background:#FFF1DB;color:#8A4B00}
@@ -704,7 +710,9 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .surv-p.complet{background:#FDE7E7;color:#9B1C1C}
 :root[data-theme="dark"] .surv-p.complet{background:#4A1717;color:#F5A3A3}
 .ev.surv-full{opacity:.75}
-.chip.surv-type{background:var(--surface-2);color:var(--ink-2);font-weight:600}
+.chip.surv-type{background:var(--surface-2);color:var(--ink-2);font-weight:600;margin-right:6px}
+.surv-vide{color:var(--ink-2);line-height:2}
+.surv-vide svg{width:15px;height:15px;vertical-align:-3px;color:var(--ink-3)}
 .surv-strip{background:#FFF8EC;border-color:var(--encours)}
 :root[data-theme="dark"] .surv-strip{background:#3A2A12}
 .surv-strip .bl{color:var(--encours-ink)}
@@ -737,7 +745,7 @@ nav.tabs .sub-badge{display:inline-block;min-width:17px;padding:0 5px;margin-lef
     <div class="side-nav">
       <div class="grp">Mon espace</div>
       <button data-v="home" class="on" title="Accueil"><span class="i" data-i="home"></span><span class="l">Accueil</span></button>
-      <button data-v="surv" hidden title="Surveillé"><span class="i" data-i="surv"></span><span class="l">Surveillé</span></button>
+      <button data-v="surv" hidden title="Enregistré"><span class="i" data-i="surv"></span><span class="l">Enregistré</span></button>
       <button data-v="pd" id="pdTabBtn" title="Parcours Découverte"><span class="i" data-i="pd"></span><span class="l">Parcours</span></button>
       <div class="grp">Le réseau</div>
       <button data-v="cat" title="Ateliers"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></button>
@@ -791,7 +799,7 @@ nav.tabs .sub-badge{display:inline-block;min-width:17px;padding:0 5px;margin-lef
 
     <section class="view" id="v-surv">
       <div class="panel">
-        <h2>Ce que je surveille</h2>
+        <h2>Mes sessions enregistrées</h2>
         <p class="mbr-sub" id="survNote"></p>
         <div id="survList"></div>
       </div>
@@ -1003,7 +1011,7 @@ nav.tabs .sub-badge{display:inline-block;min-width:17px;padding:0 5px;margin-lef
   <nav class="botbar" aria-label="Navigation">
     <button data-v="home"><span class="i" data-i="home"></span><span class="l">Accueil</span></button>
     <button data-v="pd"><span class="i" data-i="pd"></span><span class="l">Parcours</span></button>
-    <button data-v="surv" hidden><span class="i" data-i="surv"></span><span class="l">Surveillé</span></button>
+    <button data-v="surv" hidden><span class="i" data-i="surv"></span><span class="l">Enregistré</span></button>
     <button data-v="cat"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></button>
     <button type="button" id="plusBtn"><span class="i" data-i="plus"></span><span class="l">Plus</span></button>
   </nav>
@@ -1118,7 +1126,7 @@ const lieuKey = l => (l==='Visio'||l==='Zoom') ? 'Visio / Zoom' : l;
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const todayIso = TODAY.getFullYear()+'-'+String(TODAY.getMonth()+1).padStart(2,'0')+'-'+String(TODAY.getDate()).padStart(2,'0');
 
-/* ---------- Surveiller une session ---------- */
+/* ---------- Sessions enregistrées (signet) ---------- */
 // SURV : clés « type:id » (a = atelier, r = réunion, f = formation, e = événement)
 let SURV = new Set();
 const survCle = a => (a.k||'a')+':'+a.id;
@@ -1131,12 +1139,16 @@ function survPlaces(a){
   const seuil = Math.max(3, Math.ceil(a.max * 0.05));
   return { reste, seuil, max:a.max, complet: reste===0, tendu: reste>0 && reste < seuil };
 }
+// Enregistrer = mettre de côté. L'alerte « places bientôt épuisées » en découle, ce n'est pas une case de plus.
+const SIGNET_PLEIN = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M6.4 3.8h11.2a1 1 0 0 1 1 1v15.4l-6.6-4-6.6 4V4.8a1 1 0 0 1 1-1Z"/></svg>';
+const SIGNET_VIDE  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M6.4 3.8h11.2a1 1 0 0 1 1 1v15.4l-6.6-4-6.6 4V4.8a1 1 0 0 1 1-1Z"/></svg>';
 function survEtoile(a){
   if(!SBUSER || isPast(a)) return '';
   const on = SURV.has(survCle(a));
-  return '<button class="xtra surv-btn'+(on?' on':'')+'" data-surv="'+esc(survCle(a))+'" title="'
-    + (on?'Ne plus surveiller cette session':'Surveiller cette session (alerte quand les places se raréfient)')
-    + '">'+(on?'★ Surveillé':'☆ Surveiller')+'</button>';
+  return '<button class="surv-btn'+(on?' on':'')+'" data-surv="'+esc(survCle(a))+'" aria-pressed="'+on+'" aria-label="'
+    + (on?'Retirer de mes sessions enregistrées':'Enregistrer cette session')+'" title="'
+    + (on?'Enregistré — cliquer pour retirer':'Enregistrer : je la retrouve dans mon onglet et je suis prévenu quand les places s’épuisent')
+    + '">'+(on?SIGNET_PLEIN:SIGNET_VIDE)+'</button>';
 }
 function survObjets(){
   const out = [];
@@ -1190,14 +1202,8 @@ function majOngletSurv(){
   document.querySelectorAll('[data-v="surv"]').forEach(btn=>{
     btn.hidden = !SBUSER;
     const l = btn.querySelector('.l');
-    if(l) l.innerHTML = 'Surveillé' + (n ? ' <span class="sub-badge">'+n+'</span>' : '');
+    if(l) l.innerHTML = 'Enregistré' + (n ? ' <span class="sub-badge">'+n+'</span>' : '');
   });
-}
-function survPastille(p){
-  if(!p) return '';
-  if(p.complet) return '<span class="xtra surv-p complet">Complet</span>';
-  if(p.tendu) return '<span class="xtra surv-p tendu">Plus que '+p.reste+' place'+(p.reste>1?'s':'')+' sur '+p.max+'</span>';
-  return '<span class="xtra surv-p ok">'+p.reste+' places libres sur '+p.max+'</span>';
 }
 // redessine les listes qui portent l'étoile
 function rafraichirListes(){
@@ -1219,19 +1225,20 @@ function buildSurv(){
     ? 'Places relevées le '+releve+' — la liste du réseau est synchronisée quatre fois par jour.'
     : '';
   if(!objs.length){
-    el.innerHTML = '<p style="color:var(--ink-2)">Rien sous surveillance. Dans les onglets Parcours, Ateliers, Réunions, Formations et Événements, le bouton <b>☆ Surveiller</b> ajoute une session à cette liste.</p>';
+    el.innerHTML = '<p class="surv-vide">Rien d’enregistré pour l’instant.<br>Dans les onglets Parcours, Ateliers, Réunions, Formations et Événements, le signet '
+      + SIGNET_VIDE + ' en haut à droite d’une session la garde de côté ici — et te prévient quand les places s’épuisent.</p>';
     return;
   }
   let html='', mois='';
   objs.forEach(o=>{
     const a=o.a, p=survPlaces(a), mk=(a.start||'').slice(0,7);
     if(mk!==mois){ if(mois) html+='</div>'; mois=mk; const [y,m]=mk.split('-'); html+='<div class="month-h">'+MOIS[+m-1]+' '+y+'</div><div class="day">'; }
-    html += '<div class="ev'+(p&&p.complet?' surv-full':'')+'"><div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div>'
+    html += '<div class="ev ev2'+(p&&p.complet?' surv-full':'')+'">'
+      + '<div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div>'
       + '<b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor||'')+'</div></div>'
-      + '<div><span class="chip surv-type">'+esc(survLib[o.t]||'')+'</span>'
+      + '<div class="body"><span class="chip surv-type">'+esc(survLib[o.t]||'')+'</span> '
       + '<a class="t" href="'+a.url+'" target="_blank" rel="noopener">'+esc(a.title)+'</a>'
       + '<div class="meta">'+lieuHtml(a.lieu)+(a.pilotes?' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span>':'')+'</div>'
-      + '<div class="xtras">'+survPastille(p)+survEtoile(a)+'</div>'
       + evExtras(a)
       + '</div></div>';
   });
@@ -1245,8 +1252,8 @@ function buildSurvAccueil(){
   const al = survAlertes();
   el.hidden = !al.length;
   if(!al.length) return;
-  el.innerHTML = '<span class="bl">⏳ '+al.length+' session'+(al.length>1?'s':'')+' surveillée'+(al.length>1?'s':'')+' à surveiller de près</span>'
-    + al.slice(0,4).map(o=>'<a class="surv-a" href="#surveille">'+esc(o.a.title)+' <span class="w">'
+  el.innerHTML = '<span class="bl">'+al.length+' session'+(al.length>1?'s':'')+' enregistrée'+(al.length>1?'s':'')+' où les places s’épuisent</span>'
+    + al.slice(0,4).map(o=>'<a class="surv-a" href="#enregistre">'+esc(o.a.title)+' <span class="w">'
       + (o.p.complet?'complet':'plus que '+o.p.reste)+'</span></a>').join('');
 }
 document.addEventListener('click', e=>{
@@ -1400,6 +1407,7 @@ const ICO = {
   theme:'<circle cx="12" cy="12" r="8.6"/><path d="M12 3.4a8.6 8.6 0 0 1 0 17.2Z" fill="currentColor" stroke="none"/>',
   install:'<path d="M12 3.4v11.4"/><path d="m7.6 10.6 4.4 4.4 4.4-4.4"/><path d="M4.2 17.8v2a1 1 0 0 0 1 1h13.6a1 1 0 0 0 1-1v-2"/>',
   cloud:'<path d="M7.2 18.4h10.2a3.5 3.5 0 0 0 .3-7 5.6 5.6 0 0 0-10.6-1.5 4.2 4.2 0 0 0 .1 8.5Z"/>',
+  surv:'<path d="M6.4 3.8h11.2a1 1 0 0 1 1 1v15.4l-6.6-4-6.6 4V4.8a1 1 0 0 1 1-1Z"/>',
   search:'<circle cx="11" cy="11" r="6.8"/><path d="m19.6 19.6-3.6-3.6"/>',
   plus:'<circle cx="5.2" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="18.8" cy="12" r="1.7" fill="currentColor" stroke="none"/>'
 };
@@ -1456,7 +1464,7 @@ document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('cli
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
 const TABS=['home','veille','surv','pd','cat','reu','for','evt','ann','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',surv:'surveille',pd:'parcours-decouverte',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',admin:'admin'};
+const TAB_SLUG={home:'accueil',veille:'veille',surv:'enregistre',pd:'parcours-decouverte',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',admin:'admin'};
 // Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
 const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin'});
 const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
