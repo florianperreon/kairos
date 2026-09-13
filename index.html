@@ -57,10 +57,34 @@ header.top .mark{margin:0}
 .icon-btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer}
 .icon-btn:hover{color:var(--ink);border-color:var(--ink-3)}
 nav.tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);flex-wrap:wrap}
-nav.tabs button{border:0;background:none;padding:10px 16px 12px;font-family:"Sora";font-weight:600;font-size:15px;color:var(--ink-2);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
-nav.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
-nav.tabs button:hover{color:var(--ink)}
-main{padding-top:26px}
+nav.tabs.side button[data-v]{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;border-radius:9px;padding:9px 10px;font-family:"Sora";font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
+nav.tabs.side button[data-v] .i{flex:none;width:20px;text-align:center;font-size:15px}
+nav.tabs.side button[data-v]:hover{background:var(--surface-2);color:var(--ink)}
+nav.tabs.side button[data-v].on{background:var(--accent-soft);color:var(--accent)}
+#app.replie nav.tabs.side .l{display:none}
+#app.replie nav.tabs.side button[data-v]{justify-content:center;padding:10px 0}
+#app.replie .side-toggle{text-align:center;padding:8px 0}
+/* Barre inférieure (téléphone) */
+nav.botbar{display:none}
+#plusMenu[hidden]{display:none}
+@media(max-width:860px){
+  .shell{display:block}
+  nav.tabs.side{display:none}
+  #app{padding-bottom:74px}
+  nav.botbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
+  nav.botbar button{flex:1;border:0;background:none;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer;min-width:0}
+  nav.botbar button .i{font-size:18px;line-height:1}
+  nav.botbar button .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  nav.botbar button.on{color:var(--accent)}
+  #plusMenu{position:fixed;inset:0;z-index:61;background:rgba(8,10,14,.45)}
+  .plus-card{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:16px 16px 0 0;padding:10px 10px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+  .plus-t{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:8px 12px}
+  .plus-card button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--ink);padding:12px;border-radius:10px;font-family:"Sora";font-weight:600;font-size:15px;cursor:pointer;text-align:left}
+  .plus-card button.on{background:var(--accent-soft);color:var(--accent)}
+  .plus-card button .i{font-size:17px;width:22px;text-align:center}
+}
+main{padding-top:4px}
+@media(max-width:860px){main{padding-top:20px}}
 section.view{display:none}
 section.view.on{display:block}
 
@@ -654,18 +678,26 @@ nav.tabs .sub-badge{display:inline-block;min-width:17px;padding:0 5px;margin-lef
       <button class="icon-btn" id="lockBtn" title="Fermer ma session">🚪 Déconnexion</button>
     </div>
   </header>
-  <nav class="tabs">
-    <button data-v="home" class="on">Accueil</button>
-    <button data-v="veille" hidden>Veille</button>
-    <button data-v="surv" hidden>Surveillé</button>
-    <button data-v="pd" id="pdTabBtn">Parcours</button>
-    <button data-v="cat">Ateliers</button>
-    <button data-v="reu">Réunions d'équipe</button>
-    <button data-v="for">Formations</button>
-    <button data-v="evt">Événements</button>
-    <button data-v="ann">Annuaire</button>
-    <button data-v="admin" hidden>Admin</button>
+  <div class="shell">
+  <nav class="tabs side" id="side" aria-label="Navigation principale">
+    <div class="grp">Mon espace</div>
+    <button data-v="home" class="on"><span class="i">🏠</span><span class="l">Accueil</span></button>
+    <button data-v="surv" hidden><span class="i">👁</span><span class="l">Surveillé</span></button>
+    <button data-v="pd" id="pdTabBtn"><span class="i">🧭</span><span class="l">Parcours</span></button>
+    <div class="grp">Le réseau</div>
+    <button data-v="cat"><span class="i">🎓</span><span class="l">Ateliers</span></button>
+    <button data-v="reu"><span class="i">👥</span><span class="l">Réunions d'équipe</span></button>
+    <button data-v="for"><span class="i">📚</span><span class="l">Formations</span></button>
+    <button data-v="evt"><span class="i">🎉</span><span class="l">Événements</span></button>
+    <button data-v="ann"><span class="i">📇</span><span class="l">Annuaire</span></button>
+    <div class="grp">S'informer</div>
+    <button data-v="veille" hidden><span class="i">📰</span><span class="l">Veille</span></button>
+    <div class="side-bas">
+      <button data-v="admin" hidden><span class="i">⚙️</span><span class="l">Admin</span></button>
+      <button type="button" id="sideToggle" class="side-toggle" title="Replier le menu">‹ Replier</button>
+    </div>
   </nav>
+  <div class="content">
   <main>
     <section class="view on" id="v-home">
       <div class="panel welcome" id="welcome"></div>
@@ -897,6 +929,16 @@ nav.tabs .sub-badge{display:inline-block;min-width:17px;padding:0 5px;margin-lef
     </section>
   </main>
   <footer id="foot"></footer>
+  </div>
+  </div>
+  <nav class="botbar" aria-label="Navigation">
+    <button data-v="home"><span class="i">🏠</span><span class="l">Accueil</span></button>
+    <button data-v="pd"><span class="i">🧭</span><span class="l">Parcours</span></button>
+    <button data-v="surv" hidden><span class="i">👁</span><span class="l">Surveillé</span></button>
+    <button data-v="cat"><span class="i">🎓</span><span class="l">Ateliers</span></button>
+    <button type="button" id="plusBtn"><span class="i">⋯</span><span class="l">Plus</span></button>
+  </nav>
+  <div id="plusMenu" hidden><div class="plus-card" id="plusCard"></div></div>
 </div>
 
 <div id="sheet"><div class="sheet-card" id="sheetCard"></div></div>
@@ -1075,11 +1117,12 @@ async function survBascule(cle){
   majOngletSurv(); buildSurv(); rafraichirListes();
 }
 function majOngletSurv(){
-  const btn = document.querySelector('nav.tabs button[data-v="surv"]');
-  if(!btn) return;
-  btn.hidden = !SBUSER;
   const n = survAlertes().length;
-  btn.innerHTML = 'Surveillé' + (n ? ' <span class="sub-badge">'+n+'</span>' : '');
+  document.querySelectorAll('[data-v="surv"]').forEach(btn=>{
+    btn.hidden = !SBUSER;
+    const l = btn.querySelector('.l');
+    if(l) l.innerHTML = 'Surveillé' + (n ? ' <span class="sub-badge">'+n+'</span>' : '');
+  });
 }
 function survPastille(p){
   if(!p) return '';
@@ -1233,6 +1276,7 @@ function boot(){
   document.getElementById('app').style.display='block';
   document.getElementById('foot').innerHTML = 'Données '+esc(DATA.cfg&&DATA.cfg.src||'')+' — mise à jour le '+esc(fmtMaj(META&&META.maj?META:DATA.meta))+' · Fait avec <span class="heart">♥</span> par '+esc(DATA.cfg&&DATA.cfg.auteur||'');
   document.getElementById('brandMaj').textContent = ' · Mise à jour le '+fmtMaj(META&&META.maj?META:DATA.meta);
+  if(NAV_REPLIE) sideReplier(true);
   initCalToggles();
   buildHome(); buildPd(); buildCat(); buildAnn(); buildContenu(); buildVeille(); buildWeek(); buildSearchIndex(); routeHash();
   buildSimple('reu', R, id=>BASE+'teamMeeting/detail/'+id, 'réunion');
@@ -1250,14 +1294,45 @@ function boot(){
 
 /* ---------- Navigation / thème / verrou ---------- */
 function showTab(v){
-  document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
+  document.querySelectorAll('nav.tabs button, nav.botbar button, #plusCard button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
 }
-document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('click',()=>{
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('nav.tabs button[data-v], nav.botbar button[data-v], #plusCard button[data-v]');
+  if(!b) return;
   showTab(b.dataset.v); curTab=b.dataset.v;
+  fermerPlus();
   syncHash(true);
   window.scrollTo({top:0});
-}));
+});
+
+/* ---------- Barre latérale : repli mémorisé, et menu « Plus » sur téléphone ---------- */
+function sideReplier(on){
+  document.getElementById('app').classList.toggle('replie', !!on);
+  const t=document.getElementById('sideToggle');
+  if(t){ t.textContent = on ? '›' : '‹ Replier'; t.title = on ? 'Déplier le menu' : 'Replier le menu'; }
+  try{ localStorage.setItem('kairos_nav', on?'1':'0'); }catch(e){}
+  NAV_REPLIE = !!on;
+  planSync();
+}
+let NAV_REPLIE = false;
+try{ NAV_REPLIE = localStorage.getItem('kairos_nav')==='1'; }catch(e){}
+function fermerPlus(){ const m=document.getElementById('plusMenu'); if(m) m.hidden=true; }
+function ouvrirPlus(){
+  const m=document.getElementById('plusMenu'), c=document.getElementById('plusCard');
+  if(!m||!c) return;
+  const dans=['home','pd','surv','cat'];
+  c.innerHTML = '<div class="plus-t">Aller à…</div>' + [...document.querySelectorAll('#side button[data-v]')]
+    .filter(b=>!b.hidden && !dans.includes(b.dataset.v))
+    .map(b=>'<button data-v="'+b.dataset.v+'"'+(b.dataset.v===curTab?' class="on"':'')+'>'
+      +'<span class="i">'+b.querySelector('.i').textContent+'</span>'+b.querySelector('.l').textContent+'</button>').join('');
+  m.hidden=false;
+}
+document.addEventListener('click', e=>{
+  if(e.target.closest && e.target.closest('#sideToggle')){ sideReplier(!document.getElementById('app').classList.contains('replie')); return; }
+  if(e.target.closest && e.target.closest('#plusBtn')){ ouvrirPlus(); return; }
+  if(e.target.id==='plusMenu') fermerPlus();
+});
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
 const ADMIN_SUBS=['mbr','dem','cnt','stats'];
@@ -2265,7 +2340,7 @@ const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/su
 const AUTH_MAIL = false;   // connexion par code e-mail : nécessite un SMTP externe (service intégré limité à 2 envois/h)
 let SB=null, SBUSER=null, SYNC_T=null, SYNC_FAIT=false;
 
-const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK] });
+const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK], nav:NAV_REPLIE });
 let ACC_NOM_AFF = null;
 // Prénom de la personne connectée (Google), pour personnaliser l'accueil
 function prenomUser(){
@@ -2320,6 +2395,7 @@ async function syncPull(){
   (d.obj||[]).forEach(x=>{ if(!OBJ_OK.has(x)){ OBJ_OK.add(x); chg=true; } });
   const c=d.check||{};
   for(const k in c){ if(c[k]&&!CHECK[k]){ CHECK[k]=c[k]; chg=true; } }
+  if(typeof d.nav==='boolean' && d.nav!==NAV_REPLIE){ try{ sideReplier(d.nav); }catch(e){} }
   if(chg){
     try{
       localStorage.setItem('kairos_favs', JSON.stringify([...FAVS]));
