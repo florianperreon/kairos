@@ -744,20 +744,13 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 <div id="cmdk" role="dialog" aria-modal="true" aria-label="Recherche"><div class="ck-card"><div class="ck-in"><span class="ic">🔍</span><input type="search" id="ckQ" placeholder="Rechercher une page, une question, un atelier, un membre…" autocomplete="off"><span class="kbd">Échap</span></div><div class="ck-res" id="ckRes"></div><div class="ck-foot"><span>↑↓ naviguer</span><span>↵ ouvrir</span><span>Échap fermer</span></div></div></div>
 
 <script>
-// Blocs chiffrés : inclus dans la page (artefact) ou chargés depuis des fichiers séparés (site ou fichier local) :
-// donnees.js = données du réseau (régénéré chaque nuit), contenu.js = contenu éditorial, meta.js = date de mise à jour (en clair).
-// Chargés par balise <script> (et non fetch) pour fonctionner aussi en double-cliquant index.html (file://).
-const CENC_INLINE = null;
+// Tout le contenu du portail vit désormais dans la base : données du réseau, contenu éditorial et veille.
+// meta.js (date de mise à jour, en clair) reste le seul fichier chargé à côté de la page.
+const CENC_INLINE = null;   // conservé pour la génération d'index.html
 let MDP = '';
-let CENC = null, META = null, DATA = null, CONTENU = null, VEILLE = null;
+let META = null, DATA = null, CONTENU = null, VEILLE = null;
 const loadScript = f => new Promise((res, rej) => { const el = document.createElement('script'); el.src = f + (location.protocol === 'file:' ? '' : '?t=' + Date.now()); el.onload = () => res(); el.onerror = () => rej(new Error('CHARGEMENT ' + f)); document.head.appendChild(el); });
 const METAP = loadScript('meta.js').then(() => { META = window.KAIROS_META || null; showMeta(); }).catch(() => {});
-const BLOCKS = (async () => {
-  if (CENC_INLINE && CENC_INLINE.data) { CENC = CENC_INLINE; return; }
-  await loadScript('contenu.js'); CENC = window.KAIROS_CONTENU || null;
-  if (!CENC || !CENC.data) throw new Error('CHARGEMENT contenu.js');
-})();
-BLOCKS.catch(() => {});
 function showMeta(){
   const m = META && META.maj ? fmtMaj(META) : '';
   if (window.__booted && m) { document.getElementById('brandMaj').textContent = ' · Mise à jour le ' + m; }
@@ -833,26 +826,29 @@ const lieuKey = l => (l==='Visio'||l==='Zoom') ? 'Visio / Zoom' : l;
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const todayIso = TODAY.getFullYear()+'-'+String(TODAY.getMonth()+1).padStart(2,'0')+'-'+String(TODAY.getDate()).padStart(2,'0');
 
-/* ---------- Déchiffrement ---------- */
-const b64 = s => Uint8Array.from(atob(s), c=>c.charCodeAt(0));
-const b64e = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
-async function deriveKey(pw, blk){
-  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey({name:'PBKDF2', salt:b64(blk.salt), iterations:blk.iter||300000, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, true, ['decrypt']);
+/* ---------- Ouverture du portail ---------- */
+// Contenu éditorial : tables si connecté, fonction dédiée si entrée par mot de passe
+async function chargerContenu(){
+  try{
+    if(SB && SBUSER){
+      const [b,p] = await Promise.all([
+        SB.from('contenu_blocs').select('cle,valeur'),
+        SB.from('contenu_pages').select('slug,titre,icone,html,minutes')
+      ]);
+      if(b.error||p.error) return null;
+      const C={}; (b.data||[]).forEach(l=>{ C[l.cle]=l.valeur; });
+      const pages={}; (p.data||[]).forEach(l=>{ pages[l.slug]={t:l.titre, i:l.icone, h:l.html, n:l.minutes}; });
+      C.pages=pages; return C;
+    }
+    if(MDP){
+      const r = await fetch(SB_URL+'/functions/v1/contenu', { headers:{ 'x-kairos-mdp': MDP } });
+      if(!r.ok) return null;
+      return await r.json();
+    }
+  }catch(e){}
+  return null;
 }
-async function gunzipJson(pt){
-  const ds = new DecompressionStream('gzip');
-  const stream = new Blob([pt]).stream().pipeThrough(ds);
-  return JSON.parse(await new Response(stream).text());
-}
-const decBlock = async (blk, key) => gunzipJson(await crypto.subtle.decrypt({name:'AES-GCM', iv:b64(blk.iv)}, key, b64(blk.data)));
-// Le contenu éditorial reste chiffré dans contenu.js ; les données du réseau viennent de la base.
-async function keysFor(pw){
-  const keys = {};
-  if (CENC && CENC.salt) keys[CENC.salt] = await deriveKey(pw, CENC);
-  return keys;
-}
-// Données du réseau : table donnees_reseau si connecté, sinon fonction dédiée avec le mot de passe du portail
+// Données du réseau : table si connecté, fonction dédiée si entrée par mot de passe
 async function chargerDonnees(){
   try{
     if(SB && SBUSER){
@@ -869,46 +865,42 @@ async function chargerDonnees(){
   }catch(e){}
   return null;
 }
+// Saisie du mot de passe : c'est le serveur qui le vérifie (401 = mot de passe faux)
 async function tryUnlock(pw){
-  await BLOCKS;
-  const keys = await keysFor(pw);
-  CONTENU = await decBlock(CENC, keys[CENC.salt]);   // lève si le mot de passe est faux
-  VEILLE = null;
+  let rep;
+  try{ rep = await fetch(SB_URL+'/functions/v1/donnees', { headers:{ 'x-kairos-mdp': pw } }); }
+  catch(e){ throw new Error('RESEAU'); }
+  if(rep.status===401) throw new Error('MDP');
+  if(!rep.ok) throw new Error('RESEAU');
+  DATA = (await rep.json()).payload;
+  if(!DATA) throw new Error('RESEAU');
   MDP = pw;
-  DATA = await chargerDonnees();
-  if(!DATA) throw new Error('DONNEES');
-  if (document.getElementById('remember').checked){
-    try{ localStorage.setItem('kairos_p', pw); }catch(e){}
-    try{ const store = {}; for(const s in keys) store[s] = b64e(await crypto.subtle.exportKey('raw', keys[s])); localStorage.setItem('kairos_k', JSON.stringify(store)); }catch(e){}
-  }
+  CONTENU = await chargerContenu();
+  VEILLE = null;
+  if (document.getElementById('remember').checked){ try{ localStorage.setItem('kairos_p', pw); }catch(e){} }
   boot();
 }
+// Ouverture directe : session Google ouverte, ou mot de passe mémorisé sur cet appareil
 async function silentUnlock(){
   try{
-    const s = localStorage.getItem('kairos_k'); if(!s || !s.startsWith('{')) return false;
-    await BLOCKS;
-    const store = JSON.parse(s);
-    const salt = CENC && CENC.salt;
-    if(!salt || !store[salt]) return false;
-    const key = await crypto.subtle.importKey('raw', b64(store[salt]), {name:'AES-GCM'}, false, ['decrypt']);
-    try{ MDP = localStorage.getItem('kairos_p')||''; }catch(e){}
-    CONTENU = await decBlock(CENC, key);
-    VEILLE = null;
+    let p=''; try{ p=localStorage.getItem('kairos_p')||''; }catch(e){}
+    if(!p && !(SB && SBUSER)) return false;
+    MDP = p;
     DATA = await chargerDonnees();
     if(!DATA) return false;
+    CONTENU = await chargerContenu();
+    VEILLE = null;
     boot(); return true;
-  }catch(e){ try{localStorage.removeItem('kairos_k');}catch(_){} return false; }
+  }catch(e){ return false; }
 }
 document.getElementById('unlockBtn').addEventListener('click', async ()=>{
   const err = document.getElementById('lockErr'); err.textContent='';
   const pw = document.getElementById('pw').value;
   if(!pw){ err.textContent='Entre le mot de passe.'; return; }
-  document.getElementById('unlockBtn').textContent='Déchiffrement…';
+  document.getElementById('unlockBtn').textContent='Ouverture…';
   try{ await tryUnlock(pw); }
   catch(e){ const m=String(e&&e.message||'');
-    err.textContent = m==='DONNEES' ? 'Mot de passe correct, mais les données du réseau n\u2019ont pas pu être chargées — vérifie ta connexion et réessaie.'
-      : /^CHARGEMENT/.test(m) ? 'Impossible de charger '+m.slice(11)+' — le fichier doit être à côté de index.html ; en ligne, vérifie la connexion et réessaie.'
-      : 'Mot de passe incorrect.';
+    err.textContent = m==='RESEAU' ? 'Le portail n\u2019a pas pu joindre le serveur \u2014 vérifie ta connexion et réessaie.' : 'Mot de passe incorrect.';
     document.getElementById('unlockBtn').textContent='Déverrouiller'; }
 });
 document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('unlockBtn').click(); });
@@ -2083,15 +2075,6 @@ async function chargerVeille(){
     return true;
   }catch(err){ return false; }
 }
-// Clé de lecture du contenu chiffré, délivrée par la base aux seules personnes autorisées
-async function cleContenu(){
-  if(!SB||!SBUSER) return null;
-  try{
-    const r = await SB.from('portail').select('valeur').eq('cle','mdp').maybeSingle();
-    if(r.error) throw r.error;
-    return (r.data && r.data.valeur) || null;
-  }catch(e){ return null; }
-}
 function lockErr(m){ const e=document.getElementById('lockErr'); if(e) e.textContent=m||''; }
 function afficherMdp(){
   const w=document.getElementById('lockWait'); if(w) w.hidden=true;
@@ -2102,17 +2085,14 @@ function afficherMdp(){
 async function demarrer(){
   const w=document.getElementById('lockWait');
   const connecte = await initSync();                  // prépare Supabase et dit si une session est ouverte
-  let mdpMemo=''; try{ mdpMemo=localStorage.getItem('kairos_p')||''; }catch(e){}
-  // ouverture directe seulement si on saura lire les données en ligne (session Google, ou mot de passe mémorisé)
-  if((connecte || mdpMemo) && await silentUnlock()) return;
   const q=new URLSearchParams(location.search.slice(1));
   const err=q.get('error_description')||q.get('error');
   if(err) history.replaceState(null,'',location.pathname+location.hash);
-  if(connecte){
+  let mdpMemo=''; try{ mdpMemo=localStorage.getItem('kairos_p')||''; }catch(e){}
+  if(connecte || mdpMemo){
     if(w) w.textContent='Ouverture de ton espace\u2026';
-    const pw = await cleContenu();
-    if(pw){ try{ await tryUnlock(pw); return; }catch(e){} }
-    lockErr('Ton compte n\u2019est pas encore autoris\u00e9 sur ce portail.');
+    if(await silentUnlock()) return;
+    if(connecte) lockErr('Ton compte n\u2019est pas encore autoris\u00e9 sur ce portail.');
   }
   if(w) w.hidden=true;
   const g=document.getElementById('lockGoogle');

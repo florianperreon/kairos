@@ -6,7 +6,6 @@ et le réécrit dans la base. Plus aucun fichier de données : index.html est r�
 template.html, et le portail lit la base (ou la fonction « donnees » pour une entrée par mot de passe).
 Option --complet (ou COMPLET=1) : relit tout l'historique depuis l'origine au lieu du dernier mois + à venir.
 Configuration via variables d'environnement (secrets du dépôt) :
-  PORTAL_PW : mot de passe du portail (clé de chiffrement de contenu.js)
   KAIROS_TOKEN : jeton d'écriture des données dans la base du portail
   API_BASE  : URL de base de l'API (ex. https://exemple.tld)
   LIGNEE    : (optionnel) noms de la lignée, séparés par des virgules
@@ -264,7 +263,6 @@ def dedup(items):
 
 # ---------------- pipeline ----------------
 def run():
-    pw = os.environ["PORTAL_PW"].encode()
     api = os.environ["API_BASE"].rstrip("/")
     now = datetime.datetime.now(PARIS)
     today = now.date()
@@ -456,29 +454,16 @@ def run():
                "cfg": cfg, "ateliers": ateliers, "adherents": membres,
                "autres": autres, "adherentIds": adh_ids, "sites": sites,
                "extra": {str(k): v for k, v in extra.items()}}
-    # Contenu éditorial : tant que contenu.js existe, on le pousse en base quand sa version diffère
+    # Version du contenu éditorial (lue en base, le contenu n'a plus de fichier)
     contenu_version = ""
-    if os.path.exists("contenu.js"):
-        C = decrypt_enc(read_js("contenu.js"), pw)
-        contenu_version = str(C.get("version") or "")
-        if KAIROS_TOKEN:
-            url_c = KAIROS_BASE.replace("/donnees", "/contenu")
-            en_base = ""
-            try:
-                r = requests.get(url_c + "?version", headers={"x-kairos-token": KAIROS_TOKEN}, timeout=120)
-                if r.ok:
-                    en_base = str(r.json().get("version") or "")
-            except Exception as e:
-                print(f"lecture du contenu en base impossible ({e})")
-            if en_base != contenu_version:
-                gz64 = base64.b64encode(gzip.compress(
-                    json.dumps(C, ensure_ascii=False, separators=(",", ":")).encode("utf-8"), 9)).decode()
-                rp = requests.post(url_c, json={"gz": gz64},
-                                   headers={"x-kairos-token": KAIROS_TOKEN, "Content-Type": "application/json"},
-                                   timeout=300)
-                print("contenu en base : " + rp.text[:200])
-            else:
-                print(f"contenu déjà à jour en base (version {en_base})")
+    if KAIROS_TOKEN:
+        try:
+            r = requests.get(KAIROS_BASE.replace("/donnees", "/contenu") + "?version",
+                             headers={"x-kairos-token": KAIROS_TOKEN}, timeout=120)
+            if r.ok:
+                contenu_version = str(r.json().get("version") or "")
+        except Exception as e:
+            print(f"version du contenu indisponible ({e})")
 
     tpl = open("template.html", encoding="utf-8").read()
     if tpl.count("__CENC__") != 1:
@@ -522,7 +507,7 @@ if __name__ == "__main__":
     except Exception as e:
         # logs publics : ne divulguer ni URL, ni noms, ni identifiants
         msg = str(e)
-        for v in (os.environ.get("API_BASE", ""), os.environ.get("PORTAL_PW", "")):
+        for v in (os.environ.get("API_BASE", ""), os.environ.get("KAIROS_TOKEN", "")):
             if v:
                 msg = msg.replace(v, "***")
                 h = urlparse(v).hostname or ""

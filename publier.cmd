@@ -29,7 +29,7 @@ set PREP=%TEMP%\kairos_prep
 if exist "%PREP%" rmdir /s /q "%PREP%"
 mkdir "%PREP%\workflows"
 echo === 1/4 Copie des fichiers prepares ===
-for %%f in (index.html template.html update.py contenu.js sw.js manifest.webmanifest publier.cmd confidentialite.html CNAME icon-192.png icon-512.png icon-512-maskable.png favicon.svg .gitignore) do (
+for %%f in (index.html template.html update.py sw.js manifest.webmanifest publier.cmd confidentialite.html CNAME icon-192.png icon-512.png icon-512-maskable.png favicon.svg .gitignore) do (
   if exist "%%f" copy /y "%%f" "%PREP%\" >nul
 )
 copy /y ".github\workflows\*.yml" "%PREP%\workflows\" >nul
@@ -50,6 +50,7 @@ rem Anciens fichiers de donnees (les donnees vivent desormais en base)
 if exist contenu.enc del /q contenu.enc
 if exist donnees.enc del /q donnees.enc
 if exist donnees.js del /q donnees.js
+if exist contenu.js del /q contenu.js
 git rm -r -q --cached "Claude outputs" 2>nul
 
 echo === 4/4 Commit et push ===
