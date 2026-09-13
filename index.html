@@ -115,6 +115,15 @@ table{width:100%;border-collapse:collapse;font-size:14.5px}
 th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
 td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 tr.row:hover td{background:var(--surface-2)}
+th.sortable{cursor:pointer;user-select:none;position:relative;padding-right:18px}
+th.sortable:hover{color:var(--ink)}
+th.sortable::after{content:"↕";position:absolute;right:6px;opacity:.35;font-size:11px}
+th.sortable.asc::after{content:"▲";opacity:1;color:var(--accent)}
+th.sortable.desc::after{content:"▼";opacity:1;color:var(--accent)}
+th.sortable.asc,th.sortable.desc{color:var(--accent)}
+tr.colf th{padding:4px 6px 8px;border-bottom:2px solid var(--line)}
+tr.colf input{width:100%;min-width:80px;padding:5px 8px;border:1px solid var(--line-2);border-radius:6px;background:var(--ground);color:var(--ink);font-size:12.5px;font-weight:400;text-transform:none;letter-spacing:0}
+tr.colf input:focus{outline:2px solid var(--accent);outline-offset:0}
 .tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
 .pager{display:flex;gap:10px;align-items:center;justify-content:center;padding:14px;font-size:14px;color:var(--ink-2)}
 .pager button{border:1px solid var(--line-2);background:var(--surface);border-radius:7px;padding:5px 12px;cursor:pointer;color:var(--ink)}
@@ -571,14 +580,16 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
         <input type="search" id="annQ" placeholder="Nom, email, téléphone, parrain, ville…">
         <select id="annYear"><option value="">Toutes années</option></select>
         <select id="annDep"><option value="">Tous départements</option></select>
-        <select id="annSort"><option value="name">Tri : nom</option><option value="dateDesc">Tri : inscription ↓</option><option value="dateAsc">Tri : inscription ↑</option><option value="id">Tri : ID</option></select>
         <label class="chk"><input type="checkbox" id="annAdh"> Adhérents</label>
         <label class="chk"><input type="checkbox" id="annFav"> ★ Favoris</label>
       </div>
       <div class="count-line"><span id="annCount"></span></div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th></th><th>Nom</th><th>Téléphone</th><th>Email</th><th>Inscription</th><th>Ville</th><th>Parrain</th><th>Manager</th></tr></thead>
+          <thead>
+            <tr id="annHead"><th></th><th data-col="name" class="sortable">Nom</th><th data-col="tel" class="sortable">Téléphone</th><th data-col="mail" class="sortable">Email</th><th data-col="date" class="sortable">Inscription</th><th data-col="city" class="sortable">Ville</th><th data-col="parrain" class="sortable">Parrain</th><th data-col="mgr" class="sortable">Manager</th></tr>
+            <tr class="colf"><th></th><th><input type="search" data-f="nn" placeholder="Filtrer…" aria-label="Filtrer par nom"></th><th><input type="search" data-f="nt" placeholder="Filtrer…" aria-label="Filtrer par téléphone"></th><th><input type="search" data-f="nm" placeholder="Filtrer…" aria-label="Filtrer par email"></th><th><input type="search" data-f="date" placeholder="AAAA-MM…" aria-label="Filtrer par date d’inscription"></th><th><input type="search" data-f="nc" placeholder="Filtrer…" aria-label="Filtrer par ville"></th><th><input type="search" data-f="np" placeholder="Filtrer…" aria-label="Filtrer par parrain"></th><th><input type="search" data-f="ng" placeholder="Filtrer…" aria-label="Filtrer par manager"></th></tr>
+          </thead>
           <tbody id="annBody"></tbody>
         </table>
         <div class="pager"><button id="pgPrev">←</button><span id="pgInfo" class="num"></span><button id="pgNext">→</button></div>
@@ -1266,7 +1277,7 @@ function initCalToggles(){
 }
 
 /* ---------- Annuaire ---------- */
-let annPage=0, annRows=[];
+let annPage=0, annRows=[], ANN_SORT={col:'date',dir:'desc'};
 function buildAnn(){
   const years=[...new Set(M.map(m=>(m.date||'').slice(0,4)).filter(y=>y>='2009'))].sort().reverse();
   document.getElementById('annYear').innerHTML='<option value="">Toutes années</option>'+years.map(y=>'<option>'+y+'</option>').join('');
@@ -1282,14 +1293,18 @@ function buildAnn(){
       if(m.nc.includes(q)) return 5;
       return 9;
     };
-    const yr=document.getElementById('annYear').value, fav=document.getElementById('annFav').checked, sort=document.getElementById('annSort').value;
+    const yr=document.getElementById('annYear').value, fav=document.getElementById('annFav').checked;
     const adh=document.getElementById('annAdh').checked, dep=document.getElementById('annDep').value;
-    annRows=M.filter(m=>score(m)<9&&(!dep||m.cp.slice(0,2)===dep)&&(!yr||(m.date||'').startsWith(yr))&&(!fav||FAVS.has(m.id))&&(!adh||ADH.has(m.id)));
-    if(sort==='name'&&q) annRows.sort((a,b)=>{const d=score(a)-score(b); return d!==0?d:(a.nn<b.nn?-1:1);});
-    else if(sort==='name') annRows.sort((a,b)=>a.nn<b.nn?-1:1);
-    else if(sort==='dateDesc') annRows.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    else if(sort==='dateAsc') annRows.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-    else annRows.sort((a,b)=>a.id-b.id);
+    // filtres par colonne (ligne sous les en-têtes) : contient, sans accents ; téléphone = chiffres seulement
+    const colf=[...document.querySelectorAll('#v-ann tr.colf input')].map(i=>[i.dataset.f, i.dataset.f==='nt'?i.value.replace(/\D/g,''):norm(i.value.trim())]).filter(x=>x[1]);
+    const colOk=m=>colf.every(([f,v])=>{ const val=f==='date'?(m.date||''):(m[f]||''); return val.includes(v); });
+    annRows=M.filter(m=>score(m)<9&&colOk(m)&&(!dep||m.cp.slice(0,2)===dep)&&(!yr||(m.date||'').startsWith(yr))&&(!fav||FAVS.has(m.id))&&(!adh||ADH.has(m.id)));
+    // tri : clic sur l'en-tête (défaut : inscription décroissante) ; avec une recherche globale, la pertinence prime sur le tri par nom
+    const {col,dir}=ANN_SORT; const sgn=dir==='asc'?1:-1;
+    const key=m=>col==='name'?m.nn:col==='tel'?m.nt:col==='mail'?m.nm:col==='date'?(m.date||''):col==='city'?m.nc:col==='parrain'?m.np:m.ng;
+    const cmp=(a,b)=>{ const ka=key(a), kb=key(b); if(ka===kb) return a.nn<b.nn?-1:a.nn>b.nn?1:0; if(!ka) return 1; if(!kb) return -1; return (ka<kb?-1:1)*sgn; };
+    if(col==='name'&&q) annRows.sort((a,b)=>{const d=score(a)-score(b); return d!==0?d:cmp(a,b);});
+    else annRows.sort(cmp);
     annPage=0; renderPage();
   };
   const renderPage=()=>{
@@ -1313,7 +1328,16 @@ function buildAnn(){
   document.getElementById('pgNext').addEventListener('click',()=>{annPage++;renderPage();window.scrollTo({top:0});});
   const deps={}; M.forEach(m=>{ const d=m.cp.slice(0,2); if(/^\d\d$/.test(d)) deps[d]=(deps[d]||0)+1; });
   document.getElementById('annDep').innerHTML='<option value="">Tous départements</option>'+Object.keys(deps).sort().map(d=>'<option value="'+d+'">'+d+' ('+deps[d]+')</option>').join('');
-  ['annQ','annYear','annSort','annFav','annAdh','annDep'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+  ['annQ','annYear','annFav','annAdh','annDep'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+  document.querySelectorAll('#v-ann tr.colf input').forEach(i=>i.addEventListener('input',render));
+  const paintSort=()=>document.querySelectorAll('#annHead th.sortable').forEach(th=>{ th.classList.toggle('asc',th.dataset.col===ANN_SORT.col&&ANN_SORT.dir==='asc'); th.classList.toggle('desc',th.dataset.col===ANN_SORT.col&&ANN_SORT.dir==='desc'); th.title='Trier par '+th.textContent.trim().toLowerCase(); });
+  document.querySelectorAll('#annHead th.sortable').forEach(th=>th.addEventListener('click',()=>{
+    const c=th.dataset.col;
+    if(ANN_SORT.col===c) ANN_SORT.dir = ANN_SORT.dir==='asc'?'desc':'asc';
+    else ANN_SORT={col:c, dir: c==='date'?'desc':'asc'};   // texte : A→Z d'abord ; date : plus récents d'abord
+    paintSort(); render();
+  }));
+  paintSort();
   render();
 }
 
