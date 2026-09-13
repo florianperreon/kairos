@@ -56,7 +56,19 @@ header.top .mark{margin:0}
 .top-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
 .icon-btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer}
 .icon-btn:hover{color:var(--ink);border-color:var(--ink-3)}
-nav.tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);flex-wrap:wrap}
+nav.tabs:not(.side){display:flex;gap:4px;border-bottom:2px solid var(--line);flex-wrap:wrap}
+/* Deux colonnes : menu à gauche, contenu à droite */
+.shell{display:grid;grid-template-columns:212px minmax(0,1fr);gap:26px;align-items:start}
+#app.replie .shell{grid-template-columns:62px minmax(0,1fr)}
+.content{min-width:0}
+nav.tabs.side{position:sticky;top:14px;display:flex;flex-direction:column;gap:2px;border:0;padding:10px 8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:calc(100vh - 28px);overflow:auto}
+nav.tabs.side .grp{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);padding:12px 10px 5px}
+nav.tabs.side .grp:first-child{padding-top:2px}
+#app.replie nav.tabs.side{padding:10px 6px}
+#app.replie nav.tabs.side .grp{height:1px;padding:0;margin:9px 6px;background:var(--line);overflow:hidden;color:transparent}
+.side-bas{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.side-toggle{border:0;background:none;color:var(--ink-3);font-size:12px;font-weight:600;padding:7px 10px;border-radius:8px;text-align:left;cursor:pointer}
+.side-toggle:hover{background:var(--surface-2);color:var(--ink-2)}
 nav.tabs.side button[data-v]{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;border-radius:9px;padding:9px 10px;font-family:"Sora";font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
 nav.tabs.side button[data-v] .i{flex:none;width:20px;text-align:center;font-size:15px}
 nav.tabs.side button[data-v]:hover{background:var(--surface-2);color:var(--ink)}
