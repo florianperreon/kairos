@@ -29,7 +29,7 @@ set PREP=%TEMP%\kairos_prep
 if exist "%PREP%" rmdir /s /q "%PREP%"
 mkdir "%PREP%\workflows"
 echo === 1/4 Copie des fichiers prepares ===
-for %%f in (index.html template.html update.py veille.py contenu.js sw.js manifest.webmanifest publier.cmd icon-192.png icon-512.png icon-512-maskable.png favicon.svg .gitignore) do (
+for %%f in (index.html template.html update.py veille.py veille_notion.py contenu.js sw.js manifest.webmanifest publier.cmd icon-192.png icon-512.png icon-512-maskable.png favicon.svg .gitignore) do (
   if exist "%%f" copy /y "%%f" "%PREP%\" >nul
 )
 copy /y ".github\workflows\*.yml" "%PREP%\workflows\" >nul
