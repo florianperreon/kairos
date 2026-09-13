@@ -1292,11 +1292,24 @@ async function chargerDonnees(){
   return null;
 }
 // Ouverture directe : la session Google donne accès aux données
+// Une adresse Google qui figure déjà sur une fiche de la lignée ouvre l'accès sans passer par un administrateur.
+async function rattachementAuto(){
+  if(!(SB && SBUSER)) return false;
+  try{
+    const r = await SB.rpc('rattachement_auto');
+    return !r.error && r.data && r.data.ok === true;
+  }catch(e){ return false; }
+}
 async function silentUnlock(){
   try{
     if(!(SB && SBUSER)) return false;
     DATA = await chargerDonnees();
-    if(!DATA) return false;
+    if(!DATA){
+      // pas encore autorisé : on tente le rapprochement automatique, puis une seule nouvelle lecture
+      if(!(await rattachementAuto())) return false;
+      DATA = await chargerDonnees();
+      if(!DATA) return false;
+    }
     CONTENU = await chargerContenu();
     VEILLE = null;
     boot(); return true;
