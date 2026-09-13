@@ -511,15 +511,30 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 .acc-state{font-size:12px;color:var(--ink-3);margin:0 0 18px}
 .acc-note{font-size:12px;color:var(--ink-3);margin-top:14px;line-height:1.5}
 
+/* Écran de connexion : Google d'abord, mot de passe en repli */
+#lockGoogle{margin:4px 0 0}
+.lock-alt{margin:16px 0 0;text-align:center}
+.lock-alt button{border:0;background:transparent;color:var(--ink-3);font-size:13px;text-decoration:underline;cursor:pointer;padding:4px;font-family:inherit}
+.lock-alt button:hover{color:var(--ink-2)}
+#lockPwBox{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.lock-note{font-size:12px;color:var(--ink-3);line-height:1.5;margin:10px 0 0;text-align:left}
+.lock-wait{font-size:13px;color:var(--ink-2);margin:10px 0 0}
+
 </style>
 
 <div id="lock" class="wrap">
   <div class="lock-card">
     <h1>Portail Kairos</h1>
     <p>Kairos, c'est l'art de reconnaître le bon moment — et d'agir au moment juste</p>
-    <input type="password" id="pw" placeholder="Mot de passe" autocomplete="current-password">
-    <div class="lock-row"><input type="checkbox" id="remember" checked><label for="remember">Rester déverrouillé</label></div>
-    <button id="unlockBtn">Déverrouiller</button>
+    <button class="acc-g" id="lockGoogle" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.2 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.3-4.6 7l7.2 5.6c4.2-3.9 6.6-9.6 6.6-16.4z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.9-6.1C1 16.9 0 20.3 0 24s1 7.1 2.6 10.2l7.9-5.5z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.2-5.6c-2 1.4-4.6 2.2-8.7 2.2-6.3 0-11.6-3.7-13.5-9.1l-7.9 5.5C6.5 42.6 14.6 48 24 48z"/></svg>Continuer avec Google</button>
+    <p class="lock-wait" id="lockWait">Ouverture…</p>
+    <div class="lock-alt" id="lockAlt" hidden><button type="button" id="lockPwLink">Se connecter avec le mot de passe</button></div>
+    <div id="lockPwBox" hidden>
+      <input type="password" id="pw" placeholder="Mot de passe" autocomplete="current-password">
+      <div class="lock-row"><input type="checkbox" id="remember" checked><label for="remember">Rester déverrouillé</label></div>
+      <button id="unlockBtn">Déverrouiller</button>
+      <p class="lock-note">Sans compte, tes favoris et tes étapes cochées restent sur cet appareil uniquement : ils ne te suivront pas sur ton téléphone et seront perdus si tu changes de navigateur.</p>
+    </div>
     <div id="lockErr"></div>
   </div>
 </div>
@@ -904,7 +919,8 @@ function boot(){
   buildSimple('for', F, id=>BASE+'formation/detail/'+id, 'formation');
   buildSimple('evt', E, id=>BASE+'event/detail/'+id, 'événement');
   window.__booted=true;
-  initSync();
+  accMaj();
+  if(SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
 }
 
 /* ---------- Navigation / thème / verrou ---------- */
@@ -1884,28 +1900,70 @@ async function syncPush(){
 function planSync(){ if(!SB||!SBUSER) return; clearTimeout(SYNC_T); SYNC_T=setTimeout(syncPush, 1200); }
 window.addEventListener('pagehide',()=>{ if(SYNC_T) syncPush(); });
 
+// Prépare le client Supabase (avant même le déverrouillage) et renvoie true si une session est ouverte.
 async function initSync(){
-  if(location.protocol==='file:') return;            // test local : pas de compte
-  const b=accEl('accBtn'); if(b) b.hidden=false;
-  try{ await loadScript(SB_LIB); }catch(e){ if(b) b.hidden=true; return; }
-  if(!window.supabase||!window.supabase.createClient){ if(b) b.hidden=true; return; }
+  if(SB) return !!SBUSER;
+  if(location.protocol==='file:') return false;       // test local : pas de compte
+  try{ await loadScript(SB_LIB); }catch(e){ return false; }
+  if(!window.supabase||!window.supabase.createClient) return false;
   SB = window.supabase.createClient(SB_URL, SB_KEY, { auth:{ flowType:'pkce', persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storageKey:'kairos_auth' } });
   SB.auth.onAuthStateChange((ev, session)=>{
     SBUSER = session ? session.user : null;
     accMaj();
-    if(SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
+    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
     if(!SBUSER) SYNC_FAIT=false;
   });
   try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }
+  const b=accEl('accBtn'); if(b) b.hidden=false;
   accMaj();
-  if(SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
-  // Retour d'une connexion Google refusée (adresse hors liste)
-  const q=new URLSearchParams(location.search.slice(1));
-  if(q.get('error')||q.get('error_description')){
-    history.replaceState(null,'',location.pathname+location.hash);
-    accOuvrir(); accErr(accMsg(q.get('error_description')||q.get('error')));
-  }
+  if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
+  return !!SBUSER;
 }
+// Clé de lecture du contenu chiffré, délivrée par la base aux seules personnes autorisées
+async function cleContenu(){
+  if(!SB||!SBUSER) return null;
+  try{
+    const r = await SB.from('portail').select('valeur').eq('cle','mdp').maybeSingle();
+    if(r.error) throw r.error;
+    return (r.data && r.data.valeur) || null;
+  }catch(e){ return null; }
+}
+function lockErr(m){ const e=document.getElementById('lockErr'); if(e) e.textContent=m||''; }
+function afficherMdp(){
+  const w=document.getElementById('lockWait'); if(w) w.hidden=true;
+  const a=document.getElementById('lockAlt'); if(a) a.hidden=true;
+  const b=document.getElementById('lockPwBox'); if(b){ b.hidden=false; const p=document.getElementById('pw'); if(p) setTimeout(()=>p.focus(),50); }
+}
+// Démarrage : session Google en priorité, écran mot de passe sinon
+async function demarrer(){
+  if(await silentUnlock()){ initSync(); return; }     // déjà déverrouillé sur cet appareil
+  const w=document.getElementById('lockWait');
+  const connecte = await initSync();
+  const q=new URLSearchParams(location.search.slice(1));
+  const err=q.get('error_description')||q.get('error');
+  if(err) history.replaceState(null,'',location.pathname+location.hash);
+  if(connecte){
+    if(w) w.textContent='Ouverture de ton espace\u2026';
+    const pw = await cleContenu();
+    if(pw){ try{ await tryUnlock(pw); return; }catch(e){} }
+    lockErr('Ton compte n\u2019est pas encore autoris\u00e9 sur ce portail.');
+  }
+  if(w) w.hidden=true;
+  const g=document.getElementById('lockGoogle');
+  if(SB && g) g.hidden=false;
+  if(err) lockErr(accMsg(err));
+  if(SB){ const a=document.getElementById('lockAlt'); if(a) a.hidden=false; }
+  else { afficherMdp(); }
+}
+document.addEventListener('click', async e=>{
+  if(e.target.closest && e.target.closest('#lockPwLink')){ afficherMdp(); return; }
+  const g = e.target.closest && e.target.closest('#lockGoogle');
+  if(!g) return;
+  lockErr('');
+  g.disabled=true;
+  try{ await SB.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.origin+location.pathname } }); }
+  catch(err){ lockErr(accMsg(err)); g.disabled=false; }
+});
 
 document.addEventListener('click', e=>{
   const t=e.target;
@@ -1958,6 +2016,7 @@ document.addEventListener('click', async e=>{
   if(d){
     try{ await SB.auth.signOut(); }catch(err){}
     SBUSER=null; SYNC_FAIT=false; accMaj(); accFermer();
+    accEtat('');
   }
 });
 document.addEventListener('keydown', e=>{
@@ -1972,7 +2031,7 @@ document.addEventListener('keydown', e=>{
   try{ const v=localStorage.getItem('kairos_theme'); if(v==='dark'||v==='light') t=v; }catch(e){}
   document.documentElement.setAttribute('data-theme', t);
 })();
-silentUnlock();
+demarrer();
 </script>
 
 </body></html>
