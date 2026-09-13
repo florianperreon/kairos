@@ -921,6 +921,7 @@ function boot(){
   window.__booted=true;
   accMaj();
   if(SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
+  chargerVeille();
 }
 
 /* ---------- Navigation / thème / verrou ---------- */
@@ -1929,13 +1930,38 @@ async function initSync(){
   SB.auth.onAuthStateChange((ev, session)=>{
     SBUSER = session ? session.user : null;
     accMaj();
-    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
+    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); }
     if(!SBUSER) SYNC_FAIT=false;
   });
   try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }
   accMaj();
   if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
   return !!SBUSER;
+}
+// Veille CGP : lue en base (source de vérité depuis le 13/09/2026), veille.js ne sert plus que de secours hors ligne
+async function chargerVeille(){
+  if(!SB||!SBUSER) return false;
+  try{
+    const [e,b] = await Promise.all([
+      SB.from('veille_editions').select('du,au,axe,sujet,breves,maj').order('du',{ascending:false}),
+      SB.from('veille_breaking').select('d,axe,t,r,i,u,s').order('d',{ascending:false})
+    ]);
+    if(e.error||b.error) return false;
+    const lignes = e.data||[];
+    if(!lignes.length) return false;
+    const eds={}; let last='';
+    lignes.forEach(r=>{
+      if(!eds[r.du]) eds[r.du]={du:r.du, au:r.au, items:{}};
+      eds[r.du].items[r.axe]={ sujet:r.sujet||{}, breves:r.breves||[], maj:r.maj };
+      if((r.maj||'')>last) last=r.maj||'';
+    });
+    let maj='';
+    if(last){ const d=new Date(last), z=n=>String(n).padStart(2,'0');
+      maj = d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes()); }
+    VEILLE = { maj: maj, editions: Object.values(eds), breaking: (b.data||[]) };
+    if(window.__booted){ try{ buildVeille(); buildSearchIndex(); routeHash(); }catch(err){} }
+    return true;
+  }catch(err){ return false; }
 }
 // Clé de lecture du contenu chiffré, délivrée par la base aux seules personnes autorisées
 async function cleContenu(){
