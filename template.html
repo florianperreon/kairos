@@ -47,42 +47,71 @@ button{font:inherit}
 #lockErr{color:var(--bad);font-size:14px;min-height:20px;margin-top:10px}
 .lock-note{font-size:12.5px;color:var(--ink-3);margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
 
-/* ---------- App shell ---------- */
-#app{display:none;padding-block:0 60px}
-header.top{display:flex;align-items:center;gap:14px;padding-block:18px 14px;flex-wrap:wrap}
-header.top .mark{margin:0}
-.brand{font-family:"Sora";font-weight:800;font-size:20px;letter-spacing:-.01em}
-.brand small{display:block;font-weight:600;font-size:11.5px;color:var(--ink-2);letter-spacing:.08em;text-transform:uppercase}
+/* ---------- App shell : barre latérale pleine hauteur, contenu plein écran ---------- */
+#app{display:none;grid-template-columns:var(--side-w,248px) minmax(0,1fr);min-height:100vh}
+#app.replie{--side-w:68px}
+
+/* Colonne de gauche */
+nav.tabs.side{position:sticky;top:0;align-self:start;height:100vh;display:flex;flex-direction:column;
+  background:var(--surface);border-right:1px solid var(--line);padding:14px 12px 12px}
+.side-head{display:flex;align-items:center;gap:10px;padding:2px 6px 16px;min-height:44px}
+.side-head .mark{margin:0;flex:none}
+.side-head .mark span{border-width:0 9px 17px 9px}
+.side-head .mark .t2{border-width:17px 9px 0 9px}
+.side-nav{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:2px;margin:0 -4px;padding:0 4px}
+.side-nav::-webkit-scrollbar{width:6px}
+.side-nav::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:3px}
+nav.tabs.side .grp{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);padding:14px 10px 5px}
+nav.tabs.side .grp:first-child{padding-top:2px}
+nav.tabs.side button[data-v]{position:relative;display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:0;background:none;border-radius:9px;padding:9px 10px;font-family:"Sora";font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer;transition:background .12s,color .12s}
+nav.tabs.side button[data-v] .i{flex:none;width:20px;text-align:center;font-size:15px}
+nav.tabs.side button[data-v] .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+nav.tabs.side button[data-v]:hover{background:var(--surface-2);color:var(--ink)}
+nav.tabs.side button[data-v].on{background:var(--accent-soft);color:var(--accent)}
+.side-bas{padding-top:10px;margin-top:8px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.side-toggle{border:0;background:none;color:var(--ink-3);font-size:12px;font-weight:600;padding:8px 10px;border-radius:8px;text-align:left;cursor:pointer}
+.side-toggle:hover{background:var(--surface-2);color:var(--ink-2)}
+/* Menu replié : icônes seules */
+#app.replie nav.tabs.side{padding:14px 8px 12px;align-items:stretch}
+#app.replie .side-head{justify-content:center;padding:2px 0 16px}
+#app.replie .side-head .brand{display:none}
+#app.replie nav.tabs.side .l{display:none}
+#app.replie nav.tabs.side button[data-v]{justify-content:center;padding:10px 0;gap:0}
+#app.replie nav.tabs.side .grp{height:1px;padding:0;margin:11px 6px 7px;background:var(--line);overflow:hidden;color:transparent}
+#app.replie .side-toggle{text-align:center;padding:8px 0}
+
+/* Colonne de droite */
+.content{min-width:0;display:flex;flex-direction:column}
+.content > main{flex:1}
+.inner{width:100%;max-width:1460px;margin:0 auto;padding:24px 32px 64px}
+header.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  background:var(--ground);background:color-mix(in srgb,var(--ground) 88%,transparent);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);padding:11px 32px;flex-wrap:wrap}
+header.top .mark,header.top .brand{display:none}
+.brand{font-family:"Sora";font-weight:800;font-size:19px;letter-spacing:-.01em;line-height:1.15;min-width:0}
+.brand small{display:block;font-weight:600;font-size:10.5px;color:var(--ink-2);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top-maj{font-size:12px;color:var(--ink-3)}
 .top-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
 .icon-btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:7px 11px;font-size:13px;cursor:pointer}
 .icon-btn:hover{color:var(--ink);border-color:var(--ink-3)}
 nav.tabs:not(.side){display:flex;gap:4px;border-bottom:2px solid var(--line);flex-wrap:wrap}
-/* Deux colonnes : menu à gauche, contenu à droite */
-.shell{display:grid;grid-template-columns:212px minmax(0,1fr);gap:26px;align-items:start}
-#app.replie .shell{grid-template-columns:62px minmax(0,1fr)}
-.content{min-width:0}
-nav.tabs.side{position:sticky;top:14px;display:flex;flex-direction:column;gap:2px;border:0;padding:10px 8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;max-height:calc(100vh - 28px);overflow:auto}
-nav.tabs.side .grp{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);padding:12px 10px 5px}
-nav.tabs.side .grp:first-child{padding-top:2px}
-#app.replie nav.tabs.side{padding:10px 6px}
-#app.replie nav.tabs.side .grp{height:1px;padding:0;margin:9px 6px;background:var(--line);overflow:hidden;color:transparent}
-.side-bas{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
-.side-toggle{border:0;background:none;color:var(--ink-3);font-size:12px;font-weight:600;padding:7px 10px;border-radius:8px;text-align:left;cursor:pointer}
-.side-toggle:hover{background:var(--surface-2);color:var(--ink-2)}
-nav.tabs.side button[data-v]{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;border-radius:9px;padding:9px 10px;font-family:"Sora";font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
-nav.tabs.side button[data-v] .i{flex:none;width:20px;text-align:center;font-size:15px}
-nav.tabs.side button[data-v]:hover{background:var(--surface-2);color:var(--ink)}
-nav.tabs.side button[data-v].on{background:var(--accent-soft);color:var(--accent)}
-#app.replie nav.tabs.side .l{display:none}
-#app.replie nav.tabs.side button[data-v]{justify-content:center;padding:10px 0}
-#app.replie .side-toggle{text-align:center;padding:8px 0}
 /* Barre inférieure (téléphone) */
 nav.botbar{display:none}
 #plusMenu[hidden]{display:none}
 @media(max-width:860px){
-  .shell{display:block}
+  #app{grid-template-columns:minmax(0,1fr);padding-bottom:74px}
   nav.tabs.side{display:none}
-  #app{padding-bottom:74px}
+  .inner{padding:18px 16px 30px}
+  header.top{padding:9px 14px;gap:10px;flex-wrap:nowrap}
+  header.top .brand{display:block;font-size:17px;flex:none}
+  header.top .mark{display:flex;margin:0;flex:none}
+  header.top .mark span{border-width:0 8px 15px 8px}
+  header.top .mark .t2{border-width:15px 8px 0 8px}
+  .top-maj{display:none}
+  .top-actions{gap:6px;flex-wrap:nowrap;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .top-actions::-webkit-scrollbar{display:none}
+  .icon-btn{padding:6px 9px;font-size:12px;white-space:nowrap;flex:none}
+  .icon-btn .kbd{display:none}
   nav.botbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
   nav.botbar button{flex:1;border:0;background:none;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer;min-width:0}
   nav.botbar button .i{font-size:18px;line-height:1}
@@ -677,10 +706,36 @@ nav.tabs .sub-badge{display:inline-block;min-width:17px;padding:0 5px;margin-lef
   </div>
 </div>
 
-<div id="app" class="wrap">
+<div id="app">
+  <nav class="tabs side" id="side" aria-label="Navigation principale">
+    <div class="side-head">
+      <div class="mark"><span class="t1"></span><span class="t2"></span><span class="t3"></span></div>
+      <div class="brand">KAIROS</div>
+    </div>
+    <div class="side-nav">
+      <div class="grp">Mon espace</div>
+      <button data-v="home" class="on" title="Accueil"><span class="i">🏠</span><span class="l">Accueil</span></button>
+      <button data-v="surv" hidden title="Surveillé"><span class="i">👁</span><span class="l">Surveillé</span></button>
+      <button data-v="pd" id="pdTabBtn" title="Parcours Découverte"><span class="i">🧭</span><span class="l">Parcours</span></button>
+      <div class="grp">Le réseau</div>
+      <button data-v="cat" title="Ateliers"><span class="i">🎓</span><span class="l">Ateliers</span></button>
+      <button data-v="reu" title="Réunions d'équipe"><span class="i">👥</span><span class="l">Réunions d'équipe</span></button>
+      <button data-v="for" title="Formations"><span class="i">📚</span><span class="l">Formations</span></button>
+      <button data-v="evt" title="Événements"><span class="i">🎉</span><span class="l">Événements</span></button>
+      <button data-v="ann" title="Annuaire"><span class="i">📇</span><span class="l">Annuaire</span></button>
+      <div class="grp">S'informer</div>
+      <button data-v="veille" hidden title="Veille"><span class="i">📰</span><span class="l">Veille</span></button>
+    </div>
+    <div class="side-bas">
+      <button data-v="admin" hidden title="Admin"><span class="i">⚙️</span><span class="l">Admin</span></button>
+      <button type="button" id="sideToggle" class="side-toggle" title="Replier le menu">‹ Replier</button>
+    </div>
+  </nav>
+  <div class="content">
   <header class="top">
     <div class="mark"><span class="t1"></span><span class="t2"></span><span class="t3"></span></div>
-    <div class="brand">KAIROS<small>Ressources partagées<span id="brandMaj"></span></small></div>
+    <div class="brand">KAIROS</div>
+    <div class="top-maj" id="brandMaj"></div>
     <div class="top-actions">
       <button class="icon-btn" id="searchBtn" title="Rechercher partout (Ctrl K)">🔍 Rechercher<span class="kbd">Ctrl K</span></button>
       <button class="icon-btn" id="linkBtn" title="Copier le lien de cette vue (onglet + filtres) pour le partager">🔗 Lien</button>
@@ -690,26 +745,7 @@ nav.tabs .sub-badge{display:inline-block;min-width:17px;padding:0 5px;margin-lef
       <button class="icon-btn" id="lockBtn" title="Fermer ma session">🚪 Déconnexion</button>
     </div>
   </header>
-  <div class="shell">
-  <nav class="tabs side" id="side" aria-label="Navigation principale">
-    <div class="grp">Mon espace</div>
-    <button data-v="home" class="on"><span class="i">🏠</span><span class="l">Accueil</span></button>
-    <button data-v="surv" hidden><span class="i">👁</span><span class="l">Surveillé</span></button>
-    <button data-v="pd" id="pdTabBtn"><span class="i">🧭</span><span class="l">Parcours</span></button>
-    <div class="grp">Le réseau</div>
-    <button data-v="cat"><span class="i">🎓</span><span class="l">Ateliers</span></button>
-    <button data-v="reu"><span class="i">👥</span><span class="l">Réunions d'équipe</span></button>
-    <button data-v="for"><span class="i">📚</span><span class="l">Formations</span></button>
-    <button data-v="evt"><span class="i">🎉</span><span class="l">Événements</span></button>
-    <button data-v="ann"><span class="i">📇</span><span class="l">Annuaire</span></button>
-    <div class="grp">S'informer</div>
-    <button data-v="veille" hidden><span class="i">📰</span><span class="l">Veille</span></button>
-    <div class="side-bas">
-      <button data-v="admin" hidden><span class="i">⚙️</span><span class="l">Admin</span></button>
-      <button type="button" id="sideToggle" class="side-toggle" title="Replier le menu">‹ Replier</button>
-    </div>
-  </nav>
-  <div class="content">
+  <div class="inner">
   <main>
     <section class="view on" id="v-home">
       <div class="panel welcome" id="welcome"></div>
@@ -969,7 +1005,7 @@ const loadScript = f => new Promise((res, rej) => { const el = document.createEl
 const METAP = loadScript('meta.js').then(() => { META = window.KAIROS_META || null; showMeta(); }).catch(() => {});
 function showMeta(){
   const m = META && META.maj ? fmtMaj(META) : '';
-  if (window.__booted && m) { document.getElementById('brandMaj').textContent = ' · Mise à jour le ' + m; }
+  if (window.__booted && m) { document.getElementById('brandMaj').textContent = 'Mise à jour le ' + m; }
 }
 
 /* ---------- Constantes métier ---------- */
@@ -1285,9 +1321,9 @@ function boot(){
   });
   LIGNEE_IDS=new Set(M.filter(m=>LIGNEE.some(l=>m.nn.includes(l))).map(m=>m.id));
   document.getElementById('lock').style.display='none';
-  document.getElementById('app').style.display='block';
+  document.getElementById('app').style.display='grid';
   document.getElementById('foot').innerHTML = 'Données '+esc(DATA.cfg&&DATA.cfg.src||'')+' — mise à jour le '+esc(fmtMaj(META&&META.maj?META:DATA.meta))+' · Fait avec <span class="heart">♥</span> par '+esc(DATA.cfg&&DATA.cfg.auteur||'');
-  document.getElementById('brandMaj').textContent = ' · Mise à jour le '+fmtMaj(META&&META.maj?META:DATA.meta);
+  document.getElementById('brandMaj').textContent = 'Mise à jour le '+fmtMaj(META&&META.maj?META:DATA.meta);
   if(NAV_REPLIE) sideReplier(true);
   initCalToggles();
   buildHome(); buildPd(); buildCat(); buildAnn(); buildContenu(); buildVeille(); buildWeek(); buildSearchIndex(); routeHash();
