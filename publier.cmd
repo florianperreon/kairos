@@ -1,32 +1,60 @@
 @echo off
-cd /d "%~dp0"
-rem Le dossier .github est protege : Claude depose le workflow dans "Claude outputs", on le met en place ici
+setlocal
+rem Le script s'execute depuis une COPIE dans %TEMP% : cmd lit un .cmd par position dans le fichier, et
+rem l'etape 2 (git reset --hard) reecrit publier.cmd lui-meme, ce qui ferait derailler la lecture.
+if /i not "%~dp0"=="%TEMP%\" (
+  copy /y "%~f0" "%TEMP%\kairos_publier.cmd" >nul
+  call "%TEMP%\kairos_publier.cmd" "%~dp0"
+  exit /b
+)
+cd /d "%~1"
+echo [script execute depuis %~f0]
+echo [dossier : %CD%]
+rem ============================================================================
+rem  Publication du portail Kairos (fichiers prepares par Claude dans ce dossier)
+rem  Sans "git stash" (fragile sous Windows a cause des fins de ligne) :
+rem   1. copie des fichiers prepares dans un dossier temporaire
+rem   2. remise du depot a l'etat exact de GitHub (git reset --hard origin/main)
+rem   3. recopie des fichiers prepares par-dessus
+rem   4. commit + push
+rem ============================================================================
+git config core.autocrlf false
+git config core.safecrlf false
+
+rem Le dossier .github est protege : Claude depose les workflows dans "Claude outputs"
 if not exist ".github\workflows" mkdir ".github\workflows"
 for %%f in ("Claude outputs\*.yml") do move /y "%%f" ".github\workflows\" >nul
-git add .github/workflows 2>nul
-echo === Mise de cote des fichiers modifies ===
+
+set PREP=%TEMP%\kairos_prep
+if exist "%PREP%" rmdir /s /q "%PREP%"
+mkdir "%PREP%\workflows"
+echo === 1/4 Copie des fichiers prepares ===
+for %%f in (index.html template.html update.py contenu.js sw.js manifest.webmanifest publier.cmd icon-192.png icon-512.png icon-512-maskable.png favicon.svg .gitignore) do (
+  if exist "%%f" copy /y "%%f" "%PREP%\" >nul
+)
+copy /y ".github\workflows\*.yml" "%PREP%\workflows\" >nul
+rem donnees.js et meta.js sont produits par la GitHub Action : on ne les reprend que s'ils manquent sur GitHub
+mkdir "%PREP%\donnees"
+for %%f in (donnees.js meta.js) do if exist "%%f" copy /y "%%f" "%PREP%\donnees\" >nul
+
+echo === 2/4 Synchronisation avec GitHub ===
+git stash clear 2>nul
+git fetch origin || goto err
+git reset -q --hard origin/main || goto err
+
+echo === 3/4 Reprise des fichiers prepares ===
+copy /y "%PREP%\*" "." >nul
+copy /y "%PREP%\workflows\*.yml" ".github\workflows\" >nul
+for %%f in (donnees.js meta.js) do if not exist "%%f" if exist "%PREP%\donnees\%%f" copy /y "%PREP%\donnees\%%f" "." >nul
 rem Anciens fichiers de donnees (remplaces par donnees.js / contenu.js / meta.js)
 if exist contenu.enc del /q contenu.enc
 if exist donnees.enc del /q donnees.enc
-git reset -q -- contenu.js donnees.js meta.js 2>nul
-for %%f in (contenu.js donnees.js meta.js) do git ls-files --error-unmatch %%f >nul 2>nul || git add %%f
-git update-index -q --refresh
-for /f %%i in ('git stash list ^| find /c /v ""') do set N0=%%i
-git stash push -- index.html template.html update.py contenu.js donnees.js meta.js .github/workflows || goto err
-for /f %%i in ('git stash list ^| find /c /v ""') do set N1=%%i
-echo === git pull ===
-git pull --ff-only || goto err
-if "%N1%"=="%N0%" (
-  echo Aucun fichier prepare par Claude a reprendre.
-) else (
-  echo === Reprise des fichiers prepares par Claude ===
-  git checkout stash@{0} -- index.html template.html update.py contenu.js donnees.js meta.js .github/workflows || goto err
-  git stash drop
-)
 git rm -r -q --cached "Claude outputs" 2>nul
+
+echo === 4/4 Commit et push ===
 git add -A
-git diff --cached --quiet && echo Rien de nouveau a valider. || git commit -m "Mise a jour du portail (Claude) %date% %time:~0,5%" || goto err
-echo === git push ===
+git diff --cached --quiet && echo Rien de nouveau a valider. && goto end
+git commit -q -m "Mise a jour du portail (Claude) %date% %time:~0,5%" || goto err
 git push || goto err
 echo.
 echo === OK : publie sur GitHub, le site sera a jour dans 1-2 minutes ===
@@ -35,4 +63,5 @@ goto end
 echo.
 echo !!! Une commande a echoue, ne rien faire de plus, montre cette fenetre a Claude.
 :end
+rmdir /s /q "%PREP%" 2>nul
 pause

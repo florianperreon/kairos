@@ -1362,7 +1362,9 @@ function openSheet(id){
   const sub=ALL.filter(o=>!isPast(o.a)&&(o.a.guests||[]).includes(m.id)).sort((p,q)=>p.a.start.localeCompare(q.a.start));
   const anim=ALL.filter(o=>!isPast(o.a)&&pilOf(o.a)).sort((p,q)=>p.a.start.localeCompare(q.a.start));
   const y1=new Date(TODAY); y1.setFullYear(y1.getFullYear()-1); const iso1=y1.toISOString().slice(0,10);
-  const pastSub=ALL.filter(o=>isPast(o.a)&&o.a.start>=iso1&&(o.a.guests||[]).includes(m.id)), pastAnim=ALL.filter(o=>isPast(o.a)&&o.a.start>=iso1&&pilOf(o.a));
+  const allSub=ALL.filter(o=>isPast(o.a)&&(o.a.guests||[]).includes(m.id)), allAnim=ALL.filter(o=>isPast(o.a)&&pilOf(o.a));
+  const pastSub=allSub.filter(o=>o.a.start>=iso1), pastAnim=allAnim.filter(o=>o.a.start>=iso1);
+  const firstEv=[...allSub,...allAnim].map(o=>o.a.start).sort()[0];
   // Filleuls / managés : adhérents mis en avant, les autres en note grise « membres invités »
   const relBlock=(label,list)=>{
     const adh=list.filter(k=>ADH.has(k.id)), inv=list.filter(k=>!ADH.has(k.id));
@@ -1396,7 +1398,7 @@ function openSheet(id){
     '</div>'+
     (sub.length?'<div class="sub-h">Inscrit prochainement ('+sub.length+')</div>'+evList(sub):'')+
     (anim.length?'<div class="sub-h">Anime prochainement ('+anim.length+')</div>'+evList(anim):'')+
-    (pastAnim.length||pastSub.length?'<div class="sub-h">12 derniers mois</div><div class="meta" style="font-size:13.5px;color:var(--ink-2)">'+pastAnim.length+' atelier'+(pastAnim.length>1?'s':'')+' animé'+(pastAnim.length>1?'s':'')+' · '+pastSub.length+' participation'+(pastSub.length>1?'s':'')+'</div>':'')+
+    (allAnim.length||allSub.length?'<div class="sub-h">Activité</div><div class="kv" style="margin:6px 0 14px;font-size:14px"><div class="k">12 derniers mois</div><div class="num">'+pastAnim.length+' animé'+(pastAnim.length>1?'s':'')+' · '+pastSub.length+' participation'+(pastSub.length>1?'s':'')+'</div><div class="k">Depuis le début</div><div class="num">'+allAnim.length+' animé'+(allAnim.length>1?'s':'')+' · '+allSub.length+' participation'+(allSub.length>1?'s':'')+(firstEv?' <span style="color:var(--ink-3)">(1er : '+fmtD(firstEv)+')</span>':'')+'</div></div>':'')+
     (chain.length?'<div class="sub-h">Lignée ascendante (parrains)</div><ul class="tree"><li class="me">'+esc(m.name)+'</li>'+chain.map(p=>'<li>'+linkName(p.name)+'</li>').join('')+'</ul>':'')+
     (kids.length?'<div class="sub-h">Équipe ('+team.tot+' adhérent'+(team.tot>1?'s':'')+')</div>'+(team.per.length?'<div class="kv team-lv">'+team.per.map((who,i)=>'<div class="k">'+(i===0?'Directs (niveau 1)':'Niveau '+(i+1))+'</div><div class="num"><span class="tipn" title="'+esc(teamTip(who))+'">'+who.length+'</span></div>').join('')+'</div>':'<div class="invites">Aucun adhérent dans son équipe.</div>'):'')+
     relBlock('Filleuls',kids)+relBlock('Managés',mans);
