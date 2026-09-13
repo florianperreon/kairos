@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """Mise à jour quotidienne des données du portail.
 
-Relit le payload précédent dans la base du portail (Supabase), récupère les données à jour,
-reconstruit le payload et le réécrit dans la base — plus aucun fichier de données public.
-Tant que la bascule n'est pas terminée, donnees.js continue d'être écrit en parallèle (repli).
-index.html est régénéré à partir de template.html sans aucune donnée.
+Relit le payload précédent dans la base du portail (Supabase), récupère les données à jour
+et le réécrit dans la base. Plus aucun fichier de données : index.html est régénéré à partir de
+template.html, et le portail lit la base (ou la fonction « donnees » pour une entrée par mot de passe).
 Option --complet (ou COMPLET=1) : relit tout l'historique depuis l'origine au lieu du dernier mois + à venir.
 Configuration via variables d'environnement (secrets du dépôt) :
   PORTAL_PW : mot de passe du portail (clé de chiffrement de contenu.js)
   KAIROS_TOKEN : jeton d'écriture des données dans la base du portail
-  KAIROS_FICHIER : mettre 0 pour cesser d'écrire donnees.js (repli) — 1 par défaut
   API_BASE  : URL de base de l'API (ex. https://exemple.tld)
   LIGNEE    : (optionnel) noms de la lignée, séparés par des virgules
   LIGNEE_FILLEULS_DE : (optionnel) noms dont toute la descendance (filleuls,
@@ -273,22 +271,11 @@ def run():
     today_iso = today.isoformat()
     maj_iso = now.strftime("%Y-%m-%dT%H:%M")  # date + heure (Paris) de la mise à jour
 
-    # Payload précédent (cfg + dates d'inscription connues) : la base d'abord, donnees.js en repli
-    old_enc = None
+    # Payload précédent (cfg + dates d'inscription connues) : la base du portail est la seule source
     old = base_lire()
-    if old:
-        print(f"payload précédent lu en base ({len(old.get('adherents', []))} membres)")
-    else:
-        if os.path.exists("donnees.js"):
-            old_enc = read_js("donnees.js")
-        else:
-            html = open("index.html", encoding="utf-8").read()
-            m = re.search(r"const ENC = (\{.*?\});", html, re.S)
-            if not m or m.group(1).strip() == "null":
-                raise RuntimeError("ni base, ni donnees.js, ni bloc ENC dans index.html")
-            old_enc = json.loads(m.group(1))
-        old = decrypt_enc(old_enc, pw)
-        print("payload précédent lu dans donnees.js (repli)")
+    if not old:
+        raise RuntimeError("payload précédent introuvable en base (KAIROS_TOKEN manquant ou base vide)")
+    print(f"payload précédent lu en base ({len(old.get('adherents', []))} membres)")
 
     # Configuration de la lignée (secrets du dépôt) : écrase l'ancienne si fournie
     cfg = dict(old["cfg"])
@@ -469,16 +456,6 @@ def run():
                "cfg": cfg, "ateliers": ateliers, "adherents": membres,
                "autres": autres, "adherentIds": adh_ids, "sites": sites,
                "extra": {str(k): v for k, v in extra.items()}}
-    # Fichier de repli : seulement tant que KAIROS_FICHIER n'est pas mis à 0
-    fichier = os.environ.get("KAIROS_FICHIER", "1") != "0"
-    enc_json = None
-    if fichier:
-        salt = base64.b64decode(old_enc["salt"]) if old_enc else (
-            base64.b64decode(read_js("donnees.js")["salt"]) if os.path.exists("donnees.js") else None)
-        enc_json = encrypt_payload(payload, pw, salt)
-        # Vérification aller-retour du chiffrement
-        if decrypt_enc(json.loads(enc_json), pw)["meta"]["majAteliers"] != today_iso:
-            raise RuntimeError("échec de la vérification de déchiffrement")
     # Le contenu éditorial (contenu.js, sel propre) est servi tel quel : on vérifie juste qu'il s'ouvre
     contenu_version = ""
     if os.path.exists("contenu.js"):
@@ -510,9 +487,8 @@ def run():
     if bad:
         raise RuntimeError(f"audit de confidentialité en échec ({len(bad)} motif(s))")
 
-    base_ecrire(payload)
-    if enc_json:
-        write_js("donnees.js", "KAIROS_DONNEES", enc_json)
+    if not base_ecrire(payload):
+        raise RuntimeError("écriture en base impossible (KAIROS_TOKEN manquant)")
     # meta.js (en clair) : date de mise à jour, variable du projet lisible sans mot de passe
     write_js("meta.js", "KAIROS_META", json.dumps({"maj": maj_iso, "majDonnees": today_iso, "versionContenu": contenu_version}))
     open("index.html", "w", encoding="utf-8").write(out)
