@@ -1361,7 +1361,8 @@ function openSheet(id){
   const pilOf=a=>norm(a.pilotes).includes(m.nn);
   const sub=ALL.filter(o=>!isPast(o.a)&&(o.a.guests||[]).includes(m.id)).sort((p,q)=>p.a.start.localeCompare(q.a.start));
   const anim=ALL.filter(o=>!isPast(o.a)&&pilOf(o.a)).sort((p,q)=>p.a.start.localeCompare(q.a.start));
-  const pastSub=ALL.filter(o=>isPast(o.a)&&(o.a.guests||[]).includes(m.id)), pastAnim=ALL.filter(o=>isPast(o.a)&&pilOf(o.a));
+  const y1=new Date(TODAY); y1.setFullYear(y1.getFullYear()-1); const iso1=y1.toISOString().slice(0,10);
+  const pastSub=ALL.filter(o=>isPast(o.a)&&o.a.start>=iso1&&(o.a.guests||[]).includes(m.id)), pastAnim=ALL.filter(o=>isPast(o.a)&&o.a.start>=iso1&&pilOf(o.a));
   // Filleuls / managés : adhérents mis en avant, les autres en note grise « membres invités »
   const relBlock=(label,list)=>{
     const adh=list.filter(k=>ADH.has(k.id)), inv=list.filter(k=>!ADH.has(k.id));

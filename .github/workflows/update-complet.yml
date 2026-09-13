@@ -1,27 +1,23 @@
-name: Mise à jour rapide (4 fois par jour)
+name: Mise à jour complète (mensuelle)
 
 on:
   schedule:
-    # 4 passages par jour, heures UTC (Paris = UTC+2 en été, +1 en hiver) : minuit, 6h, midi, 18h Paris en été
-    # (23h, 5h, 11h, 17h en hiver). Minute non ronde pour limiter les retards GitHub (les crons à l'heure pile
-    # sont les plus chargés). Le script est idempotent : un passage sans changement ne publie rien.
-    - cron: '17 22 * * *'   # 00h17 Paris (été)
-    - cron: '17 4 * * *'    # 06h17
-    - cron: '17 10 * * *'   # 12h17
-    - cron: '17 16 * * *'   # 18h17
-  workflow_dispatch: {}     # permet aussi de lancer à la main depuis l'onglet Actions
+    # Le 1er du mois à 00:17 UTC = 02h17 Paris en été, 01h17 en hiver (les crons GitHub ne connaissent pas
+    # l'heure locale). Relit TOUT l'historique des ateliers, réunions, formations et événements depuis l'origine.
+    - cron: '17 0 1 * *'
+  workflow_dispatch: {}     # à lancer à la main pour la première récupération complète
 
 permissions:
   contents: write
 
 concurrency:
-  group: maj-quotidienne
+  group: maj-quotidienne    # jamais en même temps que la mise à jour rapide
   cancel-in-progress: false
 
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -32,13 +28,13 @@ jobs:
       - name: Dépendances
         run: pip install --quiet requests cryptography
 
-      - name: Régénération des données
+      - name: Régénération complète des données
         env:
           PORTAL_PW: ${{ secrets.PORTAL_PW }}
           API_BASE: ${{ secrets.API_BASE }}
           LIGNEE: ${{ secrets.LIGNEE }}
           LIGNEE_FILLEULS_DE: ${{ secrets.LIGNEE_FILLEULS_DE }}
-        run: python update.py
+        run: python update.py --complet
 
       - name: Commit et publication
         run: |
@@ -46,6 +42,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html donnees.js meta.js
           git diff --cached --quiet && echo "Aucun changement" || {
-            git commit -m "Mise à jour quotidienne des données"
+            git commit -m "Mise à jour complète des données"
             git push
           }

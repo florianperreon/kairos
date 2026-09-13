@@ -5,6 +5,7 @@ Lit l'ancien payload chiffré dans donnees.js (ou, à défaut, dans le bloc ENC 
 récupère les données à jour, reconstruit le payload et le chiffre dans donnees.js (sel conservé d'un
 jour à l'autre pour que « Rester déverrouillé » survive à la mise à jour). index.html est régénéré à
 partir de template.html sans aucune donnée : la page charge donnees.js, contenu.js et meta.js par balises <script>.
+Option --complet (ou COMPLET=1) : relit tout l'historique depuis l'origine au lieu du dernier mois + à venir.
 Configuration via variables d'environnement (secrets du dépôt) :
   PORTAL_PW : mot de passe du portail (clé de chiffrement)
   API_BASE  : URL de base de l'API (ex. https://exemple.tld)
@@ -97,7 +98,7 @@ def list_all(api, endpoint, today_iso):
 
 def fetch_details(api, endpoint, ids):
     out = {}
-    with ThreadPoolExecutor(max_workers=8) as ex:
+    with ThreadPoolExecutor(max_workers=12) as ex:
         futs = {ex.submit(get, f"{api}/api/{endpoint}/{i}"): i for i in ids}
         for f in as_completed(futs):
             d = f.result()
@@ -256,40 +257,55 @@ def run():
     if split(os.environ.get("LIGNEE_FILLEULS_DE")):
         cfg["ligneeRoots"] = split(os.environ.get("LIGNEE_FILLEULS_DE"))
 
-    # Historique : on remonte 12 mois en arrière (onglet « passés », statistiques par pilote)
-    since_iso = (today - datetime.timedelta(days=365)).isoformat()
-    sites = {}
+    # Historique : on conserve TOUT (depuis 2022) — onglet « passés », statistiques, fiches membres
+    since_iso = "2000-01-01"
+    complet = "--complet" in sys.argv or os.environ.get("COMPLET") == "1"
+    sites = dict(old.get("sites") or {})
+    sites = {int(k): v for k, v in sites.items()}
+
+    # Optimisation (13/09/2026) : l'API n'est interrogée que pour les événements à venir ET ceux du dernier mois
+    # (liste + détail, pour suivre inscrits/absences après coup) ; les plus anciens ne changent plus, on reprend
+    # leurs lignes de la veille (dans la fenêtre de 12 mois).
+    # Mode complet (--complet, 1er du mois) : tout est relu depuis l'origine.
+    refresh_iso = since_iso if complet else (today - datetime.timedelta(days=30)).isoformat()
+    def keep_past(rows, idx_start):
+        return [r for r in rows if since_iso <= r[idx_start] < refresh_iso]
+
+    def merge(new_rows, old_rows, idx_start):
+        seen = {r[0] for r in new_rows}
+        out = list(new_rows) + [r for r in keep_past(old_rows, idx_start) if r[0] not in seen]
+        out.sort(key=lambda a: (a[idx_start], a[0]))
+        return out
 
     # Ateliers (publiés uniquement)
-    ws_list = dedup(list_all(api, "workshops", since_iso))
+    ws_list = dedup(list_all(api, "workshops", refresh_iso))
     ws_det = fetch_details(api, "workshops", [w["id"] for w in ws_list])
     ws = [w for w in (ws_det[i["id"]] for i in ws_list) if w.get("isPublish")]
     ateliers = [[w["id"], (w["thematic"] or "").strip(), (w["title"] or "").strip(),
                  pdate(w["startDate"]), pdate(w["endDate"]), lieu(w), pilotes(w),
                  horaires(w, "workshopDates")] + extras(w, sites) for w in ws]
-    ateliers.sort(key=lambda a: (a[3], a[0]))
+    ateliers = merge(ateliers, old.get("ateliers") or [], 3)
 
     # Réunions, formations, événements (pas de filtre isPublish)
     autres = {}
     for key, ep, dkey in [("reu", "team_meatings", "TeamMeatingDates"),
                           ("for", "formations", "formationDates"),
                           ("evt", "events", "eventDates")]:
-        lst = dedup(list_all(api, ep, since_iso))
+        lst = dedup(list_all(api, ep, refresh_iso))
         det = fetch_details(api, ep, [x["id"] for x in lst])
         tup = [[w["id"], (w["title"] or "").strip(), pdate(w["startDate"]), pdate(w["endDate"]),
                 lieu(w), pilotes(w), horaires(w, dkey)] + extras(w, sites)
                for w in (det[x["id"]] for x in lst)]
-        tup.sort(key=lambda a: (a[2], a[0]))
-        autres[key] = tup
+        autres[key] = merge(tup, (old.get("autres") or {}).get(key) or [], 2)
 
-    # Membres
-    users, page = [], 1
-    while True:
-        d = get(f"{api}/api/users/collection", params={"page": page, "pageSize": 500})
-        users.extend(d["items"])
-        if page >= d["pagination"]["totalPages"]:
-            break
-        page += 1
+    # Membres : la 1re page donne le nombre de pages, les suivantes sont chargées en parallèle
+    first = get(f"{api}/api/users/collection", params={"page": 1, "pageSize": 500})
+    users = list(first["items"])
+    total_pages = int(first["pagination"]["totalPages"])
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for d in ex.map(lambda p: get(f"{api}/api/users/collection", params={"page": p, "pageSize": 500}),
+                        range(2, total_pages + 1)):
+            users.extend(d["items"])
     users = dedup(users)
     users.sort(key=lambda u: u["id"])
     id2name = {u["id"]: name(u) for u in users}
@@ -452,7 +468,7 @@ def run():
     # meta.js (en clair) : date de mise à jour, variable du projet lisible sans mot de passe
     write_js("meta.js", "KAIROS_META", json.dumps({"maj": maj_iso, "majDonnees": today_iso, "versionContenu": contenu_version}))
     open("index.html", "w", encoding="utf-8").write(out)
-    print(f"OK {today_iso} — ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
+    print(f"OK {today_iso} {'(complet) ' if complet else ''}— ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
           f"formations {len(autres['for'])} | événements {len(autres['evt'])} | "
           f"membres {len(membres)} (+{len(new_ids)}) | liste filtrée {len(adh_ids)} | "
           f"lignée {len(lig_ids)} | sites {len(sites)}")
