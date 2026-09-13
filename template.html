@@ -828,7 +828,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
                 <div class="cnt-ligne">
                   <label>Titre<input type="text" id="cntTitre"></label>
                   <label class="court">Icône<input type="text" id="cntIcone" maxlength="4"></label>
-                  <label class="court">Minutes<input type="number" id="cntMin" min="1" max="99"></label>
+                  <label class="court" title="Position de la page dans les listes du parcours">Ordre<input type="number" id="cntMin" min="1" max="99"></label>
                 </div>
                 <div class="cnt-slug">Adresse : <code id="cntSlug"></code></div>
                 <div class="cnt-barre" id="cntBarre"></div>
@@ -978,11 +978,11 @@ async function chargerContenu(){
     if(SB && SBUSER){
       const [b,p] = await Promise.all([
         SB.from('contenu_blocs').select('cle,valeur'),
-        SB.from('contenu_pages').select('slug,titre,icone,html,minutes')
+        SB.from('contenu_pages').select('slug,titre,icone,html,ordre')
       ]);
       if(b.error||p.error) return null;
       const C={}; (b.data||[]).forEach(l=>{ C[l.cle]=l.valeur; });
-      const pages={}; (p.data||[]).forEach(l=>{ pages[l.slug]={t:l.titre, i:l.icone, h:l.html, n:l.minutes}; });
+      const pages={}; (p.data||[]).forEach(l=>{ pages[l.slug]={t:l.titre, i:l.icone, h:l.html, n:l.ordre}; });
       C.pages=pages; return C;
     }
   }catch(e){}
@@ -2412,7 +2412,7 @@ function cntListe(){
 async function buildContenuAdmin(){
   if(!SB||!SBUSER||!cntEl('cntListe')) return false;
   try{
-    const r = await SB.from('contenu_pages').select('slug,titre,icone,minutes,maj').order('titre');
+    const r = await SB.from('contenu_pages').select('slug,titre,icone,ordre,maj').order('titre');
     if(r.error) throw r.error;
     CNT_PAGES = (r.data||[]).map(p=>Object.assign({}, p));
     const b = await SB.from('contenu_blocs').select('cle,maj').order('cle');
@@ -2426,13 +2426,13 @@ async function buildContenuAdmin(){
 async function cntOuvrir(slug){
   if(CNT_SALE && !confirm('Des modifications ne sont pas enregistrées. Les abandonner ?')) return;
   cntMsg('');
-  const r = await SB.from('contenu_pages').select('slug,titre,icone,html,minutes,maj').eq('slug',slug).maybeSingle();
+  const r = await SB.from('contenu_pages').select('slug,titre,icone,html,ordre,maj').eq('slug',slug).maybeSingle();
   if(r.error || !r.data){ cntMsg('Page illisible.', true); return; }
   CNT_SLUG = slug; CNT_SALE = false;
   cntEl('cntEdit').hidden = false;
   cntEl('cntTitre').value = r.data.titre||'';
   cntEl('cntIcone').value = r.data.icone||'';
-  cntEl('cntMin').value = r.data.minutes==null?'':r.data.minutes;
+  cntEl('cntMin').value = r.data.ordre==null?'':r.data.ordre;
   cntEl('cntHtml').value = r.data.html||'';
   cntEl('cntSlug').textContent = slug;
   cntBarreOutils();
@@ -2452,7 +2452,7 @@ async function cntEnregistrer(){
   const btn = cntEl('cntSave');
   btn.disabled = true; cntMsg('Enregistrement…');
   const maj = { titre: cntEl('cntTitre').value.trim(), icone: cntEl('cntIcone').value.trim(),
-                html: cntHtmlCourant(), minutes: cntEl('cntMin').value ? +cntEl('cntMin').value : null };
+                html: cntHtmlCourant(), ordre: cntEl('cntMin').value ? +cntEl('cntMin').value : null };
   const r = await SB.from('contenu_pages').update(maj).eq('slug', CNT_SLUG);
   btn.disabled = false;
   if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
