@@ -261,6 +261,161 @@ def dedup(items):
             out.append(x)
     return out
 
+
+
+# ---------------- progression individuelle (étapes validées par le réseau) ----------------
+# Correspondance libellé d'atelier -> clé d'étape du parcours Kairos.
+# L'ordre compte : la première règle qui correspond gagne.
+ETAPES_ATELIERS = [
+    ("com_n2", ("communication", "niveau 2")),
+    ("com_n2", ("communication", "n2")),
+    ("com_n1", ("communication", "niveau 1")),
+    ("com_n1", ("communication", "n1")),
+    ("r1_n1", ("prise de r1", "niveau 1")),
+    ("r1_n1", ("prise de r1", "n1")),
+    ("mise_en_relation", ("mise en relation",)),
+    ("dm", ("decouverte metier",)),
+    ("dm", ("decouverte du metier",)),
+    ("ad", ("atelier demarrage",)),
+    ("ad", ("demarrage",)),
+    ("trois_jours", ("3 jours",)),
+    ("trois_jours", ("trois jours",)),
+]
+ETAPES_FORMATIONS = [
+    ("udp", ("udp",)),
+    ("udp", ("universite du patrimoine",)),
+]
+
+def _norm(s):
+    s = unicodedata.normalize("NFD", str(s or "").lower())
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    return " ".join(s.replace("'", " ").replace("-", " ").split())
+
+def _cle_etape(titre, regles):
+    n = _norm(titre)
+    for cle, motifs in regles:
+        if all(m in n for m in motifs):
+            return cle
+    return None
+
+def _pages(api, endpoint, params):
+    """Toutes les pages d'une collection (30 par page)."""
+    items, page = [], 1
+    while True:
+        p = dict(params); p["page"] = page
+        d = get(f"{api}/api/{endpoint}", params=p)
+        batch = d if isinstance(d, list) else (d or {}).get("hydra:member", [])
+        items.extend(batch)
+        if len(batch) < 30 or page > 30:
+            break
+        page += 1
+    return items
+
+def _jour(x):
+    return str(x or "")[:10] or None
+
+def _premiere(dates):
+    d = sorted([x for x in dates if x])
+    return d[0] if d else None
+
+def parcours_membre(api, uid, membres, adh_ids):
+    """Étapes validées par le réseau pour un membre, avec la date du premier atelier concerné."""
+    u = get(f"{api}/api/users/{uid}") or {}
+    ateliers = _pages(api, "workshops", {"guests.id": uid})
+    formations = _pages(api, "formations", {"guests.id": uid})
+    evenements = _pages(api, "events", {"guests.id": uid})
+    objectifs = _pages(api, "goal_finisheds", {"user": uid})
+
+    faits = {}
+    def noter(cle, date, source):
+        if not cle:
+            return
+        d = _jour(date)
+        if cle not in faits or (d and (not faits[cle].get("d") or d < faits[cle]["d"])):
+            faits[cle] = {"d": d, "src": source}
+
+    for a in ateliers:
+        noter(_cle_etape(a.get("title"), ETAPES_ATELIERS), a.get("startDate"), "atelier")
+    for f in formations:
+        noter(_cle_etape(f.get("title"), ETAPES_FORMATIONS), f.get("startDate"), "formation")
+    for e in evenements:
+        noter(_cle_etape(e.get("title"), ETAPES_ATELIERS + ETAPES_FORMATIONS), e.get("startDate"), "evenement")
+
+    # Onboarding : le drapeau du réseau fait foi ; la date vient de l'atelier si on l'a retrouvé
+    for cle, champ in (("dm", "isJdEnded"), ("ad", "isDemarrageEnded"), ("trois_jours", "is3JREnded")):
+        if u.get(champ):
+            if cle not in faits:
+                faits[cle] = {"d": None, "src": "statut"}
+        elif faits.get(cle) and faits[cle].get("src") != "statut":
+            pass   # inscrit à la session mais pas encore validé côté réseau : on garde la date
+
+    # Adhésion à l'association
+    if u.get("adhesionPaidAt"):
+        faits["adhesion"] = {"d": _jour(u["adhesionPaidAt"]), "src": "adhesion"}
+
+    # Objectifs officiels par statut : validés seulement si tous le sont
+    par_niveau = {}
+    for o in objectifs:
+        g = o.get("goal") or {}
+        niveau = _norm(g.get("level") or o.get("level") or "")
+        if not niveau:
+            continue
+        par_niveau.setdefault(niveau, []).append(o)
+    for niveau, liste in par_niveau.items():
+        valides = [o for o in liste if _norm(o.get("status")).startswith("valid")]
+        if liste and len(valides) == len(liste):
+            faits["objectifs_" + niveau] = {
+                "d": _premiere([_jour(o.get("updatedAt") or o.get("createdAt")) for o in valides]),
+                "src": "objectifs",
+            }
+
+    # Première formation FORMAN réservée (même à venir)
+    if formations:
+        faits["formation_reservee"] = {"d": _premiere([_jour(f.get("startDate")) for f in formations]), "src": "formation"}
+
+    # Premier filleul devenu adhérent
+    moi = _norm((u.get("firstName") or "") + " " + (u.get("lastName") or ""))
+    filleuls = [m for m in membres if _norm(m[5]) == moi and m[0] in adh_ids and m[0] != uid]
+    if filleuls:
+        dates = []
+        for f in filleuls[:12]:
+            d = get(f"{api}/api/users/{f[0]}") or {}
+            dates.append(_jour(d.get("adhesionPaidAt")) or _jour(f[4]))
+        faits["filleul_adherent"] = {"d": _premiere(dates), "src": "parrainage"}
+
+    # Rythme : formations suivies par mois, sur les 12 derniers mois
+    mois = sorted({str(f.get("startDate"))[:7] for f in formations if f.get("startDate")})
+    return {"etapes": faits, "formations_mois": mois[-12:],
+            "statut": (u.get("roles") or [None])[0], "maj": datetime.datetime.now(PARIS).strftime("%Y-%m-%dT%H:%M")}
+
+def sync_parcours(api, membres, adh_ids):
+    if not KAIROS_TOKEN:
+        print("KAIROS_TOKEN absent : progression individuelle ignorée")
+        return
+    url_p = KAIROS_BASE.replace("/donnees", "/parcours")
+    try:
+        r = requests.get(url_p, headers={"x-kairos-token": KAIROS_TOKEN}, timeout=120)
+        cibles = r.json().get("membres", []) if r.ok else []
+    except Exception as e:
+        print(f"liste des membres à synchroniser indisponible ({e})")
+        return
+    ids = [c["membre_id"] for c in cibles if c.get("membre_id")]
+    if not ids:
+        print("aucun compte rapproché : rien à synchroniser")
+        return
+    lignes = []
+    for uid in ids:
+        try:
+            lignes.append({"membre_id": uid, "donnees": parcours_membre(api, uid, membres, adh_ids)})
+        except Exception as e:
+            print(f"progression {uid} en échec ({type(e).__name__})")
+    if not lignes:
+        return
+    rp = requests.post(url_p, json={"parcours": lignes},
+                       headers={"x-kairos-token": KAIROS_TOKEN, "Content-Type": "application/json"},
+                       timeout=300)
+    print("progressions : " + rp.text[:200])
+
 # ---------------- pipeline ----------------
 def run():
     api = os.environ["API_BASE"].rstrip("/")
@@ -493,6 +648,10 @@ def run():
 
     if not base_ecrire(payload):
         raise RuntimeError("écriture en base impossible (KAIROS_TOKEN manquant)")
+    try:
+        sync_parcours(api, membres, adh_ids)
+    except Exception as e:
+        print(f"progressions individuelles en échec ({type(e).__name__})")
     # meta.js (en clair) : date de mise à jour, variable du projet lisible sans mot de passe
     write_js("meta.js", "KAIROS_META", json.dumps({"maj": maj_iso, "majDonnees": today_iso, "versionContenu": contenu_version}))
     open("index.html", "w", encoding="utf-8").write(out)

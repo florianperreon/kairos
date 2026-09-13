@@ -539,6 +539,29 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .mbr-moi{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:1px 7px;margin-left:6px;vertical-align:middle}
 .mbr-note{font-size:13px;color:var(--ink-3);margin:12px 0 0}
 
+/* Étapes validées automatiquement */
+.chk label.auto{opacity:1}
+.chk label.auto input{cursor:not-allowed}
+.chk label small.auto{display:block;font-size:11.5px;font-weight:600;margin-top:2px}
+.chk label small.auto.ok{color:var(--gold-ink)}
+.chk label small.auto.att{color:var(--ink-3);font-weight:500;font-style:italic}
+.chk label.auto.attente span>b,.chk label.auto.attente>span{color:var(--ink-2)}
+
+/* Demandes d'accès */
+.subtabs .sub-badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;border-radius:99px;background:var(--encours);color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center}
+#demTbl td{vertical-align:middle}
+#demTbl .dem-pick{width:100%;min-width:200px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:13.5px}
+#demTbl .dem-act{white-space:nowrap}
+#demTbl .dem-act button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;margin-left:6px}
+#demTbl .dem-ok{border-color:var(--gold);color:var(--gold-ink);font-weight:700}
+#demTbl .dem-no:hover{border-color:var(--bad);color:var(--bad)}
+#demTbl .dem-n{font-size:11px;color:var(--encours-ink);font-weight:700}
+
+/* Accès en attente */
+#lockErr b{color:var(--ink)}
+#lockErr #lockOut{display:block;margin:12px auto 0;border:1px solid var(--line);background:transparent;color:var(--ink-2);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+#lockErr #lockOut:hover{border-color:var(--ink-3);color:var(--ink)}
+
 </style>
 
 <div id="lock" class="wrap">
@@ -713,6 +736,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
       <nav class="subtabs" id="adminSub">
         <button data-s="mbr" class="on">Membres</button>
         <button data-s="stats">Statistiques</button>
+        <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
       </nav>
 
       <div class="subview on" id="sv-mbr">
@@ -727,6 +751,22 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
         </div>
         <p class="mbr-note" id="mbrNote"></p>
       </div>
+      </div>
+
+      <div class="subview" id="sv-dem">
+        <div class="panel">
+          <h2>Demandes d’accès</h2>
+          <p class="mbr-sub">Ces personnes se sont connectées avec un compte que le portail ne reconnaît pas. Rapproche chaque compte de sa fiche pour lui ouvrir l’accès.</p>
+          <div class="tbl-wrap">
+            <table id="demTbl">
+              <thead><tr><th>Compte</th><th>Dernière tentative</th><th>Fiche correspondante</th><th></th></tr></thead>
+              <tbody id="demBody"></tbody>
+            </table>
+          </div>
+          <datalist id="demAnnuaire"></datalist>
+          <p class="mbr-note" id="demNote"></p>
+          <p class="acc-err" id="demErr"></p>
+        </div>
       </div>
 
       <div class="subview" id="sv-stats">
@@ -968,6 +1008,7 @@ function boot(){
   accMaj();
   if(SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
   chargerVeille();
+  chargerParcours();
   buildMembres();
 }
 
@@ -983,8 +1024,8 @@ document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('clic
 }));
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','stats'];
-const ADMIN_SLUG={mbr:'membres',stats:'statistiques'};
+const ADMIN_SUBS=['mbr','stats','dem'];
+const ADMIN_SLUG={mbr:'membres',stats:'statistiques',dem:'demandes'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 function showAdminSub(s){
@@ -1162,9 +1203,63 @@ function buildContenu(){
       return r.u ? '<a class="resc" href="'+esc(r.u)+'" target="_blank" rel="noopener">'+inner+'</a>' : '<div class="resc nolink">'+inner+'<p class="note">Lien à venir</p></div>';
     }).join(''); }
 }
+/* ---------- Étapes validées automatiquement par le réseau ---------- */
+// PARCOURS = {etapes:{cle:{d:'AAAA-MM-JJ'|null, src}}, formations_mois:[], statut, maj}
+let PARCOURS = null;
+const AUTO_REGLES = [
+  ['dm',                 ['decouverte metier']],
+  ['ad',                 ['atelier demarrage']],
+  ['trois_jours',        ['3 jours']],
+  ['formation_reservee', ['premiere formation', 'reserv']],
+  ['adhesion',           ['adhesion']],
+  ['r1_n1',              ['prise de r1', 'niveau 1']],
+  ['mise_en_relation',   ['atelier mise en relation']],
+  ['filleul_adherent',   ['premier filleul']],
+  ['objectifs_neoman',   ['objectifs neoman']],
+  ['objectifs_beman',    ['objectifs beman']],
+  ['udp',                ['participation aux udp']],
+  ['com_n1',             ['communication niveau 1']],
+  ['com_n2',             ['communication niveau 2']],
+];
+const AUTO_LIB = {
+  dm:'Découverte Métier', ad:'Atelier Démarrage', trois_jours:'3 Jours', formation_reservee:'formation réservée',
+  adhesion:'adhésion', r1_n1:'atelier Prise de R1', mise_en_relation:'atelier Mise en relation',
+  filleul_adherent:'filleul adhérent', objectifs_neoman:'objectifs NEOMAN', objectifs_beman:'objectifs BEMAN',
+  udp:'UDP', com_n1:'Clefs de la communication N1', com_n2:'Clefs de la communication N2'
+};
+// Libellé d'une case -> clé automatique (null si la case reste manuelle)
+function cleAuto(lib){
+  const n = norm(lib).replace(/[’']/g,' ').replace(/\s+/g,' ').trim();
+  for(const [cle, motifs] of AUTO_REGLES){ if(motifs.every(m=>n.includes(m))) return cle; }
+  return null;
+}
+const faitAuto = cle => (PARCOURS && PARCOURS.etapes && PARCOURS.etapes[cle]) || null;
+// État d'une case : l'API fait foi sur les étapes automatiques
+function caseCochee(k, lib){
+  const cle = cleAuto(lib);
+  if(cle) return !!faitAuto(cle);
+  return !!CHECK[k];
+}
+function autoMention(cle){
+  const f = faitAuto(cle);
+  if(!f) return SBUSER ? '<small class="auto att">Validé automatiquement par le réseau</small>'
+                       : '<small class="auto att">Automatique — connecte-toi avec ton compte</small>';
+  return '<small class="auto ok">Validé par le réseau'+(f.d?' le '+esc(fmtD(f.d)):'')+'</small>';
+}
+async function chargerParcours(){
+  if(!SB || !SBUSER){ PARCOURS = null; return false; }
+  try{
+    const r = await SB.from('membres_parcours').select('donnees,maj').limit(1).maybeSingle();
+    if(r.error) throw r.error;
+    PARCOURS = (r.data && r.data.donnees) || null;
+    if(window.__booted && PARCOURS){ try{ buildPhases(); }catch(e){} }
+    return !!PARCOURS;
+  }catch(e){ PARCOURS = null; return false; }
+}
+
 function phaseProgress(ph,pi){
   let tot=0, ok=0;
-  (ph.etapes||[]).forEach((e,ei)=>(e.check||[]).forEach((c,ci)=>{ tot++; if(CHECK[pi+'-'+ei+'-'+ci]) ok++; }));
+  (ph.etapes||[]).forEach((e,ei)=>(e.check||[]).forEach((c,ci)=>{ tot++; if(caseCochee(pi+'-'+ei+'-'+ci, c)) ok++; }));
   return {tot,ok,pct: tot?Math.round(ok*100/tot):0};
 }
 function isLocked(pi){
@@ -1183,12 +1278,15 @@ function buildPhases(){
   document.getElementById('homeEtapes').innerHTML=(ph.intro?'<div class="phase-intro">'+esc(ph.intro)+'</div>':'')+(ph.etapes||[]).map((e,ei)=>{
     const asCards=Array.isArray(e.checkD)&&e.checkD.length===(e.check||[]).length;
     const chk=(e.check||[]).map((c,ci)=>{ const k=curPhase+'-'+ei+'-'+ci;
-      if(asCards) return '<label class="tip'+(CHECK[k]?' ok':'')+'"><input type="checkbox" data-k="'+k+'"'+(CHECK[k]?' checked':'')+'><span><b>'+esc(c)+'</b><small>'+esc(e.checkD[ci])+'</small></span></label>';
+      const cleA=cleAuto(c), coche=caseCochee(k,c);
+      const att=cleA?' data-auto="'+cleA+'" disabled title="Cette étape est validée automatiquement par le réseau"':'';
+      const cls=(coche?' ok':'')+(cleA?' auto'+(coche?'':' attente'):'');
+      if(asCards) return '<label class="tip'+cls+'"><input type="checkbox" data-k="'+k+'"'+(coche?' checked':'')+att+'><span><b>'+esc(c)+'</b><small>'+esc(e.checkD[ci])+'</small>'+(cleA?autoMention(cleA):'')+'</span></label>';
       const u=(e.checkU||[])[ci];
-      return '<label class="'+(CHECK[k]?'ok':'')+'"><input type="checkbox" data-k="'+k+'"'+(CHECK[k]?' checked':'')+'> <span>'+esc(c)+(u?' <a class="lk" href="'+esc(u)+'" target="_blank" rel="noopener">Voir ↗</a>':'')+'</span></label>'; }).join('');
+      return '<label class="'+cls.trim()+'"><input type="checkbox" data-k="'+k+'"'+(coche?' checked':'')+att+'> <span>'+esc(c)+(u?' <a class="lk" href="'+esc(u)+'" target="_blank" rel="noopener">Voir ↗</a>':'')+(cleA?autoMention(cleA):'')+'</span></label>'; }).join('');
     const pages=(e.pages||[]).filter(s=>C.pages&&C.pages[s]).map(s=>'<a href="#p/'+s+'">'+(C.pages[s].i?C.pages[s].i+' ':'')+esc(C.pages[s].t)+'</a>').join('')
       +(e.liens||[]).map(l=>'<a class="ext" href="'+esc(l.u)+'" target="_blank" rel="noopener">'+esc(l.t)+' ↗</a>').join('');
-    const nOk=(e.check||[]).filter((c,ci)=>CHECK[curPhase+'-'+ei+'-'+ci]).length;
+    const nOk=(e.check||[]).filter((c,ci)=>caseCochee(curPhase+'-'+ei+'-'+ci, c)).length;
     return '<details class="etape"'+(ei===0?' open':'')+'><summary><span class="n">'+(ei+1)+'</span>'+esc(e.t)+(e.check&&e.check.length?'<span class="done">'+nOk+'/'+e.check.length+'</span>':'')+'</summary><div class="ebody"><p class="d">'+esc(e.d||'')+'</p>'+(chk?'<div class="chk'+(asCards?' tips':'')+'">'+chk+'</div>':'')+(pages?'<div class="chips-p">'+pages+'</div>':'')+'</div></details>';
   }).join('');
   document.querySelectorAll('#homeEtapes input[type=checkbox]').forEach(cb=>cb.addEventListener('change',()=>{ CHECK[cb.dataset.k]=cb.checked; if(!cb.checked) delete CHECK[cb.dataset.k]; saveCheck(); const open=[...document.querySelectorAll('#homeEtapes details')].map(d=>d.open); buildPhases(); document.querySelectorAll('#homeEtapes details').forEach((d,i)=>d.open=open[i]); }));
@@ -2000,7 +2098,7 @@ async function initSync(){
   SB.auth.onAuthStateChange((ev, session)=>{
     SBUSER = session ? session.user : null;
     accMaj();
-    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); buildMembres(); }
+    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); chargerParcours(); buildMembres(); }
     if(!SBUSER) SYNC_FAIT=false;
   });
   try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }
@@ -2032,6 +2130,7 @@ async function buildMembres(){
   try{ const r=await SB.rpc('membres_connectes'); if(r.error) throw r.error; rows=r.data||[]; }
   catch(e){ return masquerAdmin(btn); }
   if(btn) btn.hidden=false;
+  buildDemandes();
   body.innerHTML = rows.length ? rows.map(m=>{
     const nom = m.nom || (m.email||'').split('@')[0];
     const moi = SBUSER && m.email===SBUSER.email ? ' <span class="mbr-moi">toi</span>' : '';
@@ -2043,6 +2142,78 @@ async function buildMembres(){
   if(n) n.textContent = rows.length===1 ? '1 personne connectée à ce jour.' : rows.length+' personnes connectées à ce jour.';
   return true;
 }
+
+// Demandes d'accès : comptes connectés qui ne sont pas encore rapprochés d'une fiche du réseau
+let DEMANDES = [];
+function majBadgeDem(n){
+  const b=document.getElementById('demBadge');
+  if(!b) return;
+  b.hidden = !n; b.textContent = n || '';
+}
+async function buildDemandes(){
+  const body=document.getElementById('demBody');
+  if(!SB||!SBUSER||!body) return false;
+  try{
+    const r = await SB.from('demandes_acces').select('email,nom,premiere,derniere,tentatives,statut')
+                      .eq('statut','en_attente').order('derniere',{ascending:false});
+    if(r.error) throw r.error;
+    DEMANDES = r.data||[];
+  }catch(e){ return false; }
+  majBadgeDem(DEMANDES.length);
+  // liste de choix : adhérents, pour rapprocher un compte d'une fiche
+  const dl=document.getElementById('demAnnuaire');
+  if(dl && !dl.dataset.pret && Array.isArray(M) && M.length){
+    dl.innerHTML = M.filter(m=>ADH.has(m.id)).slice(0,4000)
+      .map(m=>'<option value="'+esc(m.name)+' · #'+m.id+'"></option>').join('');
+    dl.dataset.pret='1';
+  }
+  body.innerHTML = DEMANDES.length ? DEMANDES.map(d=>{
+    const nom = d.nom || (d.email||'').split('@')[0];
+    return '<tr data-mail="'+esc(d.email)+'">'
+      + '<td><b>'+esc(nom)+'</b><div class="mbr-mail">'+esc(d.email)+'</div></td>'
+      + '<td class="num">'+esc(fmtQuand(d.derniere))+(d.tentatives>1?' <span class="dem-n">'+d.tentatives+' tentatives</span>':'')+'</td>'
+      + '<td><input class="dem-pick" list="demAnnuaire" placeholder="Rechercher la fiche…" autocomplete="off"></td>'
+      + '<td class="dem-act"><button class="dem-ok">Valider</button><button class="dem-no">Refuser</button></td></tr>';
+  }).join('') : '<tr><td colspan="4" style="color:var(--ink-2)">Aucune demande en attente.</td></tr>';
+  const n=document.getElementById('demNote');
+  if(n) n.textContent = DEMANDES.length ? 'Tant qu’une demande n’est pas validée, la personne ne voit aucune donnée du portail.' : '';
+  return true;
+}
+async function traiterDemande(tr, valider){
+  const mail=tr.dataset.mail;
+  const err=document.getElementById('demErr');
+  if(err) err.textContent='';
+  let fid=null, nomF='';
+  if(valider){
+    const v=(tr.querySelector('.dem-pick')||{}).value||'';
+    const m=v.match(/#(\d+)\s*$/);
+    if(!m){ if(err) err.textContent='Choisis d’abord la fiche correspondante dans la liste.'; return; }
+    fid=+m[1]; nomF=v.split('·')[0].trim();
+  }
+  tr.querySelectorAll('button').forEach(b=>b.disabled=true);
+  try{
+    if(valider){
+      const a = await SB.from('adherents_autorises').upsert({ email:mail, nom:nomF, membre_id:fid }, { onConflict:'email' });
+      if(a.error) throw a.error;
+    }
+    const d = await SB.from('demandes_acces').update({
+      statut: valider?'validee':'refusee', membre_id: fid,
+      traitee_le: new Date().toISOString(), traitee_par: SBUSER.email
+    }).eq('email', mail);
+    if(d.error) throw d.error;
+    buildDemandes();
+  }catch(e){
+    if(err) err.textContent='Action impossible : '+(e.message||e);
+    tr.querySelectorAll('button').forEach(b=>b.disabled=false);
+  }
+}
+document.addEventListener('click', e=>{
+  const ok=e.target.closest && e.target.closest('.dem-ok');
+  const no=e.target.closest && e.target.closest('.dem-no');
+  if(!ok && !no) return;
+  const tr=(ok||no).closest('tr');
+  if(tr) traiterDemande(tr, !!ok);
+});
 
 // Veille CGP : lue en base (source de vérité depuis le 13/09/2026)
 async function chargerVeille(){
@@ -2097,7 +2268,13 @@ async function demarrer(){
   if(connecte || mdpMemo){
     if(w) w.textContent='Ouverture de ton espace\u2026';
     if(await silentUnlock()) return;
-    if(connecte) lockErr('Ton compte n\u2019est pas encore autoris\u00e9 sur ce portail.');
+    if(connecte){
+      const el=document.getElementById('lockErr');
+      if(el) el.innerHTML='<b>Acc\u00e8s en attente de validation</b><br>Ton compte <b>'+esc((SBUSER&&SBUSER.email)||'')
+        +'</b> est bien enregistr\u00e9, mais il doit encore \u00eatre rapproch\u00e9 de ta fiche par un administrateur. '
+        +'Tu auras acc\u00e8s au portail d\u00e8s que ce sera fait, sans rien avoir \u00e0 refaire.'
+        +'<button type="button" id="lockOut">Utiliser un autre compte</button>';
+    }
   }
   if(w) w.hidden=true;
   const g=document.getElementById('lockGoogle');
@@ -2107,6 +2284,11 @@ async function demarrer(){
   else { afficherMdp(); }
 }
 document.addEventListener('click', async e=>{
+  if(e.target.closest && e.target.closest('#lockOut')){
+    try{ if(SB) await SB.auth.signOut(); }catch(err){}
+    try{ localStorage.removeItem('kairos_p'); }catch(err){}
+    location.replace(location.pathname); return;
+  }
   if(e.target.closest && e.target.closest('#lockPwLink')){ afficherMdp(); return; }
   const g = e.target.closest && e.target.closest('#lockGoogle');
   if(!g) return;
