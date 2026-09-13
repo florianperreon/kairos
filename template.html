@@ -520,6 +520,14 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 .lock-note{font-size:12px;color:var(--ink-3);line-height:1.5;margin:10px 0 0;text-align:left}
 .lock-wait{font-size:13px;color:var(--ink-2);margin:10px 0 0}
 
+/* Onglet Admin : sous-menu Membres / Statistiques */
+nav.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+nav.subtabs button{border:1px solid var(--line);background:var(--surface);padding:7px 15px;border-radius:99px;font-family:"Sora";font-weight:600;font-size:13px;color:var(--ink-2);cursor:pointer}
+nav.subtabs button:hover{color:var(--ink)}
+nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+.subview{display:none}
+.subview.on{display:block}
+
 /* Onglet Membres */
 .mbr-sub{font-size:14px;color:var(--ink-2);margin:-4px 0 14px}
 .mbr-mail{font-size:12px;color:var(--ink-3);margin-top:2px}
@@ -567,8 +575,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
     <button data-v="for">Formations</button>
     <button data-v="evt">Événements</button>
     <button data-v="ann">Annuaire</button>
-    <button data-v="mbr" hidden>Membres</button>
-    <button data-v="stats">Statistiques</button>
+    <button data-v="admin" hidden>Admin</button>
   </nav>
   <main>
     <section class="view on" id="v-home">
@@ -697,7 +704,13 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
       </div>
     </section>
 
-    <section class="view" id="v-mbr">
+    <section class="view" id="v-admin">
+      <nav class="subtabs" id="adminSub">
+        <button data-s="mbr" class="on">Membres</button>
+        <button data-s="stats">Statistiques</button>
+      </nav>
+
+      <div class="subview on" id="sv-mbr">
       <div class="panel">
         <h2>Qui utilise Kairos</h2>
         <p class="mbr-sub">Les personnes qui se sont connectées au portail avec un compte, et leur dernière visite.</p>
@@ -709,13 +722,14 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
         </div>
         <p class="mbr-note" id="mbrNote"></p>
       </div>
-    </section>
+      </div>
 
-    <section class="view" id="v-stats">
-      <div class="tiles" id="tiles"></div>
-      <div class="grid2">
-        <div class="panel"><h2>Inscriptions de membres par mois</h2><div id="chartIns"></div></div>
-        <div class="panel"><h2>Ateliers à venir par thématique</h2><div id="chartTh"></div></div>
+      <div class="subview" id="sv-stats">
+        <div class="tiles" id="tiles"></div>
+        <div class="grid2">
+          <div class="panel"><h2>Inscriptions de membres par mois</h2><div id="chartIns"></div></div>
+          <div class="panel"><h2>Ateliers à venir par thématique</h2><div id="chartTh"></div></div>
+        </div>
       </div>
     </section>
   </main>
@@ -955,12 +969,30 @@ document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('clic
   window.scrollTo({top:0});
 }));
 
+/* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
+const ADMIN_SUBS=['mbr','stats'];
+const ADMIN_SLUG={mbr:'membres',stats:'statistiques'};
+const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
+let curSub='mbr';
+function showAdminSub(s){
+  if(!ADMIN_SUBS.includes(s)) s='mbr';
+  curSub=s;
+  document.querySelectorAll('#adminSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+  document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
+}
+document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('click',()=>{
+  showAdminSub(b.dataset.s);
+  syncHash(true);
+  window.scrollTo({top:0});
+}));
+
 /* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
-const TABS=['home','veille','pd','cat','reu','for','evt','ann','mbr','stats'];
+const TABS=['home','veille','pd','cat','reu','for','evt','ann','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',pd:'parcours-decouverte',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',mbr:'membres',stats:'statistiques'};
-const SLUG_TAB=Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k]));
+const TAB_SLUG={home:'accueil',veille:'veille',pd:'parcours-decouverte',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',admin:'admin'};
+// Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
+const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin'});
 const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
 let curTab='home', APPLYING=false;
 const ctrlKey=(el,tab)=>(el.id.startsWith(tab)?el.id.slice(tab.length):el.id).toLowerCase();
@@ -977,6 +1009,7 @@ function tabState(tab){
   const vt=sec.querySelector('.vtoggle button.on'); if(vt&&vt.dataset.m!=='list') p.set('vue',vt.dataset.m);
   sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ if(i.value) p.set('f_'+i.dataset.f,i.value); });
   if(tab==='ann'&&typeof ANN_SORT!=='undefined'&&(ANN_SORT.col!=='date'||ANN_SORT.dir!=='desc')) p.set('tri',ANN_SORT.col+'.'+ANN_SORT.dir);
+  if(tab==='admin'&&curSub!=='mbr') p.set('s', ADMIN_SLUG[curSub]);
   return p;
 }
 function hashFor(tab){ const q=tabState(tab).toString(); return '#'+(TAB_SLUG[tab]||tab)+(q?'?'+q:''); }
@@ -1005,6 +1038,7 @@ function applyState(tab,p){
       for(let pass=0;pass<3;pass++){ let changed=false; chips.forEach(c=>{ if(c.classList.contains('on')!==want.has(c.dataset.t)){ c.click(); changed=true; } }); if(!changed) break; } }
     const vue=p.get('vue')||'list'; const vb=sec.querySelector('.vtoggle button[data-m="'+vue+'"]'); if(vb&&!vb.classList.contains('on')) vb.click();
     sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ const want=p.get('f_'+i.dataset.f)||''; if(i.value!==want){ i.value=want; fire(i,['input']); } });
+    if(tab==='admin'){ const s=p.get('s')||''; showAdminSub(SLUG_ADMIN[s]||s||'mbr'); }
     if(tab==='ann'&&typeof ANN_SORT!=='undefined'){ const [c,d]=(p.get('tri')||'date.desc').split('.'); if(ANN_SORT.col!==c||ANN_SORT.dir!==d){ const th=document.querySelector('#annHead th[data-col="'+c+'"]'); if(th){ th.click(); if(ANN_SORT.dir!==d) th.click(); } } }
   } finally { APPLYING=false; }
   updateResetBtns();
@@ -1019,7 +1053,10 @@ function routeHash(){
   if(h==='#faq-apercu'){ buildFaq(true); return; }
   const m=h.match(/^#([a-z-]+)(?:\?(.*))?$/); const tab=m?tabFromSlug(m[1]):null;
   if(tab){ const btn=document.querySelector('nav.tabs button[data-v="'+tab+'"]'); if(btn&&btn.hidden) return;
-    showTab(tab); curTab=tab; applyState(tab, new URLSearchParams(m[2]||'')); }
+    showTab(tab); curTab=tab;
+    const p=new URLSearchParams(m[2]||'');
+    if(tab==='admin'&&!p.has('s')&&SLUG_ADMIN[m[1]]) p.set('s', m[1]);
+    applyState(tab, p); }
 }
 window.addEventListener('hashchange',()=>{ if(window.__booted) routeHash(); });
 window.addEventListener('popstate',()=>{ if(window.__booted) routeHash(); });
@@ -1958,7 +1995,7 @@ async function initSync(){
   if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
   return !!SBUSER;
 }
-// Onglet « Membres » : qui s'est connecté au portail (fonction membres_connectes, réservée aux comptes autorisés)
+// Onglet « Admin » (sous-menus Membres et Statistiques) : réservé aux comptes autorisés (fonction membres_connectes)
 function fmtQuand(iso){
   if(!iso) return 'jamais';
   const d=new Date(iso), now=new Date();
@@ -1969,13 +2006,18 @@ function fmtQuand(iso){
   if(j<7) return 'il y a '+j+' jours';
   return fmtD(d.toISOString().slice(0,10));
 }
+function masquerAdmin(btn){
+  if(btn) btn.hidden=true;
+  if(curTab==='admin'){ showTab('home'); curTab='home'; syncHash(false); }
+  return false;
+}
 async function buildMembres(){
-  const btn=document.querySelector('nav.tabs button[data-v="mbr"]');
+  const btn=document.querySelector('nav.tabs button[data-v="admin"]');
   const body=document.getElementById('mbrBody');
-  if(!SB||!SBUSER||!body){ if(btn) btn.hidden=true; return false; }
+  if(!SB||!SBUSER||!body) return masquerAdmin(btn);
   let rows=null;
   try{ const r=await SB.rpc('membres_connectes'); if(r.error) throw r.error; rows=r.data||[]; }
-  catch(e){ if(btn) btn.hidden=true; return false; }
+  catch(e){ return masquerAdmin(btn); }
   if(btn) btn.hidden=false;
   body.innerHTML = rows.length ? rows.map(m=>{
     const nom = m.nom || (m.email||'').split('@')[0];
