@@ -422,6 +422,8 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 .wit .wt a{font-weight:600;text-decoration:none}
 .wit .wt a:hover{text-decoration:underline}
 .wit .wt .m{color:var(--ink-2);font-size:13px}
+.wit .wlig{margin-top:4px}
+.wit .wlig .xtra{display:inline-block;font-size:12.5px}
 .wit.rit .wt b{font-weight:600}
 .wit.jal{background:var(--gold-soft);border-radius:8px;padding:6px 10px;color:var(--gold-ink);font-weight:600}
 .wtag{display:inline-block;border-radius:5px;padding:0 6px;font-size:11px;font-weight:700;letter-spacing:.03em;vertical-align:1px;margin-left:4px;white-space:nowrap}
@@ -1177,6 +1179,7 @@ const AUTO_REGLES = [
   ['r1_n1',              ['prise de r1', 'niveau 1']],
   ['mise_en_relation',   ['atelier mise en relation']],
   ['filleul_adherent',   ['premier filleul']],
+  ['invite_dm',          ['premier invite']],
   ['objectifs_neoman',   ['objectifs neoman']],
   ['objectifs_beman',    ['objectifs beman']],
   ['udp',                ['participation aux udp']],
@@ -1186,7 +1189,7 @@ const AUTO_REGLES = [
 const AUTO_LIB = {
   dm:'Découverte Métier', ad:'Atelier Démarrage', trois_jours:'3 Jours', formation_reservee:'formation réservée',
   adhesion:'adhésion', r1_n1:'atelier Prise de R1', mise_en_relation:'atelier Mise en relation',
-  filleul_adherent:'filleul adhérent', objectifs_neoman:'objectifs NEOMAN', objectifs_beman:'objectifs BEMAN',
+  filleul_adherent:'filleul adhérent', invite_dm:'invité en DM', objectifs_neoman:'objectifs NEOMAN', objectifs_beman:'objectifs BEMAN',
   udp:'UDP', com_n1:'Clefs de la communication N1', com_n2:'Clefs de la communication N2'
 };
 // Libellé d'une case -> clé automatique (null si la case reste manuelle)
@@ -1776,7 +1779,7 @@ function buildWeek(){
     ALL.filter(o=>o.a.start===iso).forEach(o=>{ const a=o.a; const pil=isLigneePilote(a.pilotes); const ins=(a.guests||[]).filter(ligAdh).map(id=>byId.get(id)).filter(Boolean);
       if(!pil&&!ins.length) return;
       const multi=a.end&&a.end>a.start?' <span class="m">(jusqu’au '+fmtD(a.end)+')</span>':'';
-      items.push({t:(a.hor||'99'), h:'<div class="wit"><span class="ic">'+({atelier:'🎓',réunion:'👥',formation:'📚',événement:'🎉'})[o.k]+'</span><span class="hr num">'+esc(a.hor||'')+'</span><span class="wt"><a href="'+a.url+'" target="_blank" rel="noopener">'+esc(a.title)+'</a>'+(pil?'<span class="wtag pil">piloté par la lignée</span>':'')+multi+'<div class="m">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span>'+(ins.length?' · <span class="wtag ins">lignée inscrite</span> '+ins.map(m=>'<span class="lig-open link" data-id="'+m.id+'">'+esc(m.name)+'</span>').join(', '):'')+'</div></span></div>'}); });
+      items.push({t:(a.hor||'99'), h:'<div class="wit"><span class="ic">'+({atelier:'🎓',réunion:'👥',formation:'📚',événement:'🎉'})[o.k]+'</span><span class="hr num">'+esc(a.hor||'')+'</span><span class="wt"><a href="'+a.url+'" target="_blank" rel="noopener">'+esc(a.title)+'</a>'+(pil?'<span class="wtag pil">piloté par la lignée</span>':'')+multi+'<div class="m">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span>'+'</div>'+(ins.length?'<div class="wlig"><span class="xtra lig-in" title="Membres de ta lignée inscrits">Lignée inscrite : '+ins.map(m=>'<span class="lig-open" data-id="'+m.id+'">'+esc(m.name)+'</span>').join(', ')+'</span></div>':'')+'</span></div>'}); });
     // Anniversaires (naissance) et anniversaires d'inscription — adhérents de la lignée uniquement
     M.forEach(m=>{ if(!ligAdh(m.id)) return;
       const x=EXTRA[m.id]; if(x&&x.bd===md) items.push({t:'00', h:'<div class="wit"><span class="ic">🎂</span><span class="hr"></span><span class="wt"><span class="lig-open link" data-id="'+m.id+'">'+esc(m.name)+'</span> <span class="m">fête son anniversaire'+(i===0?' aujourd’hui !':'')+'</span></span></div>'});

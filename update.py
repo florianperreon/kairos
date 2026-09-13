@@ -397,6 +397,18 @@ def parcours_membre(api, uid, membres, adh_ids):
     for f in formations:
         noter("formation_reservee", f.get("startDate"), "formation")
 
+    # Premier invité en DM : une séance où la personne est présente et où figure aussi l'un de ses filleuls
+    for a in ateliers:
+        if not _cle_etape(a.get("title"), [("dm", ("decouverte metier",)), ("dm", ("decouverte du metier",))]):
+            continue
+        for g in (a.get("guests") or []):
+            if not isinstance(g, dict) or g.get("id") == uid:
+                continue
+            parrain = g.get("godFather") or {}
+            if isinstance(parrain, dict) and parrain.get("id") == uid:
+                noter("invite_dm", a.get("startDate"), "invite")
+                break
+
     # Premier filleul devenu adhérent
     moi = _norm((u.get("firstName") or "") + " " + (u.get("lastName") or ""))
     filleuls = [m for m in membres if _norm(m[5]) == moi and m[0] in adh_ids and m[0] != uid]
