@@ -606,6 +606,28 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .cnt-wys:focus{outline:2px solid var(--accent);outline-offset:-2px}
 .cnt-wys:empty::before{content:"Écris ici…";color:var(--ink-3)}
 
+/* Surveillance de sessions */
+.surv-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:5px;padding:1px 8px;font-size:12px;cursor:pointer;font-family:inherit}
+.surv-btn:hover{border-color:var(--accent);color:var(--accent)}
+.surv-btn.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
+.surv-p{font-weight:700;border-radius:5px;padding:1px 8px}
+.surv-p.ok{background:var(--gold-soft);color:var(--gold-ink)}
+.surv-p.tendu{background:#FFF1DB;color:#8A4B00}
+:root[data-theme="dark"] .surv-p.tendu{background:#4A2E0F;color:#FBBF77}
+.surv-p.complet{background:#FDE7E7;color:#9B1C1C}
+:root[data-theme="dark"] .surv-p.complet{background:#4A1717;color:#F5A3A3}
+.ev.surv-full{opacity:.75}
+.chip.surv-type{background:var(--surface-2);color:var(--ink-2);font-weight:600}
+.surv-strip{background:#FFF8EC;border-color:var(--encours)}
+:root[data-theme="dark"] .surv-strip{background:#3A2A12}
+.surv-strip .bl{color:var(--encours-ink)}
+.surv-a{text-decoration:none;color:var(--ink);font-size:13.5px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:3px 10px}
+.surv-a .w{font-weight:700;color:var(--encours-ink);margin-left:4px}
+nav.tabs .sub-badge{display:inline-block;min-width:17px;padding:0 5px;margin-left:5px;border-radius:99px;background:var(--encours);color:#fff;font-size:10.5px;font-weight:800;line-height:17px;text-align:center;vertical-align:1px}
+
+.xtra.places.tendu{background:#FFF1DB;color:#8A4B00;font-weight:700}
+:root[data-theme="dark"] .xtra.places.tendu{background:#4A2E0F;color:#FBBF77}
+
 </style>
 
 <div id="lock" class="wrap">
@@ -635,6 +657,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
   <nav class="tabs">
     <button data-v="home" class="on">Accueil</button>
     <button data-v="veille" hidden>Veille</button>
+    <button data-v="surv" hidden>Surveillé</button>
     <button data-v="pd" id="pdTabBtn">Parcours</button>
     <button data-v="cat">Ateliers</button>
     <button data-v="reu">Réunions d'équipe</button>
@@ -648,6 +671,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
       <div class="panel welcome" id="welcome"></div>
       <div class="valeurs" id="homeValeurs" hidden></div>
       <div class="bdstrip" id="homeBd" hidden></div>
+      <div class="bdstrip surv-strip" id="homeSurv" hidden></div>
       <div class="panel" id="homeWeekPanel"><h2>Les 7 prochains jours <span class="badge-lig">Lignée</span></h2><div class="wjal" id="homeJalons" hidden></div><div class="week" id="homeWeek"></div></div>
       <div class="principes" id="homePrincipes" hidden></div>
       <div class="panel" id="homeParcoursPanel" hidden><h2>Où en es-tu ? <span class="badge-lig">Ton parcours en 4 phases</span></h2><div class="phases" id="homePhases"></div><div class="etapes" id="homeEtapes"></div></div>
@@ -662,6 +686,14 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
       <div class="panel vbreak" id="veilleBreak"></div>
       <div id="veilleLast"></div>
       <div class="panel" id="veilleHistoPanel" hidden><h2>Historique</h2><div id="veilleHisto"></div></div>
+    </section>
+
+    <section class="view" id="v-surv">
+      <div class="panel">
+        <h2>Ce que je surveille</h2>
+        <p class="mbr-sub" id="survNote"></p>
+        <div id="survList"></div>
+      </div>
     </section>
 
     <section class="view" id="v-pd">
@@ -944,7 +976,10 @@ function evExtras(a){
   if(a.pub!=null) parts.push('<span class="xtra pub'+(a.pub?' restreint':'')+'" title="Public visé (statut minimum requis)">'+esc(pubLabel(a.pub))+'</span>');
   if(a.hab) parts.push('<span class="xtra pub restreint" title="Habilitation requise">Habilitation : '+esc(a.hab)+'</span>');
   const isFull=x=>x.max>0&&x.total>=x.max;
-  if(a.max>0){ const full=isFull(a); parts.push('<span class="xtra places'+(full?' full':'')+'" title="Inscrits / places">'+a.total+'/'+a.max+(full?' · complet':'')+'</span>');
+  if(a.max>0){ const full=isFull(a), pl=survPlaces(a);
+    // même règle partout : alerte sous 3 places, ou sous 5 % de la capacité si c'est plus large
+    parts.push('<span class="xtra places'+(full?' full':(pl&&pl.tendu&&!isPast(a)?' tendu':''))+'" title="Inscrits / places">'
+      +a.total+'/'+a.max+(full?' · complet':(pl&&pl.tendu&&!isPast(a)?' · plus que '+pl.reste+' place'+(pl.reste>1?'s':''):''))+'</span>');
     if(full&&!isPast(a)){
       const alt=(SAME.get(a.tkey)||[]).filter(x=>x!==a&&x.start>a.start&&!isPast(x)&&!isFull(x)).sort((p,q)=>p.start.localeCompare(q.start)).slice(0,3);
       if(alt.length) parts.push('<span class="xtra alt">Prochaines dates disponibles : '+alt.map(x=>'<a href="'+x.url+'" target="_blank" rel="noopener" title="'+esc(x.title+(x.hor?' · '+x.hor:'')+(x.lieu?' · '+x.lieu:''))+'">'+fmtD(x.start)+(x.lieu?' ('+esc(x.lieu)+')':'')+(x.max>0?' · '+x.total+'/'+x.max:'')+' ↗</a>').join(', ')+'</span>');
@@ -961,6 +996,7 @@ function evExtras(a){
     if(/^https?:\/\/[^\s]+$/i.test(lk)) parts.push('<a class="xtra act" href="'+esc(lk)+'" target="_blank" rel="noopener">Rejoindre la visio ↗</a>'+pwHtml);
     else if(!/^(zoom( \w+)?|visio|teams|-|\.|\?|à définir|a definir)$/i.test(lk)) parts.push('<span class="xtra" title="Lien visio non renseigné sous forme d\u2019URL">Visio : '+esc(lk)+'</span>'+pwHtml);
   }
+  const et=survEtoile(a); if(et) parts.push(et);
   const st=a.siteId!=null?SITES[a.siteId]:null;
   if(st&&(st[2]||st[1])) parts.push('<a class="xtra act" href="'+esc(mapsUrl(st))+'" target="_blank" rel="noopener" title="'+esc([st[0],st[2],st[3],st[1]].filter(Boolean).join(', '))+'">Itinéraire ↗</a>');
   return parts.length?'<div class="xtras">'+parts.join(' ')+'</div>':'';
@@ -970,6 +1006,143 @@ const lieuHtml = l => (l==='Visio'||l==='Zoom') ? '<span class="lieu-visio">'+es
 const lieuKey = l => (l==='Visio'||l==='Zoom') ? 'Visio / Zoom' : l;
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const todayIso = TODAY.getFullYear()+'-'+String(TODAY.getMonth()+1).padStart(2,'0')+'-'+String(TODAY.getDate()).padStart(2,'0');
+
+/* ---------- Surveiller une session ---------- */
+// SURV : clés « type:id » (a = atelier, r = réunion, f = formation, e = événement)
+let SURV = new Set();
+const survCle = a => (a.k||'a')+':'+a.id;
+const survListes = { a:()=>A, r:()=>R, f:()=>F, e:()=>E };
+const survLib = { a:'Atelier', r:'Réunion d’équipe', f:'Formation', e:'Événement' };
+// Places restantes et seuil d'alerte : le plus large entre 3 places et 5 % de la capacité
+function survPlaces(a){
+  if(!(a.max>0)) return null;
+  const reste = Math.max(0, a.max - (a.total||0));
+  const seuil = Math.max(3, Math.ceil(a.max * 0.05));
+  return { reste, seuil, max:a.max, complet: reste===0, tendu: reste>0 && reste < seuil };
+}
+function survEtoile(a){
+  if(!SBUSER || isPast(a)) return '';
+  const on = SURV.has(survCle(a));
+  return '<button class="xtra surv-btn'+(on?' on':'')+'" data-surv="'+esc(survCle(a))+'" title="'
+    + (on?'Ne plus surveiller cette session':'Surveiller cette session (alerte quand les places se raréfient)')
+    + '">'+(on?'★ Surveillé':'☆ Surveiller')+'</button>';
+}
+function survObjets(){
+  const out = [];
+  SURV.forEach(cle=>{
+    const [t,id] = cle.split(':');
+    const liste = (survListes[t]||(()=>[]))();
+    const a = liste.find(x=>String(x.id)===id);
+    if(a) out.push({ cle, t, a });
+  });
+  return out.sort((x,y)=>(x.a.start||'').localeCompare(y.a.start||''));
+}
+function survAlertes(){
+  return survObjets().filter(o=>!isPast(o.a)).map(o=>Object.assign({}, o, {p:survPlaces(o.a)}))
+                     .filter(o=>o.p && (o.p.tendu || o.p.complet));
+}
+async function chargerSurv(){
+  if(!SB || !SBUSER){ SURV = new Set(); return false; }
+  try{
+    const r = await SB.from('surveillances').select('cle');
+    if(r.error) throw r.error;
+    SURV = new Set((r.data||[]).map(x=>x.cle));
+  }catch(e){ SURV = new Set(); return false; }
+  if(window.__booted){ try{ survPurge(); buildSurv(); majOngletSurv(); rafraichirListes(); }catch(e){} }
+  return true;
+}
+// Les sessions passées sortent d'elles-mêmes de la liste
+async function survPurge(){
+  const finies = [...SURV].filter(cle=>{
+    const [t,id] = cle.split(':');
+    const liste = (survListes[t]||(()=>[]))();
+    const a = liste.find(x=>String(x.id)===id);
+    return a ? isPast(a) : false;      // session inconnue : on la garde (données pas encore chargées)
+  });
+  if(!finies.length) return;
+  finies.forEach(c=>SURV.delete(c));
+  try{ await SB.from('surveillances').delete().in('cle', finies); }catch(e){}
+}
+async function survBascule(cle){
+  if(!SB || !SBUSER) return;
+  if(SURV.has(cle)){
+    SURV.delete(cle);
+    try{ await SB.from('surveillances').delete().eq('cle', cle); }catch(e){}
+  } else {
+    SURV.add(cle);
+    try{ await SB.from('surveillances').insert({ user_id: SBUSER.id, cle }); }catch(e){ SURV.delete(cle); }
+  }
+  majOngletSurv(); buildSurv(); rafraichirListes();
+}
+function majOngletSurv(){
+  const btn = document.querySelector('nav.tabs button[data-v="surv"]');
+  if(!btn) return;
+  btn.hidden = !SBUSER;
+  const n = survAlertes().length;
+  btn.innerHTML = 'Surveillé' + (n ? ' <span class="sub-badge">'+n+'</span>' : '');
+}
+function survPastille(p){
+  if(!p) return '';
+  if(p.complet) return '<span class="xtra surv-p complet">Complet</span>';
+  if(p.tendu) return '<span class="xtra surv-p tendu">Plus que '+p.reste+' place'+(p.reste>1?'s':'')+' sur '+p.max+'</span>';
+  return '<span class="xtra surv-p ok">'+p.reste+' places libres sur '+p.max+'</span>';
+}
+// redessine les listes qui portent l'étoile
+function rafraichirListes(){
+  try{ buildCat(); }catch(e){}
+  try{ buildPd(); }catch(e){}
+  try{ buildSimple('reu', R, id=>BASE+'teamMeeting/detail/'+id, 'réunion'); }catch(e){}
+  try{ buildSimple('for', F, id=>BASE+'formation/detail/'+id, 'formation'); }catch(e){}
+  try{ buildSimple('evt', E, id=>BASE+'event/detail/'+id, 'événement'); }catch(e){}
+  try{ buildHome(); buildSurvAccueil(); }catch(e){}
+  try{ routeHash(); }catch(e){}
+}
+function buildSurv(){
+  const el = document.getElementById('survList');
+  if(!el) return;
+  const objs = survObjets().filter(o=>!isPast(o.a));
+  const releve = (META&&META.maj) ? fmtMaj(META) : (DATA&&DATA.meta?fmtMaj(DATA.meta):'');
+  const note = document.getElementById('survNote');
+  if(note) note.textContent = objs.length
+    ? 'Places relevées le '+releve+' — la liste du réseau est synchronisée quatre fois par jour.'
+    : '';
+  if(!objs.length){
+    el.innerHTML = '<p style="color:var(--ink-2)">Rien sous surveillance. Dans les onglets Parcours, Ateliers, Réunions, Formations et Événements, le bouton <b>☆ Surveiller</b> ajoute une session à cette liste.</p>';
+    return;
+  }
+  let html='', mois='';
+  objs.forEach(o=>{
+    const a=o.a, p=survPlaces(a), mk=(a.start||'').slice(0,7);
+    if(mk!==mois){ if(mois) html+='</div>'; mois=mk; const [y,m]=mk.split('-'); html+='<div class="month-h">'+MOIS[+m-1]+' '+y+'</div><div class="day">'; }
+    html += '<div class="ev'+(p&&p.complet?' surv-full':'')+'"><div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div>'
+      + '<b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor||'')+'</div></div>'
+      + '<div><span class="chip surv-type">'+esc(survLib[o.t]||'')+'</span>'
+      + '<a class="t" href="'+a.url+'" target="_blank" rel="noopener">'+esc(a.title)+'</a>'
+      + '<div class="meta">'+lieuHtml(a.lieu)+(a.pilotes?' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span>':'')+'</div>'
+      + '<div class="xtras">'+survPastille(p)+survEtoile(a)+'</div>'
+      + evExtras(a)
+      + '</div></div>';
+  });
+  if(mois) html+='</div>';
+  el.innerHTML = html;
+}
+// Encart d'accueil : uniquement s'il y a une alerte
+function buildSurvAccueil(){
+  const el = document.getElementById('homeSurv');
+  if(!el) return;
+  const al = survAlertes();
+  el.hidden = !al.length;
+  if(!al.length) return;
+  el.innerHTML = '<span class="bl">⏳ '+al.length+' session'+(al.length>1?'s':'')+' surveillée'+(al.length>1?'s':'')+' à surveiller de près</span>'
+    + al.slice(0,4).map(o=>'<a class="surv-a" href="#surveille">'+esc(o.a.title)+' <span class="w">'
+      + (o.p.complet?'complet':'plus que '+o.p.reste)+'</span></a>').join('');
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-surv]');
+  if(!b) return;
+  e.preventDefault();
+  survBascule(b.dataset.surv);
+});
 
 /* ---------- Ouverture du portail ---------- */
 // Contenu éditorial : tables si connecté, fonction dédiée si entrée par mot de passe
@@ -1032,8 +1205,8 @@ function boot(){
   BASE=CFG.base||''; TH_COLORS=CFG.th||{};
   // Même atelier / réunion / formation / événement à d'autres dates (titre normalisé) → « prochaines dates disponibles » quand c'est complet
   SAME=new Map();
-  [[A,a=>urlAtelier(a.id)],[R,a=>BASE+'teamMeeting/detail/'+a.id],[F,a=>BASE+'formation/detail/'+a.id],[E,a=>BASE+'event/detail/'+a.id]].forEach(([list,url])=>{
-    list.forEach(a=>{ a.url=url(a); const k=norm(a.title).replace(/[^a-z0-9]+/g,' ').trim(); a.tkey=k; if(!SAME.has(k)) SAME.set(k,[]); SAME.get(k).push(a); });
+  [[A,a=>urlAtelier(a.id),'a'],[R,a=>BASE+'teamMeeting/detail/'+a.id,'r'],[F,a=>BASE+'formation/detail/'+a.id,'f'],[E,a=>BASE+'event/detail/'+a.id,'e']].forEach(([list,url,kind])=>{
+    list.forEach(a=>{ a.url=url(a); a.k=kind; const k=norm(a.title).replace(/[^a-z0-9]+/g,' ').trim(); a.tkey=k; if(!SAME.has(k)) SAME.set(k,[]); SAME.get(k).push(a); });
   });
   (CFG.pdCats||[]).forEach(c=>{ CATN_G[c[0]]=c[1]; CATC_G[c[0]]=c[2]; PD_MAP[c[1]]=c[0]; });
   if(CFG.pdTab) document.getElementById('pdTabBtn').textContent=CFG.pdTab;
@@ -1070,7 +1243,9 @@ function boot(){
   if(SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
   chargerVeille();
   chargerParcours();
+  chargerSurv();
   buildMembres();
+  majOngletSurv(); buildSurv(); buildSurvAccueil();
 }
 
 /* ---------- Navigation / thème / verrou ---------- */
@@ -1103,9 +1278,9 @@ document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('cli
 
 /* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
-const TABS=['home','veille','pd','cat','reu','for','evt','ann','admin'];
+const TABS=['home','veille','surv','pd','cat','reu','for','evt','ann','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',pd:'parcours-decouverte',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',admin:'admin'};
+const TAB_SLUG={home:'accueil',veille:'veille',surv:'surveille',pd:'parcours-decouverte',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',admin:'admin'};
 // Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
 const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin'});
 const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
@@ -2177,7 +2352,7 @@ async function initSync(){
   SB.auth.onAuthStateChange((ev, session)=>{
     SBUSER = session ? session.user : null;
     accMaj();
-    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); chargerParcours(); buildMembres(); }
+    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); chargerParcours(); chargerSurv(); buildMembres(); }
     if(!SBUSER) SYNC_FAIT=false;
   });
   try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }
