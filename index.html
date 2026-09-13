@@ -1216,7 +1216,12 @@ function cleAuto(lib){
   for(const [cle, motifs] of AUTO_REGLES){ if(motifs.every(m=>n.includes(m))) return cle; }
   return null;
 }
-const faitAuto = cle => (PARCOURS && PARCOURS.etapes && PARCOURS.etapes[cle]) || null;
+// les anciennes synchronisations écrivaient objectifs_role_neoman : on accepte les deux
+const faitAuto = cle => {
+  const e = PARCOURS && PARCOURS.etapes;
+  if(!e) return null;
+  return e[cle] || e[cle.replace('objectifs_','objectifs_role_')] || null;
+};
 // validé = séance déjà passée, drapeau du réseau, ou objectifs tous atteints
 const estValide = f => !!(f && (f.d || f.ok));
 // État d'une case : l'API fait foi sur les étapes automatiques

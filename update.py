@@ -332,7 +332,7 @@ def goals_par_niveau(api):
     return _GOALS_PAR_NIVEAU
 
 def _niveau(level):
-    return _norm(level).replace("role ", "").strip()
+    return _norm(str(level).replace("_", " ")).replace("role ", "").strip()
 
 def parcours_membre(api, uid, membres, adh_ids):
     """Étapes validées par le réseau pour un membre.
