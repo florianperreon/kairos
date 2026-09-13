@@ -562,6 +562,11 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 #lockErr #lockOut{display:block;margin:12px auto 0;border:1px solid var(--line);background:transparent;color:var(--ink-2);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-family:inherit}
 #lockErr #lockOut:hover{border-color:var(--ink-3);color:var(--ink)}
 
+.dem-filtres{display:flex;gap:8px;margin:-6px 0 14px;flex-wrap:wrap}
+.dem-filtres button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:5px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.dem-filtres button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+#demTbl .dem-tr{font-size:11.5px;color:var(--ink-3);margin-top:2px;font-weight:500}
+
 </style>
 
 <div id="lock" class="wrap">
@@ -735,8 +740,8 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
     <section class="view" id="v-admin">
       <nav class="subtabs" id="adminSub">
         <button data-s="mbr" class="on">Membres</button>
-        <button data-s="stats">Statistiques</button>
         <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
+        <button data-s="stats">Statistiques</button>
       </nav>
 
       <div class="subview on" id="sv-mbr">
@@ -757,6 +762,11 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
         <div class="panel">
           <h2>Demandes d’accès</h2>
           <p class="mbr-sub">Ces personnes se sont connectées avec un compte que le portail ne reconnaît pas. Rapproche chaque compte de sa fiche pour lui ouvrir l’accès.</p>
+          <div class="dem-filtres" id="demFiltres">
+            <button data-st="en_attente" class="on">En attente</button>
+            <button data-st="refusee">Refusées</button>
+            <button data-st="validee">Validées</button>
+          </div>
           <div class="tbl-wrap">
             <table id="demTbl">
               <thead><tr><th>Compte</th><th>Dernière tentative</th><th>Fiche correspondante</th><th></th></tr></thead>
@@ -1024,8 +1034,8 @@ document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('clic
 }));
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','stats','dem'];
-const ADMIN_SLUG={mbr:'membres',stats:'statistiques',dem:'demandes'};
+const ADMIN_SUBS=['mbr','dem','stats'];
+const ADMIN_SLUG={mbr:'membres',dem:'demandes',stats:'statistiques'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 function showAdminSub(s){
@@ -2144,7 +2154,7 @@ async function buildMembres(){
 }
 
 // Demandes d'accès : comptes connectés qui ne sont pas encore rapprochés d'une fiche du réseau
-let DEMANDES = [];
+let DEMANDES = [], DEM_STATUT = 'en_attente';
 function majBadgeDem(n){
   const b=document.getElementById('demBadge');
   if(!b) return;
@@ -2154,12 +2164,13 @@ async function buildDemandes(){
   const body=document.getElementById('demBody');
   if(!SB||!SBUSER||!body) return false;
   try{
-    const r = await SB.from('demandes_acces').select('email,nom,premiere,derniere,tentatives,statut')
-                      .eq('statut','en_attente').order('derniere',{ascending:false});
+    const r = await SB.from('demandes_acces').select('email,nom,premiere,derniere,tentatives,statut,traitee_le,traitee_par')
+                      .eq('statut', DEM_STATUT).order('derniere',{ascending:false});
     if(r.error) throw r.error;
     DEMANDES = r.data||[];
   }catch(e){ return false; }
-  majBadgeDem(DEMANDES.length);
+  if(DEM_STATUT==='en_attente') majBadgeDem(DEMANDES.length);
+  else { try{ const c=await SB.from('demandes_acces').select('email',{count:'exact',head:true}).eq('statut','en_attente'); majBadgeDem(c.count||0); }catch(e){} }
   // liste de choix : adhérents, pour rapprocher un compte d'une fiche
   const dl=document.getElementById('demAnnuaire');
   if(dl && !dl.dataset.pret && Array.isArray(M) && M.length){
@@ -2167,16 +2178,21 @@ async function buildDemandes(){
       .map(m=>'<option value="'+esc(m.name)+' · #'+m.id+'"></option>').join('');
     dl.dataset.pret='1';
   }
+  const vide = {en_attente:'Aucune demande en attente.', refusee:'Aucune demande refusée.', validee:'Aucune demande validée.'}[DEM_STATUT];
   body.innerHTML = DEMANDES.length ? DEMANDES.map(d=>{
     const nom = d.nom || (d.email||'').split('@')[0];
+    const traite = d.traitee_le ? '<div class="dem-tr">'+(d.statut==='validee'?'Validée':'Refusée')+' le '+esc(fmtD(String(d.traitee_le).slice(0,10)))+'</div>' : '';
+    const act = d.statut==='en_attente'
+      ? '<button class="dem-ok">Valider</button><button class="dem-no">Refuser</button>'
+      : (d.statut==='refusee' ? '<button class="dem-ok">Valider finalement</button>' : '<button class="dem-no">Retirer l’accès</button>');
     return '<tr data-mail="'+esc(d.email)+'">'
       + '<td><b>'+esc(nom)+'</b><div class="mbr-mail">'+esc(d.email)+'</div></td>'
-      + '<td class="num">'+esc(fmtQuand(d.derniere))+(d.tentatives>1?' <span class="dem-n">'+d.tentatives+' tentatives</span>':'')+'</td>'
-      + '<td><input class="dem-pick" list="demAnnuaire" placeholder="Rechercher la fiche…" autocomplete="off"></td>'
-      + '<td class="dem-act"><button class="dem-ok">Valider</button><button class="dem-no">Refuser</button></td></tr>';
-  }).join('') : '<tr><td colspan="4" style="color:var(--ink-2)">Aucune demande en attente.</td></tr>';
+      + '<td class="num">'+esc(fmtQuand(d.derniere))+(d.tentatives>1?' <span class="dem-n">'+d.tentatives+' tentatives</span>':'')+traite+'</td>'
+      + '<td>'+(d.statut==='validee'?'':'<input class="dem-pick" list="demAnnuaire" placeholder="Rechercher la fiche…" autocomplete="off">')+'</td>'
+      + '<td class="dem-act">'+act+'</td></tr>';
+  }).join('') : '<tr><td colspan="4" style="color:var(--ink-2)">'+vide+'</td></tr>';
   const n=document.getElementById('demNote');
-  if(n) n.textContent = DEMANDES.length ? 'Tant qu’une demande n’est pas validée, la personne ne voit aucune donnée du portail.' : '';
+  if(n) n.textContent = (DEM_STATUT==='en_attente' && DEMANDES.length) ? 'Tant qu’une demande n’est pas validée, la personne ne voit aucune donnée du portail.' : '';
   return true;
 }
 async function traiterDemande(tr, valider){
@@ -2195,6 +2211,9 @@ async function traiterDemande(tr, valider){
     if(valider){
       const a = await SB.from('adherents_autorises').upsert({ email:mail, nom:nomF, membre_id:fid }, { onConflict:'email' });
       if(a.error) throw a.error;
+    } else {
+      const a = await SB.from('adherents_autorises').delete().eq('email', mail);   // retire l'accès si la personne l'avait
+      if(a.error) throw a.error;
     }
     const d = await SB.from('demandes_acces').update({
       statut: valider?'validee':'refusee', membre_id: fid,
@@ -2203,11 +2222,16 @@ async function traiterDemande(tr, valider){
     if(d.error) throw d.error;
     buildDemandes();
   }catch(e){
-    if(err) err.textContent='Action impossible : '+(e.message||e);
+    const m=String((e&&(e.message||e.details))||e);
+    if(err) err.textContent = /duplicate key|unique/i.test(m)
+      ? 'Cette fiche est déjà rattachée à un autre compte : une fiche ne peut être liée qu’à une seule adresse.'
+      : 'Action impossible : '+m;
     tr.querySelectorAll('button').forEach(b=>b.disabled=false);
   }
 }
 document.addEventListener('click', e=>{
+  const f=e.target.closest && e.target.closest('#demFiltres button');
+  if(f){ DEM_STATUT=f.dataset.st; document.querySelectorAll('#demFiltres button').forEach(b=>b.classList.toggle('on',b===f)); buildDemandes(); return; }
   const ok=e.target.closest && e.target.closest('.dem-ok');
   const no=e.target.closest && e.target.closest('.dem-no');
   if(!ok && !no) return;
