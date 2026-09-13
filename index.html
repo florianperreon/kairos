@@ -569,6 +569,35 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .dem-filtres button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
 #demTbl .dem-tr{font-size:11.5px;color:var(--ink-3);margin-top:2px;font-weight:500}
 
+/* Édition du contenu */
+.cnt-wrap{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.cnt-wrap{grid-template-columns:1fr}}
+#cntQ{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:14px;margin-bottom:8px}
+.cnt-liste{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.cnt-item{display:flex;gap:8px;align-items:center;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 10px;font-size:13.5px;cursor:pointer;font-family:inherit}
+.cnt-item:hover{background:var(--surface-2)}
+.cnt-item.on{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.cnt-item .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cnt-item .n{color:var(--ink-3);font-size:11.5px}
+.cnt-ligne{display:flex;gap:10px;flex-wrap:wrap}
+.cnt-ligne label{flex:1;min-width:160px;font-size:12px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
+.cnt-ligne label.court{flex:0 0 110px;min-width:90px}
+.cnt-ligne input{display:block;width:100%;margin-top:4px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:14px;font-weight:400;text-transform:none;letter-spacing:0}
+.cnt-slug{font-size:12px;color:var(--ink-3);margin:8px 0}
+#cntHtml,#cntBlocJson{width:100%;min-height:320px;margin-top:6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.55;resize:vertical}
+#cntBlocJson{min-height:220px}
+.cnt-actions{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.cnt-actions .acc-btn{width:auto;padding:9px 16px}
+.cnt-actions button:not(.acc-btn),.cnt-hist button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:9px;padding:8px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+.cnt-hist{font-size:12px;color:var(--ink-3);margin-left:auto}
+.cnt-apercu{margin-top:14px;border:1px dashed var(--line);border-radius:10px;padding:14px}
+.cnt-blocs{margin-top:26px;border-top:1px solid var(--line);padding-top:18px}
+.cnt-blocs h3{font-size:15px;margin:0 0 4px}
+#cntBlocs{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:14px}
+.cnt-blocs .acc-btn{width:auto;padding:9px 16px;margin-top:10px}
+.cnt-msg{font-size:13px;color:var(--gold-ink);margin-top:12px;min-height:1em}
+.cnt-msg.err{color:#e05252}
+
 </style>
 
 <div id="lock" class="wrap">
@@ -738,6 +767,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
       <nav class="subtabs" id="adminSub">
         <button data-s="mbr" class="on">Membres</button>
         <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
+        <button data-s="cnt">Contenu</button>
         <button data-s="stats">Statistiques</button>
       </nav>
 
@@ -773,6 +803,46 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
           <datalist id="demAnnuaire"></datalist>
           <p class="mbr-note" id="demNote"></p>
           <p class="acc-err" id="demErr"></p>
+        </div>
+      </div>
+
+      <div class="subview" id="sv-cnt">
+        <div class="panel">
+          <h2>Contenu éditorial</h2>
+          <p class="mbr-sub">Chaque modification est publiée immédiatement pour toute la lignée, et la version précédente est archivée.</p>
+          <div class="cnt-wrap">
+            <div class="cnt-col">
+              <input type="search" id="cntQ" placeholder="Filtrer les pages…" autocomplete="off">
+              <div class="cnt-liste" id="cntListe"></div>
+            </div>
+            <div class="cnt-col cnt-form">
+              <div id="cntEdit" hidden>
+                <div class="cnt-ligne">
+                  <label>Titre<input type="text" id="cntTitre"></label>
+                  <label class="court">Icône<input type="text" id="cntIcone" maxlength="4"></label>
+                  <label class="court">Minutes<input type="number" id="cntMin" min="1" max="99"></label>
+                </div>
+                <div class="cnt-slug">Adresse : <code id="cntSlug"></code></div>
+                <textarea id="cntHtml" spellcheck="false" placeholder="Contenu HTML de la page…"></textarea>
+                <div class="cnt-actions">
+                  <button type="button" id="cntSave" class="acc-btn">Enregistrer</button>
+                  <button type="button" id="cntVoir">Aperçu</button>
+                  <span class="cnt-hist" id="cntHist"></span>
+                </div>
+                <div class="nc cnt-apercu" id="cntApercu" hidden></div>
+              </div>
+              <div class="cnt-blocs">
+                <h3>Autres blocs</h3>
+                <p class="mbr-sub">Parcours, FAQ, ressources, rituels, objections… édition directe en JSON, à manier avec précaution.</p>
+                <select id="cntBlocs"></select>
+                <div id="cntBlocEdit" hidden>
+                  <textarea id="cntBlocJson" spellcheck="false"></textarea>
+                  <button type="button" id="cntBlocSave" class="acc-btn">Enregistrer le bloc</button>
+                </div>
+              </div>
+              <p class="cnt-msg" id="cntMsg"></p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1006,8 +1076,8 @@ document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('clic
 }));
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','dem','stats'];
-const ADMIN_SLUG={mbr:'membres',dem:'demandes',stats:'statistiques'};
+const ADMIN_SUBS=['mbr','dem','cnt','stats'];
+const ADMIN_SLUG={mbr:'membres',dem:'demandes',cnt:'contenu',stats:'statistiques'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 function showAdminSub(s){
@@ -2131,6 +2201,7 @@ async function buildMembres(){
   catch(e){ return masquerAdmin(btn); }
   if(btn) btn.hidden=false;
   buildDemandes();
+  buildContenuAdmin();
   body.innerHTML = rows.length ? rows.map(m=>{
     const nom = m.nom || (m.email||'').split('@')[0];
     const moi = SBUSER && m.email===SBUSER.email ? ' <span class="mbr-moi">toi</span>' : '';
@@ -2229,6 +2300,129 @@ document.addEventListener('click', e=>{
   const tr=(ok||no).closest('tr');
   if(tr) traiterDemande(tr, !!ok);
 });
+
+// Édition du contenu éditorial (réservée aux administrateurs)
+let CNT_PAGES = [], CNT_SLUG = null, CNT_BLOC = null, CNT_SALE = false;
+const cntEl = id => document.getElementById(id);
+function cntMsg(m, err){
+  const e = cntEl('cntMsg');
+  if(!e) return;
+  e.textContent = m || '';
+  e.className = 'cnt-msg' + (err ? ' err' : '');
+}
+function cntListe(){
+  const q = norm((cntEl('cntQ')||{}).value || '');
+  const ul = cntEl('cntListe');
+  if(!ul) return;
+  const vues = CNT_PAGES.filter(p=>!q || norm(p.titre+' '+p.slug).includes(q));
+  ul.innerHTML = vues.map(p=>'<button class="cnt-item'+(p.slug===CNT_SLUG?' on':'')+'" data-slug="'+esc(p.slug)+'">'
+    + (p.icone?'<span class="ic">'+esc(p.icone)+'</span>':'')
+    + '<span class="t">'+esc(p.titre||p.slug)+'</span>'
+    + '<span class="n num">'+Math.round((p.taille||0)/1000)+' k</span></button>').join('')
+    || '<p style="color:var(--ink-2);padding:8px">Aucune page.</p>';
+}
+async function buildContenuAdmin(){
+  if(!SB||!SBUSER||!cntEl('cntListe')) return false;
+  try{
+    const r = await SB.from('contenu_pages').select('slug,titre,icone,minutes,maj').order('titre');
+    if(r.error) throw r.error;
+    CNT_PAGES = (r.data||[]).map(p=>Object.assign({}, p));
+    const b = await SB.from('contenu_blocs').select('cle,maj').order('cle');
+    const sel = cntEl('cntBlocs');
+    if(sel && !b.error) sel.innerHTML = '<option value="">— choisir un bloc —</option>'
+      + (b.data||[]).map(x=>'<option value="'+esc(x.cle)+'">'+esc(x.cle)+'</option>').join('');
+  }catch(e){ return false; }
+  cntListe();
+  return true;
+}
+async function cntOuvrir(slug){
+  if(CNT_SALE && !confirm('Des modifications ne sont pas enregistrées. Les abandonner ?')) return;
+  cntMsg('');
+  const r = await SB.from('contenu_pages').select('slug,titre,icone,html,minutes,maj').eq('slug',slug).maybeSingle();
+  if(r.error || !r.data){ cntMsg('Page illisible.', true); return; }
+  CNT_SLUG = slug; CNT_SALE = false;
+  cntEl('cntEdit').hidden = false;
+  cntEl('cntTitre').value = r.data.titre||'';
+  cntEl('cntIcone').value = r.data.icone||'';
+  cntEl('cntMin').value = r.data.minutes==null?'':r.data.minutes;
+  cntEl('cntHtml').value = r.data.html||'';
+  cntEl('cntSlug').textContent = slug;
+  cntEl('cntApercu').innerHTML = '';
+  cntEl('cntApercu').hidden = true;
+  const v = await SB.from('contenu_versions').select('id,remplacee_le').eq('slug',slug).order('remplacee_le',{ascending:false}).limit(1);
+  const h = cntEl('cntHist');
+  if(h){
+    const der = v.data && v.data[0];
+    h.innerHTML = der ? 'Version précédente archivée le '+esc(fmtD(String(der.remplacee_le).slice(0,10)))
+      +' <button type="button" id="cntRestaurer" data-id="'+der.id+'">Restaurer</button>' : 'Aucune version archivée.';
+  }
+  cntListe();
+  cntEl('cntTitre').focus();
+}
+async function cntEnregistrer(){
+  if(!CNT_SLUG) return;
+  const btn = cntEl('cntSave');
+  btn.disabled = true; cntMsg('Enregistrement…');
+  const maj = { titre: cntEl('cntTitre').value.trim(), icone: cntEl('cntIcone').value.trim(),
+                html: cntEl('cntHtml').value, minutes: cntEl('cntMin').value ? +cntEl('cntMin').value : null };
+  const r = await SB.from('contenu_pages').update(maj).eq('slug', CNT_SLUG);
+  btn.disabled = false;
+  if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
+  CNT_SALE = false;
+  cntMsg('Enregistré. La page est à jour pour tout le monde.');
+  const p = CNT_PAGES.find(x=>x.slug===CNT_SLUG);
+  if(p){ p.titre = maj.titre; p.icone = maj.icone; }
+  cntListe();
+  await chargerContenu().then(()=>{ try{ buildContenu(); buildPhases(); buildSearchIndex(); }catch(e){} });
+}
+async function cntRestaurer(id){
+  if(!confirm('Remplacer la page par la version archivée ?')) return;
+  const v = await SB.from('contenu_versions').select('titre,html').eq('id', id).maybeSingle();
+  if(v.error || !v.data){ cntMsg('Version illisible.', true); return; }
+  cntEl('cntTitre').value = v.data.titre||'';
+  cntEl('cntHtml').value = v.data.html||'';
+  CNT_SALE = true;
+  cntMsg('Version restaurée dans l’éditeur — enregistre pour la publier.');
+}
+async function cntOuvrirBloc(cle){
+  CNT_BLOC = cle || null;
+  const z = cntEl('cntBlocEdit');
+  if(!cle){ z.hidden = true; return; }
+  const r = await SB.from('contenu_blocs').select('valeur').eq('cle',cle).maybeSingle();
+  if(r.error || !r.data){ cntMsg('Bloc illisible.', true); return; }
+  z.hidden = false;
+  cntEl('cntBlocJson').value = JSON.stringify(r.data.valeur, null, 2);
+  cntMsg('');
+}
+async function cntEnregistrerBloc(){
+  if(!CNT_BLOC) return;
+  let val;
+  try{ val = JSON.parse(cntEl('cntBlocJson').value); }
+  catch(e){ cntMsg('JSON invalide : '+e.message, true); return; }
+  const r = await SB.from('contenu_blocs').update({ valeur: val, maj: new Date().toISOString() }).eq('cle', CNT_BLOC);
+  if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
+  cntMsg('Bloc « '+CNT_BLOC+' » enregistré.');
+  await chargerContenu().then(()=>{ try{ buildContenu(); buildPhases(); buildSearchIndex(); }catch(e){} });
+}
+document.addEventListener('input', e=>{
+  if(e.target.closest && e.target.closest('#cntEdit')) CNT_SALE = true;
+  if(e.target.id === 'cntQ') cntListe();
+});
+document.addEventListener('click', e=>{
+  const it = e.target.closest && e.target.closest('.cnt-item');
+  if(it){ cntOuvrir(it.dataset.slug); return; }
+  if(e.target.id === 'cntSave'){ cntEnregistrer(); return; }
+  if(e.target.id === 'cntRestaurer'){ cntRestaurer(+e.target.dataset.id); return; }
+  if(e.target.id === 'cntVoir'){
+    const z = cntEl('cntApercu');
+    z.hidden = !z.hidden;
+    if(!z.hidden) z.innerHTML = cntEl('cntHtml').value;
+    e.target.textContent = z.hidden ? 'Aperçu' : 'Masquer l’aperçu';
+    return;
+  }
+  if(e.target.id === 'cntBlocSave'){ cntEnregistrerBloc(); return; }
+});
+document.addEventListener('change', e=>{ if(e.target.id === 'cntBlocs') cntOuvrirBloc(e.target.value); });
 
 // Veille CGP : lue en base (source de vérité depuis le 13/09/2026)
 async function chargerVeille(){
