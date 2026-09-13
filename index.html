@@ -7,6 +7,7 @@
   --line:#E2E4F0; --line-2:#D0D3E6;
   --accent:#4338CA; --accent-ink:#FFFFFF; --accent-soft:#E8E7FB;
   --gold:#22C58B; --gold-ink:#0B5C40; --gold-soft:#DDF6EC;
+  --encours:#E8A33D; --encours-ink:#8A5A00;
   --ok:#149467; --bad:#D64545;
   --shadow:0 10px 30px rgba(23,26,43,.10);
   --r:12px;
@@ -17,6 +18,7 @@
   --line:#262A48; --line-2:#343960;
   --accent:#8F88F2; --accent-ink:#12142A; --accent-soft:#2A2D55;
   --gold:#34D89F; --gold-ink:#A7F3D0; --gold-soft:#123B2E;
+  --encours:#F0B857; --encours-ink:#F5D08A;
   --ok:#3DC98A; --bad:#F07B6B;
   --shadow:0 10px 30px rgba(0,0,0,.40);
 }
@@ -313,8 +315,11 @@ footer .heart{color:#E0245E}
 .phase h3{font-size:16.5px;font-weight:700;margin:2px 0 6px}
 .phase p{margin:0;font-size:13.5px;color:var(--ink-2)}
 .phase .prog{height:6px;background:var(--surface-2);border-radius:4px;margin-top:12px;overflow:hidden}
-.phase .prog i{display:block;height:100%;background:var(--gold);width:0}
-.phase .pct{font-size:12px;color:var(--ink-3);margin-top:4px}
+.phase .prog i{display:block;height:100%;background:var(--encours);width:0;transition:width .25s}
+.phase .prog.fini i{background:var(--gold)}
+.phase .pct{font-size:12px;color:var(--encours-ink);margin-top:4px;font-weight:600}
+.phase .pct.fini{color:var(--gold-ink)}
+.phase .pct.neutre{color:var(--ink-3);font-weight:500}
 .etapes{margin-top:16px}
 .phase-intro{background:var(--accent-soft);color:var(--ink);border-left:3px solid var(--accent);border-radius:8px;padding:10px 14px;font-size:14.5px;margin-bottom:12px}
 .etape{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);margin-bottom:10px;overflow:hidden}
@@ -1172,7 +1177,7 @@ function buildPhases(){
   const C=CONTENU;
   if(isLocked(curPhase)) curPhase=0;
   document.getElementById('homePhases').innerHTML=C.parcours.map((ph,pi)=>{ const pr=phaseProgress(ph,pi); const lk=isLocked(pi);
-    return '<div class="phase '+esc(ph.c||'')+(pi===curPhase?' on':'')+(lk?' locked':'')+(ph.locked&&!lk?' unlocked':'')+'" data-pi="'+pi+'" title="'+(lk?'Se débloque quand toutes les étapes des phases précédentes sont cochées':'')+'"><div class="pn">Phase '+ph.n+'</div><h3>'+esc(ph.t)+'</h3><p>'+esc(ph.obj||'')+'</p>'+(pr.tot?'<div class="prog"><i style="width:'+pr.pct+'%"></i></div><div class="pct">'+pr.ok+' / '+pr.tot+' étapes cochées</div>':(lk?'<div class="pct">Verrouillée</div>':'<div class="pct">Débloquée 🎉</div>'))+'</div>'; }).join('');
+    return '<div class="phase '+esc(ph.c||'')+(pi===curPhase?' on':'')+(lk?' locked':'')+(ph.locked&&!lk?' unlocked':'')+'" data-pi="'+pi+'" title="'+(lk?'Se débloque quand toutes les étapes des phases précédentes sont cochées':'')+'"><div class="pn">Phase '+ph.n+'</div><h3>'+esc(ph.t)+'</h3><p>'+esc(ph.obj||'')+'</p>'+(pr.tot?'<div class="prog'+(pr.ok===pr.tot?' fini':'')+'"><i style="width:'+pr.pct+'%"></i></div><div class="pct'+(pr.ok===pr.tot?' fini':'')+'">'+pr.ok+' / '+pr.tot+' étapes cochées'+(pr.ok===pr.tot?' ✓':'')+'</div>':(lk?'<div class="pct neutre">Verrouillée</div>':'<div class="pct neutre">Débloquée 🎉</div>'))+'</div>'; }).join('');
   document.querySelectorAll('#homePhases .phase').forEach(el=>el.addEventListener('click',()=>{ const pi=+el.dataset.pi; if(isLocked(pi)) return; curPhase=pi; buildPhases(); }));
   const ph=C.parcours[curPhase];
   document.getElementById('homeEtapes').innerHTML=(ph.intro?'<div class="phase-intro">'+esc(ph.intro)+'</div>':'')+(ph.etapes||[]).map((e,ei)=>{
