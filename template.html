@@ -44,8 +44,6 @@ button{font:inherit}
 .lock-card input[type=password]{width:100%;padding:11px 12px;border:1px solid var(--line-2);border-radius:8px;background:var(--ground);color:var(--ink);font-size:16px}
 .lock-card input[type=password]:focus{outline:2px solid var(--accent);outline-offset:1px}
 .lock-row{display:flex;align-items:center;gap:8px;margin:14px 0 18px;font-size:14px;color:var(--ink-2)}
-#unlockBtn{width:100%;padding:11px;border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-family:"Sora";font-size:15px;cursor:pointer}
-#unlockBtn:hover{filter:brightness(1.1)}
 #lockErr{color:var(--bad);font-size:14px;min-height:20px;margin-top:10px}
 .lock-note{font-size:12.5px;color:var(--ink-3);margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
 
@@ -521,7 +519,6 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 .lock-alt{margin:16px 0 0;text-align:center}
 .lock-alt button{border:0;background:transparent;color:var(--ink-3);font-size:13px;text-decoration:underline;cursor:pointer;padding:4px;font-family:inherit}
 .lock-alt button:hover{color:var(--ink-2)}
-#lockPwBox{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
 .lock-note{font-size:12px;color:var(--ink-3);line-height:1.5;margin:10px 0 0;text-align:left}
 .lock-wait{font-size:13px;color:var(--ink-2);margin:10px 0 0}
 
@@ -575,13 +572,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
     <p>Kairos, c'est l'art de reconnaître le bon moment — et d'agir au moment juste</p>
     <button class="acc-g" id="lockGoogle" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.2 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.3-4.6 7l7.2 5.6c4.2-3.9 6.6-9.6 6.6-16.4z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.9-6.1C1 16.9 0 20.3 0 24s1 7.1 2.6 10.2l7.9-5.5z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.2-5.6c-2 1.4-4.6 2.2-8.7 2.2-6.3 0-11.6-3.7-13.5-9.1l-7.9 5.5C6.5 42.6 14.6 48 24 48z"/></svg>Continuer avec Google</button>
     <p class="lock-wait" id="lockWait">Ouverture…</p>
-    <div class="lock-alt" id="lockAlt" hidden><button type="button" id="lockPwLink">Se connecter avec le mot de passe</button></div>
-    <div id="lockPwBox" hidden>
-      <input type="password" id="pw" placeholder="Mot de passe" autocomplete="current-password">
-      <div class="lock-row"><input type="checkbox" id="remember" checked><label for="remember">Rester déverrouillé</label></div>
-      <button id="unlockBtn">Déverrouiller</button>
-      <p class="lock-note">Sans compte, tes favoris et tes étapes cochées restent sur cet appareil uniquement : ils ne te suivront pas sur ton téléphone et seront perdus si tu changes de navigateur.</p>
-    </div>
+    <p class="lock-note" id="lockInfo" hidden>L’accès est réservé aux personnes de la lignée. Connecte-toi avec ton compte Google : si le portail ne te reconnaît pas encore, ta demande est transmise à un administrateur.</p>
     <div id="lockErr"></div>
   </div>
 </div>
@@ -802,7 +793,6 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 // Tout le contenu du portail vit désormais dans la base : données du réseau, contenu éditorial et veille.
 // meta.js (date de mise à jour, en clair) reste le seul fichier chargé à côté de la page.
 const CENC_INLINE = __CENC__;   // conservé pour la génération d'index.html
-let MDP = '';
 let META = null, DATA = null, CONTENU = null, VEILLE = null;
 const loadScript = f => new Promise((res, rej) => { const el = document.createElement('script'); el.src = f + (location.protocol === 'file:' ? '' : '?t=' + Date.now()); el.onload = () => res(); el.onerror = () => rej(new Error('CHARGEMENT ' + f)); document.head.appendChild(el); });
 const METAP = loadScript('meta.js').then(() => { META = window.KAIROS_META || null; showMeta(); }).catch(() => {});
@@ -895,11 +885,6 @@ async function chargerContenu(){
       const pages={}; (p.data||[]).forEach(l=>{ pages[l.slug]={t:l.titre, i:l.icone, h:l.html, n:l.minutes}; });
       C.pages=pages; return C;
     }
-    if(MDP){
-      const r = await fetch(SB_URL+'/functions/v1/contenu', { headers:{ 'x-kairos-mdp': MDP } });
-      if(!r.ok) return null;
-      return await r.json();
-    }
   }catch(e){}
   return null;
 }
@@ -911,36 +896,13 @@ async function chargerDonnees(){
       if(r.error) throw r.error;
       return (r.data && r.data.payload) || null;
     }
-    if(MDP){
-      const r = await fetch(SB_URL+'/functions/v1/donnees', { headers:{ 'x-kairos-mdp': MDP } });
-      if(!r.ok) return null;
-      const d = await r.json();
-      return d.payload || null;
-    }
   }catch(e){}
   return null;
 }
-// Saisie du mot de passe : c'est le serveur qui le vérifie (401 = mot de passe faux)
-async function tryUnlock(pw){
-  let rep;
-  try{ rep = await fetch(SB_URL+'/functions/v1/donnees', { headers:{ 'x-kairos-mdp': pw } }); }
-  catch(e){ throw new Error('RESEAU'); }
-  if(rep.status===401) throw new Error('MDP');
-  if(!rep.ok) throw new Error('RESEAU');
-  DATA = (await rep.json()).payload;
-  if(!DATA) throw new Error('RESEAU');
-  MDP = pw;
-  CONTENU = await chargerContenu();
-  VEILLE = null;
-  if (document.getElementById('remember').checked){ try{ localStorage.setItem('kairos_p', pw); }catch(e){} }
-  boot();
-}
-// Ouverture directe : session Google ouverte, ou mot de passe mémorisé sur cet appareil
+// Ouverture directe : la session Google donne accès aux données
 async function silentUnlock(){
   try{
-    let p=''; try{ p=localStorage.getItem('kairos_p')||''; }catch(e){}
-    if(!p && !(SB && SBUSER)) return false;
-    MDP = p;
+    if(!(SB && SBUSER)) return false;
     DATA = await chargerDonnees();
     if(!DATA) return false;
     CONTENU = await chargerContenu();
@@ -948,17 +910,6 @@ async function silentUnlock(){
     boot(); return true;
   }catch(e){ return false; }
 }
-document.getElementById('unlockBtn').addEventListener('click', async ()=>{
-  const err = document.getElementById('lockErr'); err.textContent='';
-  const pw = document.getElementById('pw').value;
-  if(!pw){ err.textContent='Entre le mot de passe.'; return; }
-  document.getElementById('unlockBtn').textContent='Ouverture…';
-  try{ await tryUnlock(pw); }
-  catch(e){ const m=String(e&&e.message||'');
-    err.textContent = m==='RESEAU' ? 'Le portail n\u2019a pas pu joindre le serveur \u2014 vérifie ta connexion et réessaie.' : 'Mot de passe incorrect.';
-    document.getElementById('unlockBtn').textContent='Déverrouiller'; }
-});
-document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('unlockBtn').click(); });
 
 /* ---------- App ---------- */
 let A=[], M=[], byNormName=new Map(), children=new Map(), managed=new Map(), FAVS=new Set();
@@ -1136,7 +1087,7 @@ document.getElementById('lockBtn').addEventListener('click',async ()=>{
   b.disabled=true; b.textContent='…';
   if(SYNC_T){ try{ await syncPush(); }catch(e){} }          // dernière sauvegarde avant de partir
   if(SB && SBUSER){ try{ await SB.auth.signOut(); }catch(e){} }
-  try{localStorage.removeItem('kairos_k'); localStorage.removeItem('kairos_p');}catch(e){}
+  try{localStorage.removeItem('kairos_k'); localStorage.removeItem('kairos_p');}catch(e){}   // clés de l'ancien mode mot de passe
   location.replace(location.pathname);
 });
 
@@ -2251,12 +2202,6 @@ async function chargerVeille(){
       ]);
       if(e.error||b.error) return false;
       lignes = e.data||[]; alertes = b.data||[];
-    } else if(MDP){
-      // entré par mot de passe : lecture via la fonction dédiée, la veille ne devient pas publique pour autant
-      const r = await fetch(SB_URL+'/functions/v1/veille-lire', { headers:{ 'x-kairos-mdp': MDP } });
-      if(!r.ok) return false;
-      const d = await r.json();
-      lignes = d.editions||[]; alertes = d.breaking||[];
     } else return false;
   }catch(err){ return false; }
   try{
@@ -2276,36 +2221,29 @@ async function chargerVeille(){
   }catch(err){ return false; }
 }
 function lockErr(m){ const e=document.getElementById('lockErr'); if(e) e.textContent=m||''; }
-function afficherMdp(){
-  const w=document.getElementById('lockWait'); if(w) w.hidden=true;
-  const a=document.getElementById('lockAlt'); if(a) a.hidden=true;
-  const b=document.getElementById('lockPwBox'); if(b){ b.hidden=false; const p=document.getElementById('pw'); if(p) setTimeout(()=>p.focus(),50); }
-}
-// Démarrage : session Google en priorité, écran mot de passe sinon
+// Démarrage : tout passe par le compte Google
 async function demarrer(){
   const w=document.getElementById('lockWait');
-  const connecte = await initSync();                  // prépare Supabase et dit si une session est ouverte
+  const connecte = await initSync();
   const q=new URLSearchParams(location.search.slice(1));
   const err=q.get('error_description')||q.get('error');
   if(err) history.replaceState(null,'',location.pathname+location.hash);
-  let mdpMemo=''; try{ mdpMemo=localStorage.getItem('kairos_p')||''; }catch(e){}
-  if(connecte || mdpMemo){
-    if(w) w.textContent='Ouverture de ton espace\u2026';
+  if(connecte){
+    if(w) w.textContent='Ouverture de ton espace…';
     if(await silentUnlock()) return;
-    if(connecte){
-      const el=document.getElementById('lockErr');
-      if(el) el.innerHTML='<b>Acc\u00e8s en attente de validation</b><br>Ton compte <b>'+esc((SBUSER&&SBUSER.email)||'')
-        +'</b> est bien enregistr\u00e9, mais il doit encore \u00eatre rapproch\u00e9 de ta fiche par un administrateur. '
-        +'Tu auras acc\u00e8s au portail d\u00e8s que ce sera fait, sans rien avoir \u00e0 refaire.'
-        +'<button type="button" id="lockOut">Utiliser un autre compte</button>';
-    }
+    const el=document.getElementById('lockErr');
+    if(el) el.innerHTML='<b>Accès en attente de validation</b><br>Ton compte <b>'+esc((SBUSER&&SBUSER.email)||'')
+      +'</b> est bien enregistré, mais il doit encore être rapproché de ta fiche par un administrateur. '
+      +'Tu auras accès au portail dès que ce sera fait, sans rien avoir à refaire.'
+      +'<button type="button" id="lockOut">Utiliser un autre compte</button>';
   }
   if(w) w.hidden=true;
   const g=document.getElementById('lockGoogle');
-  if(SB && g) g.hidden=false;
-  if(err) lockErr(accMsg(err));
-  if(SB){ const a=document.getElementById('lockAlt'); if(a) a.hidden=false; }
-  else { afficherMdp(); }
+  if(g) g.hidden=!SB;
+  const info=document.getElementById('lockInfo');
+  if(info) info.hidden = !SB || connecte;
+  if(!SB) lockErr('Le portail n’a pas pu joindre le serveur — vérifie ta connexion et recharge la page.');
+  else if(err) lockErr(accMsg(err));
 }
 document.addEventListener('click', async e=>{
   if(e.target.closest && e.target.closest('#lockOut')){
@@ -2313,7 +2251,6 @@ document.addEventListener('click', async e=>{
     try{ localStorage.removeItem('kairos_p'); }catch(err){}
     location.replace(location.pathname); return;
   }
-  if(e.target.closest && e.target.closest('#lockPwLink')){ afficherMdp(); return; }
   const g = e.target.closest && e.target.closest('#lockGoogle');
   if(!g) return;
   lockErr('');
