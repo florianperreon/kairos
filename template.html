@@ -714,7 +714,8 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 // Chargés par balise <script> (et non fetch) pour fonctionner aussi en double-cliquant index.html (file://).
 const ENC_INLINE = __ENC__;
 const CENC_INLINE = __CENC__;
-let ENC = null, CENC = null, VENC = null, META = null, DATA = null, CONTENU = null, VEILLE = null;
+let MDP = '';
+let ENC = null, CENC = null, META = null, DATA = null, CONTENU = null, VEILLE = null;
 const loadScript = f => new Promise((res, rej) => { const el = document.createElement('script'); el.src = f + (location.protocol === 'file:' ? '' : '?t=' + Date.now()); el.onload = () => res(); el.onerror = () => rej(new Error('CHARGEMENT ' + f)); document.head.appendChild(el); });
 const METAP = loadScript('meta.js').then(() => { META = window.KAIROS_META || null; showMeta(); }).catch(() => {});
 const BLOCKS = (async () => {
@@ -722,7 +723,6 @@ const BLOCKS = (async () => {
   await loadScript('donnees.js'); ENC = window.KAIROS_DONNEES;
   if (!ENC || !ENC.data) throw new Error('CHARGEMENT donnees.js');
   try { await loadScript('contenu.js'); CENC = window.KAIROS_CONTENU || null; } catch (e) { CENC = null; }
-  try { await loadScript('veille.js'); VENC = window.KAIROS_VEILLE || null; } catch (e) { VENC = null; }
 })();
 BLOCKS.catch(() => {});
 function showMeta(){
@@ -820,22 +820,21 @@ async function decryptWith(keys){
   if (CENC && CENC.data){
     try{ CONTENU = await decBlock(CENC, keys[CENC.salt||ENC.salt]); }catch(e){ CONTENU = null; }
   }
-  VEILLE = null;
-  if (VENC && VENC.data){
-    try{ VEILLE = await decBlock(VENC, keys[VENC.salt||ENC.salt]); }catch(e){ VEILLE = null; }
-  }
+  VEILLE = null;   // la veille vient de la base (chargerVeille), plus d'un fichier chiffré
   return data;
 }
 async function keysFor(pw){
   const keys = {}; keys[ENC.salt] = await deriveKey(pw, ENC);
-  for(const blk of [CENC, VENC]) if(blk && blk.salt && !keys[blk.salt]) keys[blk.salt] = await deriveKey(pw, blk);
+  for(const blk of [CENC]) if(blk && blk.salt && !keys[blk.salt]) keys[blk.salt] = await deriveKey(pw, blk);
   return keys;
 }
 async function tryUnlock(pw){
   await BLOCKS;
   const keys = await keysFor(pw);
   DATA = await decryptWith(keys);
+  MDP = pw;
   if (document.getElementById('remember').checked){
+    try{ localStorage.setItem('kairos_p', pw); }catch(e){}
     try{ const store = {}; for(const s in keys) store[s] = b64e(await crypto.subtle.exportKey('raw', keys[s])); localStorage.setItem('kairos_k', JSON.stringify(store)); }catch(e){}
   }
   boot();
@@ -847,8 +846,7 @@ async function silentUnlock(){
     const store = s.startsWith('{') ? JSON.parse(s) : {[ENC.salt]: s};   // ancien format : une seule clé brute
     const keys = {};
     for(const salt of [ENC.salt, (CENC&&CENC.salt)||ENC.salt]){ if(!store[salt]) return false; keys[salt] = await crypto.subtle.importKey('raw', b64(store[salt]), {name:'AES-GCM'}, false, ['decrypt']); }
-    const vsalt = VENC && VENC.salt;   // veille.js : facultatif (clé absente d'une session ouverte avant son arrivée)
-    if(vsalt && !keys[vsalt] && store[vsalt]) keys[vsalt] = await crypto.subtle.importKey('raw', b64(store[vsalt]), {name:'AES-GCM'}, false, ['decrypt']);
+    try{ MDP = localStorage.getItem('kairos_p')||''; }catch(e){}
     DATA = await decryptWith(keys); boot(); return true;
   }catch(e){ try{localStorage.removeItem('kairos_k');}catch(_){} return false; }
 }
@@ -1015,7 +1013,7 @@ document.getElementById('lockBtn').addEventListener('click',async ()=>{
   b.disabled=true; b.textContent='…';
   if(SYNC_T){ try{ await syncPush(); }catch(e){} }          // dernière sauvegarde avant de partir
   if(SB && SBUSER){ try{ await SB.auth.signOut(); }catch(e){} }
-  try{localStorage.removeItem('kairos_k');}catch(e){}
+  try{localStorage.removeItem('kairos_k'); localStorage.removeItem('kairos_p');}catch(e){}
   location.replace(location.pathname);
 });
 
@@ -1656,8 +1654,8 @@ function buildWeek(){
 
 /* ---------- Recherche globale (Ctrl K) ---------- */
 /* ---------- Veille ---------- */
-// veille.js : bloc chiffré séparé (même mot de passe, sel de contenu.js), réécrit chaque semaine par
-// les tâches planifiées. VEILLE = {maj, axes[], editions[{sem,du,au,maj,items{axe:{sujet,breves[]}}}], breaking[]}
+// Source de vérité : tables veille_editions / veille_breaking (Supabase), lues par chargerVeille().
+// VEILLE = {maj, editions[{du,au,items{axe:{sujet,breves[]}}}], breaking[]}
 const VAXD = [
   {id:'fisca',    t:'Fiscalité & réglementation', ic:'⚖️'},
   {id:'marches',  t:'Marchés & économie',         ic:'📈'},
@@ -1938,17 +1936,28 @@ async function initSync(){
   if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
   return !!SBUSER;
 }
-// Veille CGP : lue en base (source de vérité depuis le 13/09/2026), veille.js ne sert plus que de secours hors ligne
+// Veille CGP : lue en base (source de vérité depuis le 13/09/2026)
 async function chargerVeille(){
-  if(!SB||!SBUSER) return false;
+  if(location.protocol==='file:') return false;
+  let lignes=null, alertes=[];
   try{
-    const [e,b] = await Promise.all([
-      SB.from('veille_editions').select('du,au,axe,sujet,breves,maj').order('du',{ascending:false}),
-      SB.from('veille_breaking').select('d,axe,t,r,i,u,s').order('d',{ascending:false})
-    ]);
-    if(e.error||b.error) return false;
-    const lignes = e.data||[];
-    if(!lignes.length) return false;
+    if(SB && SBUSER){
+      const [e,b] = await Promise.all([
+        SB.from('veille_editions').select('du,au,axe,sujet,breves,maj').order('du',{ascending:false}),
+        SB.from('veille_breaking').select('d,axe,t,r,i,u,s').order('d',{ascending:false})
+      ]);
+      if(e.error||b.error) return false;
+      lignes = e.data||[]; alertes = b.data||[];
+    } else if(MDP){
+      // entré par mot de passe : lecture via la fonction dédiée, la veille ne devient pas publique pour autant
+      const r = await fetch(SB_URL+'/functions/v1/veille-lire', { headers:{ 'x-kairos-mdp': MDP } });
+      if(!r.ok) return false;
+      const d = await r.json();
+      lignes = d.editions||[]; alertes = d.breaking||[];
+    } else return false;
+  }catch(err){ return false; }
+  try{
+    if(!lignes || !lignes.length) return false;
     const eds={}; let last='';
     lignes.forEach(r=>{
       if(!eds[r.du]) eds[r.du]={du:r.du, au:r.au, items:{}};
@@ -1958,7 +1967,7 @@ async function chargerVeille(){
     let maj='';
     if(last){ const d=new Date(last), z=n=>String(n).padStart(2,'0');
       maj = d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes()); }
-    VEILLE = { maj: maj, editions: Object.values(eds), breaking: (b.data||[]) };
+    VEILLE = { maj: maj, editions: Object.values(eds), breaking: alertes };
     if(window.__booted){ try{ buildVeille(); buildSearchIndex(); routeHash(); }catch(err){} }
     return true;
   }catch(err){ return false; }
