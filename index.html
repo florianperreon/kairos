@@ -598,6 +598,14 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .cnt-msg{font-size:13px;color:var(--gold-ink);margin-top:12px;min-height:1em}
 .cnt-msg.err{color:#e05252}
 
+/* Éditeur visuel */
+.cnt-barre{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;padding:6px;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;background:var(--surface-2)}
+.cnt-barre button{border:1px solid transparent;background:transparent;color:var(--ink-2);border-radius:7px;padding:5px 9px;font-size:13px;cursor:pointer;font-family:inherit}
+.cnt-barre button:hover{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.cnt-wys{min-height:320px;max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:0 0 10px 10px;background:var(--bg);padding:14px 16px;font-size:14.5px;line-height:1.6}
+.cnt-wys:focus{outline:2px solid var(--accent);outline-offset:-2px}
+.cnt-wys:empty::before{content:"Écris ici…";color:var(--ink-3)}
+
 </style>
 
 <div id="lock" class="wrap">
@@ -823,13 +831,14 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
                   <label class="court">Minutes<input type="number" id="cntMin" min="1" max="99"></label>
                 </div>
                 <div class="cnt-slug">Adresse : <code id="cntSlug"></code></div>
-                <textarea id="cntHtml" spellcheck="false" placeholder="Contenu HTML de la page…"></textarea>
+                <div class="cnt-barre" id="cntBarre"></div>
+                <div class="nc cnt-wys" id="cntWys" contenteditable="true" spellcheck="true"></div>
+                <textarea id="cntHtml" spellcheck="false" placeholder="Contenu HTML de la page…" hidden></textarea>
                 <div class="cnt-actions">
                   <button type="button" id="cntSave" class="acc-btn">Enregistrer</button>
-                  <button type="button" id="cntVoir">Aperçu</button>
+                  <button type="button" id="cntCode">‹ › Code HTML</button>
                   <span class="cnt-hist" id="cntHist"></span>
                 </div>
-                <div class="nc cnt-apercu" id="cntApercu" hidden></div>
               </div>
               <div class="cnt-blocs">
                 <h3>Autres blocs</h3>
@@ -2301,6 +2310,85 @@ document.addEventListener('click', e=>{
   if(tr) traiterDemande(tr, !!ok);
 });
 
+// Éditeur visuel : ce que l'on voit est ce qui sera publié (aucune connaissance du HTML requise)
+let CNT_MODE = 'visuel';
+const OUTILS = [
+  ['gras',      'B',   'Gras (Ctrl+B)',        ()=>document.execCommand('bold')],
+  ['italique',  'I',   'Italique (Ctrl+I)',    ()=>document.execCommand('italic')],
+  ['titre',     'Titre','Titre de section',    ()=>wysTitre()],
+  ['normal',    '¶',   'Texte normal',         ()=>document.execCommand('formatBlock', false, 'p')],
+  ['puces',     '• Liste','Liste à puces',     ()=>document.execCommand('insertUnorderedList')],
+  ['num',       '1. Liste','Liste numérotée',  ()=>document.execCommand('insertOrderedList')],
+  ['lien',      '🔗 Lien','Insérer un lien',   ()=>wysLien()],
+  ['deslien',   'Retirer le lien','Retirer le lien', ()=>document.execCommand('unlink')],
+  ['propre',    '⌫ Nettoyer','Retirer la mise en forme', ()=>document.execCommand('removeFormat')],
+];
+function wysTitre(){
+  const b = document.queryCommandValue('formatBlock');
+  document.execCommand('formatBlock', false, /h3/i.test(b) ? 'p' : 'h3');
+}
+function wysLien(){
+  const sel = String(window.getSelection()||'');
+  if(!sel){ cntMsg('Sélectionne d’abord le texte à transformer en lien.', true); return; }
+  const u = prompt('Adresse du lien (https://…)', 'https://');
+  if(!u) return;
+  document.execCommand('createLink', false, u);
+  wysLiens();
+}
+// tout lien s'ouvre dans un nouvel onglet, comme le reste du portail
+function wysLiens(){
+  const z = cntEl('cntWys');
+  if(z) z.querySelectorAll('a[href]').forEach(a=>{ a.target='_blank'; a.rel='noopener'; });
+}
+// ce qui sort de l'éditeur : pas de script, pas de style, pas de gestionnaire d'événement
+function wysPropre(html){
+  const d = document.createElement('div');
+  d.innerHTML = html || '';
+  d.querySelectorAll('script,style,iframe,object,embed').forEach(n=>n.remove());
+  d.querySelectorAll('*').forEach(n=>{
+    [...n.attributes].forEach(a=>{
+      const nom = a.name.toLowerCase();
+      if(nom.startsWith('on') || (nom==='href' && /^\s*javascript:/i.test(a.value))) n.removeAttribute(a.name);
+    });
+  });
+  return d.innerHTML;
+}
+function cntHtmlCourant(){
+  return CNT_MODE==='code' ? cntEl('cntHtml').value : wysPropre(cntEl('cntWys').innerHTML);
+}
+function cntMode(m){
+  CNT_MODE = m;
+  const wys = cntEl('cntWys'), code = cntEl('cntHtml'), b = cntEl('cntCode'), barre = cntEl('cntBarre');
+  if(m==='code'){ code.value = wysPropre(wys.innerHTML); }
+  else { wys.innerHTML = code.value; wysLiens(); }
+  wys.hidden = m==='code';
+  barre.hidden = m==='code';
+  code.hidden = m!=='code';
+  if(b) b.textContent = m==='code' ? '← Éditeur visuel' : '‹ › Code HTML';
+}
+function cntBarreOutils(){
+  const b = cntEl('cntBarre');
+  if(!b || b.dataset.pret) return;
+  b.innerHTML = OUTILS.map((o,i)=>'<button type="button" data-o="'+i+'" title="'+esc(o[2])+'">'+esc(o[1])+'</button>').join('');
+  b.dataset.pret = '1';
+  b.addEventListener('mousedown', e=>{           // mousedown : ne pas perdre la sélection
+    const t = e.target.closest('button[data-o]');
+    if(!t) return;
+    e.preventDefault();
+    cntEl('cntWys').focus();
+    OUTILS[+t.dataset.o][3]();
+    CNT_SALE = true;
+  });
+}
+// coller depuis Word ou une page web : on ne garde que le texte, la mise en forme reste celle du portail
+document.addEventListener('paste', e=>{
+  const z = e.target.closest && e.target.closest('#cntWys');
+  if(!z) return;
+  e.preventDefault();
+  const txt = (e.clipboardData||window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, txt);
+});
+
 // Édition du contenu éditorial (réservée aux administrateurs)
 let CNT_PAGES = [], CNT_SLUG = null, CNT_BLOC = null, CNT_SALE = false;
 const cntEl = id => document.getElementById(id);
@@ -2347,8 +2435,8 @@ async function cntOuvrir(slug){
   cntEl('cntMin').value = r.data.minutes==null?'':r.data.minutes;
   cntEl('cntHtml').value = r.data.html||'';
   cntEl('cntSlug').textContent = slug;
-  cntEl('cntApercu').innerHTML = '';
-  cntEl('cntApercu').hidden = true;
+  cntBarreOutils();
+  cntMode('visuel');
   const v = await SB.from('contenu_versions').select('id,remplacee_le').eq('slug',slug).order('remplacee_le',{ascending:false}).limit(1);
   const h = cntEl('cntHist');
   if(h){
@@ -2364,7 +2452,7 @@ async function cntEnregistrer(){
   const btn = cntEl('cntSave');
   btn.disabled = true; cntMsg('Enregistrement…');
   const maj = { titre: cntEl('cntTitre').value.trim(), icone: cntEl('cntIcone').value.trim(),
-                html: cntEl('cntHtml').value, minutes: cntEl('cntMin').value ? +cntEl('cntMin').value : null };
+                html: cntHtmlCourant(), minutes: cntEl('cntMin').value ? +cntEl('cntMin').value : null };
   const r = await SB.from('contenu_pages').update(maj).eq('slug', CNT_SLUG);
   btn.disabled = false;
   if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
@@ -2381,6 +2469,7 @@ async function cntRestaurer(id){
   if(v.error || !v.data){ cntMsg('Version illisible.', true); return; }
   cntEl('cntTitre').value = v.data.titre||'';
   cntEl('cntHtml').value = v.data.html||'';
+  cntMode(CNT_MODE==='code'?'code':'visuel');
   CNT_SALE = true;
   cntMsg('Version restaurée dans l’éditeur — enregistre pour la publier.');
 }
@@ -2413,13 +2502,7 @@ document.addEventListener('click', e=>{
   if(it){ cntOuvrir(it.dataset.slug); return; }
   if(e.target.id === 'cntSave'){ cntEnregistrer(); return; }
   if(e.target.id === 'cntRestaurer'){ cntRestaurer(+e.target.dataset.id); return; }
-  if(e.target.id === 'cntVoir'){
-    const z = cntEl('cntApercu');
-    z.hidden = !z.hidden;
-    if(!z.hidden) z.innerHTML = cntEl('cntHtml').value;
-    e.target.textContent = z.hidden ? 'Aperçu' : 'Masquer l’aperçu';
-    return;
-  }
+  if(e.target.id === 'cntCode'){ cntMode(CNT_MODE==='code'?'visuel':'code'); return; }
   if(e.target.id === 'cntBlocSave'){ cntEnregistrerBloc(); return; }
 });
 document.addEventListener('change', e=>{ if(e.target.id === 'cntBlocs') cntOuvrirBloc(e.target.value); });
