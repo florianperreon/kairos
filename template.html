@@ -1492,7 +1492,7 @@ function buildCat(){
   };
   const catDaySel=setupDays('catDays',()=>render());
   ['catQ','catNiv','catLieu'].forEach(id=>document.getElementById(id).addEventListener('input',render));
-  ['catFrom','catTo','catPast'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+  ['catFrom','catTo','catPast','catHors'].forEach(id=>document.getElementById(id).addEventListener('change',render));
   render();
 }
 
