@@ -108,6 +108,8 @@ section.view.on{display:block}
 .pilotes .lig{font-weight:700;text-decoration:underline}
 .pilotes .moins{font-style:italic;color:var(--ink-3)}
 .ev.dim{opacity:.62}.ev.dim .t,.ev.dim .meta,.ev.dim .hor,.ev.dim .multi{font-style:italic;color:var(--ink-3)}
+.ev.hors{opacity:.5;filter:grayscale(.85)}
+.ev.hors .t{color:var(--ink-2)}
 .pilotes .reco{font-weight:700}.badge-reco{display:inline-block;background:var(--gold-soft);color:var(--gold-ink);border-radius:5px;font-size:10.5px;font-weight:700;padding:1px 6px;margin-left:4px;letter-spacing:.03em;white-space:nowrap;vertical-align:1px}
 .lieu-visio{color:var(--ink-3)}
 .lieu-ville{font-weight:700;color:var(--accent)}
@@ -649,6 +651,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
         <select id="catNiv"><option value="">Tous niveaux</option></select>
         <select id="catLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="catPast"> Inclure les passés</label>
+        <label class="chk" id="catHorsLbl" hidden title="Ateliers dont le public visé est au-dessus de ton statut"><input type="checkbox" id="catHors"> Ateliers non accessibles</label>
         <button type="button" class="reset-btn" data-reset="cat" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
@@ -842,6 +845,21 @@ const allMoins = str => { const ps=(str||'').split(',').map(x=>x.trim()).filter(
 const mapsUrl = s => s[4] ? s[4] : 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent([s[2],s[3],s[1]].filter(Boolean).join(' '));
 const isPast = a => a.end < todayIso;
 const pubLabel = p => p===''?'Ouvert à tous':(p==='?'?'Public restreint':p+' et +');
+// Accès selon le statut : chaque atelier vise un statut minimum (pub), '' = ouvert à tous
+const RANGS=['GUEST','NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
+const monStatut = () => {
+  const r = PARCOURS && PARCOURS.statut ? String(PARCOURS.statut).toUpperCase().replace('ROLE_','') : '';
+  return RANGS.includes(r) ? r : '';
+};
+function accessible(a){
+  const mien = monStatut();
+  if(!mien) return true;                       // statut inconnu : on n'exclut rien
+  if(a.pub==null || a.pub==='') return true;   // ouvert à tous
+  const p = String(a.pub).toUpperCase().replace('ROLE_','');
+  const ip = RANGS.indexOf(p);
+  if(ip < 0) return true;                      // public non reconnu : on laisse passer
+  return RANGS.indexOf(mien) >= ip;
+}
 function evExtras(a){
   const parts=[];
   if(a.pub!=null) parts.push('<span class="xtra pub'+(a.pub?' restreint':'')+'" title="Public visé (statut minimum requis)">'+esc(pubLabel(a.pub))+'</span>');
@@ -1226,7 +1244,7 @@ async function chargerParcours(){
     const r = await SB.from('membres_parcours').select('donnees,maj').limit(1).maybeSingle();
     if(r.error) throw r.error;
     PARCOURS = (r.data && r.data.donnees) || null;
-    if(window.__booted && PARCOURS){ try{ buildPhases(); }catch(e){} }
+    if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
     return !!PARCOURS;
   }catch(e){ PARCOURS = null; return false; }
 }
@@ -1450,7 +1468,9 @@ function buildCat(){
     const q=norm(document.getElementById('catQ').value.trim());
     const niv=document.getElementById('catNiv').value, lieu=document.getElementById('catLieu').value;
     const from=document.getElementById('catFrom').value, to=document.getElementById('catTo').value, past=document.getElementById('catPast').checked;
-    const rows=oth.filter(a=>(past||!isPast(a))&&sel.has(a.th)&&(!niv||nivOf(a.title)===niv)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,catDaySel));
+    const hors=document.getElementById('catHors').checked;
+    const lbl=document.getElementById('catHorsLbl'); if(lbl) lbl.hidden = !monStatut();
+    const rows=oth.filter(a=>(past||!isPast(a))&&sel.has(a.th)&&(!niv||nivOf(a.title)===niv)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,catDaySel)&&(hors||accessible(a)));
     document.getElementById('catCount').textContent=rows.length+' atelier'+(rows.length>1?'s':'');
     window.__catRows=rows; calUpdate('cat');
     let html='', curMonth='';
@@ -1458,7 +1478,8 @@ function buildCat(){
       const mk=a.start.slice(0,7);
       if(mk!==curMonth){ curMonth=mk; const [y,m]=mk.split('-'); html+='<div class="month-h">'+MOIS[+m-1]+' '+y+'</div><div class="day">'; }
       const multi=a.start!==a.end?'<div class="multi num">jusqu\u2019au '+fmtD(a.end)+'</div>':'';
-      html+='<div class="ev"><div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div><b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div><span class="chip" style="background:'+(TH_COLORS[a.th]||'#7F8C8D')+'">'+esc(a.th)+'</span></div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes,{title:a.title})+'</span></div>'+evExtras(a)+'</div></div>';
+      const inacc=!accessible(a);
+      html+='<div class="ev'+(inacc?' hors':'')+'"'+(inacc?' title="Réservé à '+esc(pubLabel(a.pub))+' — au-dessus de ton statut"':'')+'><div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div><b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div><span class="chip" style="background:'+(TH_COLORS[a.th]||'#7F8C8D')+'">'+esc(a.th)+'</span></div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes,{title:a.title})+'</span></div>'+evExtras(a)+'</div></div>';
       const nextIdx=idx+1;
       if(nextIdx>=rows.length||rows[nextIdx].start.slice(0,7)!==mk) html+='</div>';
     });
