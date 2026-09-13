@@ -483,6 +483,34 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 .olist details.done summary::before{content:"✓ ";color:var(--ok)}
 .olist .oa{padding-top:6px;font-size:14px}.olist .oa ul{margin:4px 0;padding-left:20px}.olist .oa li{margin:3px 0}
 .olist .osrc{font-size:12px;color:var(--ink-3);margin-top:4px}
+/* Compte & synchronisation */
+#accBtn.acc-off{border-color:var(--accent);color:var(--accent)}
+#acc{position:fixed;inset:0;background:rgba(8,10,14,.55);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
+#acc.on{display:flex}
+.acc-card{position:relative;width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:24px 24px 22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.acc-card h2{font-size:18px;margin:0 0 6px}
+.acc-sub{font-size:14px;color:var(--ink-2);margin:0 0 18px;line-height:1.5}
+.acc-x{position:absolute;top:10px;right:10px;border:0;background:transparent;color:var(--ink-3);font-size:16px;cursor:pointer;padding:6px;line-height:1}
+.acc-x:hover{color:var(--ink)}
+.acc-g{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:14px;font-weight:600;cursor:pointer}
+.acc-g:hover{border-color:var(--ink-3)}
+.acc-g svg{width:18px;height:18px;flex:0 0 auto}
+.acc-sep{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--ink-3);font-size:12px}
+.acc-sep::before,.acc-sep::after{content:"";height:1px;background:var(--line);flex:1}
+.acc-l{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin:0 0 5px;text-transform:uppercase;letter-spacing:.04em}
+#acc input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font-size:15px;margin-bottom:10px}
+#acc input:focus{outline:0;border-color:var(--accent)}
+#accCode{letter-spacing:.35em;font-weight:700;text-align:center}
+.acc-btn{width:100%;padding:11px;border:0;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px;cursor:pointer}
+.acc-btn:hover{filter:brightness(1.08)}
+.acc-btn[disabled]{opacity:.6;cursor:default}
+.acc-btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink-2);font-weight:600}
+.acc-btn.ghost:hover{border-color:var(--ink-3);color:var(--ink)}
+.acc-err{font-size:13px;color:#e05252;margin-top:10px;min-height:1px}
+.acc-info{font-size:13px;color:var(--ink-2);margin-top:10px}
+.acc-state{font-size:12px;color:var(--ink-3);margin:0 0 18px}
+.acc-note{font-size:12px;color:var(--ink-3);margin-top:14px;line-height:1.5}
+
 </style>
 
 <div id="lock" class="wrap">
@@ -504,6 +532,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
       <button class="icon-btn" id="searchBtn" title="Rechercher partout (Ctrl K)">🔍 Rechercher<span class="kbd">Ctrl K</span></button>
       <button class="icon-btn" id="linkBtn" title="Copier le lien de cette vue (onglet + filtres) pour le partager">🔗 Lien</button>
       <button class="icon-btn" id="installBtn" title="Installer Kairos comme une application" hidden>📲 Installer</button>
+      <button class="icon-btn acc-off" id="accBtn" title="Retrouver ma progression sur tous mes appareils" hidden>☁ Connexion</button>
       <button class="icon-btn" id="themeBtn" title="Basculer clair/sombre">◐ Thème</button>
       <button class="icon-btn" id="lockBtn" title="Verrouiller">🔒 Verrouiller</button>
     </div>
@@ -660,6 +689,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 <div id="sheet"><div class="sheet-card" id="sheetCard"></div></div>
 <div id="psheet" aria-hidden="true"><div class="psheet-card" id="psheetCard" role="dialog" aria-modal="true"></div></div>
 <div id="modal"><div class="modal-card"><h2 id="modalTitle" style="font-size:17px;margin-bottom:10px"></h2><textarea id="modalTxt" readonly></textarea><div class="modal-actions"><button id="modalCopy">Copier</button><button id="modalDl">Télécharger</button><button id="modalClose">Fermer</button></div></div></div>
+<div id="acc" aria-hidden="true"><div class="acc-card" role="dialog" aria-modal="true" aria-label="Mon compte"><button class="acc-x" id="accClose" title="Fermer">✕</button><div id="accIn"><h2>Retrouver ma progression partout</h2><p class="acc-sub">Connecte-toi une fois : tes favoris, tes étapes cochées et tes objections maîtrisées te suivront sur ton téléphone comme sur ton ordinateur.</p><button class="acc-g" id="accGoogle"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.2 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.3-4.6 7l7.2 5.6c4.2-3.9 6.6-9.6 6.6-16.4z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.9-6.1C1 16.9 0 20.3 0 24s1 7.1 2.6 10.2l7.9-5.5z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.2-5.6c-2 1.4-4.6 2.2-8.7 2.2-6.3 0-11.6-3.7-13.5-9.1l-7.9 5.5C6.5 42.6 14.6 48 24 48z"/></svg>Continuer avec Google</button><div id="accMailWrap"><div class="acc-sep">ou</div><label class="acc-l" for="accMail">Adresse e-mail</label><input type="email" id="accMail" placeholder="Ton adresse" autocomplete="email" inputmode="email"><button class="acc-btn" id="accSend">Recevoir un code</button><div id="accCodeWrap" hidden><div style="height:12px"></div><label class="acc-l" for="accCode">Code reçu par e-mail</label><input type="text" id="accCode" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="000000"><button class="acc-btn" id="accCheck">Valider</button></div></div><div class="acc-err" id="accErr"></div><p class="acc-note">L’accès est réservé aux personnes inscrites sur la liste du portail.</p></div><div id="accOut" hidden><h2>Synchronisation active</h2><p class="acc-sub" id="accWho"></p><p class="acc-state" id="accState"></p><button class="acc-btn ghost" id="accLogout">Se déconnecter</button><p class="acc-note">La session reste ouverte : pas besoin de se reconnecter à chaque visite.</p></div></div></div>
 <div class="chart-tip" id="tip"></div>
 <div id="cmdk" role="dialog" aria-modal="true" aria-label="Recherche"><div class="ck-card"><div class="ck-in"><span class="ic">🔍</span><input type="search" id="ckQ" placeholder="Rechercher une page, une question, un atelier, un membre…" autocomplete="off"><span class="kbd">Échap</span></div><div class="ck-res" id="ckRes"></div><div class="ck-foot"><span>↑↓ naviguer</span><span>↵ ouvrir</span><span>Échap fermer</span></div></div></div>
 
@@ -822,7 +852,7 @@ document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter
 /* ---------- App ---------- */
 let A=[], M=[], byNormName=new Map(), children=new Map(), managed=new Map(), FAVS=new Set();
 try{ FAVS = new Set(JSON.parse(localStorage.getItem('kairos_favs')||'[]')); }catch(e){}
-const saveFavs = ()=>{ try{ localStorage.setItem('kairos_favs', JSON.stringify([...FAVS])); }catch(e){} };
+const saveFavs = ()=>{ try{ localStorage.setItem('kairos_favs', JSON.stringify([...FAVS])); }catch(e){} planSync(); };
 
 let R=[], F=[], E=[], ADH=new Set(), SITES={}, EXTRA={}, LIGNEE_IDS=new Set(), byId=new Map(), SAME=new Map();
 // pub : public visé ('' = ouvert à tous, sinon statut minimum ex. 'ADMAN' ; null = inconnu, données anciennes) ; hab : habilitation requise
@@ -874,6 +904,7 @@ function boot(){
   buildSimple('for', F, id=>BASE+'formation/detail/'+id, 'formation');
   buildSimple('evt', E, id=>BASE+'event/detail/'+id, 'événement');
   window.__booted=true;
+  initSync();
 }
 
 /* ---------- Navigation / thème / verrou ---------- */
@@ -1018,7 +1049,7 @@ function buildHome(){
 
 /* ---------- Contenu éditorial (guide, parcours, FAQ, ressources) ---------- */
 let CHECK={}; try{ CHECK=JSON.parse(localStorage.getItem('kairos_check')||'{}'); }catch(e){}
-const saveCheck=()=>{ try{ localStorage.setItem('kairos_check', JSON.stringify(CHECK)); }catch(e){} };
+const saveCheck=()=>{ try{ localStorage.setItem('kairos_check', JSON.stringify(CHECK)); }catch(e){} planSync(); };
 let curPhase=0;
 function buildContenu(){
   if(!CONTENU) return;
@@ -1737,7 +1768,7 @@ document.addEventListener('keydown',e=>{
 
 /* ---------- Traitement des objections : mode entraînement ---------- */
 let OBJ_OK=new Set(); try{ OBJ_OK=new Set(JSON.parse(localStorage.getItem('kairos_obj')||'[]')); }catch(e){}
-const saveObj=()=>{ try{ localStorage.setItem('kairos_obj', JSON.stringify([...OBJ_OK])); }catch(e){} };
+const saveObj=()=>{ try{ localStorage.setItem('kairos_obj', JSON.stringify([...OBJ_OK])); }catch(e){} planSync(); };
 const objAnswer=o=>'<div class="oa"><ul>'+(o.r||[]).map(x=>'<li>'+x+'</li>').join('')+'</ul>'+(o.src?'<div class="osrc">Réponses de la lignée — '+esc(o.src)+'</div>':'')+'</div>';
 function initObjections(card){
   const list=(CONTENU&&CONTENU.objections)||[]; const tr=card.querySelector('#objTrain'), ul=card.querySelector('#objList');
@@ -1781,6 +1812,159 @@ window.addEventListener('appinstalled',()=>{ document.getElementById('installBtn
 if('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !location.hostname.match(/^(localhost|127\.0\.0\.1)$/)){
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
+
+
+/* ---------- Compte personnel & synchronisation ---------- */
+const SB_URL = 'https://xslusoecharxelwmbyal.supabase.co';
+const SB_KEY = 'sb_publishable_WPzpaFRXyczA2lUjIG51vg_PtLFx_XO';
+const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+const AUTH_MAIL = false;   // connexion par code e-mail : nécessite un SMTP externe (service intégré limité à 2 envois/h)
+let SB=null, SBUSER=null, SYNC_T=null, SYNC_FAIT=false;
+
+const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK] });
+const accEl = id=>document.getElementById(id);
+
+function accErr(m){ const e=accEl('accErr'); if(e) e.textContent=m||''; }
+function accEtat(m){ const e=accEl('accState'); if(e) e.textContent=m||''; }
+function accMsg(e){
+  const m=String((e&&(e.message||e.error_description))||e||'');
+  if(/saving new user|acces_refuse|not authorized|Signups not allowed|not allowed/i.test(m)) return "Cette adresse n’est pas sur la liste des personnes autorisées.";
+  if(/expired|invalid|incorrect/i.test(m)) return "Code incorrect ou expiré — demande un nouveau code.";
+  if(/rate|too many|seconds/i.test(m)) return "Trop de tentatives, réessaie dans quelques minutes.";
+  if(/network|fetch|Failed/i.test(m)) return "Connexion au serveur impossible — vérifie ta connexion Internet.";
+  return "Connexion impossible pour le moment.";
+}
+function accMaj(){
+  const mw=accEl('accMailWrap'); if(mw) mw.hidden=!AUTH_MAIL;
+  const b=accEl('accBtn'); if(!b) return;
+  b.textContent = SBUSER ? '☁ Synchronisé' : '☁ Connexion';
+  b.classList.toggle('acc-off', !SBUSER);
+  b.title = SBUSER ? 'Ta progression est enregistrée sur ton compte' : 'Retrouver ma progression sur tous mes appareils';
+  const i=accEl('accIn'), o=accEl('accOut');
+  if(i) i.hidden=!!SBUSER;
+  if(o) o.hidden=!SBUSER;
+  const w=accEl('accWho'); if(w&&SBUSER) w.textContent=SBUSER.email||'';
+}
+function accOuvrir(){ const el=accEl('acc'); if(!el) return; accErr(''); el.classList.add('on'); el.setAttribute('aria-hidden','false'); const f=SBUSER?null:accEl('accMail'); if(f) setTimeout(()=>f.focus(),50); }
+function accFermer(){ const el=accEl('acc'); if(!el) return; el.classList.remove('on'); el.setAttribute('aria-hidden','true'); }
+
+async function syncPull(){
+  if(!SB||!SBUSER) return;
+  let data=null;
+  try{
+    const r = await SB.from('etat').select('donnees').eq('user_id', SBUSER.id).maybeSingle();
+    if(r.error) throw r.error;
+    data = r.data;
+  }catch(e){ accEtat('Synchronisation indisponible.'); return; }
+  const d = (data&&data.donnees)||{};
+  let chg=false;
+  (d.favs||[]).forEach(x=>{ if(!FAVS.has(x)){ FAVS.add(x); chg=true; } });
+  (d.obj||[]).forEach(x=>{ if(!OBJ_OK.has(x)){ OBJ_OK.add(x); chg=true; } });
+  const c=d.check||{};
+  for(const k in c){ if(c[k]&&!CHECK[k]){ CHECK[k]=c[k]; chg=true; } }
+  if(chg){
+    try{
+      localStorage.setItem('kairos_favs', JSON.stringify([...FAVS]));
+      localStorage.setItem('kairos_obj', JSON.stringify([...OBJ_OK]));
+      localStorage.setItem('kairos_check', JSON.stringify(CHECK));
+    }catch(e){}
+    try{ buildContenu(); buildAnn(); routeHash(); }catch(e){}
+  }
+  syncPush();
+}
+async function syncPush(){
+  if(!SB||!SBUSER) return;
+  clearTimeout(SYNC_T); SYNC_T=null;
+  try{
+    const r = await SB.from('etat').upsert({ user_id:SBUSER.id, donnees:etatLocal(), maj:new Date().toISOString() }, { onConflict:'user_id' });
+    if(r.error) throw r.error;
+    accEtat('À jour — ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
+  }catch(e){ accEtat('Synchronisation indisponible.'); }
+}
+function planSync(){ if(!SB||!SBUSER) return; clearTimeout(SYNC_T); SYNC_T=setTimeout(syncPush, 1200); }
+window.addEventListener('pagehide',()=>{ if(SYNC_T) syncPush(); });
+
+async function initSync(){
+  if(location.protocol==='file:') return;            // test local : pas de compte
+  const b=accEl('accBtn'); if(b) b.hidden=false;
+  try{ await loadScript(SB_LIB); }catch(e){ if(b) b.hidden=true; return; }
+  if(!window.supabase||!window.supabase.createClient){ if(b) b.hidden=true; return; }
+  SB = window.supabase.createClient(SB_URL, SB_KEY, { auth:{ flowType:'pkce', persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storageKey:'kairos_auth' } });
+  SB.auth.onAuthStateChange((ev, session)=>{
+    SBUSER = session ? session.user : null;
+    accMaj();
+    if(SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
+    if(!SBUSER) SYNC_FAIT=false;
+  });
+  try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }
+  accMaj();
+  if(SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
+  // Retour d'une connexion Google refusée (adresse hors liste)
+  const q=new URLSearchParams(location.search.slice(1));
+  if(q.get('error')||q.get('error_description')){
+    history.replaceState(null,'',location.pathname+location.hash);
+    accOuvrir(); accErr(accMsg(q.get('error_description')||q.get('error')));
+  }
+}
+
+document.addEventListener('click', e=>{
+  const t=e.target;
+  if(t.closest && t.closest('#accBtn')){ accOuvrir(); return; }
+  if(t.closest && t.closest('#accClose')){ accFermer(); return; }
+  if(t.id==='acc'){ accFermer(); return; }
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ const el=accEl('acc'); if(el&&el.classList.contains('on')) accFermer(); } });
+
+document.addEventListener('click', async e=>{
+  const g=e.target.closest&&e.target.closest('#accGoogle');
+  const s=e.target.closest&&e.target.closest('#accSend');
+  const v=e.target.closest&&e.target.closest('#accCheck');
+  const d=e.target.closest&&e.target.closest('#accLogout');
+  if(!g&&!s&&!v&&!d) return;
+  accErr('');
+  if(g){
+    try{ await SB.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.origin+location.pathname } }); }
+    catch(err){ accErr(accMsg(err)); }
+    return;
+  }
+  if(s){
+    const mail=(accEl('accMail').value||'').trim().toLowerCase();
+    if(mail.indexOf('@')<1||mail.lastIndexOf('.')<mail.indexOf('@')){ accErr('Entre une adresse valide.'); return; }
+    s.disabled=true; s.textContent='Envoi…';
+    try{
+      const r=await SB.auth.signInWithOtp({ email:mail, options:{ shouldCreateUser:true } });
+      if(r.error) throw r.error;
+      accEl('accCodeWrap').hidden=false;
+      s.textContent='Renvoyer un code';
+      accErr('');
+      accEl('accCode').focus();
+    }catch(err){ accErr(accMsg(err)); s.textContent='Recevoir un code'; }
+    s.disabled=false;
+    return;
+  }
+  if(v){
+    const mail=(accEl('accMail').value||'').trim().toLowerCase();
+    const code=(accEl('accCode').value||'').replace(/\D/g,'');
+    if(code.length<6){ accErr('Le code fait 6 chiffres.'); return; }
+    v.disabled=true; v.textContent='Vérification…';
+    try{
+      const r=await SB.auth.verifyOtp({ email:mail, token:code, type:'email' });
+      if(r.error) throw r.error;
+      accFermer();
+    }catch(err){ accErr(accMsg(err)); }
+    v.disabled=false; v.textContent='Valider';
+    return;
+  }
+  if(d){
+    try{ await SB.auth.signOut(); }catch(err){}
+    SBUSER=null; SYNC_FAIT=false; accMaj(); accFermer();
+  }
+});
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Enter') return;
+  if(e.target.id==='accMail'){ const b=accEl('accSend'); if(b) b.click(); }
+  if(e.target.id==='accCode'){ const b=accEl('accCheck'); if(b) b.click(); }
+});
 
 /* ---------- Démarrage ---------- */
 (function(){
