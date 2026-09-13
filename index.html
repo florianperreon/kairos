@@ -1586,13 +1586,13 @@ function buildVeille(){
   const lundi = vMonday(todayIso);
   const bk = (VEILLE.breaking||[]).filter(b=>b.d>=lundi).sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   document.getElementById('veilleHead').innerHTML =
-    '<div class="vhead-t"><h2>Veille patrimoniale</h2><span class="badge-lig">Hebdo · lundi 4 h</span></div>'
+    '<div class="vhead-t"><h2>Veille patrimoniale</h2></div>'
     + '<p class="vhead-s">Cinq axes suivis chaque semaine : '+vAxes().map(a=>(a.ic||'')+' '+esc(a.t)).join(' · ')+'.</p>'
     + (VEILLE.maj ? '<p class="vhead-m">Dernière mise à jour le '+esc(fmtD(VEILLE.maj.slice(0,10)))+' à '+esc(VEILLE.maj.slice(11,16).replace(':','h'))+'</p>' : '');
   const bkEl = document.getElementById('veilleBreak');
-  bkEl.innerHTML = '<h2><span class="vdot"></span>Breaking news — semaine en cours</h2>'
-    + (bk.length ? '<div class="vbks">'+bk.map(vBkHtml).join('')+'</div>'
-                 : '<p class="vempty">Rien d’urgent depuis lundi. Le radar passe chaque matin du mardi au vendredi et n’ajoute une alerte que si elle change vraiment la donne.</p>');
+  // Bloc « Breaking news » affiché seulement quand il y a une alerte cette semaine (règle Florian 13/09/2026)
+  bkEl.hidden = bk.length===0;
+  bkEl.innerHTML = bk.length ? '<h2><span class="vdot"></span>Breaking news — semaine en cours</h2><div class="vbks">'+bk.map(vBkHtml).join('')+'</div>' : '';
   bkEl.classList.toggle('hot', bk.length>0);
   document.getElementById('veilleLast').innerHTML = last
     ? '<div class="panel vlast"><div class="vhead-t"><h2>La semaine '+esc(vPeriode(last.du,last.au))+'</h2><span class="badge-lig">Semaine passée</span></div>'+vEditionHtml(last)+'</div>'
