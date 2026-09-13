@@ -718,7 +718,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .surv-strip .bl{color:var(--encours-ink)}
 .surv-a{text-decoration:none;color:var(--ink);font-size:13.5px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:3px 10px}
 .surv-a .w{font-weight:700;color:var(--encours-ink);margin-left:4px}
-nav.tabs .sub-badge{display:inline-block;min-width:17px;padding:0 5px;margin-left:5px;border-radius:99px;background:var(--encours);color:#fff;font-size:10.5px;font-weight:800;line-height:17px;text-align:center;vertical-align:1px}
+nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-block;min-width:17px;padding:0 5px;margin-left:5px;border-radius:99px;background:var(--encours);color:#fff;font-size:10.5px;font-weight:800;line-height:17px;text-align:center;vertical-align:1px}
 
 .xtra.places.tendu{background:#FFF1DB;color:#8A4B00;font-weight:700}
 :root[data-theme="dark"] .xtra.places.tendu{background:#4A2E0F;color:#FBBF77}
@@ -1160,8 +1160,12 @@ function survObjets(){
   });
   return out.sort((x,y)=>(x.a.start||'').localeCompare(y.a.start||''));
 }
+// Déjà inscrit à la session : plus rien à surveiller, l'alerte ne me concerne plus
+let MOI_ID = null;
+const dejaInscrit = a => !!(MOI_ID && (a.guests||[]).some(id=>+id===+MOI_ID));
 function survAlertes(){
-  return survObjets().filter(o=>!isPast(o.a)).map(o=>Object.assign({}, o, {p:survPlaces(o.a)}))
+  return survObjets().filter(o=>!isPast(o.a) && !dejaInscrit(o.a))
+                     .map(o=>Object.assign({}, o, {p:survPlaces(o.a)}))
                      .filter(o=>o.p && (o.p.tendu || o.p.complet));
 }
 async function chargerSurv(){
@@ -1341,7 +1345,7 @@ function boot(){
     list.forEach(a=>{ a.url=url(a); a.k=kind; const k=norm(a.title).replace(/[^a-z0-9]+/g,' ').trim(); a.tkey=k; if(!SAME.has(k)) SAME.set(k,[]); SAME.get(k).push(a); });
   });
   (CFG.pdCats||[]).forEach(c=>{ CATN_G[c[0]]=c[1]; CATC_G[c[0]]=c[2]; PD_MAP[c[1]]=c[0]; });
-  if(CFG.pdTab) document.getElementById('pdTabBtn').textContent=CFG.pdTab;
+  if(CFG.pdTab) document.querySelectorAll('[data-v="pd"] .l').forEach(l=>l.textContent=CFG.pdTab);
   document.getElementById('pdCat').innerHTML='<option value="">Toutes catégories</option>'+(CFG.pdCats||[]).map(c=>'<option value="'+c[0]+'">'+esc(c[1])+'</option>').join('');
   M = DATA.adherents.map(r=>({id:r[0], name:r[1], tel:r[2], mail:r[3], date:r[4], parrain:r[5], mgr:r[6], city:r[7]||'', cp:r[8]||'', nn:norm(r[1]), nm:norm(r[3]), nt:String(r[2]||'').replace(/\D/g,''), np:norm(r[5]), ng:norm(r[6]), nc:norm(r[7]||'')}));
   M.forEach(m=>byId.set(m.id,m));
@@ -1441,11 +1445,11 @@ function ouvrirPlus(){
   c.innerHTML = '<div class="plus-t">Aller à…</div>' + [...document.querySelectorAll('#side button[data-v]')]
     .filter(b=>!b.hidden && !dans.includes(b.dataset.v))
     .map(b=>'<button data-v="'+b.dataset.v+'"'+(b.dataset.v===curTab?' class="on"':'')+'>'
-      +'<span class="i">'+b.querySelector('.i').innerHTML+'</span>'+b.querySelector('.l').textContent+'</button>').join('')
+      +'<span class="i">'+b.querySelector('.i').innerHTML+'</span>'+b.querySelector('.l').innerHTML+'</button>').join('')
     + '<div class="plus-t">Mon compte</div>' + [...document.querySelectorAll('.side-bas .side-act')]
     .filter(b=>!b.hidden)
     .map(b=>'<button type="button" data-act="'+b.id+'">'
-      +'<span class="i">'+b.querySelector('.i').innerHTML+'</span>'+b.querySelector('.l').textContent+'</button>').join('');
+      +'<span class="i">'+b.querySelector('.i').innerHTML+'</span>'+b.querySelector('.l').innerHTML+'</button>').join('');
   m.hidden=false;
 }
 document.addEventListener('click', e=>{
@@ -1697,9 +1701,11 @@ function autoMention(cle){
 async function chargerParcours(){
   if(!SB || !SBUSER){ PARCOURS = null; return false; }
   try{
-    const r = await SB.from('membres_parcours').select('donnees,maj').limit(1).maybeSingle();
+    const r = await SB.from('membres_parcours').select('membre_id,donnees,maj').limit(1).maybeSingle();
     if(r.error) throw r.error;
     PARCOURS = (r.data && r.data.donnees) || null;
+    MOI_ID = (r.data && r.data.membre_id) || null;
+    if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); majOngletSurv(); }catch(e){} }
     if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
     return !!PARCOURS;
   }catch(e){ PARCOURS = null; return false; }
@@ -2593,8 +2599,11 @@ async function buildMembres(){
 let DEMANDES = [], DEM_STATUT = 'en_attente';
 function majBadgeDem(n){
   const b=document.getElementById('demBadge');
-  if(!b) return;
-  b.hidden = !n; b.textContent = n || '';
+  if(b){ b.hidden = !n; b.textContent = n || ''; }
+  // le même compteur remonte sur l'entrée Admin du menu
+  document.querySelectorAll('[data-v="admin"] .l').forEach(l=>{
+    l.innerHTML = 'Admin' + (n ? ' <span class="sub-badge">'+n+'</span>' : '');
+  });
 }
 async function buildDemandes(){
   const body=document.getElementById('demBody');
