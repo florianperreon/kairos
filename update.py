@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Mise à jour quotidienne des données du portail.
 
-Lit l'ancien payload chiffré dans index.html, récupère les données à jour,
-reconstruit le payload, le chiffre et régénère index.html à partir de template.html.
+Lit l'ancien payload chiffré dans donnees.enc (ou, à défaut, dans le bloc ENC d'un ancien index.html),
+récupère les données à jour, reconstruit le payload et le chiffre dans donnees.enc (sel conservé d'un
+jour à l'autre pour que « Rester déverrouillé » survive à la mise à jour). index.html est régénéré à
+partir de template.html sans aucune donnée : la page charge donnees.enc et contenu.enc au déverrouillage.
 Configuration via variables d'environnement (secrets du dépôt) :
   PORTAL_PW : mot de passe du portail (clé de chiffrement)
   API_BASE  : URL de base de l'API (ex. https://exemple.tld)
@@ -44,18 +46,10 @@ def decrypt_enc(enc: dict, pw: bytes) -> dict:
     pt = AESGCM(key).decrypt(base64.b64decode(enc["iv"]), base64.b64decode(enc["data"]), None)
     return json.loads(gzip.decompress(pt).decode("utf-8"))
 
-def encrypt_with_salt(obj: dict, pw: bytes, salt_b64: str) -> str:
-    """Chiffre obj avec la clé dérivée du sel donné (pour partager la clé du bloc ENC)."""
+def encrypt_payload(obj: dict, pw: bytes, salt: bytes = None) -> str:
     raw = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     gz = gzip.compress(raw, 9)
-    salt, iv = base64.b64decode(salt_b64), secrets.token_bytes(12)
-    ct = AESGCM(derive(pw, salt, ITER)).encrypt(iv, gz, None)
-    return json.dumps({"iv": base64.b64encode(iv).decode(), "data": base64.b64encode(ct).decode()})
-
-def encrypt_payload(obj: dict, pw: bytes) -> str:
-    raw = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    gz = gzip.compress(raw, 9)
-    salt, iv = secrets.token_bytes(16), secrets.token_bytes(12)
+    salt, iv = (salt or secrets.token_bytes(16)), secrets.token_bytes(12)
     ct = AESGCM(derive(pw, salt, ITER)).encrypt(iv, gz, None)
     return json.dumps({"salt": base64.b64encode(salt).decode(),
                        "iv": base64.b64encode(iv).decode(),
@@ -235,12 +229,16 @@ def run():
     today_iso = today.isoformat()
     maj_iso = now.strftime("%Y-%m-%dT%H:%M")  # date + heure (Paris) de la mise à jour
 
-    # Ancien payload (cfg + dates d'inscription connues)
-    html = open("index.html", encoding="utf-8").read()
-    m = re.search(r"const ENC = (\{.*?\});", html, re.S)
-    if not m:
-        raise RuntimeError("bloc ENC introuvable dans index.html")
-    old = decrypt_enc(json.loads(m.group(1)), pw)
+    # Ancien payload (cfg + dates d'inscription connues) : donnees.enc, sinon bloc ENC d'un ancien index.html
+    if os.path.exists("donnees.enc"):
+        old_enc = json.load(open("donnees.enc", encoding="utf-8"))
+    else:
+        html = open("index.html", encoding="utf-8").read()
+        m = re.search(r"const ENC = (\{.*?\});", html, re.S)
+        if not m or m.group(1).strip() == "null":
+            raise RuntimeError("ni donnees.enc ni bloc ENC dans index.html")
+        old_enc = json.loads(m.group(1))
+    old = decrypt_enc(old_enc, pw)
 
     # Configuration de la lignée (secrets du dépôt) : écrase l'ancienne si fournie
     cfg = dict(old["cfg"])
@@ -353,6 +351,45 @@ def run():
     limit = (today - datetime.timedelta(days=365)).isoformat()
     adh_ids = sorted(u["id"] for u in users
                      if u.get("adhesionPaidAt") and pdate(u["adhesionPaidAt"]) >= limit)
+    adh_set = set(adh_ids)
+
+    # Jalons d'équipe (membres de la lignée) : taille de l'équipe = adhérents dans toute la descendance
+    # par parrainage (même règle que la fiche membre du portail). On mémorise la taille du jour dans
+    # extra[id]["team"] et, quand un palier est franchi à la hausse, on ajoute [date, taille] dans
+    # extra[id]["jalons"] (30 derniers jours conservés côté données, affichés sur l'accueil).
+    # Premier passage (pas d'ancienne valeur) : on enregistre la taille sans créer de jalon.
+    PALIERS = [3, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 500]
+    keep_from = (today - datetime.timedelta(days=30)).isoformat()
+    def team_size(u):
+        seen, queue, n = {u["id"]}, [norm(name(u))], 0
+        while queue:
+            k = queue.pop()
+            for c in kids.get(k, []):
+                if c["id"] in seen:
+                    continue
+                seen.add(c["id"])
+                if c["id"] in adh_set:
+                    n += 1
+                queue.append(norm(name(c)))
+        return n
+    by_id = {u["id"]: u for u in users}
+    for i in lig_ids:
+        u = by_id.get(i)
+        if not u:
+            continue
+        x = extra.setdefault(i, {"bd": "", "v": 2})
+        n = team_size(u)
+        prev = x.get("team")
+        jal = [j for j in (x.get("jalons") or []) if j and j[0] >= keep_from]
+        if isinstance(prev, int) and n > prev:
+            crossed = [p for p in PALIERS if prev < p <= n]
+            if crossed:
+                jal.append([today_iso, n])
+        x["team"] = n
+        if jal:
+            x["jalons"] = jal
+        else:
+            x.pop("jalons", None)
 
     # Garde-fous : en cas d'échec, on sort en erreur SANS toucher à index.html
     errs = []
@@ -367,27 +404,22 @@ def run():
                "cfg": cfg, "ateliers": ateliers, "adherents": membres,
                "autres": autres, "adherentIds": adh_ids, "sites": sites,
                "extra": {str(k): v for k, v in extra.items()}}
-    enc_json = encrypt_payload(payload, pw)
-
-    # Contenu éditorial (guide, FAQ, ressources) : contenu.enc est chiffré avec le mot de passe
-    # et son propre sel ; on le rechiffre ici avec la clé du bloc ENC (même sel, IV distinct)
-    # pour que le portail n'ait qu'une seule clé à dériver.
-    cenc_json = "null"
-    if os.path.exists("contenu.enc"):
-        cobj = decrypt_enc(json.load(open("contenu.enc", encoding="utf-8")), pw)
-        cenc_json = encrypt_with_salt(cobj, pw, json.loads(enc_json)["salt"])
+    enc_json = encrypt_payload(payload, pw, base64.b64decode(old_enc["salt"]))
 
     # Vérification aller-retour du chiffrement
     if decrypt_enc(json.loads(enc_json), pw)["meta"]["majAteliers"] != today_iso:
         raise RuntimeError("échec de la vérification de déchiffrement")
+    # Le contenu éditorial (contenu.enc, sel propre) est servi tel quel : on vérifie juste qu'il s'ouvre
+    if os.path.exists("contenu.enc"):
+        decrypt_enc(json.load(open("contenu.enc", encoding="utf-8")), pw)
 
     tpl = open("template.html", encoding="utf-8").read()
     if tpl.count("__ENC__") != 1 or tpl.count("__CENC__") != 1:
         raise RuntimeError("template.html invalide")
-    out = tpl.replace("__ENC__", enc_json).replace("__CENC__", cenc_json)
+    out = tpl.replace("__ENC__", "null").replace("__CENC__", "null")
 
-    # Audit : rien de sensible en clair hors des blocs chiffrés
-    outside = out.replace(enc_json, "").replace(cenc_json, "")
+    # Audit : rien de sensible en clair dans la page (les données ne sont plus dans index.html)
+    outside = out
     needles = set()
     host = urlparse(api).hostname or ""
     for part in [host] + host.split(".") + host.split("."):
@@ -407,6 +439,7 @@ def run():
     if bad:
         raise RuntimeError(f"audit de confidentialité en échec ({len(bad)} motif(s))")
 
+    open("donnees.enc", "w", encoding="utf-8").write(enc_json)
     open("index.html", "w", encoding="utf-8").write(out)
     print(f"OK {today_iso} — ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
           f"formations {len(autres['for'])} | événements {len(autres['evt'])} | "

@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portail Kairos</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2064%2064%22%3E%3Crect%20width=%2264%22%20height=%2264%22%20rx=%2214%22%20fill=%22%23171A2B%22/%3E%3Cpolygon%20points=%226,40%2014,24%2022,40%22%20fill=%22%234338CA%22/%3E%3Cpolygon%20points=%2224,24%2040,24%2032,40%22%20fill=%22%2322C58B%22/%3E%3Cpolygon%20points=%2242,40%2050,24%2058,40%22%20fill=%22%23D0D3E6%22/%3E%3C/svg%3E"></head><body style="margin:0">
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portail Kairos</title><meta name="theme-color" content="#4338CA"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Kairos"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2064%2064%22%3E%3Crect%20width=%2264%22%20height=%2264%22%20rx=%2214%22%20fill=%22%23171A2B%22/%3E%3Cpolygon%20points=%226,40%2014,24%2022,40%22%20fill=%22%234338CA%22/%3E%3Cpolygon%20points=%2224,24%2040,24%2032,40%22%20fill=%22%2322C58B%22/%3E%3Cpolygon%20points=%2242,40%2050,24%2058,40%22%20fill=%22%23D0D3E6%22/%3E%3C/svg%3E"></head><body style="margin:0">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:ital,wght@0,400;0,500;0,600;1,400&display=swap">
 <style>
 :root{
@@ -359,6 +359,86 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 .nc a{color:var(--accent);text-underline-offset:2px}.nc a.plink{font-weight:600;text-decoration:none}.nc a.plink::before{content:"↗ ";font-size:12px}
 .nc input[type=checkbox]{accent-color:var(--gold)}
 .nc code{background:var(--surface-2);padding:1px 5px;border-radius:4px;font-size:13px}
+
+/* ---------- Les 7 prochains jours ---------- */
+.week{display:flex;flex-direction:column;gap:10px}
+.wday{display:grid;grid-template-columns:130px 1fr;gap:6px 16px;padding:8px 0;border-top:1px solid var(--line)}
+.wday:first-child{border-top:0;padding-top:0}
+.wday.today .wd{color:var(--accent)}
+.wday .wd{font-family:"Sora";font-weight:700;font-size:14px;line-height:1.3}
+.wday .wd small{display:block;font-weight:500;font-size:12px;color:var(--ink-3);text-transform:none}
+.witems{display:flex;flex-direction:column;gap:6px;min-width:0}
+.wit{display:flex;gap:9px;align-items:baseline;font-size:14px;line-height:1.45;min-width:0}
+.wit .ic{flex:none;width:22px;text-align:center}
+.wit .hr{flex:none;color:var(--ink-3);font-size:12.5px;min-width:88px}
+.wit .wt{min-width:0}
+.wit .wt a{font-weight:600;text-decoration:none}
+.wit .wt a:hover{text-decoration:underline}
+.wit .wt .m{color:var(--ink-2);font-size:13px}
+.wit.rit .wt b{font-weight:600}
+.wit.jal{background:var(--gold-soft);border-radius:8px;padding:6px 10px;color:var(--gold-ink);font-weight:600}
+.wtag{display:inline-block;border-radius:5px;padding:0 6px;font-size:11px;font-weight:700;letter-spacing:.03em;vertical-align:1px;margin-left:4px;white-space:nowrap}
+.wtag.pil{background:var(--accent-soft);color:var(--accent)}
+.wtag.ins{background:var(--gold-soft);color:var(--gold-ink)}
+.wtag.rit{background:var(--surface-2);color:var(--ink-2)}
+.wjal{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+@media(max-width:640px){.wday{grid-template-columns:1fr;gap:4px}}
+
+/* ---------- Recherche globale (Ctrl K) ---------- */
+.kbd{display:inline-block;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:0 5px;font-size:11px;color:var(--ink-3);font-family:ui-monospace,monospace;margin-left:6px}
+#cmdk{position:fixed;inset:0;background:rgba(15,20,26,.5);display:none;z-index:70;padding:8vh 16px 16px;align-items:flex-start;justify-content:center}
+#cmdk.on{display:flex}
+.ck-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);width:min(680px,100%);max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.ck-in{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.ck-in input{flex:1;border:0;background:transparent;color:var(--ink);font-size:17px;outline:none;min-width:0}
+.ck-in .ic{font-size:18px;color:var(--ink-3)}
+.ck-res{overflow-y:auto;padding:6px 0}
+.ck-g{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:700;padding:10px 16px 4px}
+.ck-it{display:flex;gap:10px;align-items:baseline;padding:8px 16px;cursor:pointer;font-size:14.5px}
+.ck-it .ic{flex:none;width:22px;text-align:center}
+.ck-it .t{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ck-it .s{color:var(--ink-3);font-size:12.5px;margin-left:auto;flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ck-it.on,.ck-it:hover{background:var(--accent-soft)}
+.ck-it.on .t{color:var(--accent)}
+.ck-empty{padding:18px 16px;color:var(--ink-3);font-size:14px}
+.ck-foot{display:flex;gap:14px;padding:8px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3)}
+@media(max-width:640px){.icon-btn .kbd{display:none}#cmdk{padding:12px}.ck-it .s{display:none}.ck-foot{display:none}}
+
+/* ---------- Bandeau de fraîcheur ---------- */
+.fresh{display:flex;gap:10px;align-items:flex-start;background:#FBF2D5;color:#5C4400;border-left:3px solid #E0B341;border-radius:8px;padding:10px 12px;margin:0 0 14px;font-size:13.5px;line-height:1.45}
+.fresh.old{background:#FDE8D3;color:#6B3A00;border-left-color:#E08A2E}
+:root[data-theme="dark"] .fresh{background:#3A3320;color:#F3D98A}
+:root[data-theme="dark"] .fresh.old{background:#3E2A18;color:#FBBF77}
+.fresh b{font-weight:700}
+
+/* ---------- Traitement des objections ---------- */
+.obj-cycle{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 14px}
+.obj-cycle span{background:var(--accent-soft);color:var(--accent);font-family:"Sora";font-weight:700;font-size:13px;border-radius:20px;padding:4px 12px}
+.obj-cycle i{color:var(--ink-3);font-style:normal}
+.obj-goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin:8px 0 12px}
+.obj-goals div{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.obj-goals b{display:block;font-family:"Sora";font-size:13px;margin-bottom:2px}
+.otrain{border:1px solid var(--line);border-radius:12px;background:var(--surface-2);padding:16px 18px;margin:12px 0 18px}
+.otrain .oh{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:13px;color:var(--ink-2)}
+.otrain .oh b{font-family:"Sora";font-size:15px;color:var(--ink)}
+.otrain .oh label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.ocard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;min-height:120px}
+.ocard .otag{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);font-weight:700}
+.ocard .oq{font-family:"Sora";font-size:19px;font-weight:700;margin:6px 0 10px;line-height:1.3}
+.ocard .oq::before{content:"« "}.ocard .oq::after{content:" »"}
+.ocard .oa{border-top:1px dashed var(--line-2);padding-top:10px;margin-top:8px;font-size:14.5px}
+.ocard .oa ul{margin:4px 0;padding-left:20px}.ocard .oa li{margin:4px 0}
+.ocard .osrc{font-size:12px;color:var(--ink-3);margin-top:8px}
+.obtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.obtns button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:14px}
+.obtns button.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.obtns button.ok{background:var(--gold-soft);border-color:var(--gold);color:var(--gold-ink)}
+.olist details{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:6px 0;background:var(--surface)}
+.olist summary{cursor:pointer;font-weight:600;display:flex;gap:8px;align-items:baseline}
+.olist summary .otag{font-size:11px;color:var(--ink-3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-left:auto;white-space:nowrap}
+.olist details.done summary::before{content:"✓ ";color:var(--ok)}
+.olist .oa{padding-top:6px;font-size:14px}.olist .oa ul{margin:4px 0;padding-left:20px}.olist .oa li{margin:3px 0}
+.olist .osrc{font-size:12px;color:var(--ink-3);margin-top:4px}
 </style>
 
 <div id="lock" class="wrap">
@@ -377,6 +457,8 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
     <div class="mark"><span class="t1"></span><span class="t2"></span><span class="t3"></span></div>
     <div class="brand">KAIROS<small>Ressources partagées<span id="brandMaj"></span></small></div>
     <div class="top-actions">
+      <button class="icon-btn" id="searchBtn" title="Rechercher partout (Ctrl K)">🔍 Rechercher<span class="kbd">Ctrl K</span></button>
+      <button class="icon-btn" id="installBtn" title="Installer Kairos comme une application" hidden>📲 Installer</button>
       <button class="icon-btn" id="themeBtn" title="Basculer clair/sombre">◐ Thème</button>
       <button class="icon-btn" id="lockBtn" title="Verrouiller">🔒 Verrouiller</button>
     </div>
@@ -396,6 +478,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
       <div class="panel welcome" id="welcome"></div>
       <div class="valeurs" id="homeValeurs" hidden></div>
       <div class="bdstrip" id="homeBd" hidden></div>
+      <div class="panel" id="homeWeekPanel"><h2>Les 7 prochains jours <span class="badge-lig">Lignée</span></h2><div class="wjal" id="homeJalons" hidden></div><div class="week" id="homeWeek"></div></div>
       <div class="principes" id="homePrincipes" hidden></div>
       <div class="panel" id="homeParcoursPanel" hidden><h2>Où en es-tu ? <span class="badge-lig">Ton parcours en 4 phases</span></h2><div class="phases" id="homePhases"></div><div class="etapes" id="homeEtapes"></div></div>
       <div class="panel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
@@ -517,11 +600,20 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 <div id="psheet" aria-hidden="true"><div class="psheet-card" id="psheetCard" role="dialog" aria-modal="true"></div></div>
 <div id="modal"><div class="modal-card"><h2 id="modalTitle" style="font-size:17px;margin-bottom:10px"></h2><textarea id="modalTxt" readonly></textarea><div class="modal-actions"><button id="modalCopy">Copier</button><button id="modalDl">Télécharger</button><button id="modalClose">Fermer</button></div></div></div>
 <div class="chart-tip" id="tip"></div>
+<div id="cmdk" role="dialog" aria-modal="true" aria-label="Recherche"><div class="ck-card"><div class="ck-in"><span class="ic">🔍</span><input type="search" id="ckQ" placeholder="Rechercher une page, une question, un atelier, un membre…" autocomplete="off"><span class="kbd">Échap</span></div><div class="ck-res" id="ckRes"></div><div class="ck-foot"><span>↑↓ naviguer</span><span>↵ ouvrir</span><span>Échap fermer</span></div></div></div>
 
 <script>
-const ENC = __ENC__;
-const CENC = __CENC__;
-let DATA = null, CONTENU = null;
+// Blocs chiffrés : inclus dans la page (artefact) ou chargés depuis des fichiers séparés (site) :
+// donnees.enc = données du réseau (régénéré chaque nuit), contenu.enc = contenu éditorial. Chacun porte son sel.
+const ENC_INLINE = __ENC__;
+const CENC_INLINE = __CENC__;
+let ENC = null, CENC = null, DATA = null, CONTENU = null;
+const BLOCKS = (async()=>{
+  if(ENC_INLINE && ENC_INLINE.data){ ENC = ENC_INLINE; CENC = CENC_INLINE; return; }
+  const getJson = async f => { const r = await fetch(f, {cache:'no-cache'}); if(!r.ok) throw new Error(f+' '+r.status); return r.json(); };
+  ENC = await getJson('donnees.enc');
+  try{ CENC = await getJson('contenu.enc'); }catch(e){ CENC = null; }
+})();
 
 /* ---------- Constantes métier ---------- */
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
@@ -595,37 +687,48 @@ const todayIso = TODAY.getFullYear()+'-'+String(TODAY.getMonth()+1).padStart(2,'
 
 /* ---------- Déchiffrement ---------- */
 const b64 = s => Uint8Array.from(atob(s), c=>c.charCodeAt(0));
-async function deriveKey(pw){
+const b64e = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+async function deriveKey(pw, blk){
   const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey({name:'PBKDF2', salt:b64(ENC.salt), iterations:ENC.iter, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, true, ['decrypt']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt:b64(blk.salt), iterations:blk.iter||300000, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, true, ['decrypt']);
 }
 async function gunzipJson(pt){
   const ds = new DecompressionStream('gzip');
   const stream = new Blob([pt]).stream().pipeThrough(ds);
   return JSON.parse(await new Response(stream).text());
 }
-async function decryptWith(key){
-  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:b64(ENC.iv)}, key, b64(ENC.data));
-  const data = await gunzipJson(pt);
+const decBlock = async (blk, key) => gunzipJson(await crypto.subtle.decrypt({name:'AES-GCM', iv:b64(blk.iv)}, key, b64(blk.data)));
+// keys : {[sel]: CryptoKey} — le contenu peut avoir son propre sel (fichier séparé) ou partager celui des données (bloc CENC inclus)
+async function decryptWith(keys){
+  const data = await decBlock(ENC, keys[ENC.salt]);
   CONTENU = null;
   if (CENC && CENC.data){
-    try{ CONTENU = await gunzipJson(await crypto.subtle.decrypt({name:'AES-GCM', iv:b64(CENC.iv)}, key, b64(CENC.data))); }catch(e){ CONTENU = null; }
+    try{ CONTENU = await decBlock(CENC, keys[CENC.salt||ENC.salt]); }catch(e){ CONTENU = null; }
   }
   return data;
 }
+async function keysFor(pw){
+  const keys = {}; keys[ENC.salt] = await deriveKey(pw, ENC);
+  if(CENC && CENC.salt && CENC.salt!==ENC.salt) keys[CENC.salt] = await deriveKey(pw, CENC);
+  return keys;
+}
 async function tryUnlock(pw){
-  const key = await deriveKey(pw);
-  DATA = await decryptWith(key);
+  await BLOCKS;
+  const keys = await keysFor(pw);
+  DATA = await decryptWith(keys);
   if (document.getElementById('remember').checked){
-    try{ const raw = await crypto.subtle.exportKey('raw', key); localStorage.setItem('kairos_k', btoa(String.fromCharCode(...new Uint8Array(raw)))); }catch(e){}
+    try{ const store = {}; for(const s in keys) store[s] = b64e(await crypto.subtle.exportKey('raw', keys[s])); localStorage.setItem('kairos_k', JSON.stringify(store)); }catch(e){}
   }
   boot();
 }
 async function silentUnlock(){
   try{
     const s = localStorage.getItem('kairos_k'); if(!s) return false;
-    const key = await crypto.subtle.importKey('raw', b64(s), {name:'AES-GCM'}, false, ['decrypt']);
-    DATA = await decryptWith(key); boot(); return true;
+    await BLOCKS;
+    const store = s.startsWith('{') ? JSON.parse(s) : {[ENC.salt]: s};   // ancien format : une seule clé brute
+    const keys = {};
+    for(const salt of [ENC.salt, (CENC&&CENC.salt)||ENC.salt]){ if(!store[salt]) return false; keys[salt] = await crypto.subtle.importKey('raw', b64(store[salt]), {name:'AES-GCM'}, false, ['decrypt']); }
+    DATA = await decryptWith(keys); boot(); return true;
   }catch(e){ try{localStorage.removeItem('kairos_k');}catch(_){} return false; }
 }
 document.getElementById('unlockBtn').addEventListener('click', async ()=>{
@@ -634,7 +737,7 @@ document.getElementById('unlockBtn').addEventListener('click', async ()=>{
   if(!pw){ err.textContent='Entre le mot de passe.'; return; }
   document.getElementById('unlockBtn').textContent='Déchiffrement…';
   try{ await tryUnlock(pw); }
-  catch(e){ err.textContent='Mot de passe incorrect.'; document.getElementById('unlockBtn').textContent='Déverrouiller'; }
+  catch(e){ err.textContent=(e&&/\.enc/.test(String(e.message)))?'Données introuvables — réessaie dans un instant.':'Mot de passe incorrect.'; document.getElementById('unlockBtn').textContent='Déverrouiller'; }
 });
 document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('unlockBtn').click(); });
 
@@ -688,7 +791,7 @@ function boot(){
   document.getElementById('foot').innerHTML = 'Données '+esc(DATA.cfg&&DATA.cfg.src||'')+' — mise à jour le '+esc(fmtMaj(DATA.meta))+' · Fait avec <span class="heart">♥</span> par '+esc(DATA.cfg&&DATA.cfg.auteur||'');
   document.getElementById('brandMaj').textContent = ' · Mise à jour le '+fmtMaj(DATA.meta);
   initCalToggles();
-  buildHome(); buildPd(); buildCat(); buildAnn(); buildContenu(); routeHash();
+  buildHome(); buildPd(); buildCat(); buildAnn(); buildContenu(); buildWeek(); buildSearchIndex(); routeHash();
   buildSimple('reu', R, id=>BASE+'teamMeeting/detail/'+id, 'réunion');
   buildSimple('for', F, id=>BASE+'formation/detail/'+id, 'formation');
   buildSimple('evt', E, id=>BASE+'event/detail/'+id, 'événement');
@@ -861,11 +964,20 @@ function showPage(slug){
   const card=document.getElementById('psheetCard');
   card.innerHTML='<div class="ps-head"><button class="ps-close" id="psClose" title="Fermer (Échap)">✕</button><div class="crumb">'+path.map(x=>esc(x)).join(' › ')+'</div><h1>'+(p.i?p.i+' ':'')+esc(p.t)+'</h1>'+
     (sib.length>1?'<div class="ps-tabs">'+sib.map(x=>'<a href="#p/'+x+'" class="'+(x===slug?'on':'')+'">'+(C.pages[x].i?C.pages[x].i+' ':'')+esc(C.pages[x].t)+'</a>').join('')+'</div>':'')+'</div>'+
-    '<div class="ps-body"><div class="nc">'+p.h+'</div></div>'+
+    '<div class="ps-body">'+freshBanner(p)+'<div class="nc">'+p.h+'</div></div>'+
     '<div class="ps-foot"><span>'+(prev?'<a href="#p/'+prev+'">← '+esc(C.pages[prev].t)+'</a>':'<span class="kbd">Échap pour fermer</span>')+'</span><span>'+(next?'<a href="#p/'+next+'">'+esc(C.pages[next].t)+' →</a>':'')+'</span></div>';
   const sh=document.getElementById('psheet'); sh.classList.add('on'); sh.setAttribute('aria-hidden','false'); document.body.classList.add('ps-open');
   card.querySelector('.ps-body').scrollTop=0;
   document.getElementById('psClose').addEventListener('click',closePage);
+  if(card.querySelector('#objTrain')) initObjections(card);
+}
+// Bandeau « contenu daté » : p.maj = "AAAA-MM" de la dernière vérification des chiffres (frais, minimums, plafonds, allocations…)
+function freshBanner(p){
+  if(!p||!p.maj) return '';
+  const [y,mo]=p.maj.split('-').map(Number); if(!y||!mo) return '';
+  const months=(TODAY.getFullYear()-y)*12+(TODAY.getMonth()+1-mo);
+  const old=months>=6;
+  return '<div class="fresh'+(old?' old':'')+'"><span>'+(old?'⚠️':'⏱')+'</span><div><b>Contenu daté — mis à jour en '+MOIS[mo-1]+' '+y+'.</b> '+(old?'Plus de '+months+' mois : les chiffres (frais, minimums, plafonds, allocations) ont pu changer — vérifie-les avant de les utiliser en rendez-vous.':'Les chiffres (frais, minimums, plafonds, allocations) évoluent : vérifie-les avant de les utiliser en rendez-vous.')+'</div></div>';
 }
 function closePage(){ const sh=document.getElementById('psheet'); sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); document.body.classList.remove('ps-open'); if(location.hash.startsWith('#p/')){ try{ history.replaceState(null,'',' '); }catch(_){} } }
 document.getElementById('psheet').addEventListener('click',e=>{ if(e.target.id==='psheet') closePage(); });
@@ -1296,6 +1408,126 @@ document.getElementById('modalDl').addEventListener('click',async ()=>{
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content],{type:mime})); a.download=modalFname; a.click();
 });
 
+/* ---------- Les 7 prochains jours (accueil) ---------- */
+// Rituels : r = {dow:1..7 (lundi=1), s:"09:00", e:"11:00", nth:3 (3e semaine du mois)} ; sans r → pas de date calculable
+const ritOn=(r,d)=>{ if(!r||!r.dow) return false; const dow=d.getDay()===0?7:d.getDay(); if(dow!==r.dow) return false; if(r.nth){ const n=Math.ceil(d.getDate()/7); if(n!==r.nth) return false; } return true; };
+const hhmm=s=>(s||'').replace(/^0/,'').replace(':','h').replace(/h00$/,'h');
+function buildWeek(){
+  const el=document.getElementById('homeWeek'), jalEl=document.getElementById('homeJalons'); if(!el) return;
+  const pad=n=>String(n).padStart(2,'0');
+  const isoOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  const mmdd=d=>pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  const ALL=[].concat(A.map(a=>({a,k:'atelier'})),R.map(a=>({a,k:'réunion'})),F.map(a=>({a,k:'formation'})),E.map(a=>({a,k:'événement'})));
+  const ligAdh=id=>LIGNEE_IDS.has(id)&&ADH.has(id);
+  const days=[];
+  for(let i=0;i<=7;i++){
+    const d=new Date(TODAY); d.setDate(d.getDate()+i); const iso=isoOf(d), md=mmdd(d); const items=[];
+    // Rituels de la lignée
+    ((CONTENU&&CONTENU.rituels)||[]).forEach(r=>{ if(ritOn(r.r,d)) items.push({t:(r.r.s||'')+' '+(r.r.e||''), h:'<div class="wit rit"><span class="ic">🗓️</span><span class="hr num">'+hhmm(r.r.s)+(r.r.e?' – '+hhmm(r.r.e):'')+'</span><span class="wt"><b>'+esc(r.n||r.t)+'</b><span class="wtag rit">'+esc(r.q||'rituel')+'</span><div class="m">'+esc(r.d||'')+'</div></span></div>'}); });
+    // Ateliers, réunions, formations, événements : pilotés par la lignée ou avec des adhérents de la lignée inscrits (jour de début)
+    ALL.filter(o=>o.a.start===iso).forEach(o=>{ const a=o.a; const pil=isLigneePilote(a.pilotes); const ins=(a.guests||[]).filter(ligAdh).map(id=>byId.get(id)).filter(Boolean);
+      if(!pil&&!ins.length) return;
+      const multi=a.end&&a.end>a.start?' <span class="m">(jusqu’au '+fmtD(a.end)+')</span>':'';
+      items.push({t:(a.hor||'99'), h:'<div class="wit"><span class="ic">'+({atelier:'🎓',réunion:'👥',formation:'📚',événement:'🎉'})[o.k]+'</span><span class="hr num">'+esc(a.hor||'')+'</span><span class="wt"><a href="'+a.url+'" target="_blank" rel="noopener">'+esc(a.title)+'</a>'+(pil?'<span class="wtag pil">piloté par la lignée</span>':'')+multi+'<div class="m">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span>'+(ins.length?' · <span class="wtag ins">lignée inscrite</span> '+ins.map(m=>'<span class="lig-open link" data-id="'+m.id+'">'+esc(m.name)+'</span>').join(', '):'')+'</div></span></div>'}); });
+    // Anniversaires (naissance) et anniversaires d'inscription — adhérents de la lignée uniquement
+    M.forEach(m=>{ if(!ligAdh(m.id)) return;
+      const x=EXTRA[m.id]; if(x&&x.bd===md) items.push({t:'00', h:'<div class="wit"><span class="ic">🎂</span><span class="hr"></span><span class="wt"><span class="lig-open link" data-id="'+m.id+'">'+esc(m.name)+'</span> <span class="m">fête son anniversaire'+(i===0?' aujourd’hui !':'')+'</span></span></div>'});
+      if(m.date&&m.date.slice(5,10)===md){ const yrs=d.getFullYear()-(+m.date.slice(0,4)); if(yrs>=1) items.push({t:'00', h:'<div class="wit"><span class="ic">🎈</span><span class="hr"></span><span class="wt"><span class="lig-open link" data-id="'+m.id+'">'+esc(m.name)+'</span> <span class="m">— '+yrs+' an'+(yrs>1?'s':'')+' dans le réseau'+(i===0?' aujourd’hui !':'')+'</span></span></div>'}); }
+    });
+    items.sort((p,q)=>p.t.localeCompare(q.t));
+    if(items.length) days.push({d,i,items});
+  }
+  el.innerHTML = days.length ? days.map(x=>'<div class="wday'+(x.i===0?' today':'')+'"><div class="wd">'+(x.i===0?'Aujourd’hui':x.i===1?'Demain':JOURS[x.d.getDay()].replace(/^./,c=>c.toUpperCase()))+'<small class="num">'+x.d.getDate()+' '+MOIS[x.d.getMonth()]+'</small></div><div class="witems">'+x.items.map(it=>it.h).join('')+'</div></div>').join('')
+    : '<p style="color:var(--ink-2);margin:0">Rien de prévu dans la lignée sur les 7 prochains jours.</p>';
+  // Jalons d'équipe (paliers franchis récemment, calculés par la mise à jour quotidienne)
+  const jal=[]; M.forEach(m=>{ const x=EXTRA[m.id]; if(!x||!x.jalons||!LIGNEE_IDS.has(m.id)) return; x.jalons.forEach(j=>jal.push({m,d:j[0],n:j[1]})); });
+  jal.sort((p,q)=>q.d.localeCompare(p.d));
+  if(jalEl){ jalEl.hidden=!jal.length; jalEl.innerHTML=jal.slice(0,6).map(j=>'<div class="wit jal"><span class="ic">🏆</span><span class="wt">L’équipe de <span class="lig-open" data-id="'+j.m.id+'" style="text-decoration:underline;cursor:pointer">'+esc(j.m.name)+'</span> passe à '+j.n+' adhérents !'+(j.d===todayIso?' <span class="m">Aujourd’hui</span>':' <span class="m">le '+fmtD(j.d)+'</span>')+'</span></div>').join(''); }
+}
+
+/* ---------- Recherche globale (Ctrl K) ---------- */
+let SIDX=[]; let ckSel=0, ckRows=[];
+const strip=h=>(h||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+function buildSearchIndex(){
+  SIDX=[];
+  const C=CONTENU||{};
+  Object.keys(C.pages||{}).forEach(s=>{ const p=C.pages[s]; SIDX.push({g:'Pages',ic:p.i||'📄',t:p.t,s:pagePath(s).slice(-1)[0]||'',k:norm(p.t),kx:norm(strip(p.h)).slice(0,20000),act:()=>{ try{history.pushState(null,'','#p/'+s);}catch(_){ } showPage(s);}}); });
+  (C.faq||[]).forEach((f,i)=>SIDX.push({g:'Questions fréquentes',ic:'❓',t:f.q,s:f.th,k:norm(f.q),kx:norm(strip(f.a)),act:()=>{ showTab('home'); if(!C.faqPubliee) buildFaq(true); const det=[...document.querySelectorAll('#faqList details')].find(d=>d.querySelector('summary').textContent.startsWith(f.q.slice(0,40))); if(det){ det.open=true; det.scrollIntoView({behavior:'smooth',block:'center'}); } else document.getElementById('homeFaqPanel').scrollIntoView({behavior:'smooth'}); }}));
+  (C.objections||[]).forEach(o=>SIDX.push({g:'Objections',ic:'💬',t:o.o,s:o.tag||'',k:norm(o.o),kx:norm((o.r||[]).join(' ')),act:()=>{ try{history.pushState(null,'','#p/traitement-des-objections');}catch(_){ } showPage('traitement-des-objections'); setTimeout(()=>{ const d=document.getElementById('obj-'+o.id); if(d){ d.open=true; d.scrollIntoView({behavior:'smooth',block:'center'}); } },80); }}));
+  const ev=(list,g,ic,p)=>list.filter(a=>!isPast(a)).forEach(a=>SIDX.push({g,ic,t:a.title,s:fmtD(a.start)+(a.lieu?' · '+a.lieu:''),k:norm(a.title),kx:norm(a.pilotes+' '+a.lieu),act:()=>{ const tab=(p==='cat'&&a.th==='PARCOURS DECOUVERTE')?'pd':p; showTab(tab); const q=document.getElementById(p+'Q'); if(q&&tab!=='pd'){ q.value=a.title; q.dispatchEvent(new Event('input')); } window.scrollTo({top:0}); }}));
+  ev(A,'Ateliers','🎓','cat'); ev(R,'Réunions d’équipe','👥','reu'); ev(F,'Formations','📚','for'); ev(E,'Événements','🎉','evt');
+  (C.ressources||[]).forEach(r=>{ if(r.u) SIDX.push({g:'Ressources',ic:'🔗',t:r.t,s:r.k||'',k:norm(r.t),kx:norm(r.d||''),act:()=>window.open(r.u,'_blank','noopener')}); });
+}
+function ckOpen(){ const el=document.getElementById('cmdk'); el.classList.add('on'); const q=document.getElementById('ckQ'); q.value=''; ckRender(''); setTimeout(()=>q.focus(),30); }
+function ckClose(){ document.getElementById('cmdk').classList.remove('on'); }
+function ckRender(qraw){
+  const q=norm(qraw.trim()); const res=document.getElementById('ckRes'); ckRows=[];
+  if(!q){ res.innerHTML='<div class="ck-empty">Tape quelques lettres : pages du parcours, questions fréquentes, objections, ateliers, réunions, formations, événements, membres de l’annuaire, ressources.</div>'; return; }
+  const score=it=>{ if(it.k===q) return 0; if(it.k.startsWith(q)) return 1; if(it.k.includes(q)) return 2; if(q.length>=3&&it.kx&&it.kx.includes(q)) return 3; return 9; };
+  const hits=SIDX.map(it=>({it,sc:score(it)})).filter(x=>x.sc<9).sort((a,b)=>a.sc-b.sc||a.it.t.localeCompare(b.it.t,'fr'));
+  if(q.length>=2){ const qd=q.replace(/[^0-9]/g,''); M.filter(m=>m.nn.includes(q)||(qd.length>=4&&m.nt.includes(qd))||(q.includes('@')&&m.nm.includes(q))).sort((a,b)=>(ADH.has(b.id)-ADH.has(a.id))||(LIGNEE_IDS.has(b.id)-LIGNEE_IDS.has(a.id))||a.nn.localeCompare(b.nn)).slice(0,8).forEach(m=>hits.push({it:{g:'Annuaire',ic:'👤',t:m.name,s:(ADH.has(m.id)?'adhérent · ':'')+(m.city||''),k:m.nn,kx:'',act:()=>openSheet(m.id)},sc:5})); }
+  const groups={}; const order=[]; const perG={};
+  hits.forEach(h=>{ const g=h.it.g; perG[g]=(perG[g]||0)+1; if(perG[g]>6) return; if(!groups[g]){ groups[g]=[]; order.push(g); } groups[g].push(h.it); });
+  const gsc=g=>g==='Annuaire'?5:Math.min(...groups[g].map(score));
+  order.sort((a,b)=>gsc(a)-gsc(b));
+  let html=''; order.forEach(g=>{ html+='<div class="ck-g">'+esc(g)+(perG[g]>6?' <span style="font-weight:500;text-transform:none;letter-spacing:0">('+perG[g]+' résultats, 6 affichés)</span>':'')+'</div>'; groups[g].forEach(it=>{ const i=ckRows.length; ckRows.push(it); html+='<div class="ck-it'+(i===0?' on':'')+'" data-i="'+i+'"><span class="ic">'+it.ic+'</span><span class="t">'+esc(it.t)+'</span><span class="s">'+esc(it.s||'')+'</span></div>'; }); });
+  ckSel=0; res.innerHTML=html||'<div class="ck-empty">Aucun résultat pour « '+esc(qraw.trim())+' ».</div>';
+  res.querySelectorAll('.ck-it').forEach(el=>{ el.addEventListener('click',()=>ckGo(+el.dataset.i)); el.addEventListener('mousemove',()=>ckHi(+el.dataset.i)); });
+}
+function ckHi(i){ ckSel=i; document.querySelectorAll('#ckRes .ck-it').forEach(el=>el.classList.toggle('on',+el.dataset.i===i)); const on=document.querySelector('#ckRes .ck-it.on'); if(on) on.scrollIntoView({block:'nearest'}); }
+function ckGo(i){ const it=ckRows[i]; if(!it) return; ckClose(); it.act(); }
+document.getElementById('searchBtn').addEventListener('click',()=>{ if(window.__booted) ckOpen(); });
+document.getElementById('cmdk').addEventListener('click',e=>{ if(e.target.id==='cmdk') ckClose(); });
+document.getElementById('ckQ').addEventListener('input',e=>ckRender(e.target.value));
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ if(!window.__booted) return; e.preventDefault(); document.getElementById('cmdk').classList.contains('on')?ckClose():ckOpen(); return; }
+  const on=document.getElementById('cmdk').classList.contains('on'); if(!on) return;
+  if(e.key==='Escape'){ e.preventDefault(); e.stopImmediatePropagation(); ckClose(); }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); ckHi(Math.min(ckRows.length-1,ckSel+1)); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); ckHi(Math.max(0,ckSel-1)); }
+  else if(e.key==='Enter'){ e.preventDefault(); ckGo(ckSel); }
+},true);
+
+/* ---------- Traitement des objections : mode entraînement ---------- */
+let OBJ_OK=new Set(); try{ OBJ_OK=new Set(JSON.parse(localStorage.getItem('kairos_obj')||'[]')); }catch(e){}
+const saveObj=()=>{ try{ localStorage.setItem('kairos_obj', JSON.stringify([...OBJ_OK])); }catch(e){} };
+const objAnswer=o=>'<div class="oa"><ul>'+(o.r||[]).map(x=>'<li>'+x+'</li>').join('')+'</ul>'+(o.src?'<div class="osrc">Réponses de la lignée — '+esc(o.src)+'</div>':'')+'</div>';
+function initObjections(card){
+  const list=(CONTENU&&CONTENU.objections)||[]; const tr=card.querySelector('#objTrain'), ul=card.querySelector('#objList');
+  if(!list.length){ if(tr) tr.innerHTML='<p class="note">Aucune carte pour le moment.</p>'; return; }
+  let onlyTodo=false, order=[], idx=0, shown=false;
+  const shuffle=()=>{ order=list.filter(o=>!onlyTodo||!OBJ_OK.has(o.id)).map(o=>o.id); for(let i=order.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; } idx=0; shown=false; };
+  const renderList=()=>{ if(ul) ul.innerHTML='<div class="olist">'+list.map(o=>'<details id="obj-'+o.id+'" class="'+(OBJ_OK.has(o.id)?'done':'')+'"><summary>« '+esc(o.o)+' »'+(o.tag?'<span class="otag">'+esc(o.tag)+'</span>':'')+'</summary>'+objAnswer(o)+'</details>').join('')+'</div>'; };
+  const render=()=>{
+    const ok=list.filter(o=>OBJ_OK.has(o.id)).length;
+    const head='<div class="oh"><b>🎲 Entraînement</b><span>'+(order.length?('Carte '+(idx+1)+' / '+order.length):'0 carte')+' · '+ok+' / '+list.length+' maîtrisée'+(ok>1?'s':'')+'</span><label><input type="checkbox" id="objTodo"'+(onlyTodo?' checked':'')+'> Seulement celles à revoir</label></div>';
+    if(!order.length){ tr.innerHTML=head+'<div class="ocard"><div class="oq" style="font-size:16px">Toutes les objections sont marquées comme maîtrisées 🎉</div><div class="obtns"><button id="objReset">Tout remettre à revoir</button></div></div>'; bind(); return; }
+    const o=list.find(x=>x.id===order[idx]);
+    tr.innerHTML=head+'<div class="ocard">'+(o.tag?'<div class="otag">'+esc(o.tag)+'</div>':'')+'<div class="oq">'+esc(o.o)+'</div>'+(shown?objAnswer(o):'<p class="note">Formule ta réponse à voix haute (écoute → acceptation → isolation → résolution → validation), puis compare.</p>')+
+      '<div class="obtns">'+(shown?'<button class="ok" id="objOk">'+(OBJ_OK.has(o.id)?'✓ Maîtrisée':'Je maîtrise ✓')+'</button><button id="objTodoBtn">À revoir</button><button class="pri" id="objNext">Suivante →</button>':'<button class="pri" id="objShow">Voir la réponse de la lignée</button><button id="objNext">Passer →</button>')+'</div></div>';
+    bind();
+  };
+  const bind=()=>{
+    const g=id=>tr.querySelector('#'+id);
+    if(g('objTodo')) g('objTodo').addEventListener('change',e=>{ onlyTodo=e.target.checked; shuffle(); render(); });
+    if(g('objShow')) g('objShow').addEventListener('click',()=>{ shown=true; render(); });
+    if(g('objNext')) g('objNext').addEventListener('click',()=>{ idx++; shown=false; if(idx>=order.length) shuffle(); render(); });
+    if(g('objOk')) g('objOk').addEventListener('click',()=>{ OBJ_OK.add(order[idx]); saveObj(); renderList(); idx++; shown=false; if(idx>=order.length) shuffle(); render(); });
+    if(g('objTodoBtn')) g('objTodoBtn').addEventListener('click',()=>{ OBJ_OK.delete(order[idx]); saveObj(); renderList(); idx++; shown=false; if(idx>=order.length) shuffle(); render(); });
+    if(g('objReset')) g('objReset').addEventListener('click',()=>{ OBJ_OK.clear(); saveObj(); renderList(); shuffle(); render(); });
+  };
+  shuffle(); render(); renderList();
+}
+
+/* ---------- Application installable (PWA) ---------- */
+let deferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredInstall=e; const b=document.getElementById('installBtn'); if(b) b.hidden=false; });
+document.getElementById('installBtn').addEventListener('click',async()=>{ if(!deferredInstall) return; deferredInstall.prompt(); try{ await deferredInstall.userChoice; }catch(_){} deferredInstall=null; document.getElementById('installBtn').hidden=true; });
+window.addEventListener('appinstalled',()=>{ document.getElementById('installBtn').hidden=true; });
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+
 /* ---------- Démarrage ---------- */
 (function(){
   let t='light';
@@ -1305,4 +1537,4 @@ document.getElementById('modalDl').addEventListener('click',async ()=>{
 silentUnlock();
 </script>
 
-</body></html>
+</body></html>

@@ -3,11 +3,12 @@ cd /d "%~dp0"
 rem Le dossier .github est protege : Claude depose le workflow dans "Claude outputs", on le met en place ici
 if exist "Claude outputs\update.yml" move /y "Claude outputs\update.yml" ".github\workflows\update.yml" >nul
 echo === Mise de cote des fichiers modifies ===
-git reset -q -- contenu.enc 2>nul
+git reset -q -- contenu.enc donnees.enc 2>nul
 git ls-files --error-unmatch contenu.enc >nul 2>nul || git add contenu.enc
+git ls-files --error-unmatch donnees.enc >nul 2>nul || git add donnees.enc
 git update-index -q --refresh
 for /f %%i in ('git stash list ^| find /c /v ""') do set N0=%%i
-git stash push -- index.html template.html update.py contenu.enc .github/workflows/update.yml || goto err
+git stash push -- index.html template.html update.py contenu.enc donnees.enc .github/workflows/update.yml || goto err
 for /f %%i in ('git stash list ^| find /c /v ""') do set N1=%%i
 echo === git pull ===
 git pull --ff-only || goto err
@@ -15,7 +16,7 @@ if "%N1%"=="%N0%" (
   echo Aucun fichier prepare par Claude a reprendre.
 ) else (
   echo === Reprise des fichiers prepares par Claude ===
-  git checkout stash@{0} -- index.html template.html update.py contenu.enc .github/workflows/update.yml || goto err
+  git checkout stash@{0} -- index.html template.html update.py contenu.enc donnees.enc .github/workflows/update.yml || goto err
   git stash drop
 )
 git rm -r -q --cached "Claude outputs" 2>nul
