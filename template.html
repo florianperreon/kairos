@@ -712,6 +712,8 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .ev.surv-full{opacity:.75}
 .chip.surv-type{background:var(--surface-2);color:var(--ink-2);font-weight:600;margin-right:6px}
 .surv-vide{color:var(--ink-2);line-height:2}
+#survPastLbl{margin:2px 0 12px}
+.month-h.passe-h{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);color:var(--ink-3)}
 .surv-vide svg{width:15px;height:15px;vertical-align:-3px;color:var(--ink-3)}
 .surv-strip{background:#FFF8EC;border-color:var(--encours)}
 :root[data-theme="dark"] .surv-strip{background:#3A2A12}
@@ -801,6 +803,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
       <div class="panel">
         <h2>Mes sessions enregistrées</h2>
         <p class="mbr-sub" id="survNote"></p>
+        <label class="chk" id="survPastLbl" hidden><input type="checkbox" id="survPast"> Sessions passées <span id="survPastN"></span></label>
         <div id="survList"></div>
       </div>
     </section>
@@ -1143,8 +1146,10 @@ function survPlaces(a){
 const SIGNET_PLEIN = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M6.4 3.8h11.2a1 1 0 0 1 1 1v15.4l-6.6-4-6.6 4V4.8a1 1 0 0 1 1-1Z"/></svg>';
 const SIGNET_VIDE  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M6.4 3.8h11.2a1 1 0 0 1 1 1v15.4l-6.6-4-6.6 4V4.8a1 1 0 0 1 1-1Z"/></svg>';
 function survEtoile(a){
-  if(!SBUSER || isPast(a)) return '';
+  if(!SBUSER) return '';
   const on = SURV.has(survCle(a));
+  if(isPast(a) && !on) return '';   // rien à enregistrer sur une session terminée…
+
   return '<button class="surv-btn'+(on?' on':'')+'" data-surv="'+esc(survCle(a))+'" aria-pressed="'+on+'" aria-label="'
     + (on?'Retirer de mes sessions enregistrées':'Enregistrer cette session')+'" title="'
     + (on?'Enregistré — cliquer pour retirer':'Enregistrer : je la retrouve dans mon onglet et je suis prévenu quand les places s’épuisent')
@@ -1175,21 +1180,10 @@ async function chargerSurv(){
     if(r.error) throw r.error;
     SURV = new Set((r.data||[]).map(x=>x.cle));
   }catch(e){ SURV = new Set(); return false; }
-  if(window.__booted){ try{ survPurge(); buildSurv(); majOngletSurv(); rafraichirListes(); }catch(e){} }
+  if(window.__booted){ try{ buildSurv(); majOngletSurv(); rafraichirListes(); }catch(e){} }
   return true;
 }
-// Les sessions passées sortent d'elles-mêmes de la liste
-async function survPurge(){
-  const finies = [...SURV].filter(cle=>{
-    const [t,id] = cle.split(':');
-    const liste = (survListes[t]||(()=>[]))();
-    const a = liste.find(x=>String(x.id)===id);
-    return a ? isPast(a) : false;      // session inconnue : on la garde (données pas encore chargées)
-  });
-  if(!finies.length) return;
-  finies.forEach(c=>SURV.delete(c));
-  try{ await SB.from('surveillances').delete().in('cle', finies); }catch(e){}
-}
+// Les sessions passées restent enregistrées : elles sont simplement masquées par défaut.
 async function survBascule(cle){
   if(!SB || !SBUSER) return;
   if(SURV.has(cle)){
@@ -1219,36 +1213,56 @@ function rafraichirListes(){
   try{ buildHome(); buildSurvAccueil(); }catch(e){}
   try{ routeHash(); }catch(e){}
 }
+function survCarte(o, passe){
+  const a=o.a, p=survPlaces(a);
+  return '<div class="ev ev2'+(passe?' dim':(p&&p.complet?' surv-full':''))+'">'
+    + '<div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div>'
+    + '<b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor||'')+'</div></div>'
+    + '<div class="body"><span class="chip surv-type">'+esc(survLib[o.t]||'')+'</span> '
+    + '<a class="t" href="'+a.url+'" target="_blank" rel="noopener">'+esc(a.title)+'</a>'
+    + '<div class="meta">'+lieuHtml(a.lieu)+(a.pilotes?' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span>':'')+'</div>'
+    + evExtras(a)
+    + '</div></div>';
+}
+function survMois(liste, passe){
+  let html='', mois='';
+  liste.forEach(o=>{
+    const mk=(o.a.start||'').slice(0,7);
+    if(mk!==mois){ if(mois) html+='</div>'; mois=mk; const [y,m]=mk.split('-'); html+='<div class="month-h">'+MOIS[+m-1]+' '+y+'</div><div class="day">'; }
+    html += survCarte(o, passe);
+  });
+  if(mois) html+='</div>';
+  return html;
+}
 function buildSurv(){
   const el = document.getElementById('survList');
   if(!el) return;
-  const objs = survObjets().filter(o=>!isPast(o.a));
+  const tous = survObjets();
+  const avenir = tous.filter(o=>!isPast(o.a));
+  const passes = tous.filter(o=>isPast(o.a)).reverse();   // les plus récentes d'abord
+  const voirPasses = (document.getElementById('survPast')||{}).checked;
   const releve = (META&&META.maj) ? fmtMaj(META) : (DATA&&DATA.meta?fmtMaj(DATA.meta):'');
   const note = document.getElementById('survNote');
-  if(note) note.textContent = objs.length
+  if(note) note.textContent = avenir.length
     ? 'Places relevées le '+releve+' — la liste du réseau est synchronisée quatre fois par jour.'
     : '';
-  if(!objs.length){
+  const lbl = document.getElementById('survPastLbl');
+  if(lbl){
+    lbl.hidden = !passes.length;
+    const n = document.getElementById('survPastN');
+    if(n) n.textContent = passes.length ? '('+passes.length+')' : '';
+  }
+  if(!tous.length){
     el.innerHTML = '<p class="surv-vide">Rien d’enregistré pour l’instant.<br>Dans les onglets Parcours, Ateliers, Réunions, Formations et Événements, le signet '
       + SIGNET_VIDE + ' en haut à droite d’une session la garde de côté ici — et te prévient quand les places s’épuisent.</p>';
     return;
   }
-  let html='', mois='';
-  objs.forEach(o=>{
-    const a=o.a, p=survPlaces(a), mk=(a.start||'').slice(0,7);
-    if(mk!==mois){ if(mois) html+='</div>'; mois=mk; const [y,m]=mk.split('-'); html+='<div class="month-h">'+MOIS[+m-1]+' '+y+'</div><div class="day">'; }
-    html += '<div class="ev ev2'+(p&&p.complet?' surv-full':'')+'">'
-      + '<div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div>'
-      + '<b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor||'')+'</div></div>'
-      + '<div class="body"><span class="chip surv-type">'+esc(survLib[o.t]||'')+'</span> '
-      + '<a class="t" href="'+a.url+'" target="_blank" rel="noopener">'+esc(a.title)+'</a>'
-      + '<div class="meta">'+lieuHtml(a.lieu)+(a.pilotes?' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span>':'')+'</div>'
-      + evExtras(a)
-      + '</div></div>';
-  });
-  if(mois) html+='</div>';
+  let html = survMois(avenir, false);
+  if(!avenir.length) html = '<p class="surv-vide">Aucune session à venir dans tes enregistrements.</p>';
+  if(voirPasses && passes.length) html += '<div class="month-h passe-h">Sessions passées</div>' + survMois(passes, true);
   el.innerHTML = html;
 }
+document.addEventListener('change', e=>{ if(e.target.id==='survPast') buildSurv(); });
 // Encart d'accueil : uniquement s'il y a une alerte
 function buildSurvAccueil(){
   const el = document.getElementById('homeSurv');
