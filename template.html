@@ -520,6 +520,12 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 .lock-note{font-size:12px;color:var(--ink-3);line-height:1.5;margin:10px 0 0;text-align:left}
 .lock-wait{font-size:13px;color:var(--ink-2);margin:10px 0 0}
 
+/* Onglet Membres */
+.mbr-sub{font-size:14px;color:var(--ink-2);margin:-4px 0 14px}
+.mbr-mail{font-size:12px;color:var(--ink-3);margin-top:2px}
+.mbr-moi{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+.mbr-note{font-size:13px;color:var(--ink-3);margin:12px 0 0}
+
 </style>
 
 <div id="lock" class="wrap">
@@ -561,6 +567,7 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
     <button data-v="for">Formations</button>
     <button data-v="evt">Événements</button>
     <button data-v="ann">Annuaire</button>
+    <button data-v="mbr" hidden>Membres</button>
     <button data-v="stats">Statistiques</button>
   </nav>
   <main>
@@ -687,6 +694,20 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
           <tbody id="annBody"></tbody>
         </table>
         <div class="pager"><button id="pgPrev">←</button><span id="pgInfo" class="num"></span><button id="pgNext">→</button></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-mbr">
+      <div class="panel">
+        <h2>Qui utilise Kairos</h2>
+        <p class="mbr-sub">Les personnes qui se sont connectées au portail avec un compte, et leur dernière visite.</p>
+        <div class="tbl-wrap">
+          <table id="mbrTbl">
+            <thead><tr><th>Personne</th><th>Dernière connexion</th><th>Premier accès</th></tr></thead>
+            <tbody id="mbrBody"></tbody>
+          </table>
+        </div>
+        <p class="mbr-note" id="mbrNote"></p>
       </div>
     </section>
 
@@ -920,6 +941,7 @@ function boot(){
   accMaj();
   if(SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
   chargerVeille();
+  buildMembres();
 }
 
 /* ---------- Navigation / thème / verrou ---------- */
@@ -935,9 +957,9 @@ document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('clic
 
 /* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
-const TABS=['home','veille','pd','cat','reu','for','evt','ann','stats'];
+const TABS=['home','veille','pd','cat','reu','for','evt','ann','mbr','stats'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',pd:'parcours-decouverte',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',stats:'statistiques'};
+const TAB_SLUG={home:'accueil',veille:'veille',pd:'parcours-decouverte',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',mbr:'membres',stats:'statistiques'};
 const SLUG_TAB=Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k]));
 const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
 let curTab='home', APPLYING=false;
@@ -1928,7 +1950,7 @@ async function initSync(){
   SB.auth.onAuthStateChange((ev, session)=>{
     SBUSER = session ? session.user : null;
     accMaj();
-    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); }
+    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); buildMembres(); }
     if(!SBUSER) SYNC_FAIT=false;
   });
   try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }
@@ -1936,6 +1958,37 @@ async function initSync(){
   if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
   return !!SBUSER;
 }
+// Onglet « Membres » : qui s'est connecté au portail (fonction membres_connectes, réservée aux comptes autorisés)
+function fmtQuand(iso){
+  if(!iso) return 'jamais';
+  const d=new Date(iso), now=new Date();
+  const j=Math.floor((now - d)/86400000);
+  const h=String(d.getHours()).padStart(2,'0')+'h'+String(d.getMinutes()).padStart(2,'0');
+  if(j<=0 && d.getDate()===now.getDate()) return "aujourd'hui à "+h;
+  if(j<=1) return 'hier à '+h;
+  if(j<7) return 'il y a '+j+' jours';
+  return fmtD(d.toISOString().slice(0,10));
+}
+async function buildMembres(){
+  const btn=document.querySelector('nav.tabs button[data-v="mbr"]');
+  const body=document.getElementById('mbrBody');
+  if(!SB||!SBUSER||!body){ if(btn) btn.hidden=true; return false; }
+  let rows=null;
+  try{ const r=await SB.rpc('membres_connectes'); if(r.error) throw r.error; rows=r.data||[]; }
+  catch(e){ if(btn) btn.hidden=true; return false; }
+  if(btn) btn.hidden=false;
+  body.innerHTML = rows.length ? rows.map(m=>{
+    const nom = m.nom || (m.email||'').split('@')[0];
+    const moi = SBUSER && m.email===SBUSER.email ? ' <span class="mbr-moi">toi</span>' : '';
+    return '<tr><td><b>'+esc(nom)+'</b>'+moi+'<div class="mbr-mail">'+esc(m.email||'')+'</div></td>'
+      + '<td class="num">'+esc(fmtQuand(m.derniere))+'</td>'
+      + '<td class="num">'+esc(m.creation?fmtD(m.creation.slice(0,10)):'—')+'</td></tr>';
+  }).join('') : '<tr><td colspan="3" style="color:var(--ink-2)">Personne ne s\u2019est encore connecté.</td></tr>';
+  const n=document.getElementById('mbrNote');
+  if(n) n.textContent = rows.length===1 ? '1 personne connectée à ce jour.' : rows.length+' personnes connectées à ce jour.';
+  return true;
+}
+
 // Veille CGP : lue en base (source de vérité depuis le 13/09/2026)
 async function chargerVeille(){
   if(location.protocol==='file:') return false;
@@ -1989,9 +2042,11 @@ function afficherMdp(){
 }
 // Démarrage : session Google en priorité, écran mot de passe sinon
 async function demarrer(){
-  if(await silentUnlock()){ initSync(); return; }     // déjà déverrouillé sur cet appareil
   const w=document.getElementById('lockWait');
-  const connecte = await initSync();
+  const connecte = await initSync();                  // prépare Supabase et dit si une session est ouverte
+  let mdpMemo=''; try{ mdpMemo=localStorage.getItem('kairos_p')||''; }catch(e){}
+  // ouverture directe seulement si on saura lire les données en ligne (session Google, ou mot de passe mémorisé)
+  if((connecte || mdpMemo) && await silentUnlock()) return;
   const q=new URLSearchParams(location.search.slice(1));
   const err=q.get('error_description')||q.get('error');
   if(err) history.replaceState(null,'',location.pathname+location.hash);
