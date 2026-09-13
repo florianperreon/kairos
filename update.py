@@ -456,10 +456,29 @@ def run():
                "cfg": cfg, "ateliers": ateliers, "adherents": membres,
                "autres": autres, "adherentIds": adh_ids, "sites": sites,
                "extra": {str(k): v for k, v in extra.items()}}
-    # Le contenu éditorial (contenu.js, sel propre) est servi tel quel : on vérifie juste qu'il s'ouvre
+    # Contenu éditorial : tant que contenu.js existe, on le pousse en base quand sa version diffère
     contenu_version = ""
     if os.path.exists("contenu.js"):
-        contenu_version = str(decrypt_enc(read_js("contenu.js"), pw).get("version") or "")
+        C = decrypt_enc(read_js("contenu.js"), pw)
+        contenu_version = str(C.get("version") or "")
+        if KAIROS_TOKEN:
+            url_c = KAIROS_BASE.replace("/donnees", "/contenu")
+            en_base = ""
+            try:
+                r = requests.get(url_c + "?version", headers={"x-kairos-token": KAIROS_TOKEN}, timeout=120)
+                if r.ok:
+                    en_base = str(r.json().get("version") or "")
+            except Exception as e:
+                print(f"lecture du contenu en base impossible ({e})")
+            if en_base != contenu_version:
+                gz64 = base64.b64encode(gzip.compress(
+                    json.dumps(C, ensure_ascii=False, separators=(",", ":")).encode("utf-8"), 9)).decode()
+                rp = requests.post(url_c, json={"gz": gz64},
+                                   headers={"x-kairos-token": KAIROS_TOKEN, "Content-Type": "application/json"},
+                                   timeout=300)
+                print("contenu en base : " + rp.text[:200])
+            else:
+                print(f"contenu déjà à jour en base (version {en_base})")
 
     tpl = open("template.html", encoding="utf-8").read()
     if tpl.count("__CENC__") != 1:
