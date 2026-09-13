@@ -747,17 +747,15 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 // Blocs chiffrés : inclus dans la page (artefact) ou chargés depuis des fichiers séparés (site ou fichier local) :
 // donnees.js = données du réseau (régénéré chaque nuit), contenu.js = contenu éditorial, meta.js = date de mise à jour (en clair).
 // Chargés par balise <script> (et non fetch) pour fonctionner aussi en double-cliquant index.html (file://).
-const ENC_INLINE = __ENC__;
 const CENC_INLINE = null;
 let MDP = '';
-let ENC = null, CENC = null, META = null, DATA = null, CONTENU = null, VEILLE = null;
+let CENC = null, META = null, DATA = null, CONTENU = null, VEILLE = null;
 const loadScript = f => new Promise((res, rej) => { const el = document.createElement('script'); el.src = f + (location.protocol === 'file:' ? '' : '?t=' + Date.now()); el.onload = () => res(); el.onerror = () => rej(new Error('CHARGEMENT ' + f)); document.head.appendChild(el); });
 const METAP = loadScript('meta.js').then(() => { META = window.KAIROS_META || null; showMeta(); }).catch(() => {});
 const BLOCKS = (async () => {
-  if (ENC_INLINE && ENC_INLINE.data) { ENC = ENC_INLINE; CENC = CENC_INLINE; return; }
-  await loadScript('donnees.js'); ENC = window.KAIROS_DONNEES;
-  if (!ENC || !ENC.data) throw new Error('CHARGEMENT donnees.js');
-  try { await loadScript('contenu.js'); CENC = window.KAIROS_CONTENU || null; } catch (e) { CENC = null; }
+  if (CENC_INLINE && CENC_INLINE.data) { CENC = CENC_INLINE; return; }
+  await loadScript('contenu.js'); CENC = window.KAIROS_CONTENU || null;
+  if (!CENC || !CENC.data) throw new Error('CHARGEMENT contenu.js');
 })();
 BLOCKS.catch(() => {});
 function showMeta(){
@@ -848,26 +846,37 @@ async function gunzipJson(pt){
   return JSON.parse(await new Response(stream).text());
 }
 const decBlock = async (blk, key) => gunzipJson(await crypto.subtle.decrypt({name:'AES-GCM', iv:b64(blk.iv)}, key, b64(blk.data)));
-// keys : {[sel]: CryptoKey} — le contenu peut avoir son propre sel (fichier séparé) ou partager celui des données (bloc CENC inclus)
-async function decryptWith(keys){
-  const data = await decBlock(ENC, keys[ENC.salt]);
-  CONTENU = null;
-  if (CENC && CENC.data){
-    try{ CONTENU = await decBlock(CENC, keys[CENC.salt||ENC.salt]); }catch(e){ CONTENU = null; }
-  }
-  VEILLE = null;   // la veille vient de la base (chargerVeille), plus d'un fichier chiffré
-  return data;
-}
+// Le contenu éditorial reste chiffré dans contenu.js ; les données du réseau viennent de la base.
 async function keysFor(pw){
-  const keys = {}; keys[ENC.salt] = await deriveKey(pw, ENC);
-  for(const blk of [CENC]) if(blk && blk.salt && !keys[blk.salt]) keys[blk.salt] = await deriveKey(pw, blk);
+  const keys = {};
+  if (CENC && CENC.salt) keys[CENC.salt] = await deriveKey(pw, CENC);
   return keys;
+}
+// Données du réseau : table donnees_reseau si connecté, sinon fonction dédiée avec le mot de passe du portail
+async function chargerDonnees(){
+  try{
+    if(SB && SBUSER){
+      const r = await SB.from('donnees_reseau').select('payload').eq('id',1).maybeSingle();
+      if(r.error) throw r.error;
+      return (r.data && r.data.payload) || null;
+    }
+    if(MDP){
+      const r = await fetch(SB_URL+'/functions/v1/donnees', { headers:{ 'x-kairos-mdp': MDP } });
+      if(!r.ok) return null;
+      const d = await r.json();
+      return d.payload || null;
+    }
+  }catch(e){}
+  return null;
 }
 async function tryUnlock(pw){
   await BLOCKS;
   const keys = await keysFor(pw);
-  DATA = await decryptWith(keys);
+  CONTENU = await decBlock(CENC, keys[CENC.salt]);   // lève si le mot de passe est faux
+  VEILLE = null;
   MDP = pw;
+  DATA = await chargerDonnees();
+  if(!DATA) throw new Error('DONNEES');
   if (document.getElementById('remember').checked){
     try{ localStorage.setItem('kairos_p', pw); }catch(e){}
     try{ const store = {}; for(const s in keys) store[s] = b64e(await crypto.subtle.exportKey('raw', keys[s])); localStorage.setItem('kairos_k', JSON.stringify(store)); }catch(e){}
@@ -876,13 +885,18 @@ async function tryUnlock(pw){
 }
 async function silentUnlock(){
   try{
-    const s = localStorage.getItem('kairos_k'); if(!s) return false;
+    const s = localStorage.getItem('kairos_k'); if(!s || !s.startsWith('{')) return false;
     await BLOCKS;
-    const store = s.startsWith('{') ? JSON.parse(s) : {[ENC.salt]: s};   // ancien format : une seule clé brute
-    const keys = {};
-    for(const salt of [ENC.salt, (CENC&&CENC.salt)||ENC.salt]){ if(!store[salt]) return false; keys[salt] = await crypto.subtle.importKey('raw', b64(store[salt]), {name:'AES-GCM'}, false, ['decrypt']); }
+    const store = JSON.parse(s);
+    const salt = CENC && CENC.salt;
+    if(!salt || !store[salt]) return false;
+    const key = await crypto.subtle.importKey('raw', b64(store[salt]), {name:'AES-GCM'}, false, ['decrypt']);
     try{ MDP = localStorage.getItem('kairos_p')||''; }catch(e){}
-    DATA = await decryptWith(keys); boot(); return true;
+    CONTENU = await decBlock(CENC, key);
+    VEILLE = null;
+    DATA = await chargerDonnees();
+    if(!DATA) return false;
+    boot(); return true;
   }catch(e){ try{localStorage.removeItem('kairos_k');}catch(_){} return false; }
 }
 document.getElementById('unlockBtn').addEventListener('click', async ()=>{
@@ -892,7 +906,9 @@ document.getElementById('unlockBtn').addEventListener('click', async ()=>{
   document.getElementById('unlockBtn').textContent='Déchiffrement…';
   try{ await tryUnlock(pw); }
   catch(e){ const m=String(e&&e.message||'');
-    err.textContent = /^CHARGEMENT/.test(m) ? 'Impossible de charger '+m.slice(11)+' — le fichier doit être à côté de index.html ; en ligne, vérifie la connexion et réessaie.' : 'Mot de passe incorrect.';
+    err.textContent = m==='DONNEES' ? 'Mot de passe correct, mais les données du réseau n\u2019ont pas pu être chargées — vérifie ta connexion et réessaie.'
+      : /^CHARGEMENT/.test(m) ? 'Impossible de charger '+m.slice(11)+' — le fichier doit être à côté de index.html ; en ligne, vérifie la connexion et réessaie.'
+      : 'Mot de passe incorrect.';
     document.getElementById('unlockBtn').textContent='Déverrouiller'; }
 });
 document.getElementById('pw').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('unlockBtn').click(); });
