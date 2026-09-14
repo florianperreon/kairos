@@ -3680,6 +3680,35 @@ function mmJauge(lib, fait, cible, unite){
     + '<div class="r">'+(reste ? 'Reste '+(unite==='€'?mmEur(reste):reste) : 'Objectif atteint 🎉')+'</div></div>';
 }
 
+/* --- les jauges de production : reste à faire et rythme requis, recalculés à chaque frappe --- */
+// Le « fait » d'un objectif : le validé compagnie et l'en cours comptent tous les deux.
+const MM_PRODJ = [['va','VA + VAA personnel','€',['prod.va','prod.vaec']],
+                  ['eva','VA + VAA équipe','€',['prod.eva','prod.evaec']],
+                  ['clients','Clients','',['prod.clients']]];
+function mmProdJauges(d, obj){
+  d = d||{}; obj = obj||{};
+  const ech = mmEcheances();
+  let h='';
+  MM_PRODJ.forEach(([k,lib,u,champs])=>{
+    const fait = champs.reduce((n,c)=>n+mmN(mmG(d,c)), 0);
+    [['dec','31/12',ech.dec],['pmr','31/07 (PMR)',ech.pmr]].forEach(([sfx,lab,date])=>{
+      const cible = obj[k+'_'+sfx];
+      if(!mmN(cible)) return;
+      h += mmJauge(lib+' au '+lab, fait, cible, u);
+      const sem=mmSemaines(date), reste=Math.max(0, mmN(cible)-fait);
+      if(sem && reste) h += '<p class="mm-note">'+sem+' semaine'+(sem>1?'s':'')+' — rythme requis : '
+        + (u==='€' ? mmEur(reste/sem) : (Math.ceil(reste/sem*10)/10)) + ' par semaine.</p>';
+    });
+  });
+  if(!Object.keys(obj).length)
+    h += '<p class="mm-note">Pose tes objectifs dans l’onglet « Mes objectifs » pour voir le reste à faire et le rythme requis.</p>';
+  return h;
+}
+function mmProdMaj(){
+  const el = document.getElementById('mmProdJ');
+  if(el && MM) el.innerHTML = mmProdJauges(MM.donnees||{}, MM_OBJ||{});
+}
+
 /* --- rendu : le formulaire (ou sa lecture seule) --- */
 function mmCorps(d, prive, ro, sem){
   d = mmMigre(d); const a = d.auto||{};
@@ -3748,21 +3777,11 @@ function mmCorps(d, prive, ro, sem){
   let prod = '<label class="mm-lab">Personnel</label>'
     + '<div class="mm-cpt">' + MM_PROD.map(champProd).join('') + '</div>'
     + '<label class="mm-lab">Équipe <small style="font-weight:400;color:var(--ink-3)">— sur 4 niveaux</small></label>'
-    + '<div class="mm-cpt">' + MM_PRODE.map(champProd).join('') + '</div>';
-  [['va','VA + VAA personnel','€'],['eva','VA + VAA équipe','€'],['clients','Clients','']].forEach(([k,lib,u])=>{
-    const fait = k==='va' ? mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))
-               : k==='eva' ? mmN(mmG(d,'prod.eva'))+mmN(mmG(d,'prod.evaec'))
-               : mmN(mmG(d,'prod.clients'));
-    [['dec','31/12',ech.dec],['pmr','31/07 (PMR)',ech.pmr]].forEach(([sfx,lab,date])=>{
-      const cible=obj[k+'_'+sfx];
-      if(!mmN(cible)) return;
-      prod += mmJauge(lib+' au '+lab, fait, cible, u);
-      const sem2=mmSemaines(date), reste=Math.max(0, mmN(cible)-fait);
-      if(sem2 && reste) prod += '<p class="mm-note">'+sem2+' semaine'+(sem2>1?'s':'')+' — rythme requis : '
-        + (u==='€' ? mmEur(reste/sem2) : (Math.ceil(reste/sem2*10)/10)) + ' par semaine.</p>';
-    });
-  });
-  if(!Object.keys(obj).length) prod += '<p class="mm-note">Pose tes objectifs dans l’onglet « Mes objectifs » pour voir le reste à faire et le rythme requis.</p>';
+    + '<div class="mm-cpt">' + MM_PRODE.map(champProd).join('') + '</div>'
+    // Les jauges sont dans leur propre conteneur : elles sont redessinées à chaque frappe sans
+    // toucher au formulaire, donc sans perdre le curseur (même principe que les totaux des
+    // souscriptions). Sans ça elles restaient figées sur les valeurs d'ouverture de la page.
+    + '<div id="mmProdJ">' + mmProdJauges(d, obj) + '</div>';
   h += mmSec(5,'Production',(ro?'':'reporté de S-1'), prod);
 
   // 6 — Habilitations & formations continues
@@ -4206,6 +4225,7 @@ function mmSaisie(t){
   if(t.dataset && t.dataset.mmo){
     MM_OBJ=MM_OBJ||{};
     MM_OBJ[t.dataset.mmo] = t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value);
+    mmProdMaj();          // les jauges de la section 5 suivent aussi un objectif qu'on vient de poser
     return true;
   }
   if(t.dataset && t.dataset.mmprod && t.value==='__+'){ mmNouveauProduit(t.dataset.mm); return true; }
@@ -4213,6 +4233,7 @@ function mmSaisie(t){
     MM.donnees=MM.donnees||{};
     mmS(MM.donnees, t.dataset.mm, t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value));
     if(t.dataset.mm.indexOf('sous.')===0) mmSousTotaux();
+    if(t.dataset.mm.indexOf('prod.')===0) mmProdMaj();
     mmPlanSave(); return true;
   }
   return false;

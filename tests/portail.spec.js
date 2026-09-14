@@ -783,6 +783,43 @@ test.describe('Mail Manager — production et texte libre', () => {
     expect(r.exportComplet).not.toContain('Mon focus de la semaine');
   });
 
+  test('les jauges de production suivent la frappe, sans perdre le curseur', async ({ page }) => {
+    await ouvrir(page);
+    // Elles étaient dessinées une fois pour toutes à l'ouverture : on pouvait saisir 84 690 € et
+    // lire « 0 € / 300 000 € · 0 % » juste en dessous.
+    await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = false);
+      document.getElementById('v-mm').classList.add('on');
+      document.getElementById('sm-moi').classList.add('on');
+      MM_PRODUITS = []; MM_SEM = mmSemCour();
+      MM_OBJ = { va_dec: 300000, eva_dec: 50000, clients_dec: 20 };
+      MM = { statut: 'brouillon', maj: null, donnees: { prod: {}, p: {}, c: {}, av: {}, sous: [], auto: {} } };
+      document.getElementById('mmMoi').innerHTML = mmCorps(MM.donnees, '', false, MM_SEM);
+      document.querySelectorAll('#mmMoi details').forEach(x => x.open = true);
+    });
+    const net = t => t.replace(/[\s\u00a0\u202f]+/g, ' ').trim();
+    const jauges = () => page.evaluate(() =>
+      [...document.querySelectorAll('#mmProdJ .mm-j .t')].map(t => t.textContent))
+      .then(l => l.map(net));
+
+    expect((await jauges())[0]).toContain('0 € / 300 000 €');
+    await page.fill('#v-mm input[data-mm="prod.va"]', '16800');
+    await page.fill('#v-mm input[data-mm="prod.vaec"]', '67890');
+    await page.fill('#v-mm input[data-mm="prod.clients"]', '11');
+    const apres = await jauges();
+    expect(apres[0], 'le validé compagnie et l’en cours se cumulent').toContain('84 690 € / 300 000 € · 28 %');
+    expect(apres.join(' | ')).toContain('11 / 20 · 55 %');
+    // Les jauges vivent dans leur propre conteneur : redessiner ne doit pas voler le curseur.
+    expect(await page.evaluate(() => document.activeElement.dataset.mm)).toBe('prod.clients');
+    // Le rythme requis suit lui aussi
+    const notes = (await page.evaluate(() =>
+      [...document.querySelectorAll('#mmProdJ .mm-note')].map(n => n.textContent))).map(net);
+    expect(notes[0], 'le rythme requis est recalculé').toContain('rythme requis');
+    expect(notes[0]).not.toContain('18 750');       // le rythme d'avant la saisie
+  });
+
   test('les retours à la ligne saisis sont conservés à la lecture', async ({ page }) => {
     await ouvrir(page);
     const r = await rendre(page, DONNEES, 'Une difficulté\nsur deux lignes');
