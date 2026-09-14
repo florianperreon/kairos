@@ -2923,7 +2923,9 @@ const MM_FC    = [['fmia','FC Assurance (MIA)'],['fiobsp','FC IOBSP'],['fimmo','
 const MM_ETATS = [['','—'],['afaire','À faire'],['encours','En cours'],['ok','Validé']];
 const MM_OBJS  = [['va','VA perso','€'],['eva','VA équipe','€'],['clients','Nombre de clients',''],
                   ['filleuls','Filleuls directs',''],['dm','Invités en DM',''],['r1sem','R1 par semaine',''],
-                  ['statut','Statut FORMAN visé','txt']];
+                  ['statut','Statut FORMAN visé','sel']];
+// Statuts du réseau, par ordre croissant
+const MM_NIVEAUX = ['NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
 
 let MM=null, MM_PREC=null, MM_PRIVE='', MM_REG=null, MM_OBJ=null;
 let MM_MUR=[], MM_LIGNES=[], MM_SEM='', MM_SUB='moi', MM_LU=null, MM_T=null, MM_ETAT='';
@@ -3444,6 +3446,15 @@ function mmLecture(){
     + '<div class="mm-bar"><button type="button" class="mm-b" data-mmcopy="lu">Copier en texte</button></div></div>';
 }
 
+function mmObjChamp(k, sfx, u, o){
+  const cle=k+'_'+sfx, v=o[cle]==null?'':o[cle];
+  if(u==='sel'){
+    return '<select data-mmo="'+cle+'"><option value="">—</option>'
+      + MM_NIVEAUX.map(n=>'<option value="'+n+'"'+(v===n?' selected':'')+'>'+n+'</option>').join('')
+      + '</select>';
+  }
+  return '<input type="number" inputmode="decimal" data-mmo="'+cle+'" value="'+esc(v)+'">';
+}
 function mmObjectifs(){
   const ech=mmEcheances(), o=MM_OBJ||{};
   let h='<div class="panel"><div class="mm-head"><h2>Mes objectifs</h2></div>'
@@ -3454,8 +3465,7 @@ function mmObjectifs(){
     + '<th class="num">Au 31/12 ('+mmSemaines(ech.dec)+' sem.)</th>'
     + '<th class="num">Au 31/07 — PMR ('+mmSemaines(ech.pmr)+' sem.)</th></tr></thead><tbody>'
     + MM_OBJS.map(([k,lib,u])=>'<tr><td>'+esc(lib)+(u==='€'?' <small style="color:var(--ink-3)">(€)</small>':'')+'</td>'
-      + '<td><input type="'+(u==='txt'?'text':'number')+'" data-mmo="'+k+'_dec" value="'+esc(o[k+'_dec']==null?'':o[k+'_dec'])+'"></td>'
-      + '<td><input type="'+(u==='txt'?'text':'number')+'" data-mmo="'+k+'_pmr" value="'+esc(o[k+'_pmr']==null?'':o[k+'_pmr'])+'"></td></tr>').join('')
+      + '<td>'+mmObjChamp(k,'dec',u,o)+'</td><td>'+mmObjChamp(k,'pmr',u,o)+'</td></tr>').join('')
     + '</tbody></table></div>'
     + '<div class="mm-bar"><button type="button" class="mm-b pri" id="mmObjSave">Enregistrer mes objectifs</button>'
     + '<span class="mm-sav"></span></div></div>';
