@@ -2132,10 +2132,18 @@ function autoMention(cle){
 async function chargerParcours(){
   if(!SB || !SBUSER){ PARCOURS = null; return false; }
   try{
-    const r = await SB.from('membres_parcours').select('membre_id,donnees,maj').limit(1).maybeSingle();
+    // Mon identifiant est demandé au serveur : la politique de lecture de membres_parcours est
+    // « est_admin() OU ma ligne », donc pour un administrateur un limit(1) sans filtre renvoyait
+    // la progression d'une autre personne — et tout ce qui en découle (sessions, filleuls…).
+    if(!MOI_ID){
+      try{ const m = await SB.rpc('mon_membre_id'); if(!m.error) MOI_ID = m.data || null; }catch(e){}
+    }
+    let q = SB.from('membres_parcours').select('membre_id,donnees,maj');
+    q = MOI_ID ? q.eq('membre_id', MOI_ID) : q.limit(1);
+    const r = await q.maybeSingle();
     if(r.error) throw r.error;
     PARCOURS = (r.data && r.data.donnees) || null;
-    MOI_ID = (r.data && r.data.membre_id) || null;
+    MOI_ID = (r.data && r.data.membre_id) || MOI_ID || null;
     if(MOI_ID) chargerMM();
     if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); buildActions(); majOngletSurv(); }catch(e){} }
     if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
@@ -3225,12 +3233,23 @@ function mmSous(d, ro){
   });
   if(L.length){
     const ti=L.reduce((n,x)=>n+mmN(x.vi),0), tp=L.reduce((n,x)=>n+mmN(x.vp),0);
-    h += '<tr class="tot"><td>'+L.length+' souscription'+(L.length>1?'s':'')+'</td>'
-       + '<td class="num">'+mmEur(ti)+'</td><td class="num">'+mmEur(tp)+'</td>'+(ro?'':'<td></td>')+'</tr>';
+    h += '<tr class="tot"><td id="mmSousN">'+L.length+' souscription'+(L.length>1?'s':'')+'</td>'
+       + '<td class="num" id="mmSousVI">'+mmEur(ti)+'</td><td class="num" id="mmSousVP">'+mmEur(tp)+'</td>'
+       + (ro?'':'<td></td>')+'</tr>';
   }
   h += '</tbody></table></div>';
   if(!ro) h += '<button type="button" class="mm-b mm-add" data-mmsadd="1">+ Ajouter une souscription</button>';
   return h;
+}
+// Les totaux suivent la frappe, sans redessiner le formulaire (on perdrait le curseur)
+function mmSousTotaux(){
+  const n=document.getElementById('mmSousN');
+  if(!n || !MM || !Array.isArray(MM.donnees.sous)) return;
+  const L=MM.donnees.sous;
+  n.textContent = L.length+' souscription'+(L.length>1?'s':'');
+  const vi=document.getElementById('mmSousVI'), vp=document.getElementById('mmSousVP');
+  if(vi) vi.textContent = mmEur(L.reduce((x,y)=>x+mmN(y.vi),0));
+  if(vp) vp.textContent = mmEur(L.reduce((x,y)=>x+mmN(y.vp),0));
 }
 function mmListeAuto(items, vide){
   if(!items || !items.length) return '<p class="mm-vide">'+esc(vide)+'</p>';
@@ -3647,6 +3666,7 @@ function mmSaisie(t){
   if(t.dataset && t.dataset.mm && MM){
     MM.donnees=MM.donnees||{};
     mmS(MM.donnees, t.dataset.mm, t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value));
+    if(t.dataset.mm.indexOf('sous.')===0) mmSousTotaux();
     mmPlanSave(); return true;
   }
   return false;
