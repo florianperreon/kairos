@@ -334,6 +334,36 @@ tr.colf input:focus{outline:2px solid var(--accent);outline-offset:0}
 .xtra.act{color:var(--accent);font-weight:600;text-decoration:none;background:var(--accent-soft);border-radius:5px;padding:1px 7px}
 .xtra.act:hover{text-decoration:underline}
 .xtra.alt{flex-basis:100%;color:var(--ink-2)}
+/* Nouveautés : pastille pleine tant que ce n'est pas vu, contour discret ensuite */
+.xtra.neuf{border-radius:5px;padding:1px 7px;font-weight:700;border:1px solid var(--line-2);color:var(--ink-3);background:var(--surface)}
+.xtra.neuf.frais{border-color:transparent;background:var(--accent);color:var(--accent-ink)}
+.xtra.neuf.chg{color:var(--gold-ink)}
+.xtra.neuf.chg.frais{background:var(--gold-soft);color:var(--gold-ink);border-color:var(--gold)}
+/* Le point sur un onglet qui a du neuf */
+.nv-pt{display:inline-block;width:7px;height:7px;margin-left:6px;border-radius:50%;background:var(--accent);vertical-align:2px;flex:none}
+nav.botbar .nv-pt{margin-left:4px}
+/* Le bandeau de l'accueil */
+.nv-panel .nv-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.nv-panel .nv-h h2{margin:0;flex:1;min-width:0}
+.nv-panel .nv-h button{border:1px solid var(--line-2);background:var(--surface);color:var(--accent);border-radius:8px;padding:6px 11px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.nv-panel .nv-h button:hover{background:var(--accent-soft)}
+.nv-panel .nv-s{margin:0 0 10px;font-size:13px;color:var(--ink-3)}
+.nv-panel .nv-l{display:flex;flex-direction:column}
+.nv-it{display:grid;grid-template-columns:148px minmax(0,1fr) auto;gap:4px 12px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line);color:inherit;text-decoration:none}
+.nv-it:first-child{border-top:0;padding-top:2px}
+.nv-it:hover b{text-decoration:underline}
+.nv-it b{font-weight:600;min-width:0}
+.nv-it .nv-d{grid-column:2;font-size:13px;color:var(--ink-2)}
+.nv-it .nv-k{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.nv-it .nv-k.k-a{color:#4338CA}.nv-it .nv-k.k-r{color:#4338CA}.nv-it .nv-k.k-f{color:#149467}.nv-it .nv-k.k-e{color:#B7791F}
+.nv-it .xtra.neuf{justify-self:end}
+.nv-calme .nv-it .nv-k,.nv-calme .nv-it b{opacity:.85}
+@media(max-width:640px){
+  .nv-it{grid-template-columns:minmax(0,1fr) auto;gap:2px 10px}
+  .nv-it b{grid-column:1/-1}
+  .nv-it .nv-d{grid-column:1/-1}
+  .nv-it .xtra.neuf{grid-column:2;grid-row:1;justify-self:end}
+}
 .xtra.alt a{color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap}
 .xtra.alt a:hover{text-decoration:underline}
 .mini-list{display:flex;flex-direction:column;gap:4px;font-size:13.5px}
@@ -1085,6 +1115,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
       <div class="bdstrip" id="homeBd" hidden></div>
       <div class="bdstrip surv-strip" id="homeSurv" hidden></div>
       <div class="panel" id="homeWeekPanel"><h2>Les 7 prochains jours <span class="badge-lig">Lignée</span></h2><div class="wjal" id="homeJalons" hidden></div><div class="week" id="homeWeek"></div></div>
+      <div class="panel nv-panel" id="homeNouv" hidden></div>
       <div class="principes" id="homePrincipes" hidden></div>
       <div class="panel" id="homeParcoursPanel" hidden><h2>Où en es-tu ? <span class="badge-lig">Ton parcours en 4 phases</span></h2><div class="phases" id="homePhases"></div><div class="etapes" id="homeEtapes"></div></div>
       <div class="panel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
@@ -1116,6 +1147,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
         <label class="chk"><input type="checkbox" id="pdReco" checked> Ateliers recommandés</label>
         <label class="chk"><input type="checkbox" id="pdLig"> Pilotés par ma lignée</label>
         <label class="chk"><input type="checkbox" id="pdPast"> Inclure les passés</label>
+        <label class="chk" title="Sessions ajoutées ou modifiées depuis moins de 14 jours"><input type="checkbox" id="pdNeuf"> Nouveautés</label>
         <button type="button" class="reset-btn" data-reset="pd" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
@@ -1144,6 +1176,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
         <select id="catNiv"><option value="">Tous niveaux</option></select>
         <select id="catLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="catPast"> Inclure les passés</label>
+        <label class="chk" title="Ateliers ajoutés ou modifiés depuis moins de 14 jours"><input type="checkbox" id="catNeuf"> Nouveautés</label>
         <label class="chk" id="catHorsLbl" hidden title="Ateliers dont le public visé est au-dessus de ton statut"><input type="checkbox" id="catHors"> Ateliers non accessibles</label>
         <button type="button" class="reset-btn" data-reset="cat" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
@@ -1163,6 +1196,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
         <input type="search" id="reuQ" placeholder="Rechercher une réunion, un animateur…">
         <select id="reuLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="reuPast"> Inclure les passés</label>
+        <label class="chk" title="Réunions ajoutées ou modifiées depuis moins de 14 jours"><input type="checkbox" id="reuNeuf"> Nouveautés</label>
         <button type="button" class="reset-btn" data-reset="reu" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
@@ -1179,6 +1213,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
         <input type="search" id="forQ" placeholder="Rechercher une formation…">
         <select id="forLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="forPast"> Inclure les passés</label>
+        <label class="chk" title="Formations ajoutées ou modifiées depuis moins de 14 jours"><input type="checkbox" id="forNeuf"> Nouveautés</label>
         <button type="button" class="reset-btn" data-reset="for" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
@@ -1195,6 +1230,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
         <input type="search" id="evtQ" placeholder="Rechercher un événement…">
         <select id="evtLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="evtPast"> Inclure les passés</label>
+        <label class="chk" title="Événements ajoutées ou modifiées depuis moins de 14 jours"><input type="checkbox" id="evtNeuf"> Nouveautés</label>
         <button type="button" class="reset-btn" data-reset="evt" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
@@ -1454,8 +1490,123 @@ function accessible(a){
   if(ip < 0) return true;                      // public non reconnu : on laisse passer
   return RANGS.indexOf(mien) >= ip;
 }
+/* ---------- Nouveautés : ce qui vient d’être ajouté ou modifié ----------
+   `nouv` et `modif` sont posés par update.py, qui compare chaque passage au précédent : l’API
+   FORMAN ne donne aucune date de création sur les séances. `VU_LE` est le repère personnel
+   « depuis ta dernière visite », enregistré en base (table membres_vues) et donc partagé entre
+   les appareils. Une séance reste marquée NEUF_J jours ; le repère, lui, ne sert qu’à distinguer
+   ce qu’on n’a pas encore regardé (pastille pleine, point sur l’onglet, bandeau d’accueil). */
+const NEUF_J = 14;
+let NOUV = {}, MODIF = {}, VU_LE = '';
+const NEUF_LIB = {d:'Déplacé', l:'Lieu changé', p:'Pilote changé', t:'Titre modifié', x:'Places libérées'};
+const NEUF_TAB = {a:'cat', r:'reu', f:'for', e:'evt'};
+const NEUF_TYPE = {a:'Atelier', r:'Réunion d’équipe', f:'Formation', e:'Événement'};
+const neufSeuil = () => Date.now() - NEUF_J*86400000;
+
+// L'état d'une séance : ajoutée, modifiée, ou rien. Une séance passée n'est jamais une nouveauté.
+function neufEtat(a){
+  if(!a || !a.k || isPast(a)) return null;
+  const cle = a.k+':'+a.id, seuil = neufSeuil();
+  const nd = NOUV[cle] || '', md = MODIF[cle] || null;
+  const neuf = (nd && Date.parse(nd) >= seuil) ? nd : '';
+  const chg  = (md && md[0] && Date.parse(md[0]) >= seuil) ? md : null;
+  if(!neuf && !chg) return null;
+  // ajoutée puis modifiée : on montre le plus récent des deux
+  if(neuf && (!chg || Date.parse(neuf) >= Date.parse(chg[0])))
+    return {q:'n', le:neuf, lib:'Nouveau', tit:'Ajouté au réseau le '+fmtD(neuf.slice(0,10))};
+  const qs = (chg[1]||[]).map(c=>NEUF_LIB[c]).filter(Boolean);
+  return {q:'m', le:chg[0], lib:(qs.length===1?qs[0]:'Modifié'),
+          tit:(qs.join(' · ')||'Modifié')+' le '+fmtD(chg[0].slice(0,10))};
+}
+const neufNonVu = e => !!e && (!VU_LE || Date.parse(e.le) > Date.parse(VU_LE));
+function neufBadge(a){
+  const e = neufEtat(a);
+  if(!e) return '';
+  return '<span class="xtra neuf'+(e.q==='m'?' chg':'')+(neufNonVu(e)?' frais':'')
+       + '" title="'+esc(e.tit)+'">'+esc(e.lib)+'</span>';
+}
+// L'onglet où la séance se range : les ateliers du parcours découverte ont le leur.
+const neufOnglet = a => a.k==='a' ? (a.th==='PARCOURS DECOUVERTE' ? 'pd' : 'cat') : NEUF_TAB[a.k];
+const neufType   = a => a.k==='a' ? (a.th==='PARCOURS DECOUVERTE' ? 'Parcours découverte' : 'Atelier') : NEUF_TYPE[a.k];
+const neufTout   = () => [...A, ...R, ...F, ...E].map(a=>({a, e:neufEtat(a)})).filter(x=>x.e);
+const RENDERS = {};
+
+// Le bandeau de l'accueil : les nouveautés les plus récentes, tous types confondus.
+function buildNouv(){
+  const el = document.getElementById('homeNouv'); if(!el) return;
+  const tous = neufTout().sort((x,y)=>Date.parse(y.e.le)-Date.parse(x.e.le));
+  if(!tous.length){ el.hidden=true; el.innerHTML=''; return; }
+  const nonVus = tous.filter(x=>neufNonVu(x.e));
+  const n = nonVus.length;
+  const source = n ? nonVus : tous;
+  const aff = source.slice(0, n?10:5), reste = source.length - aff.length;
+  const titre = n ? (n+' nouveauté'+(n>1?'s':'')+(VU_LE?' depuis ta dernière visite':' ces '+NEUF_J+' derniers jours'))
+                  : 'Rien de neuf depuis ta dernière visite';
+  const ligne = x => {
+    const a=x.a, e=x.e;
+    return '<a class="nv-it" href="'+a.url+'" target="_blank" rel="noopener">'
+      + '<span class="nv-k k-'+a.k+'">'+esc(neufType(a))+'</span>'
+      + '<b>'+esc(a.title)+'</b>'
+      + '<span class="nv-d">'+fmtD(a.start)+(a.hor?' · '+esc(a.hor):'')+(a.lieu?' · '+esc(a.lieu):'')+'</span>'
+      + '<span class="xtra neuf'+(e.q==='m'?' chg':'')+(neufNonVu(e)?' frais':'')+'" title="'+esc(e.tit)+'">'+esc(e.lib)+'</span></a>';
+  };
+  el.innerHTML = '<div class="nv-h"><h2>'+esc(titre)+'</h2>'
+    + (n&&SBUSER ? '<button type="button" id="nvVu">Marquer comme vu</button>' : '')+'</div>'
+    + (n ? '' : '<p class="nv-s">'+tous.length+' ajout'+(tous.length>1?'s':'')+' ou modification'
+            +(tous.length>1?'s':'')+' sur les '+NEUF_J+' derniers jours.</p>')
+    + '<div class="nv-l">'+aff.map(ligne).join('')+'</div>'
+    + (reste>0 ? '<p class="nv-s">et '+reste+' autre'+(reste>1?'s':'')+' — ouvre un onglet et coche « Nouveautés ».</p>' : '');
+  el.hidden = false;
+  el.classList.toggle('nv-calme', !n);
+  const b = document.getElementById('nvVu');
+  if(b) b.addEventListener('click', ()=>poserVu(true));
+}
+
+// Un point discret sur les onglets qui ont du neuf. On l'ajoute au libellé sans le réécrire :
+// le nom de l'onglet « Parcours » est personnalisable depuis l'admin.
+function nvPoints(){
+  const par = {};
+  neufTout().forEach(x=>{ if(neufNonVu(x.e)){ const t=neufOnglet(x.a); par[t]=(par[t]||0)+1; } });
+  ['pd','cat','reu','for','evt'].forEach(t=>{
+    const n = par[t]||0;
+    document.querySelectorAll('[data-v="'+t+'"]').forEach(btn=>{
+      let d = btn.querySelector('.nv-pt');
+      if(!n){ if(d) d.remove(); return; }
+      if(!d){ d=document.createElement('span'); d.className='nv-pt'; (btn.querySelector('.l')||btn).appendChild(d); }
+      d.title = n+' nouveauté'+(n>1?'s':'')+' depuis ta dernière visite';
+    });
+  });
+}
+
+function majNeuf(){
+  Object.keys(RENDERS).forEach(k=>{ try{ RENDERS[k](); }catch(e){} });
+  buildNouv(); nvPoints();
+}
+
+// Repère personnel « depuis ta dernière visite » (table membres_vues, une ligne par compte).
+async function chargerVues(){
+  if(!SB || !SBUSER) return;
+  try{
+    const { data } = await SB.from('membres_vues').select('nouveautes_vu_le').eq('user_id', SBUSER.id).maybeSingle();
+    VU_LE = (data && data.nouveautes_vu_le) || '';
+  }catch(e){ return; }
+  majNeuf();
+  // Le repère n'avance que si la visite précédente date de plus de 30 minutes : une simple
+  // actualisation de la page n'efface pas des nouveautés qu'on n'a pas encore regardées.
+  // VU_LE n'est pas touché en mémoire — l'écran garde ce qui était neuf à l'arrivée.
+  if(!VU_LE || Date.now()-Date.parse(VU_LE) > 30*60000) poserVu(false);
+}
+async function poserVu(tout_de_suite){
+  if(!SB || !SBUSER) return;
+  const t = new Date().toISOString();
+  try{ await SB.from('membres_vues').upsert({ user_id:SBUSER.id, nouveautes_vu_le:t, maj:t }, { onConflict:'user_id' }); }
+  catch(e){ return; }
+  if(tout_de_suite){ VU_LE = t; majNeuf(); }
+}
+
 function evExtras(a){
   const parts=[];
+  const nv=neufBadge(a); if(nv) parts.push(nv);
   if(a.pub!=null) parts.push('<span class="xtra pub'+(a.pub?' restreint':'')+'" title="Public visé (statut minimum requis)">'+esc(pubLabel(a.pub))+'</span>');
   if(a.hab) parts.push('<span class="xtra pub restreint" title="Habilitation requise">Habilitation : '+esc(a.hab)+'</span>');
   const isFull=x=>x.max>0&&x.total>=x.max;
@@ -1907,6 +2058,7 @@ const mapEvt = r=>withExtras({id:r[0], title:r[1], start:r[2], end:r[3], lieu:r[
 function boot(){
   A = DATA.ateliers.map(r=>withExtras({id:r[0], th:thKey(r[1]), thRaw:r[1], title:r[2], start:r[3], end:r[4], lieu:r[5], pilotes:r[6], hor:r[7]},r,8));
   SITES=DATA.sites||{}; EXTRA=DATA.extra||{};
+  NOUV=DATA.nouv||{}; MODIF=DATA.modif||{};
   const AU = DATA.autres||{};
   R=(AU.reu||[]).map(mapEvt); F=(AU.for||[]).map(mapEvt); E=(AU.evt||[]).map(mapEvt);
   ADH=new Set(DATA.adherentIds||[]);
@@ -1950,12 +2102,14 @@ function boot(){
   buildSimple('reu', R, id=>BASE+'teamMeeting/detail/'+id, 'réunion');
   buildSimple('for', F, id=>BASE+'formation/detail/'+id, 'formation');
   buildSimple('evt', E, id=>BASE+'event/detail/'+id, 'événement');
+  buildNouv(); nvPoints();
   window.__booted=true;
   accMaj();
   if(SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
   chargerVeille();
   chargerParcours();
   chargerSurv();
+  chargerVues();
   buildMembres();
   chargerRetours();
   majOngletSurv(); buildSurv(); buildSurvAccueil(); buildActions();
@@ -2544,7 +2698,8 @@ function buildPd(){
   const render=()=>{
     const cat=document.getElementById('pdCat').value, lieu=document.getElementById('pdLieu').value, lig=document.getElementById('pdLig').checked, reco=document.getElementById('pdReco').checked;
     const from=document.getElementById('pdFrom').value, to=document.getElementById('pdTo').value, past=document.getElementById('pdPast').checked;
-    const rows=pds.filter(a=>(past||!isPast(a))&&(!reco||!allMoins(a.pilotes))&&(!cat||PD_CAT(a.title)===cat)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!lig||isLigneePilote(a.pilotes))&&dateMatch(a,from,to,pdDaySel));
+    const neuf=document.getElementById('pdNeuf').checked;
+    const rows=pds.filter(a=>(past||!isPast(a))&&(!neuf||neufEtat(a))&&(!reco||!allMoins(a.pilotes))&&(!cat||PD_CAT(a.title)===cat)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!lig||isLigneePilote(a.pilotes))&&dateMatch(a,from,to,pdDaySel));
     document.getElementById('pdCount').textContent=rows.length+' session'+(rows.length>1?'s':'');
     window.__pdRows=rows; calUpdate('pd');
     const byDay={};
@@ -2560,8 +2715,8 @@ function buildPd(){
     }).join('') || '<p style="color:var(--ink-2)">Aucune session ne correspond aux filtres.</p>';
   };
   const pdDaySel=setupDays('pdDays',()=>render());
-  ['pdCat','pdLieu','pdReco','pdLig','pdFrom','pdTo','pdPast'].forEach(id=>document.getElementById(id).addEventListener('change',render));
-  render();
+  ['pdCat','pdLieu','pdReco','pdLig','pdFrom','pdTo','pdPast','pdNeuf'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+  RENDERS.pd=render; render();
 }
 
 /* ---------- Catalogue ateliers ---------- */
@@ -2588,9 +2743,9 @@ function buildCat(){
     const q=norm(document.getElementById('catQ').value.trim());
     const niv=document.getElementById('catNiv').value, lieu=document.getElementById('catLieu').value;
     const from=document.getElementById('catFrom').value, to=document.getElementById('catTo').value, past=document.getElementById('catPast').checked;
-    const hors=document.getElementById('catHors').checked;
+    const hors=document.getElementById('catHors').checked, neuf=document.getElementById('catNeuf').checked;
     const lbl=document.getElementById('catHorsLbl'); if(lbl) lbl.hidden = !monStatut();
-    const rows=oth.filter(a=>(past||!isPast(a))&&sel.has(a.th)&&(!niv||nivOf(a.title)===niv)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,catDaySel)&&(hors||accessible(a)));
+    const rows=oth.filter(a=>(past||!isPast(a))&&(!neuf||neufEtat(a))&&sel.has(a.th)&&(!niv||nivOf(a.title)===niv)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,catDaySel)&&(hors||accessible(a)));
     document.getElementById('catCount').textContent=rows.length+' atelier'+(rows.length>1?'s':'');
     window.__catRows=rows; calUpdate('cat');
     let html='', curMonth='';
@@ -2607,8 +2762,8 @@ function buildCat(){
   };
   const catDaySel=setupDays('catDays',()=>render());
   ['catQ','catNiv','catLieu'].forEach(id=>document.getElementById(id).addEventListener('input',render));
-  ['catFrom','catTo','catPast','catHors'].forEach(id=>document.getElementById(id).addEventListener('change',render));
-  render();
+  ['catFrom','catTo','catPast','catHors','catNeuf'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+  RENDERS.cat=render; render();
 }
 
 /* ---------- Listes simples (réunions, formations, événements) ---------- */
@@ -2619,7 +2774,8 @@ function buildSimple(p, items, urlFn, label){
     const q=norm(document.getElementById(p+'Q').value.trim());
     const lieu=document.getElementById(p+'Lieu').value;
     const from=document.getElementById(p+'From').value, to=document.getElementById(p+'To').value, past=document.getElementById(p+'Past').checked;
-    const rows=items.filter(a=>(past||!isPast(a))&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,daySel));
+    const neuf=document.getElementById(p+'Neuf').checked;
+    const rows=items.filter(a=>(past||!isPast(a))&&(!neuf||neufEtat(a))&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,daySel));
     document.getElementById(p+'Count').textContent=rows.length+' '+label+(rows.length>1?'s':'');
     window['__'+p+'Rows']=rows; calUpdate(p);
     let html='', cur='';
@@ -2634,8 +2790,8 @@ function buildSimple(p, items, urlFn, label){
   };
   const daySel=setupDays(p+'Days',()=>render());
   document.getElementById(p+'Q').addEventListener('input',render);
-  ['Lieu','From','To','Past'].forEach(k=>document.getElementById(p+k).addEventListener('change',render));
-  render();
+  ['Lieu','From','To','Past','Neuf'].forEach(k=>document.getElementById(p+k).addEventListener('change',render));
+  RENDERS[p]=render; render();
 }
 
 /* ---------- Vue calendrier ---------- */

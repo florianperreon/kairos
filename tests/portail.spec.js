@@ -587,3 +587,107 @@ test.describe('Téléphone (390 px)', () => {
     expect(m.entete, 'l’entête du tableau est masqué au profit des libellés de ligne').toBe('absolute');
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* Nouveautés — ce qui vient d'être ajouté ou modifié.
+   La date d'ajout n'existe pas dans l'API FORMAN : elle est déduite par update.py en comparant
+   chaque passage au précédent (voir tests/nouveautes.py pour cette partie). Ici on vérifie ce que
+   le portail en fait : la fenêtre de 14 jours, le repère personnel, le filtre et le bandeau. */
+test.describe('Nouveautés', () => {
+  const ilYA = j => new Date(Date.now() - j * 86400e3).toISOString().slice(0, 19) + 'Z';
+  const dans = j => {
+    const d = new Date(Date.now() + j * 86400e3);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  };
+
+  // Pose quatre ateliers aux états connus, puis renvoie ce que le portail en dit.
+  async function poserNouv(page, vuLe) {
+    return page.evaluate(({ recent, vieux, hier, passe, vu }) => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      const at = (id, titre, start) => ({ id, th: 'PARCOURS DECOUVERTE', thRaw: 'PARCOURS DECOUVERTE',
+        title: titre, start, end: start, lieu: 'Visio', pilotes: 'Diane P.', hor: '09:00 - 12:00',
+        siteId: null, max: 20, total: 5, guests: [], wait: [], link: '', pw: '', pub: '', hab: '',
+        k: 'a', url: '#', tkey: titre });
+      A.length = 0;
+      A.push(at(1, 'Ajouté hier', dans(10)), at(2, 'Ajouté il y a 30 jours', dans(12)),
+             at(3, 'Déplacé hier', dans(14)), at(4, 'Ajouté hier mais déjà passé', passe));
+      NOUV = { 'a:1': hier, 'a:2': vieux, 'a:4': hier };
+      MODIF = { 'a:3': [hier, ['d', 'p']] };
+      VU_LE = vu;
+      const et = id => { const e = neufEtat(A.find(a => a.id === id)); return e && { q: e.q, lib: e.lib, nonVu: neufNonVu(e) }; };
+      return { a1: et(1), a2: et(2), a3: et(3), a4: et(4), total: neufTout().length };
+    }, { hier: ilYA(1), vieux: ilYA(30), passe: dans(-3), vu: vuLe });
+  }
+  // `dans` doit exister dans la page : on le réinjecte avec les valeurs déjà calculées côté test.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(({ d10, d12, d14, dm3 }) => {
+      window.dans = j => ({ 10: d10, 12: d12, 14: d14, '-3': dm3 })[j];
+    }, { d10: dans(10), d12: dans(12), d14: dans(14), dm3: dans(-3) });
+  });
+
+  test('la fenêtre de 14 jours, les modifications et les séances passées', async ({ page }) => {
+    await ouvrir(page);
+    const r = await poserNouv(page, '');
+    expect(r.a1, 'ajouté hier → Nouveau').toMatchObject({ q: 'n', lib: 'Nouveau' });
+    expect(r.a2, 'ajouté il y a 30 jours → plus rien').toBeNull();
+    expect(r.a3, 'déplacé hier → la nature du changement est nommée').toMatchObject({ q: 'm' });
+    expect(r.a4, 'une séance déjà passée n’est jamais une nouveauté').toBeNull();
+    expect(r.total).toBe(2);
+  });
+
+  test('sans repère, tout ce qui est dans la fenêtre est « non vu »', async ({ page }) => {
+    await ouvrir(page);
+    const r = await poserNouv(page, '');
+    expect(r.a1.nonVu).toBe(true);
+    expect(r.a3.nonVu).toBe(true);
+  });
+
+  test('le repère « depuis ta dernière visite » éteint ce qui a déjà été vu', async ({ page }) => {
+    await ouvrir(page);
+    const r = await poserNouv(page, new Date().toISOString());   // visité à l’instant
+    expect(r.a1, 'la pastille reste dans la liste…').toMatchObject({ lib: 'Nouveau' });
+    expect(r.a1.nonVu, '…mais elle n’est plus « fraîche »').toBe(false);
+    expect(r.a3.nonVu).toBe(false);
+  });
+
+  test('le bandeau d’accueil trie par date d’ajout et pose un point sur les onglets', async ({ page }) => {
+    await ouvrir(page);
+    await poserNouv(page, '');
+    const r = await page.evaluate(() => {
+      R.length = 0; F.length = 0; E.length = 0;
+      buildNouv(); nvPoints();
+      const el = document.getElementById('homeNouv');
+      return {
+        visible: !el.hidden,
+        titre: el.querySelector('.nv-h h2').textContent,
+        ordre: [...el.querySelectorAll('.nv-it b')].map(b => b.textContent),
+        pastilles: [...el.querySelectorAll('.nv-it .xtra.neuf')].map(x => x.textContent),
+        points: [...document.querySelectorAll('nav.tabs.side [data-v] .nv-pt')].map(d => d.closest('[data-v]').dataset.v),
+      };
+    });
+    expect(r.visible).toBe(true);
+    expect(r.titre).toContain('2 nouveautés');
+    // les deux portent le même horodatage : l’ordre importe peu, mais les deux doivent être là
+    expect(r.ordre.sort()).toEqual(['Ajouté hier', 'Déplacé hier']);
+    expect(r.pastilles).toContain('Nouveau');
+    expect(r.points, 'le point se pose sur l’onglet du parcours découverte').toContain('pd');
+  });
+
+  test('le filtre « Nouveautés » ne garde que ce qui est récent', async ({ page }) => {
+    await ouvrir(page);
+    await poserNouv(page, '');
+    const r = await page.evaluate(() => {
+      buildPd();
+      const avant = document.getElementById('pdCount').textContent;
+      const c = document.getElementById('pdNeuf');
+      c.checked = true; c.dispatchEvent(new Event('change'));
+      const apres = document.getElementById('pdCount').textContent;
+      const titres = [...document.querySelectorAll('#pdList .ev .body a.t')].map(a => a.textContent);
+      return { avant, apres, titres };
+    });
+    expect(r.avant, 'les trois sessions à venir sont listées').toContain('3');
+    expect(r.apres, 'seules les deux nouveautés restent').toContain('2');
+    expect(r.titres.sort()).toEqual(['Ajouté hier', 'Déplacé hier']);
+  });
+});

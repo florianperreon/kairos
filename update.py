@@ -256,6 +256,77 @@ def fetch_details(api, endpoint, ids):
         raise RuntimeError(f"{endpoint}: {len(missing)} détails manquants")
     return out
 
+# ---------------- nouveautés (ajouts et modifications) ----------------
+# L'API FORMAN ne porte aucune date de création sur les séances : aucun createdAt dans les groupes
+# de lecture workshops / formations / events / team_meatings. On la déduit donc en comparant chaque
+# passage au payload précédent — déjà lu en mémoire, aucune requête de plus. C'est la mécanique
+# d'adhDates. Aucun amorçage n'est nécessaire : `old` contient déjà toutes les séances connues,
+# donc dès le premier passage seuls les vrais ajouts ressortent.
+NOUV_JOURS = 60
+# Position des champs dans une ligne : les ateliers portent la thématique en plus, d'où deux jeux.
+IDX_A = dict(titre=2, debut=3, fin=4, lieu=5, pilotes=6, hor=7, site=8, max=9, total=10)
+IDX_X = dict(titre=1, debut=2, fin=3, lieu=4, pilotes=5, hor=6, site=7, max=8, total=9)
+
+
+def _sig(r, ix):
+    return {k: (r[i] if i < len(r) else None) for k, i in ix.items()}
+
+
+def changements(avant, apres, ix):
+    """Ce qui a bougé et mérite d'être signalé. Les compteurs d'inscrits varient en permanence :
+    on ne retient que le passage de « complet » à « des places se sont libérées »."""
+    a, b = _sig(avant, ix), _sig(apres, ix)
+    q = []
+    if (a["debut"], a["fin"], a["hor"]) != (b["debut"], b["fin"], b["hor"]):
+        q.append("d")
+    if (a["lieu"], a["site"]) != (b["lieu"], b["site"]):
+        q.append("l")
+    if a["pilotes"] != b["pilotes"]:
+        q.append("p")
+    if a["titre"] != b["titre"]:
+        q.append("t")
+    plein = lambda s: bool(s["max"]) and (s["total"] or 0) >= s["max"]
+    if plein(a) and not plein(b):
+        q.append("x")
+    return q
+
+
+def nouveautes(old, ateliers, autres, today_iso, horodate, limite):
+    """Renvoie (nouv, modif, ajouts du jour, modifications du jour).
+
+    nouv  : « type:id » -> horodatage UTC de la première apparition
+    modif : « type:id » -> [horodatage UTC, [natures]]
+    Les entrées disparues du réseau ou plus anciennes que `limite` sont oubliées.
+    """
+    nouv = dict(old.get("nouv") or {})
+    modif = {k: list(v) for k, v in (old.get("modif") or {}).items()}
+    anciens_autres = old.get("autres") or {}
+    vivants, n_add, n_chg = set(), 0, 0
+    for kind, rows, ix, anciens in (
+            ("a", ateliers, IDX_A, old.get("ateliers") or []),
+            ("r", autres.get("reu") or [], IDX_X, anciens_autres.get("reu") or []),
+            ("f", autres.get("for") or [], IDX_X, anciens_autres.get("for") or []),
+            ("e", autres.get("evt") or [], IDX_X, anciens_autres.get("evt") or [])):
+        avant = {r[0]: r for r in anciens}
+        for r in rows:
+            cle = f"{kind}:{r[0]}"
+            vivants.add(cle)
+            anc = avant.get(r[0])
+            if anc is None:
+                nouv[cle] = horodate
+                n_add += 1
+                continue
+            if (r[ix["debut"]] or "") < today_iso:
+                continue          # une séance déjà passée qui bouge n'intéresse personne
+            q = changements(anc, r, ix)
+            if q:
+                modif[cle] = [horodate, q]
+                n_chg += 1
+    nouv = {k: v for k, v in nouv.items() if k in vivants and v[:10] >= limite}
+    modif = {k: v for k, v in modif.items() if k in vivants and v[0][:10] >= limite}
+    return nouv, modif, n_add, n_chg
+
+
 # ---------------- transformations ----------------
 def pdate(s):
     return datetime.datetime.fromisoformat(s).astimezone(PARIS).date().isoformat()
@@ -967,6 +1038,14 @@ def run():
         else:
             x.pop("jalons", None)
 
+    # ---------- Nouveautés : ce qui a été ajouté ou modifié depuis le passage précédent ----------
+    nouv, modif, n_add, n_chg = nouveautes(
+        old, ateliers, autres, today_iso,
+        now.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        (today - datetime.timedelta(days=NOUV_JOURS)).isoformat())
+    print(f"nouveautés : {n_add} ajout(s), {n_chg} modification(s) — "
+          f"{len(nouv)} ajouts et {len(modif)} modifications retenus sur {NOUV_JOURS} jours")
+
     # Garde-fous : en cas d'échec, on sort en erreur SANS toucher à index.html
     errs = []
     if len(ateliers) < 100: errs.append(f"ateliers {len(ateliers)} < 100")
@@ -984,7 +1063,8 @@ def run():
                "cfg": cfg, "ateliers": ateliers, "adherents": membres,
                "autres": autres, "adherentIds": adh_ids, "sites": sites,
                "extra": {str(k): v for k, v in extra.items()},
-               "adhDates": {str(k): v for k, v in adh_dates.items() if v}}
+               "adhDates": {str(k): v for k, v in adh_dates.items() if v},
+               "nouv": nouv, "modif": modif}
     # Version du contenu éditorial (lue en base, le contenu n'a plus de fichier)
     contenu_version = ""
     if KAIROS_TOKEN:

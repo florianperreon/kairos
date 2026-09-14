@@ -11,6 +11,11 @@ ratée, un onglet déclaré sans sa section ou son entrée de menu, deux onglets
 même adresse, un e-mail ou un téléphone en clair, ou une date calendaire calculée en UTC.
 Tant qu'il n'est pas vert, rien n'est poussé.
 
+**`nouveautes.py`** — la détection des ajouts et des modifications de séances (`update.nouveautes`).
+L'API FORMAN ne donne aucune date de création : elle est déduite en comparant chaque passage au
+précédent, et cette logique n'a aucun filet côté navigateur — si elle se trompe, le portail affiche
+des nouveautés fausses sans que rien ne casse. Pur Python, sans réseau ni navigateur.
+
 **`portail.spec.js`** — les tests du navigateur (Playwright, ~15 s). La page est ouverte en
 `file://`, donc le portail ne joint pas Supabase : les données sont injectées directement dans ses
 variables, et on vérifie ce que le code en fait. Chaque bug corrigé en production y a laissé un
@@ -25,6 +30,7 @@ npx playwright install chromium
 npx playwright test          # tout
 npx playwright test -g Dates # une famille
 python garde.py              # le garde-fou seul
+python nouveautes.py         # la détection des nouveautés (depuis la racine du dépôt)
 ```
 
 ## Ce qui est couvert
@@ -37,6 +43,8 @@ python garde.py              # le garde-fou seul
 | Mail Manager | le bloc automatique est recalculé au rendu · un filleul adhérent n'est pas compté comme invité · formulaire, mur, objectifs, fiche de lecture et export texte |
 | Identité | la progression est demandée avec un filtre explicite, jamais par `limit(1)` |
 | Retours | le contexte technique et les erreurs JavaScript sont bien joints · la liste et les droits admin |
+| Nouveautés | la fenêtre de 14 jours · les séances passées ne sont jamais neuves · le repère « depuis ta dernière visite » · le filtre, le bandeau d'accueil et les points sur les onglets |
+| Téléphone (390 px) | la carte de session passe sur une colonne · les filtres et les sept jours tiennent dans la largeur · le tableau des souscriptions ne défile pas latéralement |
 
 ## Ajouter un test
 
