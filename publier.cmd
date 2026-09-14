@@ -43,11 +43,14 @@ for %%f in ("Claude outputs\*.yml") do move /y "%%f" ".github\workflows\" >nul
 set PREP=%TEMP%\kairos_prep
 if exist "%PREP%" rmdir /s /q "%PREP%"
 mkdir "%PREP%\workflows"
+mkdir "%PREP%\tests"
 echo === 1/4 Copie des fichiers prepares ===
 for %%f in (index.html template.html update.py sw.js manifest.webmanifest publier.cmd confidentialite.html CNAME icon-192.png icon-512.png icon-512-maskable.png favicon.svg .gitignore) do (
   if exist "%%f" copy /y "%%f" "%PREP%\" >nul
 )
 copy /y ".github\workflows\*.yml" "%PREP%\workflows\" >nul
+rem Les tests du portail sont versionnes : les preserver comme les workflows
+if exist "tests\*" copy /y "tests\*" "%PREP%\tests\" >nul
 rem meta.js est produit par les Actions : on ne le reprend que s'il manque sur GitHub
 mkdir "%PREP%\donnees"
 for %%f in (meta.js) do if exist "%%f" copy /y "%%f" "%PREP%\donnees\" >nul
@@ -60,6 +63,8 @@ git reset -q --hard origin/main || goto err
 echo === 3/4 Reprise des fichiers prepares ===
 copy /y "%PREP%\*" "." >nul
 copy /y "%PREP%\workflows\*.yml" ".github\workflows\" >nul
+if not exist "tests" mkdir "tests"
+if exist "%PREP%\tests\*" copy /y "%PREP%\tests\*" "tests\" >nul
 for %%f in (meta.js) do if not exist "%%f" if exist "%PREP%\donnees\%%f" copy /y "%PREP%\donnees\%%f" "." >nul
 rem Anciens fichiers de donnees (les donnees vivent desormais en base)
 if exist contenu.enc del /q contenu.enc

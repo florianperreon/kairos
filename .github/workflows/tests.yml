@@ -1,0 +1,78 @@
+name: Tests du portail
+
+# Se déclenche à chaque publication qui touche la page : publier.cmd, comme le commit des
+# Actions de mise à jour. Un échec se voit sur l'Action (croix rouge) et dans Admin → Journal.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'template.html'
+      - 'tests/**'
+      - '.github/workflows/tests.yml'
+  workflow_dispatch: {}
+
+concurrency:
+  group: tests-portail
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Garde-fou de la page
+        run: python tests/garde.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Journal — début
+        env:
+          KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
+        run: |
+          curl -sS -X POST "https://xslusoecharxelwmbyal.supabase.co/functions/v1/journal" \
+            -H "x-kairos-token: $KAIROS_TOKEN" -H "Content-Type: application/json" \
+            -d '{"action":"debut","tache":"tests","source":"github","execution":"${{ github.run_id }}"}' \
+            || true
+
+      - name: Installation
+        working-directory: tests
+        run: |
+          npm install --no-audit --no-fund --silent
+          npx playwright install --with-deps chromium
+
+      - name: Tests
+        id: tests
+        working-directory: tests
+        run: npx playwright test
+
+      - name: Rapport (si échec)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-tests
+          path: tests/playwright-report
+          retention-days: 14
+
+      - name: Journal — fin
+        if: always()
+        env:
+          KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
+          ETAT: ${{ steps.tests.outcome }}
+        run: |
+          if [ "$ETAT" = "success" ]; then
+            BODY='{"action":"fin","tache":"tests","statut":"succes","source":"github","execution":"${{ github.run_id }}","resume":"Portail conforme : garde-fou et tests du navigateur au vert."}'
+          else
+            BODY='{"action":"fin","tache":"tests","statut":"echec","source":"github","execution":"${{ github.run_id }}","erreur":"Un ou plusieurs tests du portail ont échoué. Le rapport est en pièce jointe de l_Action (rapport-tests)."}'
+          fi
+          curl -sS -X POST "https://xslusoecharxelwmbyal.supabase.co/functions/v1/journal" \
+            -H "x-kairos-token: $KAIROS_TOKEN" -H "Content-Type: application/json" \
+            -d "$BODY" || true

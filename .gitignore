@@ -6,3 +6,8 @@ Claude outputs/
 ~$*
 Thumbs.db
 .DS_Store
+
+# Tests du portail
+tests/node_modules/
+tests/test-results/
+tests/playwright-report/

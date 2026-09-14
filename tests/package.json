@@ -1,0 +1,7 @@
+{
+  "name": "kairos-tests",
+  "private": true,
+  "description": "Tests du portail Kairos — lancés par la GitHub Action « Tests du portail »",
+  "scripts": { "test": "playwright test" },
+  "devDependencies": { "@playwright/test": "^1.47.0" }
+}

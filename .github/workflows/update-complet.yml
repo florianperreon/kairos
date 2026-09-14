@@ -43,13 +43,30 @@ jobs:
       - name: Journal — échec avant le script
         # update.py écrit lui-même sa ligne de journal (début, puis succès ou échec).
         # Ce filet ne sert qu'aux pannes en amont : checkout, installation de Python, dépendances.
-        if: failure() && steps.maj.outcome != 'failure'
+        if: failure() && steps.maj.outcome != 'failure' && steps.garde.outcome != 'failure'
         env:
           KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
         run: |
           curl -sS -X POST "https://xslusoecharxelwmbyal.supabase.co/functions/v1/journal" \
             -H "x-kairos-token: $KAIROS_TOKEN" -H "Content-Type: application/json" \
             -d '{"action":"fin","tache":"update_complet","statut":"echec","source":"github","execution":"${{ github.run_id }}","erreur":"Le job a échoué avant le lancement du script (préparation du runner)."}' \
+            || true
+
+
+      - name: Garde-fou de la page
+        id: garde
+        # Quelques secondes, sans navigateur : substitution __CENC__, syntaxe JavaScript, onglets
+        # complets, audit de confidentialité. Une page qui ne passe pas ici n'est jamais poussée.
+        run: python tests/garde.py
+
+      - name: Journal — page refusée par le garde-fou
+        if: failure() && steps.garde.outcome == 'failure'
+        env:
+          KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
+        run: |
+          curl -sS -X POST "https://xslusoecharxelwmbyal.supabase.co/functions/v1/journal" \
+            -H "x-kairos-token: $KAIROS_TOKEN" -H "Content-Type: application/json" \
+            -d '{"action":"fin","tache":"update_complet","statut":"echec","source":"github","execution":"${{ github.run_id }}","erreur":"Le garde-fou a refusé la page engendrée : rien n_a été publié. Voir le détail dans les logs de l_Action."}' \
             || true
 
       - name: Commit et publication
