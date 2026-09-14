@@ -21,6 +21,21 @@ rem ============================================================================
 git config core.autocrlf false
 git config core.safecrlf false
 
+rem ============================================================================
+rem  index.html est ENGENDRE a partir de template.html (meme substitution que
+rem  update.py : __CENC__ -> null). Sans cela, publier.cmd poussait la copie
+rem  locale perimee de index.html par-dessus celle de GitHub, et le portail
+rem  revenait a une version ancienne jusqu'au passage suivant de l'Action.
+rem  On en profite pour inscrire dans sw.js l'empreinte de la page engendree :
+rem  le cache des navigateurs est invalide des la mise en ligne.
+rem ============================================================================
+echo === 0/4 Generation de index.html depuis template.html ===
+if not exist "template.html" goto tplerr
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$t=[IO.File]::ReadAllText('template.html'); $o=$t.Replace('__CENC__','null'); [IO.File]::WriteAllText('index.html',$o); $b=[Text.Encoding]::UTF8.GetBytes($o); $h=[BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($b)).Replace('-','').ToLower(); $v='kairos-b'+$h.Substring(0,13); $l=[IO.File]::ReadAllLines('sw.js'); for($i=0;$i -lt $l.Length;$i++){ if($l[$i].StartsWith('const VERSION = ')){ $l[$i]='const VERSION = '+[char]39+$v+[char]39+';' } }; [IO.File]::WriteAllLines('sw.js',$l); Write-Host ('   index.html engendre, empreinte '+$v)"
+if errorlevel 1 goto generr
+findstr /C:"__CENC__" index.html >nul
+if not errorlevel 1 goto generr
+
 rem Le dossier .github est protege : Claude depose les workflows dans "Claude outputs"
 if not exist ".github\workflows" mkdir ".github\workflows"
 for %%f in ("Claude outputs\*.yml") do move /y "%%f" ".github\workflows\" >nul
@@ -60,6 +75,15 @@ git commit -q -m "Mise a jour du portail (Claude) %date% %time:~0,5%" || goto er
 git push || goto err
 echo.
 echo === OK : publie sur GitHub, le site sera a jour dans 1-2 minutes ===
+goto end
+:tplerr
+echo.
+echo !!! template.html est introuvable dans ce dossier : rien n'a ete publie.
+goto end
+:generr
+echo.
+echo !!! La generation de index.html a echoue : rien n'a ete publie.
+echo     (index.html doit etre template.html avec __CENC__ remplace par null)
 goto end
 :err
 echo.
