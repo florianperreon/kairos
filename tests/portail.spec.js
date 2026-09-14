@@ -852,6 +852,8 @@ test.describe('Mail Manager — production et texte libre', () => {
         exercices: [...document.querySelectorAll('#mmMoi .mm-pmr tbody tr:not(.tot) td:first-child')].map(t => t.textContent),
         champs: [...document.querySelectorAll('#mmMoi .mm-pmr input')].map(i => i.dataset.mm),
         cumul: [document.getElementById('mmPmrTP').textContent, document.getElementById('mmPmrTE').textContent].map(net),
+        resume: net(document.querySelector('#mmMoi .mm-pmr-d summary').textContent),
+        note: net(document.querySelector('#mmMoi .mm-pmr-d .mm-note').textContent),
         fiche: net(mmFiche(JSON.parse(JSON.stringify(d)), '', MM_SEM, {})),
         texte: mmTexte(JSON.parse(JSON.stringify(d)), 'Moi', MM_SEM),
       };
@@ -859,7 +861,10 @@ test.describe('Mail Manager — production et texte libre', () => {
     const cour = r.an + '-' + (r.an + 1);
     expect(r.titres, 'le bloc personnel annonce le PMR en cours').toContain('Personnel — PMR en cours (' + cour + ')');
     expect(r.titres, 'l’équipe aussi').toContain('sur 4 niveaux, PMR en cours (' + cour + ')');
-    expect(r.titres, 'les PMR passés disent quelle valeur on attend').toContain('PMR passés — VA + VAA VC');
+    // Le bloc des PMR passés est replié derrière son résumé (voir « saisie et vocabulaire ») :
+    // c'est là qu'on lit son intitulé, et la valeur attendue est rappelée juste en dessous.
+    expect(r.resume, 'le résumé nomme le bloc').toContain('PMR passés');
+    expect(r.note, 'et dit quelle valeur on attend').toContain('VA + VAA VC');
     // du plus récent à 2022-2023, sans l'exercice en cours
     const attendus = [];
     for (let y = r.an - 1; y >= 2022; y--) attendus.push(y + '-' + (y + 1));
@@ -997,5 +1002,80 @@ test.describe('Mail Manager — invités relevés et lecture du mur', () => {
     expect(r[4].every(t => t.startsWith('Invités DM'))).toBe(true);
     expect(r[5].join(' ')).toMatch(/R0\/semaine.*R1\/semaine/);
     expect(r[6].every(t => t.startsWith('Statut'))).toBe(true);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Mail Manager — saisie et vocabulaire', () => {
+  async function rendreForm(page, donnees, auto) {
+    return page.evaluate(({ d, a }) => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = false);
+      MM_PRODUITS = []; MM_OBJ = {}; MM_SEM = mmSemCour();
+      const don = Object.assign({ p: {}, c: {}, av: {}, sous: [], prod: {}, auto: a }, d);
+      MM = { statut: 'brouillon', maj: null, donnees: JSON.parse(JSON.stringify(don)) };
+      const el = document.getElementById('mmMoi');
+      el.innerHTML = mmCorps(MM.donnees, '', false, MM_SEM);
+      const val = k => { const i = el.querySelector('input[data-mm="' + k + '"]'); return i ? i.value : null; };
+      const pmr = el.querySelector('.mm-pmr-d');
+      return {
+        compteurs: ['p.r0', 'p.r1', 'c.r0', 'av.r0'].map(val),
+        clients: val('prod.clients'),
+        euros: [val('prod.va'), val('prod.vp')],
+        pmrReplie: pmr ? !pmr.open : null,
+        pmrResume: pmr ? pmr.querySelector('summary').textContent.replace(/[\s  ]+/g, ' ').trim() : '',
+        pmrLignes: el.querySelectorAll('.mm-pmr tbody tr').length,
+        fiche: mmFiche(JSON.parse(JSON.stringify(don)), '', MM_SEM, {}),
+        texte: mmTexte(JSON.parse(JSON.stringify(don)), 'Moi', MM_SEM),
+      };
+    }, { d: donnees, a: auto });
+  }
+
+  test('les cases à compter s’ouvrent sur 0, les montants restent vides', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendreForm(page, {}, {});
+    expect(r.compteurs, 'R0 / R1 de chaque semaine et les RDV d’avance').toEqual(['0', '0', '0', '0']);
+    expect(r.clients, 'le nombre de clients est un entier').toBe('0');
+    expect(r.euros, 'un montant vide reste vide — 0 € n’est pas une information').toEqual(['', '']);
+  });
+
+  test('les PMR passés tiennent sur une ligne repliée, cumul en résumé', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendreForm(page, { prod: { pmr: { 2025: { va: 180000, eva: 420000 }, 2024: { va: 95000 } } } }, {});
+    expect(r.pmrReplie, 'replié par défaut : l’historique n’occupe pas l’écran').toBe(true);
+    expect(r.pmrResume).toContain('PMR passés');
+    expect(r.pmrResume).toContain('275 000 € personnel');
+    expect(r.pmrResume).toContain('420 000 € équipe');
+    // le détail reste accessible, une ligne par exercice, sans ligne « Cumul » en double
+    expect(r.pmrLignes).toBeGreaterThanOrEqual(4);
+    expect(r.pmrResume).not.toContain('Cumul');
+  });
+
+  test('un filleul est un adhérent ; les autres sont des invités', async ({ page }) => {
+    await ouvrir(page);
+    const auto = { fil: 5, filadh: 2, filN: ['Adhérente Une', 'Adhérent Deux'],
+                   filIN: ['Invitée Trois', 'Invité Quatre', 'Invité Cinq'], inv: { dm: 1 } };
+    const r = await rendreForm(page, {}, auto);
+    const net = t => t.replace(/[\s  ]+/g, ' ');
+    expect(net(r.fiche), 'le mur affiche le nombre réel de filleuls').toContain('Filleuls<b>2</b>');
+    expect(net(r.fiche), 'plus de « dont adhérents »').not.toContain('dont adhérents');
+    expect(net(r.fiche)).toContain('Invités pas encore adhérents<b>3</b>');
+    expect(r.texte).toContain('- Filleuls : 2');
+    expect(r.texte).toContain('- Invités pas encore adhérents : 3');
+  });
+
+  test('l’objectif « filleuls » se mesure sur les adhérents', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const d = { p: {}, c: {}, av: {}, sous: [], prod: {}, auto: { fil: 10, filadh: 3 } };
+      const el = document.createElement('div');
+      el.innerHTML = mmFiche(d, '', mmSemCour(), { filleuls_pmr: 6 });
+      const i = [...el.querySelectorAll('.l')]
+        .find(x => x.querySelector('.k').textContent.startsWith('Objectifs')).querySelector('i');
+      return i.textContent.replace(/[\s  ]+/g, ' ');
+    });
+    // 3 adhérents sur 6 visés = 50 %. Avec les 10 filleuls déclarés on aurait lu 167 %.
+    expect(r).toContain('50 %');
   });
 });

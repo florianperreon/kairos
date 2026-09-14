@@ -910,6 +910,8 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-hist>summary::before{content:'▸ ';font-size:11px}
 .mm-hist[open]>summary::before{content:'▾ '}
 .mm-hist-l{max-height:320px;overflow-y:auto;border-left:2px solid var(--line);padding-left:10px;margin-top:4px}
+.mm-pmr-d{margin:14px 0 4px}
+.mm-pmr-d>summary .mut{font-weight:400;color:var(--ink-3)}
 .mm-pmr td.num input{max-width:190px;margin-left:auto;display:block}
 .mm-pmr td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums}
 @media (max-width:640px){
@@ -3435,6 +3437,8 @@ function mmSessions(d1,d2){
     .sort((x,y)=>(x.start||'').localeCompare(y.start||''))
     .map(s=>({d:s.start, t:s.title}));
 }
+// Les invités qui n'ont pas encore réglé leur cotisation : le reste de mes filleuls déclarés.
+const mmInvEnAttente = a => Math.max(0, (a&&a.fil||0) - (a&&a.filadh||0));
 function mmMesFilleuls(){
   const moi = MOI_ID ? byId.get(MOI_ID) : null;
   return moi ? (children.get(norm(moi.name))||[]) : [];
@@ -3464,9 +3468,12 @@ function mmAuto(sem){
   a.ag = mmSessions(vAddDays(sem,7), MM_FIN);            // tout ce qui est inscrit, sans horizon
   a.sh = mmSessions(MM_ORIGINE, vAddDays(sem,-1));       // tout l'historique, jusqu'à hier
   const mes = mmMesFilleuls();
+  // Vocabulaire du réseau : un filleul est adhérent. Tant que la cotisation n'est pas réglée,
+  // la personne est une invitée. `fil` reste le total (vieux instantanés), `filadh` fait foi.
   a.fil = mes.length;
   a.filadh = mes.filter(m=>ADH.has(m.id)).length;
-  a.filN = mes.map(m=>m.name);
+  a.filN  = mes.filter(m=>ADH.has(m.id)).map(m=>m.name);
+  a.filIN = mes.filter(m=>!ADH.has(m.id)).map(m=>m.name);
   const deb = mmEcheances().debut;
   const ex = mmInvites(deb, MM_FIN);
   a.inv = ex.n; a.invN = ex.noms;                        // sur l'exercice en cours
@@ -3632,7 +3639,9 @@ function mmChamp(p, val, ro, opt){
   opt = opt||{};
   if(ro) return '<b>'+esc(val===''||val==null?'—':(opt.eur?mmEur(val):val))+'</b>';
   const t = opt.txt ? 'text' : 'number';
-  return '<input type="'+t+'" inputmode="'+(opt.txt?'text':'decimal')+'" data-mm="'+esc(p)+'" value="'+esc(val==null?'':val)+'"'
+  // opt.zero : les compteurs entiers s'ouvrent sur 0, c'est une case de moins à remplir.
+  const v = (val==null||val==='') ? (opt.zero?0:'') : val;
+  return '<input type="'+t+'" inputmode="'+(opt.txt?'text':'decimal')+'" data-mm="'+esc(p)+'" value="'+esc(v)+'"'
        + (opt.ph?' placeholder="'+esc(opt.ph)+'"':'') + '>';
 }
 function mmCompteurs(d, base, liste, ro, prec){
@@ -3647,7 +3656,7 @@ function mmCompteurs(d, base, liste, ro, prec){
     return '<div class="mm-c"><label>'+esc(lib)+'</label>'
       + (ro ? '<div class="row"><b>'+esc(mmN(v))+'</b></div>'
             : '<div class="row"><button type="button" data-mmpm="-1" data-p="'+esc(p)+'">−</button>'
-              + '<input type="number" inputmode="numeric" min="0" data-mm="'+esc(p)+'" value="'+esc(v==null?'':v)+'">'
+              + '<input type="number" inputmode="numeric" min="0" data-mm="'+esc(p)+'" value="'+esc(v==null||v===''?0:v)+'">'
               + '<button type="button" data-mmpm="1" data-p="'+esc(p)+'">+</button></div>')
       + dlt + '</div>';
   }).join('') + '</div>';
@@ -3734,8 +3743,12 @@ function mmPmrPasses(d, ro){
   const L = mmExercicesPasses();
   if(!L.length) return '';
   const cel = (an, k) => mmChamp('prod.pmr.'+an+'.'+k, mmG(d,'prod.pmr.'+an+'.'+k), ro, {eur:true});
-  let h = '<label class="mm-lab">PMR passés <small style="font-weight:400;color:var(--ink-3)">'
-        + '— VA + VAA VC, à la clôture de chaque exercice</small></label>'
+  // Replié par défaut : l'historique n'a pas à occuper l'écran, seul son cumul compte au quotidien.
+  const som = k => L.reduce((n,[an])=>n+mmN(mmG(d,'prod.pmr.'+an+'.'+k)), 0);
+  let h = '<details class="mm-hist mm-pmr-d"><summary>PMR passés <span class="mut">— cumul '
+        + '<span id="mmPmrTP">'+mmEur(som('va'))+'</span> personnel · '
+        + '<span id="mmPmrTE">'+mmEur(som('eva'))+'</span> équipe</span></summary>'
+        + '<p class="mm-note" style="margin:2px 0 6px">VA + VAA VC à la clôture de chaque exercice.</p>'
         + '<div class="mm-wrap"><table class="mm-tbl mm-pmr"><thead><tr><th>Exercice</th>'
         + '<th class="num">Personnel</th><th class="num">Équipe</th></tr></thead><tbody>';
   L.forEach(([an,lib])=>{
@@ -3743,10 +3756,7 @@ function mmPmrPasses(d, ro){
        + '<td class="num" data-l="Personnel">'+cel(an,'va')+'</td>'
        + '<td class="num" data-l="Équipe">'+cel(an,'eva')+'</td></tr>';
   });
-  const som = k => L.reduce((n,[an])=>n+mmN(mmG(d,'prod.pmr.'+an+'.'+k)), 0);
-  h += '<tr class="tot"><td>Cumul</td><td class="num" data-l="Cumul personnel" id="mmPmrTP">'+mmEur(som('va'))
-     + '</td><td class="num" data-l="Cumul équipe" id="mmPmrTE">'+mmEur(som('eva'))+'</td></tr>';
-  return h + '</tbody></table></div>';
+  return h + '</tbody></table></div></details>';
 }
 
 /* --- les jauges de production : reste à faire et rythme requis, recalculés à chaque frappe --- */
@@ -3846,7 +3856,9 @@ function mmCorps(d, prive, ro, sem){
     + '<div'+tt(invN.dm)+'><span>Invités inscrits en DM</span><b>'+(inv.dm||0)+(obj.dm_pmr?' / '+obj.dm_pmr:'')+'</b>'+mmNoms(invN.dm)+'</div>'
     + '<div'+tt(invN.ad)+'><span>Invités à l’Atelier Démarrage</span><b>'+(inv.ad||0)+'</b>'+mmNoms(invN.ad)+'</div>'
     + '<div'+tt(invN.jr)+'><span>Invités aux 3 Jours</span><b>'+(inv.jr||0)+'</b>'+mmNoms(invN.jr)+'</div>'
-    + '<div'+tt(a.filN)+'><span>Filleuls</span><b>'+(a.fil||0)+' dont '+(a.filadh||0)+' adhérent'+((a.filadh||0)>1?'s':'')+'</b>'+mmNoms(a.filN)+'</div>'
+    + '<div'+tt(a.filN)+'><span>Filleuls</span><b>'+(a.filadh||0)+'</b>'+mmNoms(a.filN)+'</div>'
+    + (mmInvEnAttente(a) ? '<div'+tt(a.filIN)+'><span>Invités pas encore adhérents</span><b>'
+        + mmInvEnAttente(a)+'</b>'+mmNoms(a.filIN)+'</div>' : '')
     + '</div>'
     + (a.dorm ? '<p class="mm-note">⚠︎ '+a.dorm+' filleul'+(a.dorm>1?'s':'')+' adhérent'+(a.dorm>1?'s':'')+' sans séance depuis plus de 60 jours.</p>' : '')
     + '<p class="mm-note">Invités comptés depuis le '+fmtD(ech.debut)+' (début d’exercice) — un filleul déjà adhérent n’est plus compté comme invité.</p>'
@@ -3856,7 +3868,7 @@ function mmCorps(d, prive, ro, sem){
   // 5 — Production
   const champProd = ([k,lib,u]) =>
     '<div class="mm-c"><label>'+esc(lib)+'</label><div class="row">'
-    + mmChamp('prod.'+k, mmG(d,'prod.'+k), ro, {eur:u==='€'})+'</div></div>';
+    + mmChamp('prod.'+k, mmG(d,'prod.'+k), ro, {eur:u==='€', zero:u!=='€'})+'</div></div>';
   const petit = t => '<small style="font-weight:400;color:var(--ink-3)">'+esc(t)+'</small>';
   let prod = '<label class="mm-lab">Personnel '+petit('— PMR en cours ('+mmExercice()+')')+'</label>'
     + '<div class="mm-cpt">' + MM_PROD.map(champProd).join('') + '</div>'
@@ -3975,7 +3987,8 @@ function mmFiche(d, prive, sem, obj){
   if(inv.dm) eq.push('<i>DM<b>'+inv.dm+'</b></i>');
   if(inv.ad) eq.push('<i>Atelier Démarrage<b>'+inv.ad+'</b></i>');
   if(inv.jr) eq.push('<i>3 Jours<b>'+inv.jr+'</b></i>');
-  if(a.fil) eq.push('<i>Filleuls<b>'+a.fil+'</b></i>', '<i>dont adhérents<b>'+(a.filadh||0)+'</b></i>');
+  if(a.filadh) eq.push('<i>Filleuls<b>'+a.filadh+'</b></i>');
+  if(mmInvEnAttente(a)) eq.push('<i class="att">Invités pas encore adhérents<b>'+mmInvEnAttente(a)+'</b></i>');
   const noms = [].concat(invN.dm||[],invN.ad||[],invN.jr||[]);
   const tot0 = a.invT||{};
   const dep = MM_INV.filter(([k])=>tot0[k]).map(([k,lib])=>'<i class="att">'+esc(lib)+'<b>'+tot0[k]+'</b></i>').join('');
@@ -4009,7 +4022,7 @@ function mmFiche(d, prive, sem, obj){
   const fait = k => k==='va' ? mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))
                   : k==='eva' ? mmN(mmG(d,'prod.eva'))+mmN(mmG(d,'prod.evaec'))
                   : k==='clients' ? mmN(mmG(d,'prod.clients'))
-                  : k==='filleuls' ? (a.fil||0)
+                  : k==='filleuls' ? (a.filadh||0)
                   : k==='dm' ? ((a.inv||{}).dm||0) : null;
   const objPuce = ([k,lib,u]) => [['dec','31/12'],['pmr','31/07']].map(([sfx,lab])=>{
     const c=obj[k+'_'+sfx]; if(!mmN(c)) return '';
@@ -4147,12 +4160,12 @@ function mmMur(){
   const pubs = MM_LIGNES.filter(l=>l.statut==='publie');
   if(pubs.length){
     const nom = id => (MM_MUR.find(p=>p.membre_id===id)||{}).nom || ('#'+id);
-    const cols = [['R1','p.r1'],['R2','p.r2'],['RDV d’avance',''],['VA acté','prod.va'],['VA en cours','prod.vaec'],['Filleuls','']];
+    const cols = [['R1','p.r1'],['R2','p.r2'],['RDV d’avance',''],['VA + VAA VC','prod.va'],['VA + VAA EC','prod.vaec'],['Filleuls','']];
     const somme = {};
     let lignes = pubs.map(l=>{
       const d=l.donnees||{}, a=d.auto||{};
       const av = MM_AV.reduce((n,[k])=>n+mmN(mmG(d,'av.'+k)),0);
-      const v=[mmN(mmG(d,'p.r1')), mmN(mmG(d,'p.r2')), av, mmN(mmG(d,'prod.va')), mmN(mmG(d,'prod.vaec')), (a.fil||0)];
+      const v=[mmN(mmG(d,'p.r1')), mmN(mmG(d,'p.r2')), av, mmN(mmG(d,'prod.va')), mmN(mmG(d,'prod.vaec')), (a.filadh||0)];
       v.forEach((x,i)=>{ somme[i]=(somme[i]||0)+x; });
       return '<tr><td><b>'+esc(nom(l.membre_id))+'</b></td>'
         + '<td class="num">'+v[0]+'</td><td class="num">'+v[1]+'</td><td class="num">'+v[2]+'</td>'
@@ -4270,7 +4283,8 @@ function mmTexte(d, nom, sem){
   L.push('- Invités inscrits en DM : '+(inv.dm||0)+(o.dm_pmr?' / '+o.dm_pmr:''));
   L.push('- Invités inscrits à l’Atelier Démarrage : '+(inv.ad||0));
   L.push('- Invités inscrits aux 3 Jours de la Réussite : '+(inv.jr||0));
-  L.push('- Filleuls : '+(a.fil||0)+' dont '+(a.filadh||0)+' adhérent'+((a.filadh||0)>1?'s':''));
+  L.push('- Filleuls : '+(a.filadh||0));
+  if(mmInvEnAttente(a)) L.push('- Invités pas encore adhérents : '+mmInvEnAttente(a));
   const iT = invL(a.invT, {});
   if(iT.length){ L.push('Depuis le début :'); iT.forEach(x=>L.push(x)); }
   L.push(''); L.push('5 - Production — PMR en cours ('+mmExercice()+')');

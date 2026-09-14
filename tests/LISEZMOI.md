@@ -43,6 +43,7 @@ python nouveautes.py         # la détection des nouveautés (depuis la racine d
 | Mail Manager | le bloc automatique est recalculé au rendu · un filleul adhérent n'est pas compté comme invité · formulaire, mur, objectifs, fiche de lecture et export texte |
 | Identité | la progression est demandée avec un filtre explicite, jamais par `limit(1)` |
 | Retours | le contexte technique et les erreurs JavaScript sont bien joints · la liste et les droits admin |
+| Mail Manager — saisie | les compteurs entiers s'ouvrent sur 0 et les montants restent vides · les PMR passés repliés derrière leur cumul · un filleul est un adhérent, les autres sont des invités (mur, export et objectif) |
 | Mail Manager — invités relevés | EDM / DM n'est plus saisi à la main · les invités DM / AD / 3 Jours par semaine et depuis le début · l'historique des sessions et l'à-venir sans horizon · les objectifs du mur, une nature par ligne |
 | Mail Manager — production | les champs personnel / équipe 4 niveaux · les deux listes restent distinguables une fois fusionnées · la reprise de l'ancien compteur VAA · les retours à la ligne conservés à la lecture |
 | Nouveautés | la fenêtre de 14 jours · les séances passées ne sont jamais neuves · le repère « depuis ta dernière visite » · le filtre, le bandeau d'accueil et les points sur les onglets |
