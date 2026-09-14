@@ -73,6 +73,47 @@ def base_ecrire(payload: dict):
     print("base du portail : " + r.text[:200])
     return True
 
+# ---------------- journal des exécutions ----------------
+# Chaque passage ouvre une ligne « demarre » puis la clôt en « succes » ou « echec ».
+# Un passage tué en cours de route (timeout, runner coupé) laisse sa ligne ouverte :
+# le portail l'affiche alors comme « interrompue ». Tout est best-effort : une panne du
+# journal ne doit jamais faire échouer une mise à jour.
+JOURNAL_BASE = KAIROS_BASE.replace("/donnees", "/journal")
+JOURNAL_ID = None
+
+def _journal(corps):
+    if not KAIROS_TOKEN:
+        return None
+    try:
+        r = requests.post(JOURNAL_BASE, json=corps,
+                          headers={"x-kairos-token": KAIROS_TOKEN, "Content-Type": "application/json"},
+                          timeout=30)
+        if r.status_code >= 300:
+            print(f"journal : refus ({r.status_code}) {r.text[:120]}")
+            return None
+        return (r.json() or {}).get("id")
+    except Exception as e:
+        print(f"journal indisponible ({type(e).__name__})")
+        return None
+
+def journal_debut(tache):
+    global JOURNAL_ID
+    JOURNAL_ID = _journal({"action": "debut", "tache": tache, "source": "github",
+                           "execution": os.environ.get("GITHUB_RUN_ID") or ""})
+    return JOURNAL_ID
+
+def journal_fin(statut, resume=None, erreur=None, tache=None):
+    _journal({"action": "fin", "id": JOURNAL_ID, "statut": statut,
+              "resume": resume, "erreur": erreur, "tache": tache, "source": "github",
+              "execution": os.environ.get("GITHUB_RUN_ID") or ""})
+
+def tache_courante():
+    if "--verifier" in sys.argv or os.environ.get("VERIFIER") == "1":
+        return "verifier"
+    if "--complet" in sys.argv or os.environ.get("COMPLET") == "1":
+        return "update_complet"
+    return "update"
+
 # ---------------- crypto ----------------
 def derive(pw: bytes, salt: bytes, iterations: int) -> bytes:
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=iterations)
@@ -660,6 +701,7 @@ def list_users(api):
 # ---------------- pipeline ----------------
 def run():
     api = os.environ["API_BASE"].rstrip("/")
+    journal_debut(tache_courante())
 
     # 1) Authentification, 2) contrôle des endpoints. Aucune écriture tant que ce n'est pas vert.
     login(api)
@@ -669,7 +711,7 @@ def run():
                            + " ; ".join(anomalies)[:400])
     if "--verifier" in sys.argv or os.environ.get("VERIFIER") == "1":
         print("mode vérification : contrôle vert, arrêt avant tout traitement")
-        return
+        return "tous les endpoints répondent et la base est lisible"
 
     now = datetime.datetime.now(PARIS)
     today = now.date()
@@ -905,14 +947,16 @@ def run():
     # meta.js (en clair) : date de mise à jour, variable du projet lisible sans mot de passe
     write_js("meta.js", "KAIROS_META", json.dumps({"maj": maj_iso, "majDonnees": today_iso, "versionContenu": contenu_version}))
     open("index.html", "w", encoding="utf-8").write(out)
-    print(f"OK {today_iso} {'(complet) ' if complet else ''}— ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
-          f"formations {len(autres['for'])} | événements {len(autres['evt'])} | "
-          f"membres {len(membres)} (+{len(new_ids)}) | liste filtrée {len(adh_ids)} | "
-          f"lignée {len(lig_ids)} | sites {len(sites)}")
+    resume = (f"ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
+              f"formations {len(autres['for'])} | événements {len(autres['evt'])} | "
+              f"membres {len(membres)} (+{len(new_ids)}) | liste filtrée {len(adh_ids)} | "
+              f"lignée {len(lig_ids)} | sites {len(sites)}")
+    print(f"OK {today_iso} {'(complet) ' if complet else ''}— " + resume)
+    return resume
 
 if __name__ == "__main__":
     try:
-        run()
+        journal_fin("succes", resume=run(), tache=tache_courante())
     except Exception as e:
         # logs publics : ne divulguer ni URL, ni noms, ni identifiants
         msg = str(e)
@@ -924,4 +968,5 @@ if __name__ == "__main__":
                 if h:
                     msg = msg.replace(h, "***")
         print("ECHEC:", type(e).__name__, "-", msg[:300])
+        journal_fin("echec", erreur=f"{type(e).__name__} : {msg[:1500]}", tache=tache_courante())
         sys.exit(1)

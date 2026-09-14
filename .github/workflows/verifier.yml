@@ -2,6 +2,7 @@ name: Vérification des endpoints (à la demande)
 
 # Ne modifie rien : interroge chaque endpoint de l'API et la base du portail, puis s'arrête.
 # À lancer depuis l'onglet Actions dès qu'un doute existe sur l'état de l'API.
+# Le passage est tracé dans Admin → Journal du portail.
 on:
   workflow_dispatch: {}
 
@@ -20,9 +21,22 @@ jobs:
         run: pip install --quiet requests cryptography
 
       - name: Contrôle des endpoints
+        id: maj
         env:
           API_BASE: ${{ secrets.API_BASE }}
           API_USER: ${{ secrets.API_USER }}
           API_PASS: ${{ secrets.API_PASS }}
           KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
         run: python update.py --verifier
+
+      - name: Journal — échec avant le script
+        # update.py écrit lui-même sa ligne de journal (début, puis succès ou échec).
+        # Ce filet ne sert qu'aux pannes en amont : checkout, installation de Python, dépendances.
+        if: failure() && steps.maj.outcome != 'failure'
+        env:
+          KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
+        run: |
+          curl -sS -X POST "https://xslusoecharxelwmbyal.supabase.co/functions/v1/journal" \
+            -H "x-kairos-token: $KAIROS_TOKEN" -H "Content-Type: application/json" \
+            -d '{"action":"fin","tache":"verifier","statut":"echec","source":"github","execution":"${{ github.run_id }}","erreur":"Le job a échoué avant le lancement du script (préparation du runner)."}' \
+            || true

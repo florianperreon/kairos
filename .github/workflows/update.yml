@@ -33,6 +33,7 @@ jobs:
         run: pip install --quiet requests cryptography
 
       - name: Régénération des données
+        id: maj
         env:
           PORTAL_PW: ${{ secrets.PORTAL_PW }}
           API_BASE: ${{ secrets.API_BASE }}
@@ -42,6 +43,18 @@ jobs:
           LIGNEE_FILLEULS_DE: ${{ secrets.LIGNEE_FILLEULS_DE }}
           KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
         run: python update.py
+
+      - name: Journal — échec avant le script
+        # update.py écrit lui-même sa ligne de journal (début, puis succès ou échec).
+        # Ce filet ne sert qu'aux pannes en amont : checkout, installation de Python, dépendances.
+        if: failure() && steps.maj.outcome != 'failure'
+        env:
+          KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
+        run: |
+          curl -sS -X POST "https://xslusoecharxelwmbyal.supabase.co/functions/v1/journal" \
+            -H "x-kairos-token: $KAIROS_TOKEN" -H "Content-Type: application/json" \
+            -d '{"action":"fin","tache":"update","statut":"echec","source":"github","execution":"${{ github.run_id }}","erreur":"Le job a échoué avant le lancement du script (préparation du runner)."}' \
+            || true
 
       - name: Commit et publication
         run: |
