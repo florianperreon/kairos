@@ -21,6 +21,7 @@ Aucune donnée sensible ne doit apparaître dans ce fichier ni dans les logs.
 import base64
 import datetime
 import gzip
+import hashlib
 import json
 import os
 import re
@@ -72,6 +73,27 @@ def base_ecrire(payload: dict):
         raise RuntimeError(f"écriture en base refusée ({r.status_code}) : {r.text[:200]}")
     print("base du portail : " + r.text[:200])
     return True
+
+# ---------------- empreinte de version (invalidation du cache) ----------------
+def empreinte(page: str):
+    """Inscrit dans sw.js l'empreinte de la page qui vient d'être générée.
+
+    Page inchangée => même empreinte => sw.js n'est pas réécrit, donc aucun remous pour les
+    personnes connectées. Page modifiée => nouveau service worker : les anciens caches sont
+    supprimés et les onglets ouverts se rechargent tout seuls. C'est ce qui évite de devoir
+    vider son cache à la main après une mise en ligne."""
+    try:
+        sw = open("sw.js", encoding="utf-8").read()
+    except OSError:
+        return None
+    marque = "kairos-b" + hashlib.sha256(page.encode("utf-8")).hexdigest()[:13]
+    neuf = re.sub(r"const VERSION = '[^']*'", f"const VERSION = '{marque}'", sw, count=1)
+    if neuf == sw:
+        print("service worker : page inchangée, empreinte conservée")
+        return None
+    open("sw.js", "w", encoding="utf-8").write(neuf)
+    print(f"service worker : nouvelle empreinte {marque}")
+    return marque
 
 # ---------------- journal des exécutions ----------------
 # Chaque passage ouvre une ligne « demarre » puis la clôt en « succes » ou « echec ».
@@ -1002,6 +1024,7 @@ def run():
     # meta.js (en clair) : date de mise à jour, variable du projet lisible sans mot de passe
     write_js("meta.js", "KAIROS_META", json.dumps({"maj": maj_iso, "majDonnees": today_iso, "versionContenu": contenu_version}))
     open("index.html", "w", encoding="utf-8").write(out)
+    empreinte(out)
     resume = (f"annuaire {'complet' if annuaire_complet else 'incrémental'} | "
               f"ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
               f"formations {len(autres['for'])} | événements {len(autres['evt'])} | "

@@ -1,28 +1,41 @@
 /* Kairos — service worker : installation sur l'écran d'accueil + consultation hors ligne.
-   Le portail est une page unique dont les données sont chiffrées ; le cache ne contient donc
-   rien de lisible sans le mot de passe. Stratégie : la page (index.html) est demandée au réseau
-   en priorité et le cache sert de secours (hors ligne) ; icônes, manifeste et polices en cache d'abord. */
-const VERSION = 'kairos-v6';
+   Les données vivent en base et ne transitent pas par ce cache.
+
+   Invalidation à chaque déploiement (14/09/2026) :
+   - VERSION porte l'empreinte de index.html, réécrite automatiquement par update.py à chaque
+     régénération de la page. Une page inchangée = même empreinte = aucun remous ; une page
+     modifiée = nouveau service worker, anciens caches supprimés, onglets ouverts rechargés.
+   - La page et meta.js sont demandés en « no-cache » : le navigateur revalide toujours auprès
+     du serveur (304 si rien n'a changé), au lieu de servir sa copie pendant 10 minutes.
+     C'est ce qui empêchait de voir une mise en ligne récente. */
+const VERSION = 'kairos-b65938abb4c71a';
 const CORE = ['./', './index.html', './meta.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  // skipWaiting AVANT le pré-cache : une nouvelle version doit prendre la main même si un
+  // fichier de CORE manque ou répond mal. Un addAll() qui échoue bloquait toute la mise à jour.
+  self.skipWaiting();
+  e.waitUntil(caches.open(VERSION).then(c => Promise.allSettled(CORE.map(u => c.add(u)))));
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
+self.addEventListener('message', e => { if (e.data === 'skipWaiting') self.skipWaiting(); });
+
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   const isPage = req.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('/index.html');
-  const isData = url.origin === location.origin && /\/meta\.js$/.test(url.pathname);
+  const isData = url.origin === location.origin && /\/(meta|sw)\.js$/.test(url.pathname);
   if (isPage || isData) {
-    // réseau d'abord (pour recevoir la mise à jour quotidienne des données), cache en secours
+    // Toujours revalidé auprès du serveur, jamais servi depuis le cache HTTP du navigateur ;
+    // le cache du service worker ne sert que de secours hors ligne.
+    const frais = new Request(req, { cache: 'no-cache' });
     const key = isPage ? './index.html' : './' + url.pathname.split('/').pop();
-    e.respondWith(fetch(req).then(r => { if (r && r.ok) { const copy = r.clone(); caches.open(VERSION).then(c => { c.put(key, copy); }); } return r; })
+    e.respondWith(fetch(frais).then(r => { if (r && r.ok) { const copy = r.clone(); caches.open(VERSION).then(c => { c.put(key, copy); }); } return r; })
       .catch(() => caches.match(key)));
     return;
   }

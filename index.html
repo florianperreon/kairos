@@ -725,52 +725,6 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .xtra.places.tendu{background:#FFF1DB;color:#8A4B00;font-weight:700}
 :root[data-theme="dark"] .xtra.places.tendu{background:#4A2E0F;color:#FBBF77}
 
-
-/* ---------- Admin : journal des exécutions ---------- */
-.jrn-p{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
-.jrn-p.ok{background:var(--gold-soft);color:var(--gold-ink)}
-.jrn-p.ko{background:#FDE7E7;color:#9B1C1C}
-:root[data-theme="dark"] .jrn-p.ko{background:#4A1717;color:#F5A3A3}
-.jrn-p.en{background:#FFF1DB;color:#8A4B00}
-:root[data-theme="dark"] .jrn-p.en{background:#4A2E0F;color:#FBBF77}
-.jrn-p.na{background:var(--surface-2);color:var(--ink-3)}
-.jrn-src{font-size:11.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.jrn-res{font-size:12.5px;color:var(--ink-2);word-break:break-word}
-.jrn-err{font-size:12.5px;color:var(--bad);white-space:pre-wrap;word-break:break-word;margin-top:3px}
-.jrn-ret{display:inline-block;font-size:12px;font-weight:700;color:#8A4B00;background:#FFF1DB;border-radius:99px;padding:2px 8px;margin-left:6px}
-:root[data-theme="dark"] .jrn-ret{background:#4A2E0F;color:#FBBF77}
-.jrn-d{font-size:12.5px;color:var(--ink-3)}
-.jrn-f{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 10px}
-.jrn-f button{font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:4px 12px;cursor:pointer}
-.jrn-f button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
-
-/* ---------- Admin : rôle des membres ---------- */
-.rol{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--surface-2);color:var(--ink-2)}
-.rol.adm{background:var(--accent-soft);color:var(--accent)}
-.rol.prop{background:var(--gold-soft);color:var(--gold-ink);margin-left:5px}
-.rol-b{display:block;margin-top:5px;font-size:12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:2px 10px;cursor:pointer;white-space:nowrap}
-.rol-b:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-.rol-b:disabled{opacity:.5;cursor:default}
-.rol-fixe{display:block;margin-top:5px;font-size:11.5px;color:var(--ink-3)}
-.mbr-msg{font-size:13.5px;margin:10px 0 0;color:var(--ink-2)}
-.mbr-msg.err{color:var(--bad);font-weight:600}
-
-/* ---------- Accueil : mes actions de la semaine ---------- */
-.acts{display:grid;gap:8px}
-.act{display:flex;align-items:flex-start;gap:12px;text-decoration:none;color:inherit;background:var(--surface-2);border:1px solid transparent;border-radius:10px;padding:11px 14px;transition:border-color .15s}
-.act:hover{border-color:var(--accent)}
-.act .ck{flex:0 0 auto;width:20px;height:20px;border-radius:50%;border:2px solid var(--line-2);margin-top:2px}
-.act.fait .ck{border-color:var(--gold);background:var(--gold);color:#fff;font-size:13px;line-height:17px;text-align:center;font-weight:800}
-.act .tx{flex:1 1 auto;min-width:0}
-.act .tx b{display:block;font-family:"Sora";font-size:14.5px}
-.act .tx p{margin:2px 0 0;font-size:13px;color:var(--ink-2)}
-.act.fait .tx b{color:var(--ink-2);text-decoration:line-through;text-decoration-color:var(--line-2)}
-.act .go{flex:0 0 auto;color:var(--accent);font-weight:700;font-size:15px;margin-top:2px}
-.act.fait .go{visibility:hidden}
-.act .urg{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:700;border-radius:99px;padding:1px 8px;background:#FFF1DB;color:#8A4B00;vertical-align:1px}
-:root[data-theme="dark"] .act .urg{background:#4A2E0F;color:#FBBF77}
-.acts-ok{margin:0;padding:14px;text-align:center;background:var(--gold-soft);color:var(--gold-ink);border-radius:10px;font-family:"Sora";font-weight:700;font-size:15px}
-.acts-n{font-size:13px;color:var(--ink-2);margin:-4px 0 12px}
 </style>
 
 <div id="lock" class="wrap">
@@ -826,12 +780,6 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
   <main>
     <section class="view on" id="v-home">
       <div class="panel welcome" id="welcome"></div>
-      <div class="panel" id="homeActionsPanel" hidden>
-        <h2>Mes actions de la semaine</h2>
-        <p class="acts-n" id="homeActionsNote"></p>
-        <div class="acts" id="homeActions"></div>
-        <p class="acts-ok" id="homeActionsOk" hidden>Well done ; tu es à jour !</p>
-      </div>
       <div class="valeurs" id="homeValeurs" hidden></div>
       <div class="bdstrip" id="homeBd" hidden></div>
       <div class="bdstrip surv-strip" id="homeSurv" hidden></div>
@@ -973,33 +921,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
         <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
         <button data-s="cnt">Contenu</button>
         <button data-s="stats">Statistiques</button>
-        <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
       </nav>
-
-      <div class="subview" id="sv-jrn">
-      <div class="panel">
-        <h2>Journal des exécutions</h2>
-        <p class="mbr-sub">Chaque tâche planifiée écrit ici son passage. Une tâche en rouge a échoué, a été interrompue, ou n’a pas tourné depuis trop longtemps.</p>
-        <div class="tbl-wrap">
-          <table id="jrnTbl">
-            <thead><tr><th>Tâche</th><th>Dernier passage</th><th>Statut</th><th>Détail</th></tr></thead>
-            <tbody id="jrnEtat"><tr><td colspan="4" style="color:var(--ink-2)">Chargement…</td></tr></tbody>
-          </table>
-        </div>
-        <p class="mbr-sub" id="jrnNote" style="margin:10px 0 0"></p>
-      </div>
-      <div class="panel">
-        <h2>Derniers passages</h2>
-        <p class="mbr-sub">Les 60 derniers passages, toutes tâches confondues. Conservation : 90 jours.</p>
-        <div class="jrn-f" id="jrnFiltres"></div>
-        <div class="tbl-wrap">
-          <table id="jrnHistTbl">
-            <thead><tr><th>Quand</th><th>Tâche</th><th>Statut</th><th>Durée</th><th>Résultat</th></tr></thead>
-            <tbody id="jrnHist"><tr><td colspan="5" style="color:var(--ink-2)">Chargement…</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-      </div>
 
       <div class="subview on" id="sv-mbr">
       <div class="panel">
@@ -1007,12 +929,11 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
         <p class="mbr-sub">Les personnes qui se sont connectées au portail avec un compte, et leur dernière visite.</p>
         <div class="tbl-wrap">
           <table id="mbrTbl">
-            <thead><tr><th>Personne</th><th>Rôle</th><th>Dernière connexion</th><th>Premier accès</th></tr></thead>
+            <thead><tr><th>Personne</th><th>Dernière connexion</th><th>Premier accès</th></tr></thead>
             <tbody id="mbrBody"></tbody>
           </table>
         </div>
         <p class="mbr-note" id="mbrNote"></p>
-        <p class="mbr-msg" id="mbrMsg" hidden></p>
       </div>
       </div>
 
@@ -1289,7 +1210,7 @@ function rafraichirListes(){
   try{ buildSimple('reu', R, id=>BASE+'teamMeeting/detail/'+id, 'réunion'); }catch(e){}
   try{ buildSimple('for', F, id=>BASE+'formation/detail/'+id, 'formation'); }catch(e){}
   try{ buildSimple('evt', E, id=>BASE+'event/detail/'+id, 'événement'); }catch(e){}
-  try{ buildHome(); buildSurvAccueil(); buildActions(); }catch(e){}
+  try{ buildHome(); buildSurvAccueil(); }catch(e){}
   try{ routeHash(); }catch(e){}
 }
 function survCarte(o, passe){
@@ -1342,75 +1263,6 @@ function buildSurv(){
   el.innerHTML = html;
 }
 document.addEventListener('change', e=>{ if(e.target.id==='survPast') buildSurv(); });
-/* ---------- Accueil : mes actions de la semaine ----------
-   Une action = quelque chose à faire cette semaine, avec le lien qui y mène. Ce qui est fait est
-   mémorisé par semaine (clé = lundi) et suit la personne d'un appareil à l'autre ; ce qui est
-   constaté sur les données (places qui s'épuisent) disparaît tout seul une fois réglé. */
-const semaineCle = () => vMonday(todayIso);
-const semFait = c => !!(SEM[semaineCle()] || {})[c];
-function semMarquer(c){
-  const k = semaineCle();
-  if(semFait(c)) return;
-  SEM[k] = Object.assign({}, SEM[k] || {}, { [c]: true });
-  // on ne garde que les 8 dernières semaines, inutile d'accumuler
-  const cles = Object.keys(SEM).sort().slice(-8);
-  SEM = cles.reduce((o,x)=>(o[x]=SEM[x], o), {});
-  saveSem();
-  buildActions();
-}
-function buildActions(){
-  const panel = document.getElementById('homeActionsPanel');
-  const liste = document.getElementById('homeActions');
-  const okEl  = document.getElementById('homeActionsOk');
-  const note  = document.getElementById('homeActionsNote');
-  if(!panel || !liste) return;
-
-  const actions = [];
-
-  // 1) Lire la veille de la semaine — validée dès que l'onglet Veille est ouvert
-  const eds = (VEILLE && VEILLE.editions) ? VEILLE.editions.slice().sort((a,b)=>(b.du||'').localeCompare(a.du||'')) : [];
-  if(eds.length){
-    const der = eds[0];
-    actions.push({
-      t: 'Lire la veille de la semaine',
-      d: 'Édition ' + vPeriode(der.du, der.au) + ' — fiscalité, marchés, produits, profession, clients.',
-      href: '#veille', fait: semFait('veille'), go: 'Ouvrir',
-    });
-  }
-
-  // 2) S'inscrire aux sessions enregistrées où les places s'épuisent — visible seulement si besoin
-  const al = (typeof survAlertes === 'function') ? survAlertes() : [];
-  if(al.length){
-    const complets = al.filter(o=>o.p && o.p.complet).length;
-    actions.push({
-      t: 'M\u2019inscrire aux sessions bientôt complètes',
-      urg: al.length + ' session' + (al.length>1?'s':''),
-      d: al.slice(0,3).map(o=>o.a.title).join(' · ')
-         + (al.length>3 ? ' · +' + (al.length-3) + ' autre' + (al.length-4?'s':'') : '')
-         + (complets ? ' — ' + complets + ' déjà complète' + (complets>1?'s':'') : ''),
-      href: '#enregistre', fait: false, go: 'Voir',
-    });
-  }
-
-  // Rien d'évaluable (veille non chargée, aucune alerte) : on n'affiche pas le bloc du tout,
-  // plutôt que d'annoncer « tu es à jour » sans avoir rien pu vérifier.
-  if(!actions.length && !eds.length){ panel.hidden = true; return; }
-  panel.hidden = false;
-
-  const reste = actions.filter(a=>!a.fait).length;
-  if(note) note.textContent = reste
-    ? (reste === 1 ? 'Il te reste 1 action cette semaine.' : 'Il te reste ' + reste + ' actions cette semaine.')
-    : '';
-  liste.innerHTML = actions.map(a =>
-    '<a class="act' + (a.fait?' fait':'') + '" href="' + a.href + '">'
-    + '<span class="ck">' + (a.fait?'✓':'') + '</span>'
-    + '<span class="tx"><b>' + esc(a.t) + (a.urg?'<span class="urg">'+esc(a.urg)+'</span>':'') + '</b>'
-    + '<p>' + esc(a.d) + '</p></span>'
-    + '<span class="go">' + esc(a.go) + ' →</span></a>').join('');
-  liste.hidden = !actions.length;
-  if(okEl) okEl.hidden = reste > 0;
-}
-
 // Encart d'accueil : uniquement s'il y a une alerte
 function buildSurvAccueil(){
   const el = document.getElementById('homeSurv');
@@ -1544,15 +1396,13 @@ function boot(){
   chargerParcours();
   chargerSurv();
   buildMembres();
-  majOngletSurv(); buildSurv(); buildSurvAccueil(); buildActions();
+  majOngletSurv(); buildSurv(); buildSurvAccueil();
 }
 
 /* ---------- Navigation / thème / verrou ---------- */
 function showTab(v){
   document.querySelectorAll('nav.tabs button, nav.botbar button, #plusCard button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
-  // Ouvrir la veille vaut lecture : pas de case à cocher de plus
-  if(v === 'veille' && VEILLE && VEILLE.editions && VEILLE.editions.length){ try{ semMarquer('veille'); }catch(e){} }
 }
 document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('nav.tabs button[data-v], nav.botbar button[data-v], #plusCard button[data-v]');
@@ -1625,8 +1475,8 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','dem','cnt','stats','jrn'];
-const ADMIN_SLUG={mbr:'membres',dem:'demandes',cnt:'contenu',stats:'statistiques',jrn:'journal'};
+const ADMIN_SUBS=['mbr','dem','cnt','stats'];
+const ADMIN_SLUG={mbr:'membres',dem:'demandes',cnt:'contenu',stats:'statistiques'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 function showAdminSub(s){
@@ -1869,7 +1719,7 @@ async function chargerParcours(){
     if(r.error) throw r.error;
     PARCOURS = (r.data && r.data.donnees) || null;
     MOI_ID = (r.data && r.data.membre_id) || null;
-    if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); buildActions(); majOngletSurv(); }catch(e){} }
+    if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); majOngletSurv(); }catch(e){} }
     if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
     return !!PARCOURS;
   }catch(e){ PARCOURS = null; return false; }
@@ -2625,11 +2475,7 @@ const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/su
 const AUTH_MAIL = false;   // connexion par code e-mail : nécessite un SMTP externe (service intégré limité à 2 envois/h)
 let SB=null, SBUSER=null, SYNC_T=null, SYNC_FAIT=false;
 
-// Actions de la semaine : ce qui est fait est mémorisé par semaine (clé = lundi de la semaine),
-// donc tout repart à zéro chaque lundi sans qu'on ait à purger quoi que ce soit.
-let SEM = {}; try{ SEM = JSON.parse(localStorage.getItem('kairos_sem')||'{}'); }catch(e){}
-const saveSem = ()=>{ try{ localStorage.setItem('kairos_sem', JSON.stringify(SEM)); }catch(e){} planSync(); };
-const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM });
+const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK], nav:NAV_REPLIE });
 let ACC_NOM_AFF = null;
 // Prénom de la personne connectée (Google), pour personnaliser l'accueil
 function prenomUser(){
@@ -2685,17 +2531,13 @@ async function syncPull(){
   const c=d.check||{};
   for(const k in c){ if(c[k]&&!CHECK[k]){ CHECK[k]=c[k]; chg=true; } }
   if(typeof d.nav==='boolean' && d.nav!==NAV_REPLIE){ try{ sideReplier(d.nav); }catch(e){} }
-  // Actions de la semaine : fusion par vrai (une action faite sur un appareil l'est partout)
-  const s = d.sem||{};
-  for(const k in s){ if(s[k] && !SEM[k]){ SEM[k]=s[k]; chg=true; } }
   if(chg){
     try{
       localStorage.setItem('kairos_favs', JSON.stringify([...FAVS]));
       localStorage.setItem('kairos_obj', JSON.stringify([...OBJ_OK]));
       localStorage.setItem('kairos_check', JSON.stringify(CHECK));
-      localStorage.setItem('kairos_sem', JSON.stringify(SEM));
     }catch(e){}
-    try{ buildContenu(); buildAnn(); buildActions(); routeHash(); }catch(e){}
+    try{ buildContenu(); buildAnn(); routeHash(); }catch(e){}
   }
   syncPush();
 }
@@ -2755,191 +2597,27 @@ async function buildMembres(){
   if(btn) btn.hidden=false;
   buildDemandes();
   buildContenuAdmin();
-  buildJournal();
   body.innerHTML = rows.length ? rows.map(m=>{
     const nom = m.nom || (m.email||'').split('@')[0];
     const moi = SBUSER && m.email===SBUSER.email ? ' <span class="mbr-moi">toi</span>' : '';
     return '<tr><td><b>'+esc(nom)+'</b>'+moi+'<div class="mbr-mail">'+esc(m.email||'')+'</div></td>'
-      + '<td>'+celluleRole(m)+'</td>'
       + '<td class="num">'+esc(fmtQuand(m.derniere))+'</td>'
       + '<td class="num">'+esc(m.creation?fmtD(m.creation.slice(0,10)):'—')+'</td></tr>';
-  }).join('') : '<tr><td colspan="4" style="color:var(--ink-2)">Personne ne s\u2019est encore connecté.</td></tr>';
-  body.querySelectorAll('.rol-b').forEach(b=>b.addEventListener('click', ()=>
-    basculerAdmin(b.dataset.mail, b.dataset.to === '1', b)));
+  }).join('') : '<tr><td colspan="3" style="color:var(--ink-2)">Personne ne s\u2019est encore connecté.</td></tr>';
   const n=document.getElementById('mbrNote');
-  if(n){
-    const na = rows.filter(m=>m.est_admin).length;
-    n.textContent = (rows.length===1 ? '1 personne connectée à ce jour' : rows.length+' personnes connectées à ce jour')
-      + ' · ' + (na===1 ? '1 administrateur' : na+' administrateurs') + '.';
-  }
+  if(n) n.textContent = rows.length===1 ? '1 personne connectée à ce jour.' : rows.length+' personnes connectées à ce jour.';
   return true;
-}
-
-// Rôle d'un membre : pastille, plus le bouton de changement quand le lecteur y a droit.
-// Les trois règles (être admin, ne pas se modifier soi-même, ne pas toucher au propriétaire)
-// sont appliquées par le serveur dans definir_admin ; ici on ne fait qu'éviter un clic inutile.
-function celluleRole(m){
-  let h = m.est_admin ? '<span class="rol adm">Administrateur</span>' : '<span class="rol">Membre</span>';
-  if(m.proprietaire) h += '<span class="rol prop">Propriétaire</span>';
-  if(m.modifiable){
-    h += '<button class="rol-b" data-mail="'+esc(m.email||'')+'" data-to="'+(m.est_admin?'0':'1')+'">'
-       + (m.est_admin ? 'Retirer l\u2019accès admin' : 'Nommer administrateur') + '</button>';
-  } else if(m.proprietaire){
-    h += '<span class="rol-fixe">rôle non modifiable</span>';
-  } else {
-    h += '<span class="rol-fixe">tu ne peux pas modifier ton propre rôle</span>';
-  }
-  return h;
-}
-function mbrMsg(txt, err){
-  const e = document.getElementById('mbrMsg');
-  if(!e) return;
-  e.hidden = !txt;
-  e.textContent = txt || '';
-  e.classList.toggle('err', !!err);
-}
-async function basculerAdmin(mail, versAdmin, btn){
-  if(!mail || !SB || !SBUSER) return;
-  const quoi = versAdmin
-    ? 'Nommer ' + mail + ' administrateur ? Cette personne pourra voir tout l\u2019onglet Admin et nommer d\u2019autres administrateurs.'
-    : 'Retirer l\u2019accès administrateur à ' + mail + ' ? Elle gardera son accès normal au portail.';
-  if(!confirm(quoi)) return;
-  if(btn) btn.disabled = true;
-  mbrMsg('');
-  try{
-    const r = await SB.rpc('definir_admin', { p_email: mail, p_admin: versAdmin });
-    if(r.error) throw r.error;
-    await buildMembres();
-    mbrMsg(versAdmin ? mail + ' est maintenant administrateur.' : mail + ' n\u2019est plus administrateur.');
-  }catch(e){
-    mbrMsg((e && e.message) ? e.message : 'Changement refusé.', true);
-    if(btn) btn.disabled = false;
-  }
-}
-
-// Journal des exécutions des tâches planifiées (GitHub Actions + tâches Cowork)
-let JRN_LIGNES = [], JRN_FILTRE = '';
-const JRN_STATUTS = {
-  succes:      ['ok', 'Succès'],
-  echec:       ['ko', 'Échec'],
-  interrompue: ['ko', 'Interrompue'],
-  demarre:     ['en', 'En cours'],
-  ignore:      ['na', 'Sans objet'],
-};
-function jrnPastille(s){
-  const [c, lib] = JRN_STATUTS[s] || ['na', 'Jamais exécutée'];
-  return '<span class="jrn-p '+c+'">'+lib+'</span>';
-}
-function jrnDuree(s){
-  if(s === null || s === undefined) return '—';
-  if(s < 60) return s+' s';
-  const m = Math.floor(s/60);
-  return m+' min'+(s%60 ? ' '+(s%60)+' s' : '');
-}
-async function buildJournal(){
-  const corps = document.getElementById('jrnEtat');
-  const hist  = document.getElementById('jrnHist');
-  if(!SB || !SBUSER || !corps) return false;
-  let etat = [];
-  try{
-    const [e, l] = await Promise.all([
-      SB.rpc('journal_etat'),
-      SB.from('journal_executions')
-        .select('id,tache,statut,demarre_le,fini_le,duree_s,resume,erreur,source')
-        .order('demarre_le', {ascending:false}).limit(60),
-    ]);
-    if(e.error || l.error) throw (e.error || l.error);
-    etat = e.data || [];
-    JRN_LIGNES = l.data || [];
-  }catch(err){
-    corps.innerHTML = '<tr><td colspan="4" style="color:var(--ink-2)">Journal indisponible.</td></tr>';
-    if(hist) hist.innerHTML = '';
-    return false;
-  }
-
-  let alertes = 0;
-  corps.innerHTML = etat.length ? etat.map(x=>{
-    const ko = x.dernier_statut === 'echec' || x.dernier_statut === 'interrompue' || x.en_retard;
-    if(ko) alertes++;
-    const retard = x.en_retard
-      ? '<span class="jrn-ret">' + (x.derniere_le ? 'en retard' : 'jamais vue') + '</span>' : '';
-    const detail = x.dernier_statut === 'echec' || x.dernier_statut === 'interrompue'
-      ? '<div class="jrn-err">' + esc(x.derniere_erreur || 'Passage interrompu avant la fin.') + '</div>'
-      : '<div class="jrn-res">' + esc(x.dernier_resume || '—') + '</div>';
-    const cadence = x.cadence_h
-      ? '<div class="jrn-d">attendue au moins toutes les ' + (x.cadence_h >= 48
-          ? Math.round(x.cadence_h/24) + ' j' : x.cadence_h + ' h') + '</div>' : '';
-    return '<tr><td><b>' + esc(x.libelle) + '</b>' + retard
-      + '<div class="jrn-src">' + esc(x.source) + '</div>' + cadence + '</td>'
-      + '<td class="num">' + esc(fmtQuand(x.derniere_le))
-      + (x.duree_s !== null && x.duree_s !== undefined
-         ? '<div class="jrn-d">' + esc(jrnDuree(x.duree_s)) + '</div>' : '') + '</td>'
-      + '<td>' + jrnPastille(x.dernier_statut) + '</td>'
-      + '<td>' + detail
-      + (x.echecs_7j ? '<div class="jrn-d">' + x.echecs_7j + ' échec(s) sur ' + x.passages_7j
-                     + ' passage(s) ces 7 jours</div>' : '') + '</td></tr>';
-  }).join('') : '<tr><td colspan="4" style="color:var(--ink-2)">Aucune tâche suivie.</td></tr>';
-
-  const note = document.getElementById('jrnNote');
-  if(note) note.textContent = alertes
-    ? (alertes === 1 ? '1 tâche demande ton attention.' : alertes + ' tâches demandent ton attention.')
-    : 'Toutes les tâches suivies sont à jour.';
-  majBadgeJrn(alertes);
-
-  const libelles = {};
-  etat.forEach(x=>{ libelles[x.cle] = x.libelle; });
-  const filtres = document.getElementById('jrnFiltres');
-  if(filtres){
-    const vues = [''].concat(etat.map(x=>x.cle).filter(c=>JRN_LIGNES.some(l=>l.tache===c)));
-    filtres.innerHTML = vues.map(c=>'<button data-t="' + esc(c) + '"' + (c===JRN_FILTRE?' class="on"':'')
-      + '>' + esc(c ? libelles[c] : 'Toutes') + '</button>').join('');
-    filtres.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{
-      JRN_FILTRE = b.dataset.t || '';
-      filtres.querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b));
-      jrnHistorique(libelles);
-    }));
-  }
-  jrnHistorique(libelles);
-  return true;
-}
-function jrnHistorique(libelles){
-  const hist = document.getElementById('jrnHist');
-  if(!hist) return;
-  const lignes = JRN_FILTRE ? JRN_LIGNES.filter(l=>l.tache===JRN_FILTRE) : JRN_LIGNES;
-  hist.innerHTML = lignes.length ? lignes.map(l=>{
-    const vieux = l.statut === 'demarre' && (Date.now() - new Date(l.demarre_le)) > 7200000;
-    const st = vieux ? 'interrompue' : l.statut;
-    const txt = (st === 'echec' || st === 'interrompue')
-      ? '<div class="jrn-err">' + esc(l.erreur || 'Passage interrompu avant la fin.') + '</div>'
-      : '<div class="jrn-res">' + esc(l.resume || '—') + '</div>';
-    return '<tr><td class="num">' + esc(fmtQuand(l.demarre_le)) + '</td>'
-      + '<td>' + esc((libelles && libelles[l.tache]) || l.tache) + '</td>'
-      + '<td>' + jrnPastille(st) + '</td>'
-      + '<td class="num">' + esc(jrnDuree(l.duree_s)) + '</td>'
-      + '<td>' + txt + '</td></tr>';
-  }).join('') : '<tr><td colspan="5" style="color:var(--ink-2)">Aucun passage enregistré.</td></tr>';
 }
 
 // Demandes d'accès : comptes connectés qui ne sont pas encore rapprochés d'une fiche du réseau
 let DEMANDES = [], DEM_STATUT = 'en_attente';
-let DEM_N = 0, JRN_N = 0;
-function majBadgeAdmin(){
-  const n = DEM_N + JRN_N;
+function majBadgeDem(n){
+  const b=document.getElementById('demBadge');
+  if(b){ b.hidden = !n; b.textContent = n || ''; }
+  // le même compteur remonte sur l'entrée Admin du menu
   document.querySelectorAll('[data-v="admin"] .l').forEach(l=>{
     l.innerHTML = 'Admin' + (n ? ' <span class="sub-badge">'+n+'</span>' : '');
   });
-}
-function majBadgeDem(n){
-  DEM_N = n || 0;
-  const b=document.getElementById('demBadge');
-  if(b){ b.hidden = !n; b.textContent = n || ''; }
-  majBadgeAdmin();
-}
-function majBadgeJrn(n){
-  JRN_N = n || 0;
-  const b=document.getElementById('jrnBadge');
-  if(b){ b.hidden = !n; b.textContent = n || ''; }
-  majBadgeAdmin();
 }
 async function buildDemandes(){
   const body=document.getElementById('demBody');
@@ -3244,7 +2922,7 @@ async function chargerVeille(){
     if(last){ const d=new Date(last), z=n=>String(n).padStart(2,'0');
       maj = d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes()); }
     VEILLE = { maj: maj, editions: Object.values(eds), breaking: alertes };
-    if(window.__booted){ try{ buildVeille(); buildSearchIndex(); buildActions(); routeHash(); }catch(err){} }
+    if(window.__booted){ try{ buildVeille(); buildSearchIndex(); routeHash(); }catch(err){} }
     return true;
   }catch(err){ return false; }
 }

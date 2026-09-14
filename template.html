@@ -1358,6 +1358,51 @@ function semMarquer(c){
   saveSem();
   buildActions();
 }
+// Libellés des étapes validées par le réseau (clés produites par la synchronisation)
+const ETAPE_LIB = {
+  dm:'Découverte Métier', ad:'Atelier Démarrage', trois_jours:'3 Jours de la Réussite',
+  r1_n1:'Prise de R1 niveau 1', mise_en_relation:'Art de la Mise en Relation',
+  com_n1:'Clés de la Communication N1', com_n2:'Clés de la Communication N2',
+  udp:'Universités', adhesion:'Cotisation réglée',
+  formation_reservee:'Première formation réservée',
+  invite_dm:'Premier invité en Découverte Métier',
+  filleul_adherent:'Premier filleul devenu adhérent',
+};
+const etapeLib = cle => ETAPE_LIB[cle]
+  || (cle.indexOf('objectifs_') === 0
+      ? 'Objectifs ' + cle.replace('objectifs_role_','').replace('objectifs_','').toUpperCase() + ' validés'
+      : cle.replace(/_/g,' '));
+
+// Étapes que le réseau vient de valider et qui n'ont pas encore été annoncées
+function etapesNouvelles(){
+  const e = (PARCOURS && PARCOURS.etapes) || null;
+  if(!e) return [];
+  const vues = new Set(VU.etapes || []);
+  return Object.keys(e).filter(k => estValide(e[k]) && !vues.has(k));
+}
+
+// Mes filleuls adhérents sans aucune séance depuis 60 jours (ou jamais vus en séance)
+function filleulsEndormis(){
+  if(!MOI_ID) return [];
+  const moi = byId.get(MOI_ID);
+  if(!moi) return [];
+  const mes = (children.get(norm(moi.name)) || []).filter(m => ADH.has(m.id));
+  if(!mes.length) return [];
+  const suivis = new Set(mes.map(m => m.id));
+  const derniere = {};
+  [A, R, F, E].forEach(liste => (liste||[]).forEach(s => {
+    if(!s.start || s.start > todayIso) return;
+    (s.guests || []).forEach(g => {
+      const id = +g;
+      if(suivis.has(id) && (!derniere[id] || s.start > derniere[id])) derniere[id] = s.start;
+    });
+  }));
+  const seuil = vAddDays(todayIso, -60);
+  return mes.filter(m => !derniere[m.id] || derniere[m.id] < seuil)
+            .map(m => Object.assign({}, m, { vu: derniere[m.id] || null }))
+            .sort((x,y) => (x.vu||'').localeCompare(y.vu||''));
+}
+
 function buildActions(){
   const panel = document.getElementById('homeActionsPanel');
   const liste = document.getElementById('homeActions');
@@ -1366,35 +1411,87 @@ function buildActions(){
   if(!panel || !liste) return;
 
   const actions = [];
+  let evaluable = false;
 
   // 1) Lire la veille de la semaine — validée dès que l'onglet Veille est ouvert
   const eds = (VEILLE && VEILLE.editions) ? VEILLE.editions.slice().sort((a,b)=>(b.du||'').localeCompare(a.du||'')) : [];
   if(eds.length){
+    evaluable = true;
     const der = eds[0];
-    actions.push({
-      t: 'Lire la veille de la semaine',
-      d: 'Édition ' + vPeriode(der.du, der.au) + ' — fiscalité, marchés, produits, profession, clients.',
-      href: '#veille', fait: semFait('veille'), go: 'Ouvrir',
-    });
+    actions.push({ cle:'veille', t:'Lire la veille de la semaine',
+      d:'Édition ' + vPeriode(der.du, der.au) + ' — fiscalité, marchés, produits, profession, clients.',
+      href:'#veille', fait:semFait('veille'), go:'Ouvrir' });
   }
 
-  // 2) S'inscrire aux sessions enregistrées où les places s'épuisent — visible seulement si besoin
+  // 2) Alertes de la semaine non lues. Repère persistant (date de la dernière alerte lue) :
+  //    une alerte publiée en milieu de semaine relance l'action même si la veille a déjà été lue.
+  const lundi = vMonday(todayIso);
+  const bk = ((VEILLE && VEILLE.breaking) || []).filter(b => b.d >= lundi);
+  if(bk.length){
+    evaluable = true;
+    const recent = bk.map(b=>b.d).sort().pop();
+    const lue = (VU.bk || '') >= recent;
+    actions.push({ cle:'bk', t:'Lire les alertes de la semaine',
+      urg: lue ? '' : bk.length + ' alerte' + (bk.length>1?'s':''),
+      d: bk.slice(0,2).map(b=>b.t).join(' · ') + (bk.length>2 ? ' · +' + (bk.length-2) : ''),
+      href:'#veille', fait:lue, go:'Ouvrir' });
+  }
+
+  // 3) Une étape du parcours vient d'être validée par le réseau
+  const nouv = etapesNouvelles();
+  if(nouv.length){
+    evaluable = true;
+    actions.push({ cle:'etapes', manuel:true, ancre:'homeParcoursPanel',
+      t: nouv.length > 1 ? nouv.length + ' étapes de ton parcours viennent d\u2019être validées'
+                         : 'Une étape de ton parcours vient d\u2019être validée',
+      urg:'nouveau',
+      d: nouv.slice(0,3).map(etapeLib).join(' · ') + (nouv.length>3 ? ' · +' + (nouv.length-3) : ''),
+      href:'#accueil', fait:false, go:'Voir' });
+  }
+
+  // 4) Sessions enregistrées où les places s'épuisent — alerte, jamais masquable à la main
   const al = (typeof survAlertes === 'function') ? survAlertes() : [];
+  const clesAlerte = new Set(al.map(o=>o.cle));
   if(al.length){
+    evaluable = true;
     const complets = al.filter(o=>o.p && o.p.complet).length;
-    actions.push({
-      t: 'M\u2019inscrire aux sessions bientôt complètes',
+    actions.push({ cle:'surv', t:'M\u2019inscrire aux sessions bientôt complètes',
       urg: al.length + ' session' + (al.length>1?'s':''),
       d: al.slice(0,3).map(o=>o.a.title).join(' · ')
          + (al.length>3 ? ' · +' + (al.length-3) + ' autre' + (al.length-4?'s':'') : '')
          + (complets ? ' — ' + complets + ' déjà complète' + (complets>1?'s':'') : ''),
-      href: '#enregistre', fait: false, go: 'Voir',
-    });
+      href:'#enregistre', fait:false, go:'Voir' });
   }
 
-  // Rien d'évaluable (veille non chargée, aucune alerte) : on n'affiche pas le bloc du tout,
-  // plutôt que d'annoncer « tu es à jour » sans avoir rien pu vérifier.
-  if(!actions.length && !eds.length){ panel.hidden = true; return; }
+  // 5) Sessions enregistrées de la semaine prochaine, pas encore réservées
+  const l1 = vAddDays(lundi, 7), d1 = vAddDays(l1, 6);
+  const sem1 = (typeof survObjets === 'function' ? survObjets() : [])
+    .filter(o => o.a.start >= l1 && o.a.start <= d1 && !dejaInscrit(o.a) && !clesAlerte.has(o.cle));
+  if(sem1.length){
+    evaluable = true;
+    actions.push({ cle:'sem1', manuel:true,
+      t:'M\u2019inscrire aux sessions enregistrées de la semaine prochaine',
+      urg: sem1.length + ' session' + (sem1.length>1?'s':''),
+      d: sem1.slice(0,3).map(o=>fmtD(o.a.start) + ' · ' + o.a.title).join(' — ')
+         + (sem1.length>3 ? ' · +' + (sem1.length-3) : ''),
+      href:'#enregistre', fait:semFait('sem1'), go:'Voir' });
+  }
+
+  // 6) Prendre des nouvelles d'un filleul sans séance depuis 60 jours
+  const dormeurs = (typeof filleulsEndormis === 'function') ? filleulsEndormis() : [];
+  if(dormeurs.length){
+    evaluable = true;
+    actions.push({ cle:'filleuls', manuel:true, ancre:'v-ann',
+      t: dormeurs.length > 1 ? 'Prendre des nouvelles de ' + dormeurs.length + ' filleuls'
+                             : 'Prendre des nouvelles de ' + dormeurs[0].name,
+      d: dormeurs.slice(0,3).map(m => m.name + (m.vu ? ' (vu le ' + fmtD(m.vu) + ')' : ' (jamais vu en séance)')).join(' · ')
+         + (dormeurs.length>3 ? ' · +' + (dormeurs.length-3) : ''),
+      href:'#annuaire', fait:semFait('filleuls'), go:'Voir' });
+  }
+
+  // Rien d'évaluable : on n'affiche pas le bloc, plutôt que d'annoncer « tu es à jour »
+  // sans avoir rien pu vérifier.
+  if(!evaluable){ panel.hidden = true; return; }
   panel.hidden = false;
 
   const reste = actions.filter(a=>!a.fait).length;
@@ -1402,14 +1499,32 @@ function buildActions(){
     ? (reste === 1 ? 'Il te reste 1 action cette semaine.' : 'Il te reste ' + reste + ' actions cette semaine.')
     : '';
   liste.innerHTML = actions.map(a =>
-    '<a class="act' + (a.fait?' fait':'') + '" href="' + a.href + '">'
+    '<a class="act' + (a.fait?' fait':'') + '" href="' + a.href + '" data-act="' + esc(a.cle) + '"'
+    + (a.manuel?' data-manuel="1"':'') + (a.ancre?' data-ancre="'+esc(a.ancre)+'"':'') + '>'
     + '<span class="ck">' + (a.fait?'✓':'') + '</span>'
     + '<span class="tx"><b>' + esc(a.t) + (a.urg?'<span class="urg">'+esc(a.urg)+'</span>':'') + '</b>'
     + '<p>' + esc(a.d) + '</p></span>'
     + '<span class="go">' + esc(a.go) + ' →</span></a>').join('');
-  liste.hidden = !actions.length;
   if(okEl) okEl.hidden = reste > 0;
 }
+
+// Une action « manuelle » se valide en cliquant dessus : rien ne peut la constater à notre place.
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('.act[data-act]');
+  if(!a) return;
+  const cle = a.dataset.act;
+  if(cle === 'etapes'){
+    const set = new Set(VU.etapes || []);
+    etapesNouvelles().forEach(k => set.add(k));
+    VU.etapes = [...set];
+    saveVu();
+  } else if(a.dataset.manuel){
+    semMarquer(cle);
+  }
+  const anc = a.dataset.ancre;
+  if(anc){ const el = document.getElementById(anc); if(el) setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'start'}), 60); }
+  buildActions();
+});
 
 // Encart d'accueil : uniquement s'il y a une alerte
 function buildSurvAccueil(){
@@ -1552,7 +1667,14 @@ function showTab(v){
   document.querySelectorAll('nav.tabs button, nav.botbar button, #plusCard button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
   // Ouvrir la veille vaut lecture : pas de case à cocher de plus
-  if(v === 'veille' && VEILLE && VEILLE.editions && VEILLE.editions.length){ try{ semMarquer('veille'); }catch(e){} }
+  if(v === 'veille' && VEILLE){
+    try{
+      if((VEILLE.editions||[]).length) semMarquer('veille');
+      const lundi = vMonday(todayIso);
+      const recent = (VEILLE.breaking||[]).filter(b=>b.d>=lundi).map(b=>b.d).sort().pop();
+      if(recent && recent > (VU.bk||'')){ VU.bk = recent; saveVu(); buildActions(); }
+    }catch(e){}
+  }
 }
 document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('nav.tabs button[data-v], nav.botbar button[data-v], #plusCard button[data-v]');
@@ -2614,7 +2736,34 @@ window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferredI
 document.getElementById('installBtn').addEventListener('click',async()=>{ if(!deferredInstall) return; deferredInstall.prompt(); try{ await deferredInstall.userChoice; }catch(_){} deferredInstall=null; document.getElementById('installBtn').hidden=true; });
 window.addEventListener('appinstalled',()=>{ document.getElementById('installBtn').hidden=true; });
 if('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !location.hostname.match(/^(localhost|127\.0\.0\.1)$/)){
-  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+  // updateViaCache:'none' : sw.js n'est jamais servi depuis le cache HTTP, sinon une nouvelle
+  // version resterait invisible jusqu'à l'expiration du cache (10 min sur GitHub Pages).
+  let RECHARGE = false;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    // Un nouveau service worker vient de prendre la main : la page en mémoire est périmée.
+    if(RECHARGE) return;
+    RECHARGE = true;
+    location.reload();
+  });
+  // On pousse le worker en attente à prendre la main tout de suite. On s'adresse au worker
+  // lui-même plutôt qu'à reg.waiting, qui n'est pas encore renseigné au moment du statechange.
+  const activer = sw => { if(sw && sw.state === 'installed') { try{ sw.postMessage('skipWaiting'); }catch(e){} } };
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js', { updateViaCache:'none' }).then(reg=>{
+      activer(reg.waiting);            // mise à jour installée pendant que l'onglet était fermé
+      reg.addEventListener('updatefound', ()=>{
+        const sw = reg.installing;
+        if(!sw) return;
+        sw.addEventListener('statechange', ()=>activer(sw));
+        activer(sw);
+      });
+      // Nouvelle version cherchée au retour sur l'onglet, puis toutes les 15 minutes :
+      // une mise en ligne est prise en compte sans rien vider à la main.
+      const verifier = ()=>{ if(!document.hidden) reg.update().catch(()=>{}); };
+      document.addEventListener('visibilitychange', verifier);
+      setInterval(verifier, 900000);
+    }).catch(()=>{});
+  });
 }
 
 
@@ -2629,7 +2778,12 @@ let SB=null, SBUSER=null, SYNC_T=null, SYNC_FAIT=false;
 // donc tout repart à zéro chaque lundi sans qu'on ait à purger quoi que ce soit.
 let SEM = {}; try{ SEM = JSON.parse(localStorage.getItem('kairos_sem')||'{}'); }catch(e){}
 const saveSem = ()=>{ try{ localStorage.setItem('kairos_sem', JSON.stringify(SEM)); }catch(e){} planSync(); };
-const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM });
+// VU : ce qui a déjà été signalé une bonne fois pour toutes — contrairement à SEM, ça ne se
+// remet pas à zéro le lundi (sinon toutes les étapes déjà validées redeviendraient « nouvelles »).
+// { etapes:[clés d'étapes annoncées], bk:'AAAA-MM-JJ de la dernière alerte lue' }
+let VU = {}; try{ VU = JSON.parse(localStorage.getItem('kairos_vu')||'{}'); }catch(e){}
+const saveVu = ()=>{ try{ localStorage.setItem('kairos_vu', JSON.stringify(VU)); }catch(e){} planSync(); };
+const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM, vu:VU });
 let ACC_NOM_AFF = null;
 // Prénom de la personne connectée (Google), pour personnaliser l'accueil
 function prenomUser(){
@@ -2688,12 +2842,19 @@ async function syncPull(){
   // Actions de la semaine : fusion par vrai (une action faite sur un appareil l'est partout)
   const s = d.sem||{};
   for(const k in s){ if(s[k] && !SEM[k]){ SEM[k]=s[k]; chg=true; } }
+  const v = d.vu||{};
+  if(v.etapes && v.etapes.length){
+    const set = new Set([...(VU.etapes||[]), ...v.etapes]);
+    if(set.size !== (VU.etapes||[]).length){ VU.etapes = [...set]; chg=true; }
+  }
+  if(v.bk && v.bk > (VU.bk||'')){ VU.bk = v.bk; chg=true; }
   if(chg){
     try{
       localStorage.setItem('kairos_favs', JSON.stringify([...FAVS]));
       localStorage.setItem('kairos_obj', JSON.stringify([...OBJ_OK]));
       localStorage.setItem('kairos_check', JSON.stringify(CHECK));
       localStorage.setItem('kairos_sem', JSON.stringify(SEM));
+      localStorage.setItem('kairos_vu', JSON.stringify(VU));
     }catch(e){}
     try{ buildContenu(); buildAnn(); buildActions(); routeHash(); }catch(e){}
   }
