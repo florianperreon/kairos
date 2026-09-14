@@ -743,6 +743,17 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .jrn-f{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 10px}
 .jrn-f button{font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:4px 12px;cursor:pointer}
 .jrn-f button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+
+/* ---------- Admin : rôle des membres ---------- */
+.rol{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--surface-2);color:var(--ink-2)}
+.rol.adm{background:var(--accent-soft);color:var(--accent)}
+.rol.prop{background:var(--gold-soft);color:var(--gold-ink);margin-left:5px}
+.rol-b{display:block;margin-top:5px;font-size:12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:2px 10px;cursor:pointer;white-space:nowrap}
+.rol-b:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.rol-b:disabled{opacity:.5;cursor:default}
+.rol-fixe{display:block;margin-top:5px;font-size:11.5px;color:var(--ink-3)}
+.mbr-msg{font-size:13.5px;margin:10px 0 0;color:var(--ink-2)}
+.mbr-msg.err{color:var(--bad);font-weight:600}
 </style>
 
 <div id="lock" class="wrap">
@@ -973,11 +984,12 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
         <p class="mbr-sub">Les personnes qui se sont connectées au portail avec un compte, et leur dernière visite.</p>
         <div class="tbl-wrap">
           <table id="mbrTbl">
-            <thead><tr><th>Personne</th><th>Dernière connexion</th><th>Premier accès</th></tr></thead>
+            <thead><tr><th>Personne</th><th>Rôle</th><th>Dernière connexion</th><th>Premier accès</th></tr></thead>
             <tbody id="mbrBody"></tbody>
           </table>
         </div>
         <p class="mbr-note" id="mbrNote"></p>
+        <p class="mbr-msg" id="mbrMsg" hidden></p>
       </div>
       </div>
 
@@ -2646,12 +2658,61 @@ async function buildMembres(){
     const nom = m.nom || (m.email||'').split('@')[0];
     const moi = SBUSER && m.email===SBUSER.email ? ' <span class="mbr-moi">toi</span>' : '';
     return '<tr><td><b>'+esc(nom)+'</b>'+moi+'<div class="mbr-mail">'+esc(m.email||'')+'</div></td>'
+      + '<td>'+celluleRole(m)+'</td>'
       + '<td class="num">'+esc(fmtQuand(m.derniere))+'</td>'
       + '<td class="num">'+esc(m.creation?fmtD(m.creation.slice(0,10)):'—')+'</td></tr>';
-  }).join('') : '<tr><td colspan="3" style="color:var(--ink-2)">Personne ne s\u2019est encore connecté.</td></tr>';
+  }).join('') : '<tr><td colspan="4" style="color:var(--ink-2)">Personne ne s\u2019est encore connecté.</td></tr>';
+  body.querySelectorAll('.rol-b').forEach(b=>b.addEventListener('click', ()=>
+    basculerAdmin(b.dataset.mail, b.dataset.to === '1', b)));
   const n=document.getElementById('mbrNote');
-  if(n) n.textContent = rows.length===1 ? '1 personne connectée à ce jour.' : rows.length+' personnes connectées à ce jour.';
+  if(n){
+    const na = rows.filter(m=>m.est_admin).length;
+    n.textContent = (rows.length===1 ? '1 personne connectée à ce jour' : rows.length+' personnes connectées à ce jour')
+      + ' · ' + (na===1 ? '1 administrateur' : na+' administrateurs') + '.';
+  }
   return true;
+}
+
+// Rôle d'un membre : pastille, plus le bouton de changement quand le lecteur y a droit.
+// Les trois règles (être admin, ne pas se modifier soi-même, ne pas toucher au propriétaire)
+// sont appliquées par le serveur dans definir_admin ; ici on ne fait qu'éviter un clic inutile.
+function celluleRole(m){
+  let h = m.est_admin ? '<span class="rol adm">Administrateur</span>' : '<span class="rol">Membre</span>';
+  if(m.proprietaire) h += '<span class="rol prop">Propriétaire</span>';
+  if(m.modifiable){
+    h += '<button class="rol-b" data-mail="'+esc(m.email||'')+'" data-to="'+(m.est_admin?'0':'1')+'">'
+       + (m.est_admin ? 'Retirer l\u2019accès admin' : 'Nommer administrateur') + '</button>';
+  } else if(m.proprietaire){
+    h += '<span class="rol-fixe">rôle non modifiable</span>';
+  } else {
+    h += '<span class="rol-fixe">tu ne peux pas modifier ton propre rôle</span>';
+  }
+  return h;
+}
+function mbrMsg(txt, err){
+  const e = document.getElementById('mbrMsg');
+  if(!e) return;
+  e.hidden = !txt;
+  e.textContent = txt || '';
+  e.classList.toggle('err', !!err);
+}
+async function basculerAdmin(mail, versAdmin, btn){
+  if(!mail || !SB || !SBUSER) return;
+  const quoi = versAdmin
+    ? 'Nommer ' + mail + ' administrateur ? Cette personne pourra voir tout l\u2019onglet Admin et nommer d\u2019autres administrateurs.'
+    : 'Retirer l\u2019accès administrateur à ' + mail + ' ? Elle gardera son accès normal au portail.';
+  if(!confirm(quoi)) return;
+  if(btn) btn.disabled = true;
+  mbrMsg('');
+  try{
+    const r = await SB.rpc('definir_admin', { p_email: mail, p_admin: versAdmin });
+    if(r.error) throw r.error;
+    await buildMembres();
+    mbrMsg(versAdmin ? mail + ' est maintenant administrateur.' : mail + ' n\u2019est plus administrateur.');
+  }catch(e){
+    mbrMsg((e && e.message) ? e.message : 'Changement refusé.', true);
+    if(btn) btn.disabled = false;
+  }
 }
 
 // Journal des exécutions des tâches planifiées (GitHub Actions + tâches Cowork)
