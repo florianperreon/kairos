@@ -3348,6 +3348,10 @@ function buildMM(){
   }
   const cour = MM_SEM===mmSemCour();
   const off = MM_REG && MM_REG.participe===false;
+  // Le bloc automatique est recalculé à l'affichage de la semaine en cours : sans ça, il restait
+  // vide tant qu'on n'avait rien enregistré (il n'était écrit qu'à la sauvegarde). Pour une semaine
+  // passée ou le mail manager de quelqu'un d'autre, on garde l'instantané enregistré ce jour-là.
+  if(cour && MM){ MM.donnees = MM.donnees||{}; MM.donnees.auto = mmAuto(MM_SEM); }
 
   /* Ma semaine */
   let h='<div class="panel"><div class="mm-head"><h2>Mon mail manager</h2>'
