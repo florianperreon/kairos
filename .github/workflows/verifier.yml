@@ -1,0 +1,28 @@
+name: Vérification des endpoints (à la demande)
+
+# Ne modifie rien : interroge chaque endpoint de l'API et la base du portail, puis s'arrête.
+# À lancer depuis l'onglet Actions dès qu'un doute existe sur l'état de l'API.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Dépendances
+        run: pip install --quiet requests cryptography
+
+      - name: Contrôle des endpoints
+        env:
+          API_BASE: ${{ secrets.API_BASE }}
+          API_USER: ${{ secrets.API_USER }}
+          API_PASS: ${{ secrets.API_PASS }}
+          KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
+        run: python update.py --verifier

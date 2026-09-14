@@ -5,9 +5,13 @@ Relit le payload précédent dans la base du portail (Supabase), récupère les 
 et le réécrit dans la base. Plus aucun fichier de données : index.html est régénéré à partir de
 template.html, et le portail lit la base (ou la fonction « donnees » pour une entrée par mot de passe).
 Option --complet (ou COMPLET=1) : relit tout l'historique depuis l'origine au lieu du dernier mois + à venir.
+Option --verifier (ou VERIFIER=1) : ne fait QUE le contrôle des endpoints, sans rien écrire.
 Configuration via variables d'environnement (secrets du dépôt) :
   KAIROS_TOKEN : jeton d'écriture des données dans la base du portail
   API_BASE  : URL de base de l'API (ex. https://exemple.tld)
+  API_USER  : identifiant (e-mail) du compte de service sur l'API
+  API_PASS  : mot de passe de ce compte — obligatoire depuis le 14/09/2026, toute la famille
+              /api/users exigeant un JWT. Jamais en clair dans le dépôt ni dans les logs.
   LIGNEE    : (optionnel) noms de la lignée, séparés par des virgules
   LIGNEE_FILLEULS_DE : (optionnel) noms dont toute la descendance (filleuls,
               filleuls de filleuls…) est ajoutée dynamiquement à la lignée
@@ -101,9 +105,35 @@ def encrypt_payload(obj: dict, pw: bytes, salt: bytes = None) -> str:
 S = requests.Session()
 S.headers.update({"Accept": "application/json"})
 
+# Identifiants API (secrets du dépôt). Depuis le 14/09/2026 toute la famille /api/users
+# exige un JWT : sans authentification, l'annuaire, la lignée et les adhérents sont perdus.
+API_USER = os.environ.get("API_USER") or ""
+API_PASS = os.environ.get("API_PASS") or ""
+
+def login(api):
+    """Obtient un JWT via POST /api/login_check et l'ajoute à toutes les requêtes suivantes."""
+    if not (API_USER and API_PASS):
+        print("authentification : API_USER/API_PASS absents — appels anonymes")
+        return False
+    try:
+        r = S.post(f"{api}/api/login_check",
+                   json={"email": API_USER, "password": API_PASS},
+                   headers={"Content-Type": "application/json"}, timeout=60)
+    except Exception as e:
+        raise RuntimeError(f"authentification injoignable ({type(e).__name__})")
+    if r.status_code != 200:
+        raise RuntimeError(f"authentification refusée (HTTP {r.status_code})")
+    tok = (r.json() or {}).get("token")
+    if not tok:
+        raise RuntimeError("authentification sans jeton")
+    S.headers["Authorization"] = "Bearer " + tok
+    print("authentification : OK")
+    return True
+
 def get(url, params=None, tries=4):
     last = None
     for i in range(tries):
+        refus = None
         try:
             r = S.get(url, params=params, timeout=60)
             if r.status_code == 200:
@@ -111,6 +141,28 @@ def get(url, params=None, tries=4):
             if r.status_code == 404:
                 return None
             last = f"HTTP {r.status_code}"
+            if r.status_code in (401, 403):
+                refus = last          # refus d'accès : inutile de réessayer
+        except Exception as e:
+            last = type(e).__name__
+        if refus:
+            raise RuntimeError(f"acces refuse ({refus})")
+        time.sleep(1.5 * (i + 1))
+    raise RuntimeError(f"requête en échec ({last})")
+
+def get_ld(url, params=None, tries=3):
+    """Même chose en JSON-LD (Hydra) : donne `totalItems` pour paginer sans tâtonner."""
+    last = None
+    for i in range(tries):
+        try:
+            r = S.get(url, params=params, headers={"Accept": "application/ld+json"}, timeout=60)
+            if r.status_code == 200:
+                return r.json()
+            last = f"HTTP {r.status_code}"
+            if r.status_code in (401, 403):
+                raise RuntimeError(f"acces refuse ({last})")
+        except RuntimeError:
+            raise
         except Exception as e:
             last = type(e).__name__
         time.sleep(1.5 * (i + 1))
@@ -454,16 +506,179 @@ def sync_parcours(api, membres, adh_ids):
                        timeout=300)
     print("progressions : " + rp.text[:200])
 
+# ---------------- contrôle préalable des endpoints ----------------
+def _echantillon(d):
+    """Premier élément d'une réponse de collection, ou l'objet lui-même."""
+    if isinstance(d, list):
+        return d[0] if d else None
+    if isinstance(d, dict):
+        for k in ("hydra:member", "member", "items"):
+            m = d.get(k)
+            if isinstance(m, list):
+                return m[0] if m else None
+        return d
+    return None
+
+def preflight(api):
+    """Vérifie, AVANT tout traitement, que chaque endpoint répond ET renvoie une réponse
+    exploitable (champs attendus présents). Tant que ce contrôle n'est pas vert, le script
+    s'arrête sans rien écrire : la base conserve les dernières données publiées.
+    Renvoie la liste des anomalies (vide = tout va bien)."""
+    print("--- contrôle des endpoints ---")
+    pb, vus = [], {}
+
+    def essai(nom, chemin, params, champs, tries=2):
+        try:
+            d = get(f"{api}{chemin}", params=params, tries=tries)
+        except Exception as e:
+            pb.append(f"{nom} : {type(e).__name__} {str(e)[:70]}")
+            print(f"  ECHEC   {nom} — {type(e).__name__}")
+            return None
+        ech = _echantillon(d)
+        if ech is None:
+            pb.append(f"{nom} : réponse vide")
+            print(f"  VIDE    {nom}")
+            return None
+        manque = [c for c in champs if c not in ech]
+        if manque:
+            pb.append(f"{nom} : champs absents ({', '.join(manque)})")
+            print(f"  CHAMPS  {nom} — absents : {', '.join(manque)}")
+            return None
+        print(f"  OK      {nom}")
+        return ech
+
+    jour = datetime.datetime.now(PARIS).date().isoformat()
+
+    # 1) Collections d'événements (liste) — on retient un id pour tester le détail
+    for cle, ep, champs in (("ws", "workshops", ("id", "title", "startDate", "endDate")),
+                            ("reu", "team_meatings", ("id", "title", "startDate", "endDate")),
+                            ("for", "formations", ("id", "title", "startDate", "endDate")),
+                            ("evt", "events", ("id", "title", "startDate", "endDate"))):
+        ech = essai(f"/api/{ep}", f"/api/{ep}",
+                    {"order[startDate]": "asc", "startDate[after]": jour, "page": 1}, champs)
+        if ech:
+            vus[cle] = ech["id"]
+
+    # 2) Détail d'un événement — c'est lui qui porte inscrits, places, horaires, public visé
+    for cle, ep, champs in (
+            ("ws", "workshops", ("id", "guests", "maxGuests", "isPublish", "destined",
+                                 "habilitation", "workshopDates", "totalGuests", "waitingZone")),
+            ("reu", "team_meatings", ("id", "guests", "maxGuests", "TeamMeatingDates")),
+            ("for", "formations", ("id", "guests", "maxGuests", "formationDates")),
+            ("evt", "events", ("id", "guests", "maxGuests", "eventDates"))):
+        if cle in vus:
+            essai(f"/api/{ep}/{{id}}", f"/api/{ep}/{vus[cle]}", None, champs)
+
+    # 3) Annuaire : page complète, pas seulement le premier enregistrement
+    #    (godFather est omis quand il est nul — on le cherche sur toute la page)
+    uid = None
+    try:
+        d = get_ld(f"{api}/api/users", params={"page": 1})
+        lignes = d.get("member") or d.get("hydra:member") or []
+        total = int(d.get("totalItems") or d.get("hydra:totalItems") or 0)
+        if len(lignes) < 25 or total < 15000:
+            pb.append(f"/api/users : page de {len(lignes)} ligne(s), total annoncé {total}")
+            print(f"  ECHEC   /api/users — {len(lignes)} ligne(s), total {total}")
+        else:
+            manque = [c for c in ("id", "email", "firstName", "lastName", "phoneNumber",
+                                  "adhesionPaidAt", "roles") if c not in lignes[0]]
+            if not any(l.get("godFather") for l in lignes):
+                manque.append("godFather (aucun sur la page)")
+            if manque:
+                pb.append(f"/api/users : champs absents ({', '.join(manque)})")
+                print(f"  CHAMPS  /api/users — absents : {', '.join(manque)}")
+            else:
+                uid = lignes[0]["id"]
+                print(f"  OK      /api/users ({total} membres, {len(lignes)}/page)")
+    except Exception as e:
+        pb.append(f"/api/users : {type(e).__name__} {str(e)[:70]}")
+        print(f"  ECHEC   /api/users — {type(e).__name__}")
+
+    # 4) Fiche membre : createdAt (ancienneté) et birthDay (anniversaires de la lignée)
+    if uid:
+        # godFather / manager sont omis quand ils sont nuls (haut de la lignée) : non exigés ici,
+        # leur présence est déjà vérifiée sur la page d'annuaire ci-dessus.
+        essai("/api/users/{id}", f"/api/users/{uid}", None,
+              ("id", "email", "firstName", "lastName", "createdAt", "birthDay",
+               "adhesionPaidAt", "roles", "isJdEnded", "isDemarrageEnded", "is3JREnded"))
+        essai("/api/goal_finisheds?user", "/api/goal_finisheds", {"user": uid, "page": 1},
+              ("id", "goal", "status"))
+        for ep in ("workshops", "formations", "events"):
+            essai(f"/api/{ep}?guests.id", f"/api/{ep}", {"guests.id": uid, "page": 1},
+                  ("id", "title", "startDate"))
+
+    # 5) Objectifs du réseau (paliers de promotion)
+    essai("/api/goals", "/api/goals", None, ("id", "level", "type"))
+
+    # 6) Base du portail : elle doit être LISIBLE avant d'envisager de la réécrire
+    old = base_lire()
+    if not old or not (old.get("adherents") and old.get("cfg")):
+        pb.append("base du portail illisible ou incomplète (lecture préalable)")
+        print("  ECHEC   base du portail (lecture)")
+    else:
+        print(f"  OK      base du portail ({len(old['adherents'])} membres mémorisés)")
+
+    print("--- contrôle terminé : " + ("tout est vert" if not pb else f"{len(pb)} anomalie(s)") + " ---")
+    return pb, old
+
+# ---------------- annuaire ----------------
+def list_users(api):
+    """Annuaire complet des membres.
+    `users/collection` (500/page) si le compte y a droit — c'est le chemin rapide, réservé aux
+    comptes administrateurs depuis le 14/09/2026 ; sinon `/api/users` (30/page, authentifié)."""
+    try:
+        first = get(f"{api}/api/users/collection", params={"page": 1, "pageSize": 500}, tries=1)
+        if isinstance(first, dict) and first.get("items"):
+            users = list(first["items"])
+            total_pages = int(first["pagination"]["totalPages"])
+            with ThreadPoolExecutor(max_workers=6) as ex:
+                for d in ex.map(lambda p: get(f"{api}/api/users/collection",
+                                              params={"page": p, "pageSize": 500}),
+                                range(2, total_pages + 1)):
+                    users.extend(d["items"])
+            print(f"annuaire : {len(users)} membres via users/collection")
+            return users
+    except Exception as e:
+        print(f"users/collection indisponible ({type(e).__name__}) — bascule sur /api/users")
+
+    tete = get_ld(f"{api}/api/users", params={"page": 1})
+    lignes = tete.get("member") or tete.get("hydra:member") or []
+    total = int(tete.get("totalItems") or tete.get("hydra:totalItems") or 0)
+    if not lignes or not total:
+        raise RuntimeError("annuaire vide via /api/users")
+    par_page = len(lignes)
+    pages = (total + par_page - 1) // par_page
+    users = list(lignes)
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        for d in ex.map(lambda p: get(f"{api}/api/users", params={"page": p}), range(2, pages + 1)):
+            users.extend(d if isinstance(d, list) else (d or {}).get("hydra:member", []))
+    if len(users) < 0.95 * total:
+        raise RuntimeError(f"annuaire incomplet ({len(users)}/{total})")
+    print(f"annuaire : {len(users)} membres via /api/users ({pages} pages)")
+    return users
+
 # ---------------- pipeline ----------------
 def run():
     api = os.environ["API_BASE"].rstrip("/")
+
+    # 1) Authentification, 2) contrôle des endpoints. Aucune écriture tant que ce n'est pas vert.
+    login(api)
+    anomalies, old = preflight(api)
+    if anomalies:
+        raise RuntimeError("contrôle des endpoints en échec — rien n'a été modifié : "
+                           + " ; ".join(anomalies)[:400])
+    if "--verifier" in sys.argv or os.environ.get("VERIFIER") == "1":
+        print("mode vérification : contrôle vert, arrêt avant tout traitement")
+        return
+
     now = datetime.datetime.now(PARIS)
     today = now.date()
     today_iso = today.isoformat()
     maj_iso = now.strftime("%Y-%m-%dT%H:%M")  # date + heure (Paris) de la mise à jour
 
-    # Payload précédent (cfg + dates d'inscription connues) : la base du portail est la seule source
-    old = base_lire()
+    # Payload précédent (cfg + dates d'inscription connues) : lu par le contrôle préalable,
+    # la base du portail est la seule source. Il sert aussi de filet : tout ce qui n'a pas pu être
+    # rafraîchi est repris tel quel, et en cas d'anomalie la base n'est pas réécrite du tout.
     if not old:
         raise RuntimeError("payload précédent introuvable en base (KAIROS_TOKEN manquant ou base vide)")
     print(f"payload précédent lu en base ({len(old.get('adherents', []))} membres)")
@@ -517,15 +732,8 @@ def run():
                for w in (det[x["id"]] for x in lst)]
         autres[key] = merge(tup, (old.get("autres") or {}).get(key) or [], 2)
 
-    # Membres : la 1re page donne le nombre de pages, les suivantes sont chargées en parallèle
-    first = get(f"{api}/api/users/collection", params={"page": 1, "pageSize": 500})
-    users = list(first["items"])
-    total_pages = int(first["pagination"]["totalPages"])
-    with ThreadPoolExecutor(max_workers=6) as ex:
-        for d in ex.map(lambda p: get(f"{api}/api/users/collection", params={"page": p, "pageSize": 500}),
-                        range(2, total_pages + 1)):
-            users.extend(d["items"])
-    users = dedup(users)
+    # Membres (voir list_users : users/collection si le compte y a droit, sinon /api/users)
+    users = dedup(list_users(api))
     users.sort(key=lambda u: u["id"])
     id2name = {u["id"]: name(u) for u in users}
 
@@ -640,6 +848,10 @@ def run():
     if len(membres) < 15000: errs.append(f"membres {len(membres)} < 15000")
     if len(adh_ids) < 1000: errs.append(f"liste filtrée {len(adh_ids)} < 1000")
     if len(membres) < 0.95 * len(old["adherents"]): errs.append("baisse membres > 5%")
+    if len(ateliers) < 0.90 * len(old.get("ateliers") or []): errs.append("baisse ateliers > 10%")
+    for k, lib in (("reu", "réunions"), ("for", "formations"), ("evt", "événements")):
+        anc = len((old.get("autres") or {}).get(k) or [])
+        if anc and len(autres[k]) < 0.90 * anc: errs.append(f"baisse {lib} > 10%")
     if errs:
         raise RuntimeError("garde-fous: " + "; ".join(errs))
 
@@ -704,7 +916,8 @@ if __name__ == "__main__":
     except Exception as e:
         # logs publics : ne divulguer ni URL, ni noms, ni identifiants
         msg = str(e)
-        for v in (os.environ.get("API_BASE", ""), os.environ.get("KAIROS_TOKEN", "")):
+        for v in (os.environ.get("API_BASE", ""), os.environ.get("KAIROS_TOKEN", ""),
+                  os.environ.get("API_PASS", ""), os.environ.get("API_USER", "")):
             if v:
                 msg = msg.replace(v, "***")
                 h = urlparse(v).hostname or ""

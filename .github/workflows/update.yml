@@ -36,6 +36,8 @@ jobs:
         env:
           PORTAL_PW: ${{ secrets.PORTAL_PW }}
           API_BASE: ${{ secrets.API_BASE }}
+          API_USER: ${{ secrets.API_USER }}
+          API_PASS: ${{ secrets.API_PASS }}
           LIGNEE: ${{ secrets.LIGNEE }}
           LIGNEE_FILLEULS_DE: ${{ secrets.LIGNEE_FILLEULS_DE }}
           KAIROS_TOKEN: ${{ secrets.KAIROS_TOKEN }}
