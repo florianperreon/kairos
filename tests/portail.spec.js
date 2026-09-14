@@ -716,6 +716,9 @@ test.describe('Mail Manager — production et texte libre', () => {
         groupes: lire('#mmMoi .mm-lab').map(l => l.textContent).filter(t => /^(Personnel|Équipe)/.test(t)),
         champs: lire('#mmMoi .mm-cpt .mm-c > label').map(l => l.textContent).slice(-6),
         production: (ligne('Production') || {}).innerText || '',
+        rangs: ligne('Production')
+          ? [...ligne('Production').querySelectorAll('.kpi')].map(k => k.textContent.replace(/[\s\u00a0\u202f]+/g, ' ').trim())
+          : [],
         faits: (ligne('Faits marquants') || {}).innerText || '',
         blancFaits: ligne('Faits marquants')
           ? getComputedStyle(ligne('Faits marquants').querySelector('p')).whiteSpace : '',
@@ -748,14 +751,21 @@ test.describe('Mail Manager — production et texte libre', () => {
     ]);
   });
 
-  test('personnel et équipe restent distincts une fois les deux listes fusionnées', async ({ page }) => {
+  test('personnel et équipe restent distincts sur le mur et dans l’export', async ({ page }) => {
     await ouvrir(page);
     const r = await rendre(page, DONNEES, '');
-    // Les libellés courts sont identiques des deux côtés : sur la fiche et dans l'export, sans
-    // le suffixe, on ne saurait plus lequel est lequel.
+    // Les libellés courts sont identiques des deux côtés. Sur le mur c'est le rang qui les sépare
+    // (une ligne « Personnel », une ligne « Équipe ») ; dans l'export, où tout est à plat, ce sont
+    // les libellés longs qui portent la distinction.
+    expect(r.rangs, 'deux rangs : personnel puis équipe').toHaveLength(2);
+    expect(r.rangs[0]).toMatch(/^Personnel/);
+    expect(r.rangs[0]).toContain('VA + VAA VC35 000 €');
+    expect(r.rangs[0]).toContain('Nombre de clients14');
+    expect(r.rangs[1]).toMatch(/^Équipe/);
+    expect(r.rangs[1]).toContain('VA + VAA VC80 000 €');
+    expect(r.rangs[1], 'les clients ne sont pas un chiffre d’équipe').not.toContain('Nombre de clients');
     for (const attendu of ['VA + VAA VC personnel', 'VA + VAA EC personnel',
                            'VA + VAA VC équipe', 'VA + VAA EC équipe']) {
-      expect(r.production, attendu).toContain(attendu);
       expect(r.texte.join('\n'), attendu + ' (export texte)').toContain(attendu);
     }
   });
@@ -893,5 +903,99 @@ test.describe('Mail Manager — production et texte libre', () => {
     expect(r.blancFaits, 'faits marquants').toBe('pre-wrap');
     expect(r.blancFocus, 'focus de la semaine').toBe('pre-wrap');
     expect(r.blancMot, 'mot à la lignée').toBe('pre-wrap');
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Le relevé automatique des invités (DM / Atelier Démarrage / 3 Jours) et la lisibilité du mur.
+   Depuis le 14/09/2026, « EDM / DM » ne se saisit plus : il est lu dans le réseau. */
+test.describe('Mail Manager — invités relevés et lecture du mur', () => {
+  const j = n => {
+    const d = new Date(); d.setDate(d.getDate() + n);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  };
+  // Pose un réseau minimal : moi, deux filleuls (un adhérent, un non), et quatre séances datées.
+  async function poserReseau(page, dates) {
+    return page.evaluate((D) => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      MOI_ID = 20028;
+      byId.set(20028, { id: 20028, name: 'Moi Test', parrain: 'Parrain', mgr: 'Manager', date: '2025-07-01' });
+      const fil = [{ id: 30001, name: 'Invitée Nonadherente', parrain: 'Moi Test' },
+                   { id: 30004, name: 'Filleul Adherent', parrain: 'Moi Test' }];
+      fil.forEach(f => byId.set(f.id, f));
+      children.set(norm('Moi Test'), fil);
+      ADH.clear(); ADH.add(30004);            // l'adhérent n'est plus un invité
+      A.length = 0; R.length = 0; F.length = 0; E.length = 0;
+      const s = (id, titre, start, guests) => ({ id, th: '', thRaw: '', title: titre, start, end: start,
+        lieu: 'Visio', pilotes: '', hor: '', siteId: null, max: 40, total: 5, guests, wait: [],
+        link: '', pw: '', pub: '', hab: '', k: 'a', url: '#' });
+      A.push(s(1, 'Découverte métier matinée', D.semPassee, [30001, 30004]),   // l'adhérent ne compte pas
+             s(2, 'Atelier Démarrage', D.semPassee, [30001]),
+             s(3, 'Découverte métier visio', D.semCours, [30001]),
+             s(4, 'Clefs de la communication - Niveau 1', D.vieux, [20028]),   // une session que j'ai suivie
+             s(5, 'Formation à venir', D.futurLoin, [20028]));                 // au-delà de 30 jours
+      return true;
+    }, dates);
+  }
+
+  test('EDM / DM ne se saisit plus à la main', async ({ page }) => {
+    await ouvrir(page);
+    const champs = await page.evaluate(() => MM_CPT.map(c => c[1]));
+    expect(champs).toEqual(['R0', 'R1', 'R2', 'R2 bis', 'R3', 'RX']);
+    expect(champs, 'le compteur manuel a disparu').not.toContain('EDM / DM');
+  });
+
+  test('les invités en DM / AD / 3 Jours sont relevés par semaine et depuis le début', async ({ page }) => {
+    await ouvrir(page);
+    const sem = await page.evaluate(() => mmSemCour());
+    await poserReseau(page, { semPassee: j(-4), semCours: j(1), vieux: j(-200), futurLoin: j(120) });
+    const a = await page.evaluate((sem) => {
+      // la semaine « passée » du mail manager se termine hier
+      return mmAuto(sem);
+    }, sem);
+    expect(a.invP, 'semaine écoulée').toMatchObject({ dm: 1, ad: 1, jr: 0 });
+    expect(a.invPN.dm, 'un filleul déjà adhérent n’est pas un invité').toEqual(['Invitée Nonadherente']);
+    expect(a.invC, 'semaine en cours').toMatchObject({ dm: 1, ad: 0, jr: 0 });
+    expect(a.invT, 'depuis le début, la même personne n’est comptée qu’une fois par catégorie')
+      .toMatchObject({ dm: 1, ad: 1, jr: 0 });
+  });
+
+  test('l’historique des sessions suivies remonte au début, et l’à-venir n’a plus d’horizon', async ({ page }) => {
+    await ouvrir(page);
+    const sem = await page.evaluate(() => mmSemCour());
+    await poserReseau(page, { semPassee: j(-4), semCours: j(1), vieux: j(-200), futurLoin: j(120) });
+    const a = await page.evaluate((sem) => mmAuto(sem), sem);
+    // Avant, sp ne couvrait que la semaine écoulée et ag s'arrêtait à 30 jours.
+    expect(a.sh.map(x => x.t), 'tout ce que j’ai suivi').toContain('Clefs de la communication - Niveau 1');
+    expect(a.sp.map(x => x.t), 'la semaine écoulée reste à part').not.toContain('Clefs de la communication - Niveau 1');
+    expect(a.ag.map(x => x.t), 'une session à 120 jours est bien listée').toContain('Formation à venir');
+  });
+
+  test('le mur range les objectifs une nature par ligne', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      const obj = { va_dec: 300000, va_pmr: 600000, eva_dec: 50000, clients_dec: 20,
+                    filleuls_pmr: 12, dm_pmr: 10, r0sem_dec: 3, r1sem_dec: 2,
+                    statut_dec: 'DEVMAN', statut_pmr: 'XMAN' };
+      const d = { prod: { va: 30000, eva: 10000, clients: 10 }, p: {}, c: {}, av: {}, sous: [],
+                  auto: { fil: 4, inv: { dm: 1 } } };
+      const el = document.createElement('div');
+      el.innerHTML = mmFiche(d, '', mmSemCour(), obj);
+      const ligne = k => [...el.querySelectorAll('.l')].find(x => x.querySelector('.k').textContent.startsWith(k));
+      return [...ligne('Objectifs').querySelectorAll('.kpi')]
+        // le premier nœud texte d'une puce, c'est son intitulé (la valeur vit dans le <b>)
+        .map(k => [...k.querySelectorAll('i')].map(i => i.childNodes[0].textContent.trim()));
+    });
+    // sept rangs, dans l'ordre demandé — les deux échéances d'une même nature restent ensemble
+    expect(r).toHaveLength(7);
+    expect(r[0].every(t => t.startsWith('VA + VAA personnel'))).toBe(true);
+    expect(r[1].every(t => t.startsWith('VA + VAA équipe'))).toBe(true);
+    expect(r[2].every(t => t.startsWith('Clients'))).toBe(true);
+    expect(r[3].every(t => t.startsWith('Filleuls'))).toBe(true);
+    expect(r[4].every(t => t.startsWith('Invités DM'))).toBe(true);
+    expect(r[5].join(' ')).toMatch(/R0\/semaine.*R1\/semaine/);
+    expect(r[6].every(t => t.startsWith('Statut'))).toBe(true);
   });
 });

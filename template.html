@@ -904,6 +904,12 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-add{margin-top:10px;padding:7px 13px;font-size:13px}
 .mm-tbl td.vide{color:var(--ink-3);font-style:italic}
 .mm-wrap{overflow-x:auto}
+.mm-hist{margin-top:8px}
+.mm-hist>summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--accent);list-style:none;padding:4px 0}
+.mm-hist>summary::-webkit-details-marker{display:none}
+.mm-hist>summary::before{content:'▸ ';font-size:11px}
+.mm-hist[open]>summary::before{content:'▾ '}
+.mm-hist-l{max-height:320px;overflow-y:auto;border-left:2px solid var(--line);padding-left:10px;margin-top:4px}
 .mm-pmr td.num input{max-width:190px;margin-left:auto;display:block}
 .mm-pmr td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums}
 @media (max-width:640px){
@@ -979,7 +985,9 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-f .v{min-width:0}
 .mm-f .v p{margin:0}
 .mm-pre{margin:0;white-space:pre-wrap}
-.mm-f .kpi{display:flex;flex-wrap:wrap;gap:5px}
+.mm-f .kpi{display:flex;flex-wrap:wrap;gap:5px;align-items:baseline}
+.mm-f .kpi+.kpi{margin-top:5px}
+.mm-f .kpi em{font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);min-width:74px}
 .mm-f .kpi i{font-style:normal;background:var(--surface-2);border-radius:6px;padding:1px 9px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .mm-f .kpi i b{font-weight:800;margin-left:3px}
 .mm-f .kpi i.ok{background:var(--gold-soft);color:var(--gold-ink)}
@@ -3304,7 +3312,8 @@ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !locat
    sait déjà est calculé (lignée, statut FORMAN, sessions, filleuls, invités) ; la personne ne
    saisit que ce qu'elle seule connaît. Une ligne par personne et par semaine (clé = lundi ISO). */
 
-const MM_CPT   = [['edm','EDM / DM'],['r0','R0'],['r1','R1'],['r2','R2'],['r2b','R2 bis'],['r3','R3'],['rx','RX']];
+// EDM / DM ne se saisit plus : les invités présents en DM / AD / 3 Jours sont relevés dans le réseau.
+const MM_CPT   = [['r0','R0'],['r1','R1'],['r2','R2'],['r2b','R2 bis'],['r3','R3'],['rx','RX']];
 const MM_AV    = [['r0','R0'],['r1','R1'],['r2','R2'],['r3','R3'],['rx','RX']];
 // Production. Le 4e libellé sert là où les deux listes sont fusionnées (fiche de lecture, export
 // texte) : « VA + VAA VC » ne veut rien dire tout seul une fois le personnel et l'équipe mélangés.
@@ -3396,6 +3405,22 @@ const mmEur = n => (Math.round(mmN(n))).toLocaleString('fr-FR')+' €';
 const mmInit = nom => (nom||'?').split(/[\s-]+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
 
 /* --- le bloc automatique : ce que le réseau sait déjà --- */
+const MM_ORIGINE = '2000-01-01', MM_FIN = '9999-12-31';
+// Les invités présents en Découverte Métier / Atelier Démarrage / 3 Jours sur une fenêtre de dates.
+// Un invité est un filleul qui n'est PAS encore adhérent : une fois la cotisation réglée, la
+// personne vient aux séances comme consœur de la lignée, plus comme invitée à découvrir le métier.
+// Une même personne n'est comptée qu'une fois par catégorie sur la fenêtre.
+function mmInvites(d1, d2){
+  const ids = new Map(mmMesFilleuls().filter(m=>!ADH.has(m.id)).map(m=>[m.id, m.name]));
+  const vus = {dm:new Map(), ad:new Map(), jr:new Map()};
+  [].concat(A||[],E||[]).forEach(s=>{
+    const k = mmTitreCat(s.title);
+    if(!k || !s.start || s.start<d1 || s.start>d2) return;
+    (s.guests||[]).forEach(g=>{ if(ids.has(+g)) vus[k].set(+g, ids.get(+g)); });
+  });
+  return { n:{dm:vus.dm.size, ad:vus.ad.size, jr:vus.jr.size},
+           noms:{dm:[...vus.dm.values()], ad:[...vus.ad.values()], jr:[...vus.jr.values()]} };
+}
 function mmTitreCat(t){
   const n=norm(t).replace(/[^a-z0-9]+/g,' ');
   if(n.includes('decouverte metier')||n.includes('decouverte du metier')) return 'dm';
@@ -3436,23 +3461,21 @@ function mmAuto(sem){
   if(ob){ a.fn=ob.n||0; a.ftot=ob.tot||0; }
   a.sp = mmSessions(vAddDays(sem,-7), vAddDays(sem,-1));
   a.sc = mmSessions(sem, vAddDays(sem,6));
-  a.ag = mmSessions(vAddDays(sem,7), vAddDays(sem,37));
+  a.ag = mmSessions(vAddDays(sem,7), MM_FIN);            // tout ce qui est inscrit, sans horizon
+  a.sh = mmSessions(MM_ORIGINE, vAddDays(sem,-1));       // tout l'historique, jusqu'à hier
   const mes = mmMesFilleuls();
   a.fil = mes.length;
   a.filadh = mes.filter(m=>ADH.has(m.id)).length;
   a.filN = mes.map(m=>m.name);
-  // Un invité est un filleul qui n'est PAS encore adhérent : une fois la cotisation réglée, la
-  // personne vient aux séances comme consœur de la lignée, plus comme invitée à découvrir le métier.
-  const ids = new Map(mes.filter(m=>!ADH.has(m.id)).map(m=>[m.id, m.name]));
   const deb = mmEcheances().debut;
-  const vus = {dm:new Map(), ad:new Map(), jr:new Map()};
-  [].concat(A||[],E||[]).forEach(s=>{
-    const k=mmTitreCat(s.title);
-    if(!k || !s.start || s.start<deb) return;
-    (s.guests||[]).forEach(g=>{ if(ids.has(+g)) vus[k].set(+g, ids.get(+g)); });
-  });
-  a.inv={dm:vus.dm.size, ad:vus.ad.size, jr:vus.jr.size};
-  a.invN={dm:[...vus.dm.values()], ad:[...vus.ad.values()], jr:[...vus.jr.values()]};
+  const ex = mmInvites(deb, MM_FIN);
+  a.inv = ex.n; a.invN = ex.noms;                        // sur l'exercice en cours
+  const tt = mmInvites(MM_ORIGINE, MM_FIN);
+  a.invT = tt.n; a.invTN = tt.noms;                      // depuis le début
+  const pas = mmInvites(vAddDays(sem,-7), vAddDays(sem,-1));
+  a.invP = pas.n; a.invPN = pas.noms;                    // semaine écoulée
+  const cou = mmInvites(sem, vAddDays(sem,6));
+  a.invC = cou.n; a.invCN = cou.noms;                    // semaine en cours
   try{ a.dorm=(filleulsEndormis()||[]).length; }catch(e){ a.dorm=0; }
   return a;
 }
@@ -3672,6 +3695,21 @@ function mmSousTotaux(){
   if(vi) vi.textContent = mmEur(L.reduce((x,y)=>x+mmN(y.vi),0));
   if(vp) vp.textContent = mmEur(L.reduce((x,y)=>x+mmN(y.vp),0));
 }
+const MM_INV = [['dm','Découverte Métier'],['ad','Atelier Démarrage'],['jr','3 Jours de la Réussite']];
+// Les invités relevés sur une fenêtre : trois compteurs et les noms en clair.
+function mmInvBloc(n, noms, vide){
+  n = n||{}; noms = noms||{};
+  if(!MM_INV.some(([k])=>n[k])) return '<p class="mm-vide">'+esc(vide||'Aucun invité inscrit sur cette période.')+'</p>';
+  return '<div class="mm-lig">' + MM_INV.map(([k,lib])=>
+      '<div'+((noms[k]||[]).length?' title="'+esc(noms[k].join(' · '))+'"':'')
+    + '><span>'+esc(lib)+'</span><b>'+(n[k]||0)+'</b>'+mmNoms(noms[k])+'</div>').join('') + '</div>';
+}
+// Tout l'historique des sessions suivies, replié : le plus récent d'abord.
+function mmHistorique(items){
+  if(!items || !items.length) return '';
+  return '<details class="mm-hist"><summary>Tout l’historique — '+items.length+' session'+(items.length>1?'s':'')+'</summary>'
+       + '<div class="mm-hist-l">'+mmListeAuto(items.slice().reverse(),'')+'</div></details>';
+}
 function mmListeAuto(items, vide){
   if(!items || !items.length) return '<p class="mm-vide">'+esc(vide)+'</p>';
   return '<ul class="mm-auto">'+items.map(s=>'<li><span class="d">'+esc(fmtD(s.d))+'</span><span>'+esc(s.t)+'</span></li>').join('')+'</ul>';
@@ -3771,10 +3809,13 @@ function mmCorps(d, prive, ro, sem){
   // 1 — Semaine écoulée
   h += mmSec(1,'Semaine écoulée (S'+mmNo(vAddDays(sem,-7))+')','',
       mmCompteurs(d,'p',MM_CPT,ro,prec)
+    + '<label class="mm-lab">Invités en séance <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
+    + mmInvBloc(a.invP, a.invPN, 'Aucun invité en séance la semaine dernière.')
     + '<label class="mm-lab">Signatures / souscriptions</label>'
     + mmSous(d, ro)
     + '<label class="mm-lab">Formations, ateliers et événements suivis <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
     + mmListeAuto(a.sp,'Aucune session la semaine dernière.')
+    + mmHistorique(a.sh)
     + '<label class="mm-lab">Faits marquants</label>'
     + (ro ? mmPara(d.pf||'—')
           : '<textarea class="mm-txt" data-mm="pf" rows="3" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>'), true);
@@ -3782,6 +3823,8 @@ function mmCorps(d, prive, ro, sem){
   // 2 — Semaine en cours
   h += mmSec(2,'Semaine en cours (S'+mmNo(sem)+')','',
       mmCompteurs(d,'c',MM_CPT,ro,null)
+    + '<label class="mm-lab">Invités en séance <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
+    + mmInvBloc(a.invC, a.invCN, 'Aucun invité en séance cette semaine.')
     + '<label class="mm-lab">Sessions de la semaine <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
     + mmListeAuto(a.sc,'Aucune session cette semaine.')
     + '<label class="mm-lab">Mon focus de la semaine</label>'
@@ -3806,7 +3849,9 @@ function mmCorps(d, prive, ro, sem){
     + '<div'+tt(a.filN)+'><span>Filleuls</span><b>'+(a.fil||0)+' dont '+(a.filadh||0)+' adhérent'+((a.filadh||0)>1?'s':'')+'</b>'+mmNoms(a.filN)+'</div>'
     + '</div>'
     + (a.dorm ? '<p class="mm-note">⚠︎ '+a.dorm+' filleul'+(a.dorm>1?'s':'')+' adhérent'+(a.dorm>1?'s':'')+' sans séance depuis plus de 60 jours.</p>' : '')
-    + '<p class="mm-note">Invités comptés depuis le '+fmtD(ech.debut)+' (début d’exercice) — un filleul déjà adhérent n’est plus compté comme invité.</p>');
+    + '<p class="mm-note">Invités comptés depuis le '+fmtD(ech.debut)+' (début d’exercice) — un filleul déjà adhérent n’est plus compté comme invité.</p>'
+    + '<label class="mm-lab">Depuis le début <small style="font-weight:400;color:var(--ink-3)">— tous exercices confondus</small></label>'
+    + mmInvBloc(a.invT, a.invTN, 'Aucun invité en séance pour l’instant.'));
 
   // 5 — Production
   const champProd = ([k,lib,u]) =>
@@ -3852,7 +3897,7 @@ function mmCorps(d, prive, ro, sem){
     + '</div>' + (a.ftot ? mmJauge('Progression '+(a.statut||''), a.fn, a.ftot, '') : ''));
 
   // 8 — Agenda
-  h += mmSec(8,'Formations et événements à venir','automatique', mmListeAuto(a.ag,'Rien d’inscrit dans les 30 prochains jours.'));
+  h += mmSec(8,'Formations et événements à venir','automatique', mmListeAuto(a.ag,'Rien d’inscrit à venir.'));
 
   // 9 — Un mot pour ma lignée
   h += '<div class="mm-prive"><b>Un mot pour ma lignée</b>'
@@ -3905,12 +3950,18 @@ function mmFiche(d, prive, sem, obj){
       + (mmN(x.vp)?' <span class="mut">(+'+mmEur(x.vp)+' programmés)</span>':'')).join(' · ')
       + ' — <b>total '+mmEur(ti)+(tp?' · '+mmEur(tp)+' programmés':'')+'</b></p>';
   }
+  const invSem = (n,noms) => MM_INV.filter(([k])=>(n||{})[k]).map(([k,lib])=>
+      '<i'+((noms||{})[k]&&noms[k].length?' title="'+esc(noms[k].join(' · '))+'"':'')
+    + '>'+esc(lib)+'<b>'+n[k]+'</b></i>').join('');
+  const invP = invSem(a.invP, a.invPN);
+  if(invP) bloc += '<div class="kpi" style="margin-top:5px">'+invP+'</div>';
   h += mmLigne('Semaine S'+mmNo(vAddDays(sem,-7)), bloc || '<span class="mut">Rien de déclaré.</span>');
   h += mmLigne('Sessions suivies', mmDates(a.sp));
   h += mmLigne('Faits marquants', d.pf ? mmPara(d.pf) : '');
 
   // semaine en cours
-  h += mmLigne('Semaine S'+mmNo(sem), mmKpi(d,'c',MM_CPT));
+  const invC = invSem(a.invC, a.invCN);
+  h += mmLigne('Semaine S'+mmNo(sem), mmKpi(d,'c',MM_CPT) + (invC?'<div class="kpi" style="margin-top:5px">'+invC+'</div>':''));
   h += mmLigne('Sessions prévues', mmDates(a.sc));
   h += mmLigne('Focus', d.cf ? mmPara(d.cf) : '');
 
@@ -3926,19 +3977,25 @@ function mmFiche(d, prive, sem, obj){
   if(inv.jr) eq.push('<i>3 Jours<b>'+inv.jr+'</b></i>');
   if(a.fil) eq.push('<i>Filleuls<b>'+a.fil+'</b></i>', '<i>dont adhérents<b>'+(a.filadh||0)+'</b></i>');
   const noms = [].concat(invN.dm||[],invN.ad||[],invN.jr||[]);
+  const tot0 = a.invT||{};
+  const dep = MM_INV.filter(([k])=>tot0[k]).map(([k,lib])=>'<i class="att">'+esc(lib)+'<b>'+tot0[k]+'</b></i>').join('');
   h += mmLigne('Équipe', eq.length
     ? '<div class="kpi">'+eq.join('')+'</div>'
+      + (dep?'<div class="kpi"><em>Depuis le début</em>'+dep+'</div>':'')
       + (noms.length?'<p class="mut" style="margin-top:4px">Invités : '+esc([...new Set(noms)].join(' · '))+'</p>':'')
     : '');
 
-  // production
-  const prod=[];
-  MM_PROD.concat(MM_PRODE).forEach(([k,lib,u,long])=>{
+  // production — une ligne pour le personnel, une pour l'équipe : c'est ce qu'on compare
+  const puce = ([k,lib,u]) => {
     const v=mmG(d,'prod.'+k);
-    if(mmN(v)) prod.push('<i>'+esc(long||lib)+'<b>'+(u==='€'?mmEur(v):mmN(v))+'</b></i>');
-  });
-  h += mmLigne('Production <span class="mut">'+esc(mmExercice())+'</span>',
-       prod.length ? '<div class="kpi">'+prod.join('')+'</div>' : '');
+    return mmN(v) ? '<i>'+esc(lib)+'<b>'+(u==='€'?mmEur(v):mmN(v))+'</b></i>' : '';
+  };
+  const rang = (titre, liste) => {
+    const on = liste.map(puce).filter(Boolean);
+    return on.length ? '<div class="kpi"><em>'+esc(titre)+'</em>'+on.join('')+'</div>' : '';
+  };
+  const prod = rang('Personnel', MM_PROD) + rang('Équipe', MM_PRODE);
+  h += mmLigne('Production <span class="mut">'+esc(mmExercice())+'</span>', prod);
 
   // PMR passés (VA + VAA VC)
   const pmr = mmExercicesPasses().map(([an,lib])=>{
@@ -3948,24 +4005,29 @@ function mmFiche(d, prive, sem, obj){
   }).filter(Boolean);
   h += mmLigne('PMR passés', pmr.length ? '<div class="kpi">'+pmr.join('')+'</div>' : '');
 
-  // objectifs
-  const obl=[];
-  [['va','VA + VAA personnel','€'],['eva','VA + VAA équipe','€'],['clients','Clients',''],['filleuls','Filleuls',''],['dm','Invités DM',''],['r0sem','R0/semaine',''],['r1sem','R1/semaine','']].forEach(([k,lib,u])=>{
-    [['dec','31/12'],['pmr','31/07']].forEach(([sfx,lab])=>{
-      const c=obj[k+'_'+sfx]; if(!mmN(c)) return;
-      const fait = k==='va' ? mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))
-                 : k==='eva' ? mmN(mmG(d,'prod.eva'))+mmN(mmG(d,'prod.evaec'))
-                 : k==='clients' ? mmN(mmG(d,'prod.clients'))
-                 : k==='filleuls' ? (a.fil||0)
-                 : k==='dm' ? ((a.inv||{}).dm||0) : null;
-      const pct = (fait!==null && mmN(c)) ? Math.round(fait/mmN(c)*100) : null;
-      obl.push('<i class="'+(pct!==null&&pct>=100?'ok':'att')+'">'+esc(lib)+' '+lab+'<b>'
-        + (u==='€'?mmEur(c):c) + (pct!==null?' · '+pct+' %':'') + '</b></i>');
-    });
-  });
-  if(obj.statut_dec) obl.push('<i class="att">Statut 31/12<b>'+esc(obj.statut_dec)+'</b></i>');
-  if(obj.statut_pmr) obl.push('<i class="att">Statut 31/07<b>'+esc(obj.statut_pmr)+'</b></i>');
-  h += mmLigne('Objectifs', obl.length ? '<div class="kpi">'+obl.join('')+'</div>' : '');
+  // objectifs — une ligne par nature : personnel, équipe, clients, filleuls, invités, rythme, statut
+  const fait = k => k==='va' ? mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))
+                  : k==='eva' ? mmN(mmG(d,'prod.eva'))+mmN(mmG(d,'prod.evaec'))
+                  : k==='clients' ? mmN(mmG(d,'prod.clients'))
+                  : k==='filleuls' ? (a.fil||0)
+                  : k==='dm' ? ((a.inv||{}).dm||0) : null;
+  const objPuce = ([k,lib,u]) => [['dec','31/12'],['pmr','31/07']].map(([sfx,lab])=>{
+    const c=obj[k+'_'+sfx]; if(!mmN(c)) return '';
+    const f=fait(k), pct=(f!==null&&mmN(c))?Math.round(f/mmN(c)*100):null;
+    return '<i class="'+(pct!==null&&pct>=100?'ok':'att')+'">'+esc(lib)+' '+lab+'<b>'
+      + (u==='€'?mmEur(c):c) + (pct!==null?' · '+pct+' %':'') + '</b></i>';
+  }).join('');
+  const objRang = liste => { const on=liste.map(objPuce).join(''); return on ? '<div class="kpi">'+on+'</div>' : ''; };
+  let obl = objRang([['va','VA + VAA personnel','€']])
+          + objRang([['eva','VA + VAA équipe','€']])
+          + objRang([['clients','Clients','']])
+          + objRang([['filleuls','Filleuls','']])
+          + objRang([['dm','Invités DM','']])
+          + objRang([['r0sem','R0/semaine',''],['r1sem','R1/semaine','']]);
+  const st = (obj.statut_dec?'<i class="att">Statut 31/12<b>'+esc(obj.statut_dec)+'</b></i>':'')
+           + (obj.statut_pmr?'<i class="att">Statut 31/07<b>'+esc(obj.statut_pmr)+'</b></i>':'');
+  if(st) obl += '<div class="kpi">'+st+'</div>';
+  h += mmLigne('Objectifs', obl);
 
   // habilitations
   const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
@@ -4190,9 +4252,16 @@ function mmTexte(d, nom, sem){
     const ti=sous.reduce((n,x)=>n+mmN(x.vi),0), tp=sous.reduce((n,x)=>n+mmN(x.vp),0);
     L.push('- Total : '+mmEur(ti)+(tp?' · '+mmEur(tp)+' programmés':''));
   }
+  const invL = (n,noms) => MM_INV.filter(([k])=>(n||{})[k]).map(([k,lib])=>
+      '- '+lib+' : '+n[k]+(((noms||{})[k]||[]).length?' ('+noms[k].join(' · ')+')':''));
+  const iP = invL(a.invP, a.invPN);
+  if(iP.length){ L.push('Invités en séance :'); iP.forEach(x=>L.push(x)); }
   if((a.sp||[]).length){ L.push('Sessions suivies :'); a.sp.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t)); }
+  if((a.sh||[]).length) L.push('Sessions suivies depuis le début : '+a.sh.length);
   libre('Faits marquants', d.pf);
   bloc('2 - Semaine en cours (S'+mmNo(sem)+')','c',MM_CPT);
+  const iC = invL(a.invC, a.invCN);
+  if(iC.length){ L.push('Invités en séance :'); iC.forEach(x=>L.push(x)); }
   if((a.sc||[]).length){ L.push('Sessions de la semaine :'); a.sc.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t)); }
   libre('Mon focus de la semaine', d.cf);
   bloc('3 - Nombre de RDV d’avance','av',MM_AV);
@@ -4202,6 +4271,8 @@ function mmTexte(d, nom, sem){
   L.push('- Invités inscrits à l’Atelier Démarrage : '+(inv.ad||0));
   L.push('- Invités inscrits aux 3 Jours de la Réussite : '+(inv.jr||0));
   L.push('- Filleuls : '+(a.fil||0)+' dont '+(a.filadh||0)+' adhérent'+((a.filadh||0)>1?'s':''));
+  const iT = invL(a.invT, {});
+  if(iT.length){ L.push('Depuis le début :'); iT.forEach(x=>L.push(x)); }
   L.push(''); L.push('5 - Production — PMR en cours ('+mmExercice()+')');
   MM_PROD.concat(MM_PRODE).forEach(([k,lib,u,long])=>{
     const v=mmG(d,'prod.'+k); if(v==null||v==='') return;
