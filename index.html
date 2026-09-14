@@ -771,6 +771,104 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 :root[data-theme="dark"] .sact .urg{background:#4A2E0F;color:#FBBF77}
 .acts-ok{margin:0;padding:14px;text-align:center;background:var(--gold-soft);color:var(--gold-ink);border-radius:10px;font-family:"Sora";font-weight:700;font-size:15px}
 .acts-n{font-size:13px;color:var(--ink-2);margin:-4px 0 12px}
+
+/* ---------- Mail Manager ---------- */
+.mm-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-bottom:4px}
+.mm-head h2{font-size:19px}
+.mm-sem{font-size:13px;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.mm-sem b{color:var(--accent)}
+.mm-sub{color:var(--ink-2);font-size:13.5px;margin:6px 0 0}
+.mm-etat{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.mm-etat.pub{background:var(--gold-soft);color:var(--gold-ink)}
+.mm-etat.bro{background:var(--surface-2);color:var(--ink-2)}
+.mm-etat.non{background:var(--accent-soft);color:var(--accent)}
+
+.mm-sec{border:1px solid var(--line);border-radius:var(--r);margin:12px 0;background:var(--surface);overflow:hidden}
+.mm-sec>summary{cursor:pointer;list-style:none;padding:12px 14px;font-family:"Sora";font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:9px}
+.mm-sec>summary::-webkit-details-marker{display:none}
+.mm-sec>summary::before{content:'▸';color:var(--ink-3);font-size:12px;transition:transform .15s}
+.mm-sec[open]>summary::before{transform:rotate(90deg)}
+.mm-sec>summary .n{width:21px;height:21px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font-size:11.5px;display:grid;place-items:center;flex:none}
+.mm-sec>summary .auto{margin-left:auto;font-size:11px;font-weight:700;color:var(--ink-3);background:var(--surface-2);border-radius:99px;padding:2px 8px}
+.mm-bd{padding:2px 14px 14px;border-top:1px solid var(--line)}
+
+.mm-cpt{display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:9px;margin:12px 0}
+#v-mm input[type=number]{-moz-appearance:textfield}
+#v-mm input[type=number]::-webkit-outer-spin-button,#v-mm input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.mm-c{background:var(--ground);border:1px solid var(--line);border-radius:10px;padding:8px 9px}
+.mm-c label{display:block;font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--ink-3);text-transform:uppercase;margin-bottom:4px}
+.mm-c .row{display:flex;align-items:center;gap:5px}
+.mm-c input{width:100%;min-width:0;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);padding:6px 4px;font:inherit;font-size:15px;font-variant-numeric:tabular-nums;text-align:center}
+.mm-c button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:7px;width:25px;height:30px;flex:none;cursor:pointer;font-size:15px;line-height:1;padding:0}
+.mm-c button:hover{border-color:var(--accent);color:var(--accent)}
+.mm-c .dlt{font-size:11px;color:var(--ink-3);margin-top:3px;min-height:14px}
+.mm-c .dlt.up{color:var(--ok)} .mm-c .dlt.dn{color:var(--bad)}
+
+.mm-txt{width:100%;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);padding:9px 10px;font:inherit;font-size:14px;resize:vertical;min-height:62px}
+.mm-lab{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin:12px 0 5px}
+.mm-note{font-size:12px;color:var(--ink-3);margin:5px 0 0}
+
+.mm-auto{margin:10px 0 0;padding:0;list-style:none}
+.mm-auto li{display:flex;gap:9px;padding:6px 0;border-top:1px dashed var(--line);font-size:13.5px}
+.mm-auto li:first-child{border-top:0}
+.mm-auto .d{color:var(--ink-3);font-variant-numeric:tabular-nums;flex:none;min-width:74px}
+.mm-vide{color:var(--ink-3);font-size:13px;font-style:italic;margin:8px 0 0}
+
+.mm-lig{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.mm-lig div{background:var(--ground);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.mm-lig span{display:block;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+.mm-lig b{font-size:14.5px;font-weight:700}
+
+.mm-tbl{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+.mm-tbl th,.mm-tbl td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
+.mm-tbl th{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+.mm-tbl td.num,.mm-tbl th.num{text-align:right;font-variant-numeric:tabular-nums}
+.mm-tbl select,.mm-tbl input{border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);padding:5px 7px;font:inherit;font-size:13px;width:100%}
+.mm-tbl tr.tot td{font-weight:800;border-top:2px solid var(--line-2);border-bottom:0}
+.mm-wrap{overflow-x:auto}
+
+.mm-j{margin-top:9px}
+.mm-j .t{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:4px}
+.mm-j .t b{font-weight:700}
+.mm-j .t span{color:var(--ink-2);font-variant-numeric:tabular-nums}
+.mm-j .bar{height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.mm-j .bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.mm-j .bar i.ok{background:var(--gold)}
+.mm-j .r{font-size:11.5px;color:var(--ink-3);margin-top:3px}
+
+.mm-mur{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.mm-p{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:99px;background:var(--surface);padding:5px 13px 5px 5px;cursor:pointer;font:inherit;text-align:left;color:inherit}
+.mm-p:hover{border-color:var(--accent)}
+.mm-p[disabled]{cursor:default;opacity:.62}
+.mm-p .av{width:31px;height:31px;border-radius:99px;flex:none;display:grid;place-items:center;font-size:11.5px;font-weight:800;background:var(--surface-2);color:var(--ink-2);font-family:"Sora"}
+.mm-p.pub .av{background:var(--gold-soft);color:var(--gold-ink)}
+.mm-p.bro .av{background:var(--accent-soft);color:var(--accent)}
+.mm-p .nm{display:block;font-size:13px;font-weight:700;line-height:1.25}
+.mm-p .st{display:block;font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.mm-p.pub .st{color:var(--ok)}
+.mm-p .sr{font-size:11px;font-weight:700;color:var(--encours-ink);background:var(--surface-2);border-radius:99px;padding:1px 7px;flex:none}
+
+.mm-bar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.mm-b{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:9px;padding:9px 15px;font-family:"Sora";font-weight:700;font-size:13.5px;cursor:pointer}
+.mm-b:hover{border-color:var(--accent);color:var(--accent)}
+.mm-b.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mm-b.pri:hover{filter:brightness(1.07);color:var(--accent-ink)}
+.mm-b[disabled]{opacity:.55;cursor:default}
+.mm-sav{font-size:12px;color:var(--ink-3);margin-left:auto}
+
+.mm-off{margin-top:16px;padding:12px 14px;border:1px dashed var(--line-2);border-radius:var(--r);font-size:13px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mm-off button{border:0;background:none;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;padding:0}
+.mm-nav{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:10px 0 0}
+.mm-nav button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:5px 11px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.mm-nav button:hover{color:var(--ink);border-color:var(--ink-3)}
+.mm-nav .cur{font-size:12.5px;font-weight:700;color:var(--ink-2);padding:0 5px;font-variant-numeric:tabular-nums}
+.mm-prive{border:1px solid var(--encours);background:var(--surface);border-radius:var(--r);padding:12px 14px;margin:12px 0}
+.mm-prive b{font-size:13.5px}
+.sact.att{border-color:var(--encours);background:linear-gradient(0deg,var(--surface),var(--surface))}
+@media (max-width:640px){
+  .mm-cpt{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+  .mm-c input{font-size:16px}
+}
 </style>
 
 <div id="lock" class="wrap">
@@ -795,6 +893,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
       <button data-v="home" class="on" title="Accueil"><span class="i" data-i="home"></span><span class="l">Accueil</span></button>
       <button data-v="surv" hidden title="Enregistré"><span class="i" data-i="surv"></span><span class="l">Enregistré</span></button>
       <button data-v="pd" id="pdTabBtn" title="Parcours Découverte"><span class="i" data-i="pd"></span><span class="l">Parcours</span></button>
+      <button data-v="mm" hidden title="Mail Manager"><span class="i" data-i="mm"></span><span class="l">Mail Manager</span></button>
       <div class="grp">Le réseau</div>
       <button data-v="cat" title="Ateliers"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></button>
       <button data-v="reu" title="Réunions d'équipe"><span class="i" data-i="reu"></span><span class="l">Réunions d'équipe</span></button>
@@ -876,6 +975,17 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
       <div class="count-line"><span class="vtoggle" data-vt="pd"><button data-m="list" class="on">Liste</button><button data-m="cal">Calendrier</button></span><span id="pdCount"></span></div>
       <div id="pdList"></div>
       <div id="pdCalWrap" hidden></div>
+    </section>
+
+    <section class="view" id="v-mm">
+      <nav class="subtabs" id="mmSub">
+        <button data-s="moi" class="on">Ma semaine</button>
+        <button data-s="mur">Le mur <span class="sub-badge" id="mmBadge" hidden></span></button>
+        <button data-s="obj">Mes objectifs</button>
+      </nav>
+      <div class="subview on" id="sm-moi"><div id="mmMoi"></div></div>
+      <div class="subview" id="sm-mur"><div id="mmMur"></div></div>
+      <div class="subview" id="sm-obj"><div id="mmObj"></div></div>
     </section>
 
     <section class="view" id="v-cat">
@@ -1489,6 +1599,22 @@ function buildActions(){
       href:'#annuaire', fait:semFait('filleuls'), go:'Voir' });
   }
 
+  // 7) Remplir mon mail manager — première action de la liste le lundi, mise en avant dès le mardi
+  if(typeof MM_COUR !== 'undefined' && MOI_ID && MM && !(MM_REG && MM_REG.participe === false)){
+    evaluable = true;
+    const sc = mmSemCour();
+    const fait = !!(MM_COUR && MM_COUR.statut === 'publie');
+    const retard = !fait && todayIso > sc;
+    const act = { cle:'mm', t:'Remplir mon mail manager',
+      urg: retard ? 'à faire' : '',
+      cls: retard ? 'att' : '',
+      d: fait ? 'Publié — ' + mmLib(sc)
+              : (retard ? 'Ton mail manager de la semaine n\u2019est pas encore publié — ' + mmLib(sc)
+                        : mmLib(sc)),
+      href:'#mail-manager', fait: fait, go: fait ? 'Voir' : 'Remplir' };
+    if(fait) actions.push(act); else actions.unshift(act);
+  }
+
   // Rien d'évaluable : on n'affiche pas le bloc, plutôt que d'annoncer « tu es à jour »
   // sans avoir rien pu vérifier.
   if(!evaluable){ panel.hidden = true; return; }
@@ -1499,7 +1625,7 @@ function buildActions(){
     ? (reste === 1 ? 'Il te reste 1 action cette semaine.' : 'Il te reste ' + reste + ' actions cette semaine.')
     : '';
   liste.innerHTML = actions.map(a =>
-    '<a class="sact' + (a.fait?' fait':'') + '" href="' + a.href + '" data-act="' + esc(a.cle) + '"'
+    '<a class="sact' + (a.fait?' fait':'') + (a.cls?' '+a.cls:'') + '" href="' + a.href + '" data-act="' + esc(a.cle) + '"'
     + (a.manuel?' data-manuel="1"':'') + (a.ancre?' data-ancre="'+esc(a.ancre)+'"':'') + '>'
     + '<span class="ck">' + (a.fait?'✓':'') + '</span>'
     + '<span class="tx"><b>' + esc(a.t) + (a.urg?'<span class="urg">'+esc(a.urg)+'</span>':'') + '</b>'
@@ -1666,6 +1792,7 @@ function boot(){
 function showTab(v){
   document.querySelectorAll('nav.tabs button, nav.botbar button, #plusCard button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
+  if(v === 'mm'){ try{ buildMM(); }catch(e){} }
   // Ouvrir la veille vaut lecture : pas de case à cocher de plus
   if(v === 'veille' && VEILLE){
     try{
@@ -1696,6 +1823,7 @@ function sideReplier(on){
 }
 /* ---------- Icônes (tracé fin, même famille pour tout le portail) ---------- */
 const ICO = {
+  mm:'<rect x="4.2" y="3.3" width="15.6" height="17.4" rx="2.2"/><path d="M8.4 8.4h7.2M8.4 12h7.2M8.4 15.6h4.2"/>',
   home:'<path d="M3.2 10.6 12 3.5l8.8 7.1"/><path d="M5.4 9.4V20.5h13.2V9.4"/><path d="M9.6 20.5v-6.1h4.8v6.1"/>',
   surv:'<path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
   pd:'<circle cx="12" cy="12" r="8.8"/><path d="m15.6 8.4-2.2 5-5 2.2 2.2-5 5-2.2Z"/>',
@@ -1765,9 +1893,9 @@ document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('cli
 
 /* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
-const TABS=['home','veille','surv','pd','cat','reu','for','evt','ann','admin'];
+const TABS=['home','veille','surv','pd','mm','cat','reu','for','evt','ann','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',surv:'enregistre',pd:'parcours-decouverte',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',admin:'admin'};
+const TAB_SLUG={home:'accueil',veille:'veille',surv:'enregistre',pd:'parcours-decouverte',mm:'mail-manager',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',admin:'admin'};
 // Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
 const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin'});
 const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
@@ -1787,6 +1915,11 @@ function tabState(tab){
   sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ if(i.value) p.set('f_'+i.dataset.f,i.value); });
   if(tab==='ann'&&typeof ANN_SORT!=='undefined'&&(ANN_SORT.col!=='date'||ANN_SORT.dir!=='desc')) p.set('tri',ANN_SORT.col+'.'+ANN_SORT.dir);
   if(tab==='admin'&&curSub!=='mbr') p.set('s', ADMIN_SLUG[curSub]);
+  if(tab==='mm'){
+    if(typeof MM_SUB!=='undefined' && MM_SUB!=='moi') p.set('s', MM_SLUG[MM_SUB]);
+    if(typeof MM_SEM!=='undefined' && MM_SEM && MM_SEM!==mmSemCour()) p.set('w', MM_SEM);
+    if(typeof MM_LU!=='undefined' && MM_LU) p.set('v', MM_LU.id);
+  }
   return p;
 }
 function hashFor(tab){ const q=tabState(tab).toString(); return '#'+(TAB_SLUG[tab]||tab)+(q?'?'+q:''); }
@@ -1816,6 +1949,13 @@ function applyState(tab,p){
     const vue=p.get('vue')||'list'; const vb=sec.querySelector('.vtoggle button[data-m="'+vue+'"]'); if(vb&&!vb.classList.contains('on')) vb.click();
     sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ const want=p.get('f_'+i.dataset.f)||''; if(i.value!==want){ i.value=want; fire(i,['input']); } });
     if(tab==='admin'){ const s=p.get('s')||''; showAdminSub(SLUG_ADMIN[s]||s||'mbr'); }
+    if(tab==='mm'){
+      const w=p.get('w')||'';
+      if(w && /^\d{4}-\d{2}-\d{2}$/.test(w) && w!==MM_SEM){ MM_SEM=vMonday(w); chargerMM(); }
+      const s=p.get('s')||''; showMMSub(SLUG_MM[s]||s||'moi');
+      const v=+(p.get('v')||0);
+      if(v && (!MM_LU || MM_LU.id!==v)) mmVoir(v); else if(!v && MM_LU){ MM_LU=null; buildMM(); }
+    }
     if(tab==='ann'&&typeof ANN_SORT!=='undefined'){ const [c,d]=(p.get('tri')||'date.desc').split('.'); if(ANN_SORT.col!==c||ANN_SORT.dir!==d){ const th=document.querySelector('#annHead th[data-col="'+c+'"]'); if(th){ th.click(); if(ANN_SORT.dir!==d) th.click(); } } }
   } finally { APPLYING=false; }
   updateResetBtns();
@@ -1991,6 +2131,7 @@ async function chargerParcours(){
     if(r.error) throw r.error;
     PARCOURS = (r.data && r.data.donnees) || null;
     MOI_ID = (r.data && r.data.membre_id) || null;
+    if(MOI_ID) chargerMM();
     if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); buildActions(); majOngletSurv(); }catch(e){} }
     if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
     return !!PARCOURS;
@@ -2766,6 +2907,712 @@ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !locat
   });
 }
 
+
+
+/* ---------- Mail Manager ----------
+   Le point hebdomadaire de la lignée, repris du mail manager du réseau. Tout ce que le réseau
+   sait déjà est calculé (lignée, statut FORMAN, sessions, filleuls, invités) ; la personne ne
+   saisit que ce qu'elle seule connaît. Une ligne par personne et par semaine (clé = lundi ISO). */
+
+const MM_CPT   = [['edm','EDM / DM'],['r0','R0'],['r1','R1'],['r2','R2'],['r2b','R2 bis'],['r3','R3'],['rx','RX']];
+const MM_AV    = [['r0','R0'],['r1','R1'],['r2','R2'],['r3','R3'],['rx','RX']];
+const MM_PROD  = [['va','VA acté','€'],['vaec','VA en cours','€'],['vaa','VAA','€'],['vp','VP annualisés','€'],['clients','Nombre de clients','']];
+const MM_PRODE = [['eva','VA équipe acté','€'],['evaec','VA équipe en cours','€']];
+const MM_HAB   = [['mia','MIA / Assurance niveau II'],['miobsp','MIOBSP'],['immo','Immobilier (transactions)'],['alpsi','ALPSI / CIF'],['orias','ORIAS']];
+const MM_FC    = [['fmia','FC Assurance (MIA)'],['fiobsp','FC IOBSP'],['fimmo','FC Immobilier'],['falpsi','FC ALPSI / CIF']];
+const MM_ETATS = [['','—'],['afaire','À faire'],['encours','En cours'],['ok','Validé']];
+const MM_OBJS  = [['va','VA perso','€'],['eva','VA équipe','€'],['clients','Nombre de clients',''],
+                  ['filleuls','Filleuls directs',''],['dm','Invités en DM',''],['r1sem','R1 par semaine',''],
+                  ['statut','Statut FORMAN visé','txt']];
+
+let MM=null, MM_PREC=null, MM_PRIVE='', MM_REG=null, MM_OBJ=null;
+let MM_MUR=[], MM_LIGNES=[], MM_SEM='', MM_SUB='moi', MM_LU=null, MM_T=null, MM_ETAT='';
+let MM_COUR=null;   // ma ligne de la semaine en cours, même quand on consulte une semaine passée
+
+/* --- semaines --- */
+const mmSemCour = () => vMonday(todayIso);
+function mmNo(iso){
+  const d=new Date(iso+'T00:00:00');
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  t.setUTCDate(t.getUTCDate() - ((t.getUTCDay()+6)%7) + 3);
+  const p=new Date(Date.UTC(t.getUTCFullYear(),0,4));
+  return 1 + Math.round(((t - p)/86400000 - 3 + ((p.getUTCDay()+6)%7))/7);
+}
+// « lundi 14 → dimanche 20 septembre 2026 » — les deux bornes en entier quand le mois ou l'année change
+function mmBornes(lundi){
+  const a=new Date(lundi+'T00:00:00'), b=new Date(vAddDays(lundi,6)+'T00:00:00');
+  const memeM = a.getMonth()===b.getMonth() && a.getFullYear()===b.getFullYear();
+  const memeA = a.getFullYear()===b.getFullYear();
+  return 'lundi '+a.getDate()+(memeM?'':' '+MOIS[a.getMonth()])+(memeA?'':' '+a.getFullYear())
+       + ' → dimanche '+b.getDate()+' '+MOIS[b.getMonth()]+' '+b.getFullYear();
+}
+const mmLib  = lundi => 'S'+mmNo(lundi)+' · '+mmBornes(lundi);
+const mmLibC = lundi => 'S'+mmNo(lundi);
+// Exercice du réseau : 1er août → 31 juillet
+function mmEcheances(){
+  const y=+todayIso.slice(0,4), m=+todayIso.slice(5,7);
+  return { dec:y+'-12-31', pmr:(m>=8?y+1:y)+'-07-31', debut:(m>=8?y:y-1)+'-08-01' };
+}
+const mmSemaines = ech => Math.max(0, Math.ceil((new Date(ech+'T00:00:00') - new Date(todayIso+'T00:00:00'))/604800000));
+
+/* --- lecture / écriture d'un chemin dans les données --- */
+const mmG = (o,p) => p.split('.').reduce((x,k)=>(x==null?undefined:x[k]), o);
+function mmS(o,p,v){
+  const ks=p.split('.'); let x=o;
+  for(let i=0;i<ks.length-1;i++){ if(typeof x[ks[i]]!=='object'||x[ks[i]]===null) x[ks[i]]={}; x=x[ks[i]]; }
+  x[ks[ks.length-1]]=v;
+}
+const mmN = v => { const n=parseFloat(String(v==null?'':v).replace(/\s/g,'').replace(',','.')); return isNaN(n)?0:n; };
+const mmEur = n => (Math.round(mmN(n))).toLocaleString('fr-FR')+' €';
+const mmInit = nom => (nom||'?').split(/[\s-]+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
+
+/* --- le bloc automatique : ce que le réseau sait déjà --- */
+function mmTitreCat(t){
+  const n=norm(t).replace(/[^a-z0-9]+/g,' ');
+  if(n.includes('decouverte metier')||n.includes('decouverte du metier')) return 'dm';
+  if(n.includes('atelier demarrage')||n.includes('demarrage')) return 'ad';
+  if(n.includes('3 jours')||n.includes('trois jours')) return 'jr';
+  return '';
+}
+function mmSessions(d1,d2){
+  if(!MOI_ID) return [];
+  return [].concat(A||[],R||[],F||[],E||[])
+    .filter(s=>s.start && s.start>=d1 && s.start<=d2 && (s.guests||[]).some(g=>+g===+MOI_ID))
+    .sort((x,y)=>(x.start||'').localeCompare(y.start||''))
+    .map(s=>({d:s.start, t:s.title}));
+}
+function mmMesFilleuls(){
+  const moi = MOI_ID ? byId.get(MOI_ID) : null;
+  return moi ? (children.get(norm(moi.name))||[]) : [];
+}
+// toute ma descendance (filleuls, filleuls de filleuls…) — pour la pastille du coach
+function mmDescendants(){
+  const moi = MOI_ID ? byId.get(MOI_ID) : null;
+  if(!moi) return new Set();
+  const out=new Set(), file=[norm(moi.name)], vus=new Set();
+  while(file.length){
+    const k=file.shift(); if(vus.has(k)) continue; vus.add(k);
+    (children.get(k)||[]).forEach(c=>{ out.add(c.id); file.push(norm(c.name)); });
+  }
+  return out;
+}
+function mmAuto(sem){
+  const a={};
+  const moi = MOI_ID ? byId.get(MOI_ID) : null;
+  if(moi){ a.nom=moi.name; a.parrain=(moi.parrain&&moi.parrain!=='Aucun')?moi.parrain:''; a.mgr=(moi.mgr&&moi.mgr!=='Aucun')?moi.mgr:''; a.entree=moi.date||''; }
+  const st=String((PARCOURS&&PARCOURS.statut)||'').replace('ROLE_','');
+  a.statut=st;
+  const et=(PARCOURS&&PARCOURS.etapes)||{};
+  const ob=et['objectifs_'+st.toLowerCase()];
+  if(ob){ a.fn=ob.n||0; a.ftot=ob.tot||0; }
+  a.sp = mmSessions(vAddDays(sem,-7), vAddDays(sem,-1));
+  a.sc = mmSessions(sem, vAddDays(sem,6));
+  a.ag = mmSessions(vAddDays(sem,7), vAddDays(sem,37));
+  const mes = mmMesFilleuls();
+  a.fil = mes.length;
+  a.filadh = mes.filter(m=>ADH.has(m.id)).length;
+  const ids = new Set(mes.map(m=>m.id)), deb = mmEcheances().debut;
+  const vus = {dm:new Set(), ad:new Set(), jr:new Set()};
+  [].concat(A||[],E||[]).forEach(s=>{
+    const k=mmTitreCat(s.title);
+    if(!k || !s.start || s.start<deb) return;
+    (s.guests||[]).forEach(g=>{ if(ids.has(+g)) vus[k].add(+g); });
+  });
+  a.inv={dm:vus.dm.size, ad:vus.ad.size, jr:vus.jr.size};
+  try{ a.dorm=(filleulsEndormis()||[]).length; }catch(e){ a.dorm=0; }
+  return a;
+}
+
+/* --- chargement --- */
+async function chargerMM(){
+  if(!SB || !SBUSER || !MOI_ID){ return false; }
+  if(!MM_SEM) MM_SEM = mmSemCour();
+  try{
+    const prec = vAddDays(MM_SEM,-7);
+    const [r,g,o,pv] = await Promise.all([
+      SB.from('mail_manager').select('semaine,donnees,statut,publie_le,maj').eq('membre_id',MOI_ID).in('semaine',[MM_SEM,prec,mmSemCour()]),
+      SB.from('mail_manager_membres').select('participe,reglages').eq('membre_id',MOI_ID).maybeSingle(),
+      SB.from('mail_manager_objectifs').select('donnees').eq('membre_id',MOI_ID).maybeSingle(),
+      SB.from('mail_manager_prive').select('texte').eq('membre_id',MOI_ID).eq('semaine',MM_SEM).maybeSingle()
+    ]);
+    if(r.error) throw r.error;
+    const lignes=r.data||[];
+    MM      = lignes.find(x=>x.semaine===MM_SEM) || {semaine:MM_SEM, donnees:{}, statut:'brouillon', publie_le:null};
+    MM_PREC = lignes.find(x=>x.semaine===prec) || null;
+    MM_COUR = lignes.find(x=>x.semaine===mmSemCour()) || (MM_SEM===mmSemCour()?MM:null);
+    MM.donnees = MM.donnees || {};
+    MM_REG  = (g.data)||{participe:true, reglages:{}};
+    MM_REG.reglages = MM_REG.reglages||{};
+    MM_OBJ  = ((o.data||{}).donnees)||{};
+    MM_PRIVE= ((pv.data||{}).texte)||'';
+    // habilitations et activité : reportées de semaine en semaine
+    if(!MM.donnees.hab && MM_REG.reglages.hab) MM.donnees.hab = JSON.parse(JSON.stringify(MM_REG.reglages.hab));
+    if(!MM.donnees.act && MM_REG.reglages.act) MM.donnees.act = MM_REG.reglages.act;
+    if(!MM.donnees.prod && MM_PREC && MM_PREC.donnees && MM_PREC.donnees.prod){
+      const p=MM_PREC.donnees.prod;
+      MM.donnees.prod = {va:p.va, vaa:p.vaa, vp:p.vp, clients:p.clients, eva:p.eva};
+    }
+  }catch(e){ return false; }
+  await chargerMMMur();
+  document.querySelectorAll('[data-v="mm"]').forEach(b=>b.hidden=false);
+  if(window.__booted){ try{ buildMM(); buildActions(); }catch(e){} }
+  return true;
+}
+async function chargerMMMur(){
+  if(!SB || !SBUSER) return false;
+  try{
+    const [m,l] = await Promise.all([
+      SB.rpc('mm_mur',{p_semaine:MM_SEM}),
+      SB.from('mail_manager').select('membre_id,donnees,statut,publie_le').eq('semaine',MM_SEM)
+    ]);
+    if(m.error) throw m.error;
+    MM_MUR = (m.data||[]).slice().sort((a,b)=>{
+      const pa=a.publie_le||'', pb=b.publie_le||'';
+      if(pa && pb) return pa.localeCompare(pb);
+      if(pa) return -1; if(pb) return 1;
+      return (a.nom||'').localeCompare(b.nom||'','fr');
+    });
+    MM_LIGNES = l.data||[];
+  }catch(e){ MM_MUR=[]; MM_LIGNES=[]; return false; }
+  mmBadge();
+  return true;
+}
+// Pastille du coach : les personnes de ma descendance qui n'ont pas encore publié
+function mmEnRetard(){
+  if(MM_SEM !== mmSemCour() || todayIso <= mmSemCour()) return [];
+  const desc = mmDescendants();
+  return MM_MUR.filter(p=>p.participe && p.statut!=='publie' && desc.has(p.membre_id));
+}
+function mmBadge(){
+  const b=document.getElementById('mmBadge');
+  const n=mmEnRetard().length;
+  if(b){ b.hidden=!n; b.textContent=n||''; }
+  document.querySelectorAll('[data-v="mm"] .l').forEach(l=>{
+    l.innerHTML='Mail Manager'+(n?' <span class="sub-badge">'+n+'</span>':'');
+  });
+}
+
+/* --- sauvegarde --- */
+function mmPlanSave(){
+  MM_ETAT='…'; mmMajEtat();
+  clearTimeout(MM_T);
+  MM_T=setTimeout(()=>mmSauver(false), 900);
+}
+function mmMajEtat(){ document.querySelectorAll('#v-mm .mm-sav').forEach(e=>{ e.textContent=MM_ETAT; }); }
+async function mmSauver(publier){
+  clearTimeout(MM_T);
+  if(!SB || !SBUSER || !MOI_ID || !MM) return false;
+  if(MM_SEM !== mmSemCour() && !publier) return false;
+  MM.donnees.auto = mmAuto(MM_SEM);
+  const l = { membre_id:MOI_ID, semaine:MM_SEM, donnees:MM.donnees, maj:new Date().toISOString() };
+  if(publier){ l.statut='publie'; l.publie_le=new Date().toISOString(); }
+  else l.statut = MM.statut==='publie' ? 'publie' : 'brouillon';
+  try{
+    const r = await SB.from('mail_manager').upsert(l,{onConflict:'membre_id,semaine'});
+    if(r.error) throw r.error;
+    MM.statut=l.statut; if(publier) MM.publie_le=l.publie_le;
+    if(MM_SEM===mmSemCour()) MM_COUR=MM;
+    // les habilitations et l'activité servent de base à la semaine suivante
+    await SB.from('mail_manager_membres').upsert(
+      { membre_id:MOI_ID, participe:MM_REG?MM_REG.participe:true,
+        reglages:Object.assign({}, MM_REG&&MM_REG.reglages, {hab:MM.donnees.hab||{}, act:MM.donnees.act||''}),
+        maj:new Date().toISOString() }, {onConflict:'membre_id'});
+    await SB.from('mail_manager_prive').upsert(
+      { membre_id:MOI_ID, semaine:MM_SEM, texte:MM_PRIVE||'', maj:new Date().toISOString() },
+      {onConflict:'membre_id,semaine'});
+    MM_ETAT = publier ? 'Publié ✓' : 'Enregistré ✓';
+    mmMajEtat();
+    setTimeout(()=>{ if(MM_ETAT.endsWith('✓')){ MM_ETAT=''; mmMajEtat(); } }, 2500);
+    await chargerMMMur();
+    if(publier){ buildMM(); }
+    buildActions();
+    return true;
+  }catch(e){ MM_ETAT='Non enregistré — réessaie'; mmMajEtat(); return false; }
+}
+async function mmParticipe(v){
+  if(!SB || !SBUSER || !MOI_ID) return;
+  MM_REG = MM_REG||{participe:true, reglages:{}};
+  MM_REG.participe = !!v;
+  try{
+    await SB.from('mail_manager_membres').upsert(
+      { membre_id:MOI_ID, participe:MM_REG.participe, reglages:MM_REG.reglages||{}, maj:new Date().toISOString() },
+      {onConflict:'membre_id'});
+  }catch(e){}
+  await chargerMMMur();
+  buildMM(); buildActions();
+}
+async function mmObjSauver(){
+  if(!SB || !SBUSER || !MOI_ID) return;
+  MM_ETAT='…'; mmMajEtat();
+  try{
+    const r = await SB.from('mail_manager_objectifs').upsert(
+      { membre_id:MOI_ID, donnees:MM_OBJ||{}, maj:new Date().toISOString() }, {onConflict:'membre_id'});
+    if(r.error) throw r.error;
+    MM_ETAT='Enregistré ✓'; mmMajEtat();
+    setTimeout(()=>{ if(MM_ETAT.endsWith('✓')){ MM_ETAT=''; mmMajEtat(); } }, 2500);
+  }catch(e){ MM_ETAT='Non enregistré — réessaie'; mmMajEtat(); }
+  buildMM();
+}
+
+/* --- rendu : briques --- */
+function mmChamp(p, val, ro, opt){
+  opt = opt||{};
+  if(ro) return '<b>'+esc(val===''||val==null?'—':(opt.eur?mmEur(val):val))+'</b>';
+  const t = opt.txt ? 'text' : 'number';
+  return '<input type="'+t+'" inputmode="'+(opt.txt?'text':'decimal')+'" data-mm="'+esc(p)+'" value="'+esc(val==null?'':val)+'"'
+       + (opt.ph?' placeholder="'+esc(opt.ph)+'"':'') + '>';
+}
+function mmCompteurs(d, base, liste, ro, prec){
+  return '<div class="mm-cpt">' + liste.map(([k,lib])=>{
+    const p=base+'.'+k, v=mmG(d,p);
+    let dlt='';
+    if(prec!==undefined && prec!==null){
+      const av=mmN(mmG(prec,p)), ap=mmN(v), df=ap-av;
+      if(df) dlt='<div class="dlt '+(df>0?'up':'dn')+'">'+(df>0?'+':'')+df+' vs S-1</div>';
+      else dlt='<div class="dlt"></div>';
+    }
+    return '<div class="mm-c"><label>'+esc(lib)+'</label>'
+      + (ro ? '<div class="row"><b>'+esc(mmN(v))+'</b></div>'
+            : '<div class="row"><button type="button" data-mmpm="-1" data-p="'+esc(p)+'">−</button>'
+              + '<input type="number" inputmode="numeric" min="0" data-mm="'+esc(p)+'" value="'+esc(v==null?'':v)+'">'
+              + '<button type="button" data-mmpm="1" data-p="'+esc(p)+'">+</button></div>')
+      + dlt + '</div>';
+  }).join('') + '</div>';
+}
+function mmListeAuto(items, vide){
+  if(!items || !items.length) return '<p class="mm-vide">'+esc(vide)+'</p>';
+  return '<ul class="mm-auto">'+items.map(s=>'<li><span class="d">'+esc(fmtD(s.d))+'</span><span>'+esc(s.t)+'</span></li>').join('')+'</ul>';
+}
+function mmSec(n, titre, auto, corps, ouvert){
+  return '<details class="mm-sec"'+(ouvert?' open':'')+'><summary><span class="n">'+esc(n)+'</span>'+esc(titre)
+       + (auto?'<span class="auto">'+esc(auto)+'</span>':'') + '</summary><div class="mm-bd">'+corps+'</div></details>';
+}
+function mmJauge(lib, fait, cible, unite){
+  const c=mmN(cible);
+  if(!c) return '';
+  const f=mmN(fait), pct=Math.max(0, Math.min(100, Math.round(f/c*100)));
+  const reste=Math.max(0, c-f);
+  return '<div class="mm-j"><div class="t"><b>'+esc(lib)+'</b><span>'
+    + (unite==='€'?mmEur(f)+' / '+mmEur(c):f+' / '+c)+' · '+pct+' %</span></div>'
+    + '<div class="bar"><i class="'+(pct>=100?'ok':'')+'" style="width:'+pct+'%"></i></div>'
+    + '<div class="r">'+(reste ? 'Reste '+(unite==='€'?mmEur(reste):reste) : 'Objectif atteint 🎉')+'</div></div>';
+}
+
+/* --- rendu : le formulaire (ou sa lecture seule) --- */
+function mmCorps(d, prive, ro, sem){
+  d = d||{}; const a = d.auto||{};
+  const prec = (!ro && MM_PREC) ? MM_PREC.donnees : null;
+  const ech = mmEcheances(), obj = MM_OBJ||{};
+  let h='';
+
+  // 0 — Ma lignée
+  h += mmSec(0,'Ma lignée','automatique',
+      '<div class="mm-lig">'
+    + '<div><span>Statut FORMAN</span><b>'+esc(a.statut||'—')+'</b></div>'
+    + '<div><span>Parrain / marraine</span><b>'+esc(a.parrain||'—')+'</b></div>'
+    + '<div><span>Manager</span><b>'+esc(a.mgr||'—')+'</b></div>'
+    + '<div><span>Intégration au réseau</span><b>'+esc(a.entree?fmtD(a.entree):'—')+'</b></div>'
+    + '</div>'
+    + '<label class="mm-lab">Activité</label>'
+    + (ro ? '<b>'+esc(d.act==='double'?'Double activité':(d.act==='simple'?'Activité principale':'—'))+'</b>'
+          : '<select data-mm="act" class="mm-txt" style="min-height:0;max-width:280px">'
+            + ['','simple','double'].map(v=>'<option value="'+v+'"'+((d.act||'')===v?' selected':'')+'>'
+              + (v==='double'?'Double activité':(v==='simple'?'Activité principale':'—'))+'</option>').join('')+'</select>'));
+
+  // 1 — Semaine écoulée
+  h += mmSec(1,'Semaine écoulée (S'+mmNo(vAddDays(sem,-7))+')','',
+      mmCompteurs(d,'p',MM_CPT,ro,prec)
+    + '<label class="mm-lab">Signatures / souscriptions</label>'
+    + '<div class="mm-cpt"><div class="mm-c"><label>Nombre</label><div class="row">'+mmChamp('sig.n',mmG(d,'sig.n'),ro)+'</div></div>'
+    + '<div class="mm-c"><label>Montant</label><div class="row">'+mmChamp('sig.m',mmG(d,'sig.m'),ro,{eur:true})+'</div></div></div>'
+    + '<label class="mm-lab">Formations, ateliers et événements suivis <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
+    + mmListeAuto(a.sp,'Aucune session la semaine dernière.')
+    + '<label class="mm-lab">Faits marquants</label>'
+    + (ro ? '<p>'+esc(d.pf||'—')+'</p>'
+          : '<textarea class="mm-txt" data-mm="pf" rows="2" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>'), true);
+
+  // 2 — Semaine en cours
+  h += mmSec(2,'Semaine en cours (S'+mmNo(sem)+')','',
+      mmCompteurs(d,'c',MM_CPT,ro,null)
+    + '<label class="mm-lab">Sessions de la semaine <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
+    + mmListeAuto(a.sc,'Aucune session cette semaine.')
+    + '<label class="mm-lab">Mon focus de la semaine</label>'
+    + (ro ? '<p>'+esc(d.cf||'—')+'</p>'
+          : '<textarea class="mm-txt" data-mm="cf" rows="2" placeholder="Ce sur quoi je mets l’énergie.">'+esc(d.cf||'')+'</textarea>'), true);
+
+  // 3 — RDV d'avance
+  const tot = MM_AV.reduce((n,[k])=>n+mmN(mmG(d,'av.'+k)),0);
+  const totP = prec ? MM_AV.reduce((n,[k])=>n+mmN(mmG(prec,'av.'+k)),0) : null;
+  h += mmSec(3,'RDV d’avance (à date)','',
+      mmCompteurs(d,'av',MM_AV,ro,prec)
+    + '<p class="mm-note"><b>Total : '+tot+'</b>'+(totP!==null?' · '+(tot-totP>=0?'+':'')+(tot-totP)+' vs la semaine dernière':'')+'</p>');
+
+  // 4 — Développement d'équipe
+  const inv=a.inv||{};
+  h += mmSec(4,'Développement d’équipe','automatique',
+      '<div class="mm-lig">'
+    + '<div><span>Invités inscrits en DM</span><b>'+(inv.dm||0)+(obj.dm_pmr?' / '+obj.dm_pmr:'')+'</b></div>'
+    + '<div><span>Invités à l’Atelier Démarrage</span><b>'+(inv.ad||0)+'</b></div>'
+    + '<div><span>Invités aux 3 Jours</span><b>'+(inv.jr||0)+'</b></div>'
+    + '<div><span>Filleuls</span><b>'+(a.fil||0)+' dont '+(a.filadh||0)+' adhérent'+((a.filadh||0)>1?'s':'')+'</b></div>'
+    + '</div>'
+    + (a.dorm ? '<p class="mm-note">⚠︎ '+a.dorm+' filleul'+(a.dorm>1?'s':'')+' adhérent'+(a.dorm>1?'s':'')+' sans séance depuis plus de 60 jours.</p>' : '')
+    + '<p class="mm-note">Invités comptés depuis le '+fmtD(ech.debut)+' (début d’exercice).</p>');
+
+  // 5 — Production
+  let prod = '<div class="mm-cpt">' + MM_PROD.map(([k,lib,u])=>
+      '<div class="mm-c"><label>'+esc(lib)+'</label><div class="row">'+mmChamp('prod.'+k,mmG(d,'prod.'+k),ro,{eur:u==='€'})+'</div></div>').join('')
+    + '</div><label class="mm-lab">Équipe</label><div class="mm-cpt">' + MM_PRODE.map(([k,lib,u])=>
+      '<div class="mm-c"><label>'+esc(lib)+'</label><div class="row">'+mmChamp('prod.'+k,mmG(d,'prod.'+k),ro,{eur:u==='€'})+'</div></div>').join('')
+    + '</div>';
+  [['va','VA perso','€'],['eva','VA équipe','€'],['clients','Clients','']].forEach(([k,lib,u])=>{
+    const fait = k==='va' ? mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))
+               : k==='eva' ? mmN(mmG(d,'prod.eva'))+mmN(mmG(d,'prod.evaec'))
+               : mmN(mmG(d,'prod.clients'));
+    [['dec','31/12',ech.dec],['pmr','31/07 (PMR)',ech.pmr]].forEach(([sfx,lab,date])=>{
+      const cible=obj[k+'_'+sfx];
+      if(!mmN(cible)) return;
+      prod += mmJauge(lib+' au '+lab, fait, cible, u);
+      const sem2=mmSemaines(date), reste=Math.max(0, mmN(cible)-fait);
+      if(sem2 && reste) prod += '<p class="mm-note">'+sem2+' semaine'+(sem2>1?'s':'')+' — rythme requis : '
+        + (u==='€' ? mmEur(reste/sem2) : (Math.ceil(reste/sem2*10)/10)) + ' par semaine.</p>';
+    });
+  });
+  if(!Object.keys(obj).length) prod += '<p class="mm-note">Pose tes objectifs dans l’onglet « Mes objectifs » pour voir le reste à faire et le rythme requis.</p>';
+  h += mmSec(5,'Production',(ro?'':'reporté de S-1'), prod);
+
+  // 6 — Habilitations & formations continues
+  const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
+  const ligne = (base,k,lib) => '<tr><td>'+esc(lib)+'</td><td>'
+    + (ro ? esc(etat(mmG(d,base+'.'+k+'.s')))
+          : '<select data-mm="'+base+'.'+k+'.s">'+MM_ETATS.map(([v,l])=>'<option value="'+v+'"'
+            +((mmG(d,base+'.'+k+'.s')||'')===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>')
+    + '</td><td>'+(ro ? esc(mmG(d,base+'.'+k+'.d')||'—')
+          : '<input type="text" data-mm="'+base+'.'+k+'.d" value="'+esc(mmG(d,base+'.'+k+'.d')||'')+'" placeholder="JJ/MM/AAAA">')
+    + '</td></tr>';
+  h += mmSec(6,'Habilitations & formations continues',(ro?'':'reporté de S-1'),
+      '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Habilitation</th><th>Statut</th><th>Date</th></tr></thead><tbody>'
+    + MM_HAB.map(([k,lib])=>ligne('hab',k,lib)).join('') + '</tbody></table></div>'
+    + '<label class="mm-lab">Formations continues de l’année</label>'
+    + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Formation continue</th><th>Statut</th><th>Validée le</th></tr></thead><tbody>'
+    + MM_FC.map(([k,lib])=>ligne('hab',k,lib)).join('') + '</tbody></table></div>'
+    + (mmRappelFC(d) ? '<p class="mm-note">⚠︎ '+esc(mmRappelFC(d))+'</p>' : ''));
+
+  // 7 — FORMAN
+  h += mmSec(7,'Objectifs FORMAN','automatique',
+      '<div class="mm-lig">'
+    + '<div><span>Niveau actuel</span><b>'+esc(a.statut||'—')+'</b></div>'
+    + '<div><span>Objectifs validés</span><b>'+(a.ftot?(a.fn+' / '+a.ftot):'—')+'</b></div>'
+    + '<div><span>Restants</span><b>'+(a.ftot?Math.max(0,a.ftot-a.fn):'—')+'</b></div>'
+    + '</div>' + (a.ftot ? mmJauge('Progression '+(a.statut||''), a.fn, a.ftot, '') : ''));
+
+  // 8 — Agenda
+  h += mmSec(8,'Formations et événements à venir','automatique', mmListeAuto(a.ag,'Rien d’inscrit dans les 30 prochains jours.'));
+
+  // 9 — Un mot pour ma lignée
+  h += '<div class="mm-prive"><b>Un mot pour ma lignée</b>'
+     + '<p class="mm-note" style="margin:3px 0 7px">Visible de ton parrain et de ta lignée au-dessus de toi, de personne d’autre. Jamais sur le mur, jamais dans le texte copié.</p>'
+     + (ro ? '<p>'+esc(prive||'—')+'</p>'
+           : '<textarea class="mm-txt" id="mmPrive" rows="3" placeholder="Une difficulté, un sujet sur lequel j’ai besoin d’aide…">'+esc(prive||'')+'</textarea>')
+     + '</div>';
+  return h;
+}
+function mmRappelFC(d){
+  const m=+todayIso.slice(5,7);
+  if(m<10) return '';
+  const reste = MM_FC.filter(([k])=>{ const s=mmG(d,'hab.'+k+'.s'); return s && s!=='ok'; });
+  return reste.length ? reste.length+' formation'+(reste.length>1?'s':'')+' continue'+(reste.length>1?'s':'')+' encore à valider avant la fin de l’année.' : '';
+}
+
+/* --- rendu : les trois sous-vues --- */
+function mmNav(){
+  const cour = mmSemCour();
+  return '<div class="mm-nav"><button type="button" data-mmw="-1">‹ Semaine précédente</button>'
+    + '<span class="cur">'+esc(mmLibC(MM_SEM))+'</span>'
+    + '<button type="button" data-mmw="1"'+(MM_SEM>=cour?' disabled':'')+'>Semaine suivante ›</button>'
+    + (MM_SEM!==cour?'<button type="button" data-mmw="0">Revenir à la semaine en cours</button>':'')+'</div>';
+}
+function mmEtatPuce(l){
+  if(!l) return '<span class="mm-etat non">Pas encore rempli</span>';
+  if(l.statut==='publie') return '<span class="mm-etat pub">Publié'+(l.publie_le?' '+esc(fmtQuand(l.publie_le)):'')+'</span>';
+  return '<span class="mm-etat bro">Brouillon</span>';
+}
+function buildMM(){
+  const em=document.getElementById('mmMoi'), eu=document.getElementById('mmMur'), eo=document.getElementById('mmObj');
+  if(!em) return;
+  if(!MM_SEM) MM_SEM=mmSemCour();
+  if(!MOI_ID || !MM){
+    em.innerHTML='<div class="panel"><p class="mm-vide">Le mail manager s’ouvre une fois ton compte rattaché à ta fiche du réseau.</p></div>';
+    if(eu) eu.innerHTML=''; if(eo) eo.innerHTML='';
+    return;
+  }
+  const cour = MM_SEM===mmSemCour();
+  const off = MM_REG && MM_REG.participe===false;
+
+  /* Ma semaine */
+  let h='<div class="panel"><div class="mm-head"><h2>Mon mail manager</h2>'
+      + '<span class="mm-sem"><b>S'+mmNo(MM_SEM)+'</b> · '+esc(mmBornes(MM_SEM))+'</span>'
+      + mmEtatPuce(MM.maj?MM:null) + '</div>'
+      + '<p class="mm-sub">À faire le lundi, mais remplissable à tout moment de la semaine. Tout ce qui est marqué « automatique » vient du réseau : rien à saisir.</p>'
+      + mmNav() + '</div>';
+  if(off){
+    h += '<div class="panel"><div class="mm-off"><span>Tu as indiqué ne pas souhaiter faire le mail manager. Tu n’apparais pas sur le mur et l’action de la semaine ne s’affiche plus sur ton accueil — tu continues à lire ceux des autres.</span>'
+       + '<button type="button" id="mmOn">Finalement, je veux le faire</button></div></div>';
+  } else {
+    h += '<div class="panel">' + mmCorps(MM.donnees, MM_PRIVE, !cour, MM_SEM)
+       + '<div class="mm-bar">'
+       + (cour ? '<button type="button" class="mm-b pri" id="mmPub">'+(MM.statut==='publie'?'Republier':'Publier mon mail manager')+'</button>' : '')
+       + '<button type="button" class="mm-b" data-mmcopy="moi">Copier en texte</button>'
+       + '<span class="mm-sav"></span></div>'
+       + (cour ? '<div class="mm-off"><span>Le mail manager, ce n’est pas pour toi ?</span><button type="button" id="mmOff">Je ne souhaite pas le faire</button></div>' : '')
+       + '</div>';
+  }
+  em.innerHTML=h;
+
+  /* Le mur */
+  if(eu) eu.innerHTML = MM_LU ? mmLecture() : mmMur();
+
+  /* Mes objectifs */
+  if(eo) eo.innerHTML = mmObjectifs();
+  mmMajEtat(); mmBadge();
+}
+
+function mmMur(){
+  const attendus = MM_MUR.filter(p=>p.participe);
+  const absents  = MM_MUR.length - attendus.length;
+  const pub = attendus.filter(p=>p.statut==='publie').length;
+  let h='<div class="panel"><div class="mm-head"><h2>Le mur de la semaine</h2>'
+      + '<span class="mm-sem"><b>S'+mmNo(MM_SEM)+'</b> · '+esc(mmBornes(MM_SEM))+'</span></div>'
+      + '<p class="mm-sub">'+pub+' mail manager'+(pub>1?'s':'')+' publié'+(pub>1?'s':'')+' sur '+attendus.length
+      + ' — les premiers publiés en tête. Clique sur quelqu’un pour lire le sien.</p>'
+      + mmNav();
+  h += '<div class="mm-mur">' + (attendus.length ? attendus.map(p=>{
+        const cl = p.statut==='publie' ? 'pub' : (p.statut==='brouillon' ? 'bro' : '');
+        const st = p.statut==='publie' ? (p.publie_le?fmtQuand(p.publie_le):'publié')
+                 : (p.statut==='brouillon' ? 'brouillon en cours' : 'pas encore');
+        const lisible = p.statut==='publie' || p.membre_id===MOI_ID;
+        return '<button type="button" class="mm-p '+cl+'" data-mmv="'+p.membre_id+'"'+(lisible?'':' disabled')+'>'
+          + '<span class="av">'+esc(mmInit(p.nom))+'</span>'
+          + '<span><span class="nm">'+esc(p.nom)+'</span><span class="st">'+esc(st)+'</span></span>'
+          + (p.serie>1?'<span class="sr">'+p.serie+' sem. 🔥</span>':'') + '</button>';
+      }).join('') : '<p class="mm-vide">Personne n’est encore attendu sur cette semaine.</p>') + '</div>';
+  if(absents) h += '<p class="mm-note">'+absents+' personne'+(absents>1?'s':'')+' ne participe'+(absents>1?'nt':'')+' pas au mail manager.</p>';
+  const retard = mmEnRetard();
+  if(retard.length) h += '<p class="mm-note">⚠︎ '+retard.length+' personne'+(retard.length>1?'s':'')+' de ta lignée n’'+(retard.length>1?'ont':'a')+' pas encore publié.</p>';
+  h += '</div>';
+
+  /* tableau de la lignée */
+  const pubs = MM_LIGNES.filter(l=>l.statut==='publie');
+  if(pubs.length){
+    const nom = id => (MM_MUR.find(p=>p.membre_id===id)||{}).nom || ('#'+id);
+    const cols = [['R1','p.r1'],['R2','p.r2'],['RDV d’avance',''],['VA acté','prod.va'],['VA en cours','prod.vaec'],['Filleuls','']];
+    const somme = {};
+    let lignes = pubs.map(l=>{
+      const d=l.donnees||{}, a=d.auto||{};
+      const av = MM_AV.reduce((n,[k])=>n+mmN(mmG(d,'av.'+k)),0);
+      const v=[mmN(mmG(d,'p.r1')), mmN(mmG(d,'p.r2')), av, mmN(mmG(d,'prod.va')), mmN(mmG(d,'prod.vaec')), (a.fil||0)];
+      v.forEach((x,i)=>{ somme[i]=(somme[i]||0)+x; });
+      return '<tr><td><b>'+esc(nom(l.membre_id))+'</b></td>'
+        + '<td class="num">'+v[0]+'</td><td class="num">'+v[1]+'</td><td class="num">'+v[2]+'</td>'
+        + '<td class="num">'+mmEur(v[3])+'</td><td class="num">'+mmEur(v[4])+'</td><td class="num">'+v[5]+'</td>'
+        + '<td>'+esc(a.statut||'—')+'</td></tr>';
+    }).join('');
+    lignes += '<tr class="tot"><td>Total ('+pubs.length+')</td><td class="num">'+(somme[0]||0)+'</td><td class="num">'+(somme[1]||0)
+      + '</td><td class="num">'+(somme[2]||0)+'</td><td class="num">'+mmEur(somme[3]||0)+'</td><td class="num">'+mmEur(somme[4]||0)
+      + '</td><td class="num">'+(somme[5]||0)+'</td><td></td></tr>';
+    h += '<div class="panel"><h2>La lignée en un coup d’œil</h2>'
+       + '<p class="mm-sub">Les mail managers publiés de la semaine '+esc(mmLibC(MM_SEM))+'.</p>'
+       + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Personne</th>'
+       + cols.map(c=>'<th class="num">'+esc(c[0])+'</th>').join('') + '<th>FORMAN</th></tr></thead>'
+       + '<tbody>'+lignes+'</tbody></table></div></div>';
+  }
+  return h;
+}
+
+function mmLecture(){
+  const l = MM_LU;
+  return '<div class="panel"><div class="mm-head">'
+    + '<button type="button" class="mm-b" id="mmRetour" style="padding:6px 12px">‹ Retour au mur</button>'
+    + '<h2 style="margin-left:6px">'+esc(l.nom)+'</h2>'
+    + '<span class="mm-sem"><b>S'+mmNo(MM_SEM)+'</b> · '+esc(mmBornes(MM_SEM))+'</span>'
+    + mmEtatPuce(l.ligne) + '</div></div>'
+    + '<div class="panel">' + mmCorps(l.ligne?l.ligne.donnees:{}, l.prive, true, MM_SEM)
+    + '<div class="mm-bar"><button type="button" class="mm-b" data-mmcopy="lu">Copier en texte</button></div></div>';
+}
+
+function mmObjectifs(){
+  const ech=mmEcheances(), o=MM_OBJ||{};
+  let h='<div class="panel"><div class="mm-head"><h2>Mes objectifs</h2></div>'
+    + '<p class="mm-sub">Deux échéances pour chaque indicateur : le <b>31 décembre '+ech.dec.slice(0,4)+'</b> (cap de l’année civile) '
+    + 'et le <b>31 juillet '+ech.pmr.slice(0,4)+'</b> (fin d’exercice, horizon PMR). '
+    + 'Tu les fixes toi-même et tu peux les revoir quand tu veux — chaque modification est archivée.</p>'
+    + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Indicateur</th>'
+    + '<th class="num">Au 31/12 ('+mmSemaines(ech.dec)+' sem.)</th>'
+    + '<th class="num">Au 31/07 — PMR ('+mmSemaines(ech.pmr)+' sem.)</th></tr></thead><tbody>'
+    + MM_OBJS.map(([k,lib,u])=>'<tr><td>'+esc(lib)+(u==='€'?' <small style="color:var(--ink-3)">(€)</small>':'')+'</td>'
+      + '<td><input type="'+(u==='txt'?'text':'number')+'" data-mmo="'+k+'_dec" value="'+esc(o[k+'_dec']==null?'':o[k+'_dec'])+'"></td>'
+      + '<td><input type="'+(u==='txt'?'text':'number')+'" data-mmo="'+k+'_pmr" value="'+esc(o[k+'_pmr']==null?'':o[k+'_pmr'])+'"></td></tr>').join('')
+    + '</tbody></table></div>'
+    + '<div class="mm-bar"><button type="button" class="mm-b pri" id="mmObjSave">Enregistrer mes objectifs</button>'
+    + '<span class="mm-sav"></span></div></div>';
+  // passage Manager
+  const d=(MM&&MM.donnees)||{}, a=d.auto||{};
+  const va=mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))+mmN(mmG(d,'prod.eva'))+mmN(mmG(d,'prod.evaec'));
+  const habOk=MM_HAB.filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
+  h += '<div class="panel"><h2>Passage Manager</h2>'
+     + '<p class="mm-sub">500 k€ de volume d’affaires et toutes les habilitations.</p>'
+     + mmJauge('Volume d’affaires (perso + équipe)', va, 500000, '€')
+     + mmJauge('Habilitations obtenues', habOk, MM_HAB.length, '')
+     + (a.ftot ? mmJauge('Objectifs FORMAN '+(a.statut||''), a.fn, a.ftot, '') : '')
+     + '</div>';
+  return h;
+}
+
+/* --- export texte --- */
+function mmTexte(d, nom, sem){
+  d=d||{}; const a=d.auto||{}, o=MM_OBJ||{}, ech=mmEcheances();
+  const L=[], ligne=(k,v)=>L.push(k+' : '+v);
+  L.push('Mail Manager S'+mmNo(sem)+' — '+mmBornes(sem));
+  if(nom) L.push(nom);
+  L.push('');
+  L.push('Ma lignée');
+  if(a.parrain) ligne('Parrain / marraine', a.parrain);
+  if(a.mgr) ligne('Manager', a.mgr);
+  if(a.entree) ligne('Intégration au réseau', fmtD(a.entree));
+  if(d.act) L.push(d.act==='double'?'Double activité':'Activité principale');
+  const bloc=(t,base,liste)=>{ L.push(''); L.push(t); liste.forEach(([k,lib])=>L.push('- '+lib+' : '+mmN(mmG(d,base+'.'+k)))); };
+  bloc('1 - Semaine passée (S'+mmNo(vAddDays(sem,-7))+')','p',MM_CPT);
+  if(mmN(mmG(d,'sig.n'))) L.push('- Signatures : '+mmN(mmG(d,'sig.n'))+(mmN(mmG(d,'sig.m'))?' ('+mmEur(mmG(d,'sig.m'))+')':''));
+  if((a.sp||[]).length){ L.push('Sessions suivies :'); a.sp.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t)); }
+  if(d.pf) L.push('- '+d.pf);
+  bloc('2 - Semaine en cours (S'+mmNo(sem)+')','c',MM_CPT);
+  if((a.sc||[]).length){ L.push('Sessions de la semaine :'); a.sc.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t)); }
+  if(d.cf) L.push('- '+d.cf);
+  bloc('3 - Nombre de RDV d’avance','av',MM_AV);
+  L.push(''); L.push('4 - Objectifs développement');
+  const inv=a.inv||{};
+  L.push('- Invités inscrits en DM : '+(inv.dm||0)+(o.dm_pmr?' / '+o.dm_pmr:''));
+  L.push('- Invités inscrits à l’Atelier Démarrage : '+(inv.ad||0));
+  L.push('- Invités inscrits aux 3 Jours de la Réussite : '+(inv.jr||0));
+  L.push('- Filleuls : '+(a.fil||0)+' dont '+(a.filadh||0)+' adhérent'+((a.filadh||0)>1?'s':''));
+  L.push(''); L.push('5 - Production');
+  MM_PROD.concat(MM_PRODE).forEach(([k,lib,u])=>{
+    const v=mmG(d,'prod.'+k); if(v==null||v==='') return;
+    L.push('- '+lib+' : '+(u==='€'?mmEur(v):mmN(v)));
+  });
+  [['va','VA perso','€'],['eva','VA équipe','€'],['clients','Clients','']].forEach(([k,lib,u])=>{
+    [['dec','31/12'],['pmr','31/07']].forEach(([sfx,lab])=>{
+      const c=o[k+'_'+sfx]; if(!mmN(c)) return;
+      const fait = k==='va' ? mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))
+                 : k==='eva' ? mmN(mmG(d,'prod.eva'))+mmN(mmG(d,'prod.evaec'))
+                 : mmN(mmG(d,'prod.clients'));
+      L.push('- Objectif '+lib+' au '+lab+' : '+(u==='€'?mmEur(c):c)+' — reste '+(u==='€'?mmEur(Math.max(0,mmN(c)-fait)):Math.max(0,mmN(c)-fait)));
+    });
+  });
+  L.push(''); L.push('6 - Habilitations');
+  MM_HAB.concat(MM_FC).forEach(([k,lib])=>{
+    const s=mmG(d,'hab.'+k+'.s'); if(!s) return;
+    L.push('- '+lib+' : '+(MM_ETATS.find(x=>x[0]===s)||['',''])[1]+(mmG(d,'hab.'+k+'.d')?' ('+mmG(d,'hab.'+k+'.d')+')':''));
+  });
+  L.push(''); L.push('7 - Objectifs FORMAN');
+  L.push('- Niveau actuel : '+(a.statut||'—'));
+  if(a.ftot) L.push('- Objectifs validés : '+a.fn+' / '+a.ftot+' (restants : '+Math.max(0,a.ftot-a.fn)+')');
+  if((a.ag||[]).length){
+    L.push(''); L.push('8 - Formations et événements à venir');
+    a.ag.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t));
+  }
+  return L.join('\n');
+}
+
+/* --- sous-onglets, semaine, lecture --- */
+const MM_SUBS=['moi','mur','obj'];
+const MM_SLUG={moi:'ma-semaine', mur:'le-mur', obj:'mes-objectifs'};
+// anciens raccourcis toujours acceptés dans l'URL
+const SLUG_MM=Object.assign(Object.fromEntries(Object.entries(MM_SLUG).map(([k,v])=>[v,k])),{mur:'mur',objectifs:'obj',semaine:'moi'});
+function showMMSub(s){
+  if(!MM_SUBS.includes(s)) s='moi';
+  MM_SUB=s;
+  document.querySelectorAll('#mmSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+  document.querySelectorAll('#v-mm .subview').forEach(v=>v.classList.toggle('on', v.id==='sm-'+s));
+}
+document.querySelectorAll('#mmSub button').forEach(b=>b.addEventListener('click',()=>{
+  if(b.dataset.s!=='mur') MM_LU=null;
+  showMMSub(b.dataset.s); buildMM(); syncHash(true); window.scrollTo({top:0});
+}));
+async function mmAllerSemaine(sem){
+  MM_SEM=sem; MM_LU=null;
+  await chargerMM();
+  buildMM(); syncHash(false); window.scrollTo({top:0});
+}
+async function mmVoir(id){
+  const p=MM_MUR.find(x=>x.membre_id===id);
+  if(!p || !SB) return;
+  let prive='';
+  try{
+    const r=await SB.from('mail_manager_prive').select('texte').eq('membre_id',id).eq('semaine',MM_SEM).maybeSingle();
+    prive=((r.data)||{}).texte||'';
+  }catch(e){}
+  MM_LU={ id:id, nom:p.nom, ligne:MM_LIGNES.find(l=>l.membre_id===id)||null, prive:prive };
+  showMMSub('mur'); buildMM(); syncHash(true); window.scrollTo({top:0});
+}
+
+/* --- saisie --- */
+function mmSaisie(t){
+  if(!t || !t.closest || !t.closest('#v-mm')) return false;
+  if(t.id==='mmPrive'){ MM_PRIVE=t.value; mmPlanSave(); return true; }
+  if(t.dataset && t.dataset.mmo){
+    MM_OBJ=MM_OBJ||{};
+    MM_OBJ[t.dataset.mmo] = t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value);
+    return true;
+  }
+  if(t.dataset && t.dataset.mm && MM){
+    MM.donnees=MM.donnees||{};
+    mmS(MM.donnees, t.dataset.mm, t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value));
+    mmPlanSave(); return true;
+  }
+  return false;
+}
+document.addEventListener('input', e=>{ mmSaisie(e.target); });
+document.addEventListener('change', e=>{ mmSaisie(e.target); });
+document.addEventListener('click', async e=>{
+  const c = e.target.closest ? e.target : null;
+  if(!c) return;
+  const pm=c.closest('[data-mmpm]');
+  if(pm){
+    const p=pm.dataset.p, inp=document.querySelector('#v-mm input[data-mm="'+p+'"]');
+    const v=Math.max(0, mmN(inp?inp.value:0) + (+pm.dataset.mmpm));
+    if(inp) inp.value=v;
+    if(MM){ MM.donnees=MM.donnees||{}; mmS(MM.donnees,p,v); mmPlanSave(); }
+    return;
+  }
+  const w=c.closest('[data-mmw]');
+  if(w && !w.disabled){
+    const d=+w.dataset.mmw;
+    mmAllerSemaine(d===0 ? mmSemCour() : vAddDays(MM_SEM, d*7));
+    return;
+  }
+  const v=c.closest('[data-mmv]');
+  if(v && !v.disabled){ mmVoir(+v.dataset.mmv); return; }
+  if(c.closest('#mmRetour')){ MM_LU=null; buildMM(); syncHash(true); return; }
+  if(c.closest('#mmPub')){
+    const b=c.closest('#mmPub'); b.disabled=true;
+    await mmSauver(true); b.disabled=false; return;
+  }
+  const cp=c.closest('[data-mmcopy]');
+  if(cp){
+    const lu = cp.dataset.mmcopy==='lu' && MM_LU;
+    const src = lu ? (MM_LU.ligne?MM_LU.ligne.donnees:{}) : (MM?MM.donnees:{});
+    const nom = lu ? MM_LU.nom : ((MM&&MM.donnees&&MM.donnees.auto&&MM.donnees.auto.nom)||'');
+    openModal('mail-manager-S'+mmNo(MM_SEM)+'.txt', mmTexte(src, nom, MM_SEM));
+    return;
+  }
+  if(c.closest('#mmObjSave')){ mmObjSauver(); return; }
+  if(c.closest('#mmOff')){
+    if(confirm('Tu ne recevras plus l’action de la semaine et tu n’apparaîtras plus sur le mur. Tu pourras revenir quand tu veux.')) mmParticipe(false);
+    return;
+  }
+  if(c.closest('#mmOn')){ mmParticipe(true); return; }
+});
 
 /* ---------- Compte personnel & synchronisation ---------- */
 const SB_URL = 'https://xslusoecharxelwmbyal.supabase.co';
