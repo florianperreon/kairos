@@ -3409,11 +3409,15 @@ const mmInit = nom => (nom||'?').split(/[\s-]+/).filter(Boolean).slice(0,2).map(
 /* --- le bloc automatique : ce que le réseau sait déjà --- */
 const MM_ORIGINE = '2000-01-01', MM_FIN = '9999-12-31';
 // Les invités présents en Découverte Métier / Atelier Démarrage / 3 Jours sur une fenêtre de dates.
-// Un invité est un filleul qui n'est PAS encore adhérent : une fois la cotisation réglée, la
-// personne vient aux séances comme consœur de la lignée, plus comme invitée à découvrir le métier.
 // Une même personne n'est comptée qu'une fois par catégorie sur la fenêtre.
-function mmInvites(d1, d2){
-  const ids = new Map(mmMesFilleuls().filter(m=>!ADH.has(m.id)).map(m=>[m.id, m.name]));
+//
+// `tous` distingue deux questions qui n'ont pas la même réponse :
+//  - sans (compteurs de la semaine et de l'exercice) : un invité est un filleul qui n'a PAS encore
+//    réglé sa cotisation ; une fois adhérente, la personne vient aux séances comme consœur.
+//  - avec `tous` (le cumul « depuis le début ») : on compte tout ce qu'on a fait venir, adhérentes
+//    comprises — celle qui a signé depuis était bien une invitée le jour de sa Découverte Métier.
+function mmInvites(d1, d2, tous){
+  const ids = new Map(mmMesFilleuls().filter(m=>tous || !ADH.has(m.id)).map(m=>[m.id, m.name]));
   const vus = {dm:new Map(), ad:new Map(), jr:new Map()};
   [].concat(A||[],E||[]).forEach(s=>{
     const k = mmTitreCat(s.title);
@@ -3477,7 +3481,7 @@ function mmAuto(sem){
   const deb = mmEcheances().debut;
   const ex = mmInvites(deb, MM_FIN);
   a.inv = ex.n; a.invN = ex.noms;                        // sur l'exercice en cours
-  const tt = mmInvites(MM_ORIGINE, MM_FIN);
+  const tt = mmInvites(MM_ORIGINE, MM_FIN, true);
   a.invT = tt.n; a.invTN = tt.noms;                      // depuis le début
   const pas = mmInvites(vAddDays(sem,-7), vAddDays(sem,-1));
   a.invP = pas.n; a.invPN = pas.noms;                    // semaine écoulée
@@ -3862,7 +3866,7 @@ function mmCorps(d, prive, ro, sem){
     + '</div>'
     + (a.dorm ? '<p class="mm-note">⚠︎ '+a.dorm+' filleul'+(a.dorm>1?'s':'')+' adhérent'+(a.dorm>1?'s':'')+' sans séance depuis plus de 60 jours.</p>' : '')
     + '<p class="mm-note">Invités comptés depuis le '+fmtD(ech.debut)+' (début d’exercice) — un filleul déjà adhérent n’est plus compté comme invité.</p>'
-    + '<label class="mm-lab">Depuis le début <small style="font-weight:400;color:var(--ink-3)">— tous exercices confondus</small></label>'
+    + '<label class="mm-lab">Depuis le début <small style="font-weight:400;color:var(--ink-3)">— tous exercices, celles et ceux devenus adhérents compris</small></label>'
     + mmInvBloc(a.invT, a.invTN, 'Aucun invité en séance pour l’instant.'));
 
   // 5 — Production

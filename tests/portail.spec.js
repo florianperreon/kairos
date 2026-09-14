@@ -955,15 +955,16 @@ test.describe('Mail Manager — invités relevés et lecture du mur', () => {
     await ouvrir(page);
     const sem = await page.evaluate(() => mmSemCour());
     await poserReseau(page, { semPassee: j(-4), semCours: j(1), vieux: j(-200), futurLoin: j(120) });
-    const a = await page.evaluate((sem) => {
-      // la semaine « passée » du mail manager se termine hier
-      return mmAuto(sem);
-    }, sem);
+    const a = await page.evaluate((sem) => mmAuto(sem), sem);
+    // Sur la semaine et sur l'exercice, un filleul déjà adhérent n'est plus une invitée.
     expect(a.invP, 'semaine écoulée').toMatchObject({ dm: 1, ad: 1, jr: 0 });
-    expect(a.invPN.dm, 'un filleul déjà adhérent n’est pas un invité').toEqual(['Invitée Nonadherente']);
+    expect(a.invPN.dm).toEqual(['Invitée Nonadherente']);
     expect(a.invC, 'semaine en cours').toMatchObject({ dm: 1, ad: 0, jr: 0 });
-    expect(a.invT, 'depuis le début, la même personne n’est comptée qu’une fois par catégorie')
-      .toMatchObject({ dm: 1, ad: 1, jr: 0 });
+    expect(a.inv, 'sur l’exercice').toMatchObject({ dm: 1, ad: 1, jr: 0 });
+    // Depuis le début, on compte tout ce qu'on a fait venir : celle qui a signé depuis était bien
+    // une invitée le jour de sa Découverte Métier (régression du 14/09/2026 au soir).
+    expect(a.invT, 'le cumul inclut celles et ceux devenus adhérents').toMatchObject({ dm: 2, ad: 1, jr: 0 });
+    expect(a.invTN.dm.sort()).toEqual(['Filleul Adherent', 'Invitée Nonadherente']);
   });
 
   test('l’historique des sessions suivies remonte au début, et l’à-venir n’a plus d’horizon', async ({ page }) => {
