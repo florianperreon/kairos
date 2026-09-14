@@ -707,8 +707,9 @@ test.describe('Mail Manager — production et texte libre', () => {
       document.getElementById('mmMoi').innerHTML = mmCorps(copie(), '', false, sem);
       document.getElementById('mmMur').innerHTML = mmFiche(copie(), prive, sem, MM_OBJ);
       const lire = sel => [...document.querySelectorAll(sel)];
+      // l'intitulé peut porter une précision à côté (« Production 2026-2027 »)
       const ligne = k => {
-        const l = lire('#mmMur .mm-f .l').find(x => x.querySelector('.k').textContent === k);
+        const l = lire('#mmMur .mm-f .l').find(x => x.querySelector('.k').textContent.startsWith(k));
         return l ? l.querySelector('.v') : null;
       };
       return {
@@ -738,7 +739,7 @@ test.describe('Mail Manager — production et texte libre', () => {
   test('la section Production demande le personnel puis l’équipe sur 4 niveaux', async ({ page }) => {
     await ouvrir(page);
     const r = await rendre(page, DONNEES, '');
-    expect(r.groupes[0]).toBe('Personnel');
+    expect(r.groupes[0]).toMatch(/^Personnel/);
     expect(r.groupes[1]).toMatch(/^Équipe/);
     expect(r.groupes[1], 'les quatre niveaux sont précisés').toContain('4 niveaux');
     expect(r.champs).toEqual([
@@ -818,6 +819,71 @@ test.describe('Mail Manager — production et texte libre', () => {
       [...document.querySelectorAll('#mmProdJ .mm-note')].map(n => n.textContent))).map(net);
     expect(notes[0], 'le rythme requis est recalculé').toContain('rythme requis');
     expect(notes[0]).not.toContain('18 750');       // le rythme d'avant la saisie
+  });
+
+  test('la production nomme le PMR en cours et liste les PMR passés depuis 2022', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = false);
+      MM_PRODUITS = []; MM_OBJ = {}; MM_SEM = mmSemCour();
+      const d = { prod: { va: 16800, pmr: { 2025: { va: 180000, eva: 420000 }, 2024: { va: 95000 } } },
+                  p: {}, c: {}, av: {}, sous: [], auto: {} };
+      MM = { statut: 'brouillon', maj: null, donnees: JSON.parse(JSON.stringify(d)) };
+      document.getElementById('mmMoi').innerHTML = mmCorps(MM.donnees, '', false, MM_SEM);
+      const net = t => t.replace(/[\s\u00a0\u202f]+/g, ' ').trim();
+      // l'exercice se déduit de la date du jour : aucune année n'est figée dans le test
+      const an = +new Date().getMonth() >= 7 ? new Date().getFullYear() : new Date().getFullYear() - 1;
+      return {
+        an,
+        titres: [...document.querySelectorAll('#mmMoi .mm-lab')].map(l => net(l.textContent))
+                  .filter(t => /PMR/.test(t)).join(' | '),
+        exercices: [...document.querySelectorAll('#mmMoi .mm-pmr tbody tr:not(.tot) td:first-child')].map(t => t.textContent),
+        champs: [...document.querySelectorAll('#mmMoi .mm-pmr input')].map(i => i.dataset.mm),
+        cumul: [document.getElementById('mmPmrTP').textContent, document.getElementById('mmPmrTE').textContent].map(net),
+        fiche: net(mmFiche(JSON.parse(JSON.stringify(d)), '', MM_SEM, {})),
+        texte: mmTexte(JSON.parse(JSON.stringify(d)), 'Moi', MM_SEM),
+      };
+    });
+    const cour = r.an + '-' + (r.an + 1);
+    expect(r.titres, 'le bloc personnel annonce le PMR en cours').toContain('Personnel — PMR en cours (' + cour + ')');
+    expect(r.titres, 'l’équipe aussi').toContain('sur 4 niveaux, PMR en cours (' + cour + ')');
+    expect(r.titres, 'les PMR passés disent quelle valeur on attend').toContain('PMR passés — VA + VAA VC');
+    // du plus récent à 2022-2023, sans l'exercice en cours
+    const attendus = [];
+    for (let y = r.an - 1; y >= 2022; y--) attendus.push(y + '-' + (y + 1));
+    expect(r.exercices).toEqual(attendus);
+    expect(r.exercices).not.toContain(cour);
+    expect(r.champs.slice(0, 2)).toEqual(['prod.pmr.' + (r.an - 1) + '.va', 'prod.pmr.' + (r.an - 1) + '.eva']);
+    expect(r.cumul[0]).toBe('275 000 €');
+    expect(r.cumul[1]).toBe('420 000 €');
+    expect(r.fiche, 'le mur montre l’historique').toContain('2025-2026');
+    expect(r.texte).toContain('PMR passés (VA + VAA VC) :');
+    expect(r.texte).toContain('5 - Production — PMR en cours (' + cour + ')');
+  });
+
+  test('le cumul des PMR passés suit la frappe', async ({ page }) => {
+    await ouvrir(page);
+    await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = false);
+      document.getElementById('v-mm').classList.add('on');
+      document.getElementById('sm-moi').classList.add('on');
+      MM_PRODUITS = []; MM_OBJ = {}; MM_SEM = mmSemCour();
+      MM = { statut: 'brouillon', maj: null, donnees: { prod: {}, p: {}, c: {}, av: {}, sous: [], auto: {} } };
+      document.getElementById('mmMoi').innerHTML = mmCorps(MM.donnees, '', false, MM_SEM);
+      document.querySelectorAll('#mmMoi details').forEach(x => x.open = true);
+    });
+    const champs = await page.evaluate(() =>
+      [...document.querySelectorAll('#mmMoi .mm-pmr input')].map(i => i.dataset.mm).filter(k => k.endsWith('.va')));
+    await page.fill('#v-mm input[data-mm="' + champs[0] + '"]', '180000');
+    await page.fill('#v-mm input[data-mm="' + champs[1] + '"]', '95000');
+    const net = t => t.replace(/[\s\u00a0\u202f]+/g, ' ').trim();
+    expect(net(await page.textContent('#mmPmrTP'))).toBe('275 000 €');
+    // le cumul est remplacé cellule par cellule : le tableau n'est pas redessiné sous le curseur
+    expect(await page.evaluate(() => document.activeElement.dataset.mm)).toBe(champs[1]);
   });
 
   test('les retours à la ligne saisis sont conservés à la lecture', async ({ page }) => {

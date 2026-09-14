@@ -904,6 +904,8 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-add{margin-top:10px;padding:7px 13px;font-size:13px}
 .mm-tbl td.vide{color:var(--ink-3);font-style:italic}
 .mm-wrap{overflow-x:auto}
+.mm-pmr td.num input{max-width:190px;margin-left:auto;display:block}
+.mm-pmr td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums}
 @media (max-width:640px){
   /* Téléphone : plus de défilement latéral dans le formulaire — chaque ligne
      du tableau devient un bloc où l'intitulé précède la valeur. */
@@ -3356,6 +3358,16 @@ function mmEcheances(){
   const y=+todayIso.slice(0,4), m=+todayIso.slice(5,7);
   return { dec:y+'-12-31', pmr:(m>=8?y+1:y)+'-07-31', debut:(m>=8?y:y-1)+'-08-01' };
 }
+// Les exercices (PMR) : du 1er août au 31 juillet. mmExercice() rend celui en cours sous la forme
+// « 2026-2027 » ; mmExercicesPasses() rend les précédents, du plus récent à 2022-2023.
+const MM_PMR_DEBUT = 2022;
+const mmExerciceAn = () => +mmEcheances().debut.slice(0,4);
+const mmExercice = () => { const y=mmExerciceAn(); return y+'-'+(y+1); };
+function mmExercicesPasses(){
+  const out=[];
+  for(let y=mmExerciceAn()-1; y>=MM_PMR_DEBUT; y--) out.push([String(y), y+'-'+(y+1)]);
+  return out;
+}
 const mmSemaines = ech => Math.max(0, Math.ceil((new Date(ech+'T00:00:00') - new Date(todayIso+'T00:00:00'))/604800000));
 
 // Reprise (14/09/2026) : « VAA » était un compteur à part ; il est désormais fondu dans
@@ -3472,11 +3484,10 @@ async function chargerMM(){
     // habilitations et activité : reportées de semaine en semaine
     if(!MM.donnees.hab && MM_REG.reglages.hab) MM.donnees.hab = JSON.parse(JSON.stringify(MM_REG.reglages.hab));
     if(!MM.donnees.act && MM_REG.reglages.act) MM.donnees.act = MM_REG.reglages.act;
-    // La production est cumulée sur l'exercice : elle est reportée telle quelle de S-1 à S.
+    // La production est cumulée sur l'exercice et l'historique des PMR passés ne bouge plus :
+    // tout le bloc est repris tel quel de S-1 à S, rien n'est nommé à la main (donc rien d'oublié).
     if(!MM.donnees.prod && MM_PREC && MM_PREC.donnees && MM_PREC.donnees.prod){
-      const p = mmMigre(MM_PREC.donnees).prod || {};
-      MM.donnees.prod = {};
-      MM_PROD.concat(MM_PRODE).forEach(([k])=>{ if(p[k]!=null && p[k]!=='') MM.donnees.prod[k]=p[k]; });
+      MM.donnees.prod = JSON.parse(JSON.stringify(mmMigre(MM_PREC.donnees).prod || {}));
     }
   }catch(e){ return false; }
   await chargerMMMur();
@@ -3680,6 +3691,26 @@ function mmJauge(lib, fait, cible, unite){
     + '<div class="r">'+(reste ? 'Reste '+(unite==='€'?mmEur(reste):reste) : 'Objectif atteint 🎉')+'</div></div>';
 }
 
+/* --- les PMR passés : une ligne par exercice, VA + VAA VC personnel et équipe --- */
+function mmPmrPasses(d, ro){
+  const L = mmExercicesPasses();
+  if(!L.length) return '';
+  const cel = (an, k) => mmChamp('prod.pmr.'+an+'.'+k, mmG(d,'prod.pmr.'+an+'.'+k), ro, {eur:true});
+  let h = '<label class="mm-lab">PMR passés <small style="font-weight:400;color:var(--ink-3)">'
+        + '— VA + VAA VC, à la clôture de chaque exercice</small></label>'
+        + '<div class="mm-wrap"><table class="mm-tbl mm-pmr"><thead><tr><th>Exercice</th>'
+        + '<th class="num">Personnel</th><th class="num">Équipe</th></tr></thead><tbody>';
+  L.forEach(([an,lib])=>{
+    h += '<tr><td>'+esc(lib)+'</td>'
+       + '<td class="num" data-l="Personnel">'+cel(an,'va')+'</td>'
+       + '<td class="num" data-l="Équipe">'+cel(an,'eva')+'</td></tr>';
+  });
+  const som = k => L.reduce((n,[an])=>n+mmN(mmG(d,'prod.pmr.'+an+'.'+k)), 0);
+  h += '<tr class="tot"><td>Cumul</td><td class="num" data-l="Cumul personnel" id="mmPmrTP">'+mmEur(som('va'))
+     + '</td><td class="num" data-l="Cumul équipe" id="mmPmrTE">'+mmEur(som('eva'))+'</td></tr>';
+  return h + '</tbody></table></div>';
+}
+
 /* --- les jauges de production : reste à faire et rythme requis, recalculés à chaque frappe --- */
 // Le « fait » d'un objectif : le validé compagnie et l'en cours comptent tous les deux.
 const MM_PRODJ = [['va','VA + VAA personnel','€',['prod.va','prod.vaec']],
@@ -3705,8 +3736,15 @@ function mmProdJauges(d, obj){
   return h;
 }
 function mmProdMaj(){
+  if(!MM) return;
   const el = document.getElementById('mmProdJ');
-  if(el && MM) el.innerHTML = mmProdJauges(MM.donnees||{}, MM_OBJ||{});
+  if(el) el.innerHTML = mmProdJauges(MM.donnees||{}, MM_OBJ||{});
+  // Les cumuls des PMR passés vivent dans le tableau : on remplace les deux cellules, pas le
+  // tableau, pour ne pas perdre le curseur en cours de frappe.
+  const som = k => mmExercicesPasses().reduce((n,[an])=>n+mmN(mmG(MM.donnees||{},'prod.pmr.'+an+'.'+k)), 0);
+  const tp=document.getElementById('mmPmrTP'), te=document.getElementById('mmPmrTE');
+  if(tp) tp.textContent = mmEur(som('va'));
+  if(te) te.textContent = mmEur(som('eva'));
 }
 
 /* --- rendu : le formulaire (ou sa lecture seule) --- */
@@ -3774,10 +3812,12 @@ function mmCorps(d, prive, ro, sem){
   const champProd = ([k,lib,u]) =>
     '<div class="mm-c"><label>'+esc(lib)+'</label><div class="row">'
     + mmChamp('prod.'+k, mmG(d,'prod.'+k), ro, {eur:u==='€'})+'</div></div>';
-  let prod = '<label class="mm-lab">Personnel</label>'
+  const petit = t => '<small style="font-weight:400;color:var(--ink-3)">'+esc(t)+'</small>';
+  let prod = '<label class="mm-lab">Personnel '+petit('— PMR en cours ('+mmExercice()+')')+'</label>'
     + '<div class="mm-cpt">' + MM_PROD.map(champProd).join('') + '</div>'
-    + '<label class="mm-lab">Équipe <small style="font-weight:400;color:var(--ink-3)">— sur 4 niveaux</small></label>'
+    + '<label class="mm-lab">Équipe '+petit('— sur 4 niveaux, PMR en cours ('+mmExercice()+')')+'</label>'
     + '<div class="mm-cpt">' + MM_PRODE.map(champProd).join('') + '</div>'
+    + mmPmrPasses(d, ro)
     // Les jauges sont dans leur propre conteneur : elles sont redessinées à chaque frappe sans
     // toucher au formulaire, donc sans perdre le curseur (même principe que les totaux des
     // souscriptions). Sans ça elles restaient figées sur les valeurs d'ouverture de la page.
@@ -3842,8 +3882,10 @@ function mmKpi(d, base, liste){
   if(!on.length) return '';
   return '<div class="kpi">'+on.map(([k,lib])=>'<i>'+esc(lib)+'<b>'+mmN(mmG(d,base+'.'+k))+'</b></i>').join('')+'</div>';
 }
+// `cle` accepte un peu de balisage (un exercice en gris à côté de l'intitulé) : les seules valeurs
+// qui y passent sont écrites ici, jamais des données saisies.
 function mmLigne(cle, contenu){
-  return contenu ? '<div class="l"><div class="k">'+esc(cle)+'</div><div class="v">'+contenu+'</div></div>' : '';
+  return contenu ? '<div class="l"><div class="k">'+cle+'</div><div class="v">'+contenu+'</div></div>' : '';
 }
 function mmDates(items){
   if(!items || !items.length) return '';
@@ -3895,7 +3937,16 @@ function mmFiche(d, prive, sem, obj){
     const v=mmG(d,'prod.'+k);
     if(mmN(v)) prod.push('<i>'+esc(long||lib)+'<b>'+(u==='€'?mmEur(v):mmN(v))+'</b></i>');
   });
-  h += mmLigne('Production', prod.length ? '<div class="kpi">'+prod.join('')+'</div>' : '');
+  h += mmLigne('Production <span class="mut">'+esc(mmExercice())+'</span>',
+       prod.length ? '<div class="kpi">'+prod.join('')+'</div>' : '');
+
+  // PMR passés (VA + VAA VC)
+  const pmr = mmExercicesPasses().map(([an,lib])=>{
+    const pe=mmN(mmG(d,'prod.pmr.'+an+'.va')), eq=mmN(mmG(d,'prod.pmr.'+an+'.eva'));
+    if(!pe && !eq) return '';
+    return '<i>'+esc(lib)+'<b>'+mmEur(pe)+(eq?' <span class="mut">· équipe '+mmEur(eq)+'</span>':'')+'</b></i>';
+  }).filter(Boolean);
+  h += mmLigne('PMR passés', pmr.length ? '<div class="kpi">'+pmr.join('')+'</div>' : '');
 
   // objectifs
   const obl=[];
@@ -4151,11 +4202,16 @@ function mmTexte(d, nom, sem){
   L.push('- Invités inscrits à l’Atelier Démarrage : '+(inv.ad||0));
   L.push('- Invités inscrits aux 3 Jours de la Réussite : '+(inv.jr||0));
   L.push('- Filleuls : '+(a.fil||0)+' dont '+(a.filadh||0)+' adhérent'+((a.filadh||0)>1?'s':''));
-  L.push(''); L.push('5 - Production');
+  L.push(''); L.push('5 - Production — PMR en cours ('+mmExercice()+')');
   MM_PROD.concat(MM_PRODE).forEach(([k,lib,u,long])=>{
     const v=mmG(d,'prod.'+k); if(v==null||v==='') return;
     L.push('- '+(long||lib)+' : '+(u==='€'?mmEur(v):mmN(v)));
   });
+  const pmrL = mmExercicesPasses().map(([an,lib])=>{
+    const pe=mmN(mmG(d,'prod.pmr.'+an+'.va')), eq=mmN(mmG(d,'prod.pmr.'+an+'.eva'));
+    return (pe||eq) ? '- '+lib+' : '+mmEur(pe)+' personnel'+(eq?' · '+mmEur(eq)+' équipe':'') : '';
+  }).filter(Boolean);
+  if(pmrL.length){ L.push('PMR passés (VA + VAA VC) :'); pmrL.forEach(x=>L.push(x)); }
   [['va','VA + VAA personnel','€'],['eva','VA + VAA équipe','€'],['clients','Clients','']].forEach(([k,lib,u])=>{
     [['dec','31/12'],['pmr','31/07']].forEach(([sfx,lab])=>{
       const c=o[k+'_'+sfx]; if(!mmN(c)) return;
