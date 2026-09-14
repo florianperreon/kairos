@@ -177,6 +177,13 @@ section.view.on{display:block}
 .bdstrip .bd:hover{text-decoration:underline}
 .bdstrip .bd .w{font-weight:700;color:var(--gold-ink);margin-left:4px}
 .welcome .wmark{font-size:38px;line-height:1}
+@media(max-width:640px){
+  /* Téléphone : la main passe au-dessus du texte, qui reprend toute la largeur */
+  .welcome{align-items:flex-start;gap:6px}
+  .welcome .wmark{font-size:30px;flex:1 1 100%}
+  .welcome .wtxt{min-width:0}
+  .welcome h2{font-size:20px}
+}
 .filters input[type=search],.filters select{padding:9px 12px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14.5px}
 .filters input[type=search]{min-width:230px;flex:1;max-width:360px}
 .filters label.chk{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--ink-2);cursor:pointer}
@@ -188,6 +195,19 @@ section.view.on{display:block}
 .daybtns button{width:32px;height:34px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;padding:0}
 .daybtns button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .count-line{font-size:13.5px;color:var(--ink-2);margin-bottom:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+@media(max-width:640px){
+  /* Téléphone : un filtre par ligne, la période lisible, les jours sur toute la largeur */
+  .filters{gap:8px 10px;margin-bottom:14px}
+  .filters select,.filters input[type=search]{flex:1 1 100%;width:100%;max-width:none;min-width:0}
+  .filters label.chk{flex:1 1 100%}
+  .filters .reset-btn{margin-left:0;flex:1 1 100%;text-align:center;padding:9px 11px}
+  .filters-dates .plabel{flex:1 1 100%;margin-right:0}
+  .filters input[type=date]{flex:1 1 120px;min-width:0;padding:8px 6px}
+  .daybtns{flex:1 1 100%;gap:6px;margin-top:2px}
+  .daybtns button{flex:1;width:auto;height:38px}
+  .count-line{gap:10px}
+  .chips{gap:6px}
+}
 .chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;color:#fff;letter-spacing:.02em;white-space:nowrap}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chips .chip{cursor:pointer;opacity:.45;border:0}
@@ -249,6 +269,15 @@ tr.colf th{padding:4px 6px 8px;border-bottom:2px solid var(--line)}
 tr.colf input{width:100%;min-width:80px;padding:5px 8px;border:1px solid var(--line-2);border-radius:6px;background:var(--ground);color:var(--ink);font-size:12.5px;font-weight:400;text-transform:none;letter-spacing:0}
 tr.colf input:focus{outline:2px solid var(--accent);outline-offset:0}
 .tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+@media(max-width:640px){
+  /* Téléphone : on garde le défilement latéral du tableau mais on resserre les cellules
+     pour qu'un maximum de colonnes tienne à l'écran. */
+  .tbl-wrap{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .tbl-wrap table{font-size:13.5px}
+  .tbl-wrap th,.tbl-wrap td{padding:7px 8px}
+  .tbl-wrap th{font-size:11px;letter-spacing:.03em}
+  .tbl-wrap tr.colf input{min-width:64px;font-size:12px}
+}
 .pager{display:flex;gap:10px;align-items:center;justify-content:center;padding:14px;font-size:14px;color:var(--ink-2)}
 .pager button{border:1px solid var(--line-2);background:var(--surface);border-radius:7px;padding:5px 12px;cursor:pointer;color:var(--ink)}
 .pager button:disabled{opacity:.35;cursor:default}
@@ -316,7 +345,19 @@ tr.colf input:focus{outline:2px solid var(--accent);outline-offset:0}
 .ev .body a.t{font-weight:600;text-decoration:none}
 .ev .body a.t:hover{text-decoration:underline}
 .ev .meta{font-size:13.5px;color:var(--ink-2);margin-top:1px}
-@media(max-width:640px){.ev{grid-template-columns:1fr;gap:2px}}
+@media(max-width:640px){
+  /* Téléphone : la carte de session passe sur une colonne, l'entête tient sur une ligne
+     et le corps (titre, lieu, badges) occupe toute la largeur. */
+  .ev,#pdList .ev,.ev.ev2{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:11px 42px 11px 14px}
+  .ev>div:not(.body){display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;flex:0 0 auto;max-width:100%}
+  .ev>.body{flex:1 1 100%;min-width:0;margin-top:3px}
+  .ev .evday{font-size:13px;line-height:1.35}
+  .ev .body a.t{font-size:15px;line-height:1.35}
+  .ev .meta{margin-top:3px;line-height:1.4}
+  .ev .multi{white-space:normal}
+  .xtras{gap:6px 8px;margin-top:7px}
+  .day-h{padding:9px 14px}
+}
 .month-h{font-family:"Sora";font-weight:800;font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);margin:24px 0 10px}
 .month-h:first-child{margin-top:0}
 
@@ -833,6 +874,26 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-add{margin-top:10px;padding:7px 13px;font-size:13px}
 .mm-tbl td.vide{color:var(--ink-3);font-style:italic}
 .mm-wrap{overflow-x:auto}
+@media (max-width:640px){
+  /* Téléphone : plus de défilement latéral dans le formulaire — chaque ligne
+     du tableau devient un bloc où l'intitulé précède la valeur. */
+  .mm-wrap{overflow-x:visible}
+  .mm-tbl,.mm-tbl tbody,.mm-tbl tr,.mm-tbl td{display:block;width:auto}
+  .mm-tbl thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .mm-tbl tr{border-bottom:1px solid var(--line);padding:7px 0}
+  .mm-tbl tr:last-child{border-bottom:0}
+  .mm-tbl td{border:0;padding:3px 0}
+  .mm-tbl td:first-child:not([data-l]){font-weight:700;padding-bottom:5px}
+  .mm-tbl td[data-l]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:10px;align-items:center;text-align:left}
+  .mm-tbl td[data-l]::before{content:attr(data-l);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+  .mm-tbl td.num,.mm-tbl td.num input{text-align:left}
+  .mm-tbl td.mm-del{display:none}
+  .mm-tbl tr.tot{border-top:2px solid var(--line-2);border-bottom:0}
+  .mm-tbl select,.mm-tbl input{font-size:16px}
+  .mm-tbl tbody tr{position:relative}
+  .mm-tbl td.mm-del:has(.mm-x){display:block;position:absolute;top:4px;right:0;padding:0}
+  .mm-tbl tbody tr:has(.mm-x) td[data-l]:first-child{padding-right:36px}
+}
 
 .mm-j{margin-top:9px}
 .mm-j .t{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:4px}
@@ -3392,19 +3453,20 @@ function mmSous(d, ro){
         + (ro?'':'<th></th>') + '</tr></thead><tbody>';
   if(!L.length) h += '<tr><td class="vide" colspan="'+(ro?3:4)+'">Aucune souscription cette semaine.</td></tr>';
   L.forEach((x,i)=>{
-    h += '<tr><td>' + (ro ? esc(x.t||'—') : mmProduitSelect('sous.'+i+'.t', x.t||''))
-      + '</td><td class="num">' + (ro ? esc(mmN(x.vi)?mmEur(x.vi):'—')
+    h += '<tr><td data-l="Produit">' + (ro ? esc(x.t||'—') : mmProduitSelect('sous.'+i+'.t', x.t||''))
+      + '</td><td class="num" data-l="Versement initial">' + (ro ? esc(mmN(x.vi)?mmEur(x.vi):'—')
           : '<input type="number" inputmode="decimal" data-mm="sous.'+i+'.vi" value="'+esc(x.vi==null?'':x.vi)+'">')
-      + '</td><td class="num">' + (ro ? esc(mmN(x.vp)?mmEur(x.vp):'—')
+      + '</td><td class="num" data-l="Versement programmé">' + (ro ? esc(mmN(x.vp)?mmEur(x.vp):'—')
           : '<input type="number" inputmode="decimal" data-mm="sous.'+i+'.vp" value="'+esc(x.vp==null?'':x.vp)+'">')
-      + '</td>' + (ro?'':'<td><button type="button" class="mm-x" data-mmsdel="'+i+'" title="Retirer cette souscription">×</button></td>')
+      + '</td>' + (ro?'':'<td class="mm-del"><button type="button" class="mm-x" data-mmsdel="'+i+'" title="Retirer cette souscription">×</button></td>')
       + '</tr>';
   });
   if(L.length){
     const ti=L.reduce((n,x)=>n+mmN(x.vi),0), tp=L.reduce((n,x)=>n+mmN(x.vp),0);
     h += '<tr class="tot"><td id="mmSousN">'+L.length+' souscription'+(L.length>1?'s':'')+'</td>'
-       + '<td class="num" id="mmSousVI">'+mmEur(ti)+'</td><td class="num" id="mmSousVP">'+mmEur(tp)+'</td>'
-       + (ro?'':'<td></td>')+'</tr>';
+       + '<td class="num" data-l="Total initial" id="mmSousVI">'+mmEur(ti)+'</td>'
+       + '<td class="num" data-l="Total programmé" id="mmSousVP">'+mmEur(tp)+'</td>'
+       + (ro?'':'<td class="mm-del"></td>')+'</tr>';
   }
   h += '</tbody></table></div>';
   if(!ro) h += '<button type="button" class="mm-b mm-add" data-mmsadd="1">+ Ajouter une souscription</button>';
@@ -3526,12 +3588,12 @@ function mmCorps(d, prive, ro, sem){
   const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
   const cellDate = (k,champ) => ro ? esc(mmG(d,'hab.'+k+'.'+champ)||'—')
     : '<input type="text" data-mm="hab.'+k+'.'+champ+'" value="'+esc(mmG(d,'hab.'+k+'.'+champ)||'')+'" placeholder="JJ/MM/AAAA">';
-  const ligne = (k,lib,orias) => '<tr><td>'+esc(lib)+'</td><td>'
+  const ligne = (k,lib,orias) => '<tr><td>'+esc(lib)+'</td><td data-l="Statut">'
     + (ro ? esc(etat(mmG(d,'hab.'+k+'.s')))
           : '<select data-mm="hab.'+k+'.s">'+MM_ETATS.map(([v,l])=>'<option value="'+v+'"'
             +((mmG(d,'hab.'+k+'.s')||'')===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>')
-    + '</td><td>'+cellDate(k,'d')+'</td>'
-    + (orias ? '<td>'+cellDate(k,'o')+'</td>' : '') + '</tr>';
+    + '</td><td data-l="'+(orias?'Date d\u2019examen':'Validée le')+'">'+cellDate(k,'d')+'</td>'
+    + (orias ? '<td data-l="Date ORIAS">'+cellDate(k,'o')+'</td>' : '') + '</tr>';
   h += mmSec(6,'Habilitations & formations continues',(ro?'':'reporté de S-1'),
       '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Habilitation</th><th>Statut</th>'
     + '<th>Date d’examen</th><th>Date ORIAS</th></tr></thead><tbody>'

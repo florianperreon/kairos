@@ -497,3 +497,93 @@ test.describe('Admin → Journal', () => {
     expect(r.badge).toBe('1');
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* Téléphone : la mise en page doit tenir dans 390 px de large.
+   Régression du 14/09/2026 — sur « Parcours découverte », la règle #pdList .ev (un identifiant,
+   donc plus spécifique que .ev) l'emportait sur la bascule mobile : la carte restait sur trois
+   colonnes et le titre comme l'adresse tombaient à un mot par ligne. */
+test.describe('Téléphone (390 px)', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  // Le balisage exact produit par buildPd() : catégorie, horaire, puis le corps.
+  const CARTE = `<div class="day"><div class="day-h"><span class="d">Mercredi 16 septembre 2026</span></div>
+    <div class="ev"><div><span class="chip" style="background:#9B8CFF">Découverte Métier</span></div>
+    <div><div class="hor num">09:00 - 12:00</div></div>
+    <div class="body"><a class="t" href="#">Découverte métier matinée</a>
+    <div class="meta">Paris 9e — 12 rue de la Chaussée d'Antin · <span class="pilotes">Aymeric d'Astorg</span></div>
+    <div class="xtras"><span class="xtra pub">Ouvert à tous</span><span class="xtra places">41/60</span>
+    <span class="xtra lig-in">Lignée inscrite : <b class="lig-open">Moi Test</b></span>
+    <a class="xtra act" href="#">Rejoindre la visio ↗</a></div></div></div></div>`;
+
+  test('la carte de session passe sur une colonne et rien ne déborde', async ({ page }) => {
+    await ouvrir(page);
+    const m = await page.evaluate((html) => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      document.querySelectorAll('section.view').forEach(v => v.classList.remove('on'));
+      document.getElementById('v-pd').classList.add('on');
+      document.getElementById('pdList').innerHTML = html;
+      const L = document.documentElement.clientWidth, r = el => el.getBoundingClientRect();
+      return {
+        ecran: L,
+        corps: Math.round(r(document.querySelector('#pdList .ev .body')).width),
+        titre: Math.round(r(document.querySelector('#pdList .ev .body a.t')).height),
+        debordePage: document.documentElement.scrollWidth > L,
+        debordeCarte: [...document.querySelectorAll('#pdList .ev *')]
+          .some(e => r(e).right > L + 1 || r(e).left < -1),
+      };
+    }, CARTE);
+
+    expect(m.ecran).toBe(390);
+    // Avant le correctif le corps ne recevait qu'un reliquat de colonne : il tenait sur ~30 px.
+    expect(m.corps, 'le corps de la carte doit occuper toute la largeur').toBeGreaterThan(260);
+    // Le titre tenait sur trois lignes dans une colonne étroite ; il en fait une ici.
+    expect(m.titre, 'le titre ne doit pas s’empiler sur plusieurs lignes').toBeLessThan(30);
+    expect(m.debordePage, 'la page ne défile pas latéralement').toBe(false);
+    expect(m.debordeCarte, 'aucun élément de la carte ne sort de l’écran').toBe(false);
+  });
+
+  test('les filtres occupent toute la largeur et les jours tiennent sur une ligne', async ({ page }) => {
+    await ouvrir(page);
+    const m = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      document.querySelectorAll('section.view').forEach(v => v.classList.remove('on'));
+      document.getElementById('v-pd').classList.add('on');
+      const r = el => el.getBoundingClientRect();
+      setupDays('pdDays', () => {});                 // les sept boutons sont posés par le portail
+      const j = [...document.querySelectorAll('#v-pd .daybtns button')];
+      return {
+        cat: Math.round(r(document.getElementById('pdCat')).width),
+        lieu: Math.round(r(document.getElementById('pdLieu')).width),
+        jours: j.length,
+        lignesDeJours: new Set(j.map(b => Math.round(r(b).top))).size,
+      };
+    });
+    expect(m.cat, 'les deux listes déroulantes ont la même largeur').toBe(m.lieu);
+    expect(m.cat, 'elles prennent toute la largeur disponible').toBeGreaterThan(300);
+    expect(m.jours).toBe(7);
+    expect(m.lignesDeJours, 'les sept jours restent sur une seule ligne').toBe(1);
+  });
+
+  test('le tableau des souscriptions ne défile pas latéralement', async ({ page }) => {
+    await ouvrir(page);
+    const m = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      document.querySelectorAll('section.view').forEach(v => v.classList.remove('on'));
+      const v = document.getElementById('v-mm'); v.classList.add('on'); v.hidden = false;
+      MM_PRODUITS = ['Assurance Vie', 'PER', 'SCPI', 'Girardin'];
+      const d = { sous: [{ t: 'Assurance Vie', vi: 15000, vp: 250 }, { t: 'PER', vi: 5000, vp: 100 }] };
+      document.getElementById('mmMoi').innerHTML = '<div class="panel">' + mmSous(d, false) + '</div>';
+      const w = document.querySelector('#mmMoi .mm-wrap');
+      const lbl = [...document.querySelectorAll('#mmMoi .mm-tbl td[data-l]')].map(t => t.dataset.l);
+      return { deborde: w.scrollWidth > w.clientWidth + 1, libelles: lbl.slice(0, 3),
+               entete: getComputedStyle(document.querySelector('#mmMoi .mm-tbl thead')).position };
+    });
+    expect(m.deborde, 'chaque ligne est empilée : plus de défilement latéral').toBe(false);
+    expect(m.libelles).toEqual(['Produit', 'Versement initial', 'Versement programmé']);
+    expect(m.entete, 'l’entête du tableau est masqué au profit des libellés de ligne').toBe('absolute');
+  });
+});
