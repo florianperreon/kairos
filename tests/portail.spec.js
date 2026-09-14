@@ -723,6 +723,7 @@ test.describe('Mail Manager — production et texte libre', () => {
           ? getComputedStyle(ligne('Mot à la lignée').querySelector('p')).whiteSpace : '',
         migre: mmMigre(copie()).prod,
         texte: mmTexte(copie(), 'Moi Test', sem).split('\n').filter(l => /VA \+|VP annualisés|Nombre de clients/.test(l)),
+        exportComplet: mmTexte(copie(), 'Moi Test', sem),
       };
     }, { d: donnees, prive });
   }
@@ -765,6 +766,21 @@ test.describe('Mail Manager — production et texte libre', () => {
     expect(r.migre.vaa, 'l’ancienne clé disparaît').toBeUndefined();
     // les montants portent des espaces insécables : on normalise avant de comparer
     expect(r.production.replace(/[\s\u00a0\u202f]+/g, ' ')).toContain('35 000 €');
+  });
+
+  test('l’export texte annonce les champs libres avant leur contenu', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, DONNEES, '');
+    // Sans intitulé, le lecteur du mail tombait sur deux lignes de texte sorties de nulle part.
+    expect(r.exportComplet).toContain('Faits marquants :\nJulie : NC AV\nAlice : SCPI enfin validée');
+    expect(r.exportComplet).toContain('Mon focus de la semaine :\nMardi : golf\nVendredi : signer');
+  });
+
+  test('un champ libre vide n’ajoute pas d’intitulé orphelin', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, Object.assign({}, DONNEES, { pf: '', cf: '   \n ' }), '');
+    expect(r.exportComplet).not.toContain('Faits marquants');
+    expect(r.exportComplet).not.toContain('Mon focus de la semaine');
   });
 
   test('les retours à la ligne saisis sont conservés à la lecture', async ({ page }) => {

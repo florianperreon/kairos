@@ -4107,6 +4107,9 @@ function mmTexte(d, nom, sem){
   if(a.entree) ligne('Intégration au réseau', fmtD(a.entree));
   if(d.act) L.push(d.act==='double'?'Double activité':'Activité principale');
   const bloc=(t,base,liste)=>{ L.push(''); L.push(t); liste.forEach(([k,lib])=>L.push('- '+lib+' : '+mmN(mmG(d,base+'.'+k)))); };
+  // Un champ de texte libre : son intitulé, puis le texte tel qu'il a été saisi, ligne par ligne.
+  const libre=(t,v)=>{ const x=String(v==null?'':v).trim(); if(!x) return;
+    L.push(t+' :'); x.split(/\r?\n/).forEach(l=>L.push(l)); };
   bloc('1 - Semaine passée (S'+mmNo(vAddDays(sem,-7))+')','p',MM_CPT);
   const sous = Array.isArray(d.sous)?d.sous:[];
   if(sous.length){
@@ -4118,10 +4121,10 @@ function mmTexte(d, nom, sem){
     L.push('- Total : '+mmEur(ti)+(tp?' · '+mmEur(tp)+' programmés':''));
   }
   if((a.sp||[]).length){ L.push('Sessions suivies :'); a.sp.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t)); }
-  if(d.pf) L.push('- '+d.pf);
+  libre('Faits marquants', d.pf);
   bloc('2 - Semaine en cours (S'+mmNo(sem)+')','c',MM_CPT);
   if((a.sc||[]).length){ L.push('Sessions de la semaine :'); a.sc.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t)); }
-  if(d.cf) L.push('- '+d.cf);
+  libre('Mon focus de la semaine', d.cf);
   bloc('3 - Nombre de RDV d’avance','av',MM_AV);
   L.push(''); L.push('4 - Objectifs développement');
   const inv=a.inv||{};
