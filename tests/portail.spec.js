@@ -1065,6 +1065,31 @@ test.describe('Mail Manager — saisie et vocabulaire', () => {
     expect(r.texte).toContain('- Invités pas encore adhérents : 3');
   });
 
+  test('le Passage Manager ne compte pas deux fois la production personnelle', async ({ page }) => {
+    await ouvrir(page);
+    const jauge = (prod) => page.evaluate((prod) => {
+      MM_OBJ = {}; MM_SEM = mmSemCour();
+      MM = { statut: 'brouillon', maj: null,
+             donnees: { prod, p: {}, c: {}, av: {}, sous: [], auto: { statut: 'BEMAN', fn: 8, ftot: 13 } } };
+      const el = document.createElement('div');
+      el.innerHTML = mmObjectifs();
+      const j = [...el.querySelectorAll('.mm-j')].find(x => x.textContent.includes('Volume d’affaires'));
+      return j.querySelector('.t').textContent.replace(/[\s\u00a0\u202f]+/g, ' ').trim();
+    }, prod);
+
+    // Le volume d'équipe englobe déjà le personnel : l'additionner comptait la production propre
+    // deux fois. 84 690 personnel + 153 380 équipe donnait 238 070 € au lieu de 153 380 €.
+    const avecEquipe = await jauge({ va: 16800, vaec: 67890, eva: 120000, evaec: 33380 });
+    expect(avecEquipe).toContain('153 380 € / 500 000 € · 31 %');
+    expect(avecEquipe).not.toContain('238 070');
+    expect(avecEquipe, 'l’intitulé dit que le personnel est compris dedans').toContain('personnel compris');
+
+    // Tant qu'aucune ligne d'équipe n'est renseignée, c'est la production personnelle qui compte.
+    expect(await jauge({ va: 16800, vaec: 67890 })).toContain('84 690 € / 500 000 €');
+    // Une équipe renseignée fait foi, même à zéro : c'est une déclaration, pas une absence.
+    expect(await jauge({ va: 16800, vaec: 67890, eva: 0 })).toContain('0 € / 500 000 €');
+  });
+
   test('l’objectif « filleuls » se mesure sur les adhérents', async ({ page }) => {
     await ouvrir(page);
     const r = await page.evaluate(() => {

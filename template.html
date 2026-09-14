@@ -4228,11 +4228,17 @@ function mmObjectifs(){
     + '<span class="mm-sav"></span></div></div>';
   // passage Manager
   const d=(MM&&MM.donnees)||{}, a=d.auto||{};
-  const va=mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))+mmN(mmG(d,'prod.eva'))+mmN(mmG(d,'prod.evaec'));
+  // Le volume d'affaires d'équipe englobe déjà le personnel : les additionner comptait deux fois
+  // la production propre. On prend donc le chiffre d'équipe — et le personnel sert de plancher
+  // tant que la ligne équipe n'est pas renseignée.
+  const rempli = k => { const v=mmG(d,'prod.'+k); return v!=null && v!==''; };
+  const va = (rempli('eva') || rempli('evaec'))
+           ? mmN(mmG(d,'prod.eva')) + mmN(mmG(d,'prod.evaec'))      // l'équipe fait foi
+           : mmN(mmG(d,'prod.va'))  + mmN(mmG(d,'prod.vaec'));      // pas encore d'équipe déclarée
   const habOk=MM_HAB.filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
   h += '<div class="panel"><h2>Passage Manager</h2>'
      + '<p class="mm-sub">500 k€ de volume d’affaires et toutes les habilitations.</p>'
-     + mmJauge('Volume d’affaires (perso + équipe)', va, 500000, '€')
+     + mmJauge('Volume d’affaires d’équipe (4 niveaux, personnel compris)', va, 500000, '€')
      + mmJauge('Habilitations obtenues', habOk, MM_HAB.length, '')
      + (a.ftot ? mmJauge('Objectifs FORMAN '+(a.statut||''), a.fn, a.ftot, '') : '')
      + '</div>';
