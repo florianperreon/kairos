@@ -663,24 +663,35 @@ def preflight(api):
     return pb, old
 
 # ---------------- annuaire ----------------
-def list_users(api):
-    """Annuaire complet des membres.
-    `users/collection` (500/page) si le compte y a droit — c'est le chemin rapide, réservé aux
-    comptes administrateurs depuis le 14/09/2026 ; sinon `/api/users` (30/page, authentifié)."""
-    try:
-        first = get(f"{api}/api/users/collection", params={"page": 1, "pageSize": 500}, tries=1)
-        if isinstance(first, dict) and first.get("items"):
-            users = list(first["items"])
-            total_pages = int(first["pagination"]["totalPages"])
-            with ThreadPoolExecutor(max_workers=6) as ex:
-                for d in ex.map(lambda p: get(f"{api}/api/users/collection",
-                                              params={"page": p, "pageSize": 500}),
-                                range(2, total_pages + 1)):
-                    users.extend(d["items"])
-            print(f"annuaire : {len(users)} membres via users/collection")
-            return users
-    except Exception as e:
-        print(f"users/collection indisponible ({type(e).__name__}) — bascule sur /api/users")
+MARGE_PAGES = 3   # pages lues au-delà du strict nécessaire, par sécurité
+
+def list_users(api, complet=True, connus=0):
+    """Annuaire des membres.
+
+    L'API renvoie les fiches par id croissant, 30 par page, et **ignore** aussi bien `order[...]`
+    que tout filtre de date ou d'id (vérifié le 14/09/2026 : `createdAt[after]` et `id[gt]`
+    renvoient les 15 975 fiches). Les inscrits récents sont donc toujours sur les DERNIÈRES pages.
+    Une page pèse ~570 Ko (les invités, parrains et managers y sont dépliés en entier) : relire
+    l'annuaire entier coûte ~300 Mo et 2 à 3 minutes, pour des fiches qui ne bougent presque pas.
+
+    complet=True  : tout l'annuaire (passage mensuel).
+    complet=False : seulement la fin de l'annuaire, à fusionner avec le payload précédent.
+    Renvoie (fiches, total annoncé par l'API)."""
+    if complet:
+        try:
+            first = get(f"{api}/api/users/collection", params={"page": 1, "pageSize": 500}, tries=1)
+            if isinstance(first, dict) and first.get("items"):
+                users = list(first["items"])
+                total_pages = int(first["pagination"]["totalPages"])
+                with ThreadPoolExecutor(max_workers=6) as ex:
+                    for d in ex.map(lambda p: get(f"{api}/api/users/collection",
+                                                  params={"page": p, "pageSize": 500}),
+                                    range(2, total_pages + 1)):
+                        users.extend(d["items"])
+                print(f"annuaire : {len(users)} fiches via users/collection")
+                return users, len(users)
+        except Exception as e:
+            print(f"users/collection indisponible ({type(e).__name__}) — bascule sur /api/users")
 
     tete = get_ld(f"{api}/api/users", params={"page": 1})
     lignes = tete.get("member") or tete.get("hydra:member") or []
@@ -689,14 +700,23 @@ def list_users(api):
         raise RuntimeError("annuaire vide via /api/users")
     par_page = len(lignes)
     pages = (total + par_page - 1) // par_page
-    users = list(lignes)
+
+    if complet:
+        depart = 2
+    else:
+        nouveaux = max(0, total - connus)
+        n = min(pages, (nouveaux + par_page - 1) // par_page + MARGE_PAGES)
+        depart = max(2, pages - n + 1)
+    users = list(lignes) if depart <= 2 else []
+    a_lire = list(range(depart, pages + 1))
     with ThreadPoolExecutor(max_workers=8) as ex:
-        for d in ex.map(lambda p: get(f"{api}/api/users", params={"page": p}), range(2, pages + 1)):
+        for d in ex.map(lambda p: get(f"{api}/api/users", params={"page": p}), a_lire):
             users.extend(d if isinstance(d, list) else (d or {}).get("hydra:member", []))
-    if len(users) < 0.95 * total:
+    if complet and len(users) < 0.95 * total:
         raise RuntimeError(f"annuaire incomplet ({len(users)}/{total})")
-    print(f"annuaire : {len(users)} membres via /api/users ({pages} pages)")
-    return users
+    print(f"annuaire : {len(users)} fiches lues sur {total} annoncées — "
+          f"{'complet' if complet else 'incrémental'}, {len(a_lire) + (1 if depart <= 2 else 0)}/{pages} pages")
+    return users, total
 
 # ---------------- pipeline ----------------
 def run():
@@ -774,10 +794,19 @@ def run():
                for w in (det[x["id"]] for x in lst)]
         autres[key] = merge(tup, (old.get("autres") or {}).get(key) or [], 2)
 
-    # Membres (voir list_users : users/collection si le compte y a droit, sinon /api/users)
-    users = dedup(list_users(api))
+    # Membres. Par défaut on ne relit que la fin de l'annuaire (les inscrits récents) et on fusionne
+    # avec le payload précédent. Le passage mensuel (--complet), ou ANNUAIRE_COMPLET=1, relit tout
+    # et remet d'aplomb les fiches modifiées entre-temps (téléphone, ville, cotisation, parrain…).
+    anciennes = {m[0]: list(m) for m in (old.get("adherents") or [])}
+    # adhDates absent = ancien payload : on repart d'un annuaire complet pour l'amorcer.
+    annuaire_complet = (complet or os.environ.get("ANNUAIRE_COMPLET") == "1"
+                        or not anciennes or not old.get("adhDates"))
+    users, total_api = list_users(api, annuaire_complet, len(anciennes))
+    users = dedup(users)
     users.sort(key=lambda u: u["id"])
     id2name = {u["id"]: name(u) for u in users}
+    for i, m in anciennes.items():
+        id2name.setdefault(i, m[1])
 
     def ref_name(v):
         if isinstance(v, dict):
@@ -789,27 +818,51 @@ def run():
                 return "Aucun"
         return "Aucun"
 
-    old_dates = {mm[0]: mm[4] for mm in old["adherents"]}
-    new_ids = [u["id"] for u in users if u["id"] not in old_dates]
+    # Date d'inscription : jamais renvoyée par la collection, seulement par la fiche détaillée.
+    # Une fois connue elle ne change plus : on ne la demande que pour les membres inconnus.
+    new_ids = [u["id"] for u in users if u["id"] not in anciennes]
     new_dates = {}
     for i in new_ids:
         d = get(f"{api}/api/users/{i}")
         ca = (d or {}).get("createdAt")
         new_dates[i] = pdate(ca) if ca else ""
 
-    membres = [[u["id"], name(u), u.get("phoneNumber") or "", u.get("email") or "",
-                old_dates.get(u["id"]) or new_dates.get(u["id"]) or "",
-                ref_name(u.get("godFather")), ref_name(u.get("manager")),
-                (u.get("city") or "").strip(), (u.get("postalCode") or "").strip()] for u in users]
+    # Dates de cotisation mémorisées d'un passage à l'autre : sans elles, un annuaire lu
+    # partiellement ne saurait plus dire qui est à jour (l'échéance glissante, elle, reste juste).
+    adh_dates = {int(k): v for k, v in (old.get("adhDates") or {}).items() if v}
 
-    # Lignée (mêmes règles que le navigateur : noms fixes + descendance des racines par parrainage)
-    lig_norm = [norm(x) for x in (cfg.get("lignee") or [])]
-    lig_ids = {u["id"] for u in users if any(l in norm(name(u)) for l in lig_norm)}
-    kids = {}
+    lues = {}
     for u in users:
-        g = ref_name(u.get("godFather"))
+        i = u["id"]
+        lues[i] = [i, name(u), u.get("phoneNumber") or "", u.get("email") or "",
+                   (anciennes.get(i) or ["", "", "", "", ""])[4] or new_dates.get(i) or "",
+                   ref_name(u.get("godFather")), ref_name(u.get("manager")),
+                   (u.get("city") or "").strip(), (u.get("postalCode") or "").strip()]
+        ap = u.get("adhesionPaidAt")
+        if ap:
+            adh_dates[i] = pdate(ap)
+        else:
+            adh_dates.pop(i, None)
+
+    if annuaire_complet:
+        membres = [lues[i] for i in sorted(lues)]
+        adh_dates = {i: d for i, d in adh_dates.items() if i in lues}
+    else:
+        fusion = dict(anciennes)
+        fusion.update(lues)
+        membres = [fusion[i] for i in sorted(fusion)]
+    print(f"membres : {len(membres)} au total — {len(lues)} fiches relues, {len(new_ids)} nouvelles")
+
+    # Lignée (mêmes règles que le navigateur : noms fixes + descendance des racines par parrainage).
+    # Tout ce qui suit travaille sur les lignes fusionnées, pas sur les fiches lues : c'est ce qui
+    # permet de ne relire qu'une partie de l'annuaire sans perdre la lignée ni les équipes.
+    lig_norm = [norm(x) for x in (cfg.get("lignee") or [])]
+    lig_ids = {m[0] for m in membres if any(l in norm(m[1]) for l in lig_norm)}
+    kids = {}
+    for m in membres:
+        g = m[5]
         if g and g != "Aucun":
-            kids.setdefault(norm(g), []).append(u)
+            kids.setdefault(norm(g), []).append(m)
     for root in (cfg.get("ligneeRoots") or []):
         queue, seen = [norm(root)], set()
         while queue:
@@ -817,9 +870,9 @@ def run():
             if k in seen:
                 continue
             seen.add(k)
-            for u in kids.get(k, []):
-                lig_ids.add(u["id"])
-                queue.append(norm(name(u)))
+            for m in kids.get(k, []):
+                lig_ids.add(m[0])
+                queue.append(norm(m[1]))
 
     # Données complémentaires (fiche détaillée) pour les membres de la lignée : date d'anniversaire (jour-mois)
     # birthDay est un horodatage UTC (ex. 1994-05-23T22:00:00+00:00 = 24/05 à Paris) :
@@ -840,10 +893,11 @@ def run():
                 extra[futs[f]] = {"bd": mmdd, "v": 2}
     extra = {k: v for k, v in extra.items() if k in lig_ids}
 
-    # Adhérents : cotisation réglée depuis moins de 12 mois glissants
+    # Adhérents : cotisation réglée depuis moins de 12 mois glissants. Calculé sur les dates
+    # mémorisées, donc l'expiration reste exacte chaque jour ; un NOUVEAU règlement n'apparaît
+    # qu'au passage suivant qui relit la fiche (mensuel, ou immédiat pour un membre récent).
     limit = (today - datetime.timedelta(days=365)).isoformat()
-    adh_ids = sorted(u["id"] for u in users
-                     if u.get("adhesionPaidAt") and pdate(u["adhesionPaidAt"]) >= limit)
+    adh_ids = sorted(i for i, d in adh_dates.items() if d and d >= limit)
     adh_set = set(adh_ids)
 
     # Jalons d'équipe (membres de la lignée) : taille de l'équipe = adhérents dans toute la descendance
@@ -853,19 +907,19 @@ def run():
     # Premier passage (pas d'ancienne valeur) : on enregistre la taille sans créer de jalon.
     PALIERS = [3, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 500]
     keep_from = (today - datetime.timedelta(days=30)).isoformat()
-    def team_size(u):
-        seen, queue, n = {u["id"]}, [norm(name(u))], 0
+    def team_size(m):
+        seen, queue, n = {m[0]}, [norm(m[1])], 0
         while queue:
             k = queue.pop()
             for c in kids.get(k, []):
-                if c["id"] in seen:
+                if c[0] in seen:
                     continue
-                seen.add(c["id"])
-                if c["id"] in adh_set:
+                seen.add(c[0])
+                if c[0] in adh_set:
                     n += 1
-                queue.append(norm(name(c)))
+                queue.append(norm(c[1]))
         return n
-    by_id = {u["id"]: u for u in users}
+    by_id = {m[0]: m for m in membres}
     for i in lig_ids:
         u = by_id.get(i)
         if not u:
@@ -900,7 +954,8 @@ def run():
     payload = {"meta": {"majAteliers": today_iso, "majAdherents": today_iso, "maj": maj_iso},
                "cfg": cfg, "ateliers": ateliers, "adherents": membres,
                "autres": autres, "adherentIds": adh_ids, "sites": sites,
-               "extra": {str(k): v for k, v in extra.items()}}
+               "extra": {str(k): v for k, v in extra.items()},
+               "adhDates": {str(k): v for k, v in adh_dates.items() if v}}
     # Version du contenu éditorial (lue en base, le contenu n'a plus de fichier)
     contenu_version = ""
     if KAIROS_TOKEN:
@@ -947,7 +1002,8 @@ def run():
     # meta.js (en clair) : date de mise à jour, variable du projet lisible sans mot de passe
     write_js("meta.js", "KAIROS_META", json.dumps({"maj": maj_iso, "majDonnees": today_iso, "versionContenu": contenu_version}))
     open("index.html", "w", encoding="utf-8").write(out)
-    resume = (f"ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
+    resume = (f"annuaire {'complet' if annuaire_complet else 'incrémental'} | "
+              f"ateliers {len(ateliers)} | réunions {len(autres['reu'])} | "
               f"formations {len(autres['for'])} | événements {len(autres['evt'])} | "
               f"membres {len(membres)} (+{len(new_ids)}) | liste filtrée {len(adh_ids)} | "
               f"lignée {len(lig_ids)} | sites {len(sites)}")

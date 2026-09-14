@@ -754,6 +754,23 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .rol-fixe{display:block;margin-top:5px;font-size:11.5px;color:var(--ink-3)}
 .mbr-msg{font-size:13.5px;margin:10px 0 0;color:var(--ink-2)}
 .mbr-msg.err{color:var(--bad);font-weight:600}
+
+/* ---------- Accueil : mes actions de la semaine ---------- */
+.acts{display:grid;gap:8px}
+.act{display:flex;align-items:flex-start;gap:12px;text-decoration:none;color:inherit;background:var(--surface-2);border:1px solid transparent;border-radius:10px;padding:11px 14px;transition:border-color .15s}
+.act:hover{border-color:var(--accent)}
+.act .ck{flex:0 0 auto;width:20px;height:20px;border-radius:50%;border:2px solid var(--line-2);margin-top:2px}
+.act.fait .ck{border-color:var(--gold);background:var(--gold);color:#fff;font-size:13px;line-height:17px;text-align:center;font-weight:800}
+.act .tx{flex:1 1 auto;min-width:0}
+.act .tx b{display:block;font-family:"Sora";font-size:14.5px}
+.act .tx p{margin:2px 0 0;font-size:13px;color:var(--ink-2)}
+.act.fait .tx b{color:var(--ink-2);text-decoration:line-through;text-decoration-color:var(--line-2)}
+.act .go{flex:0 0 auto;color:var(--accent);font-weight:700;font-size:15px;margin-top:2px}
+.act.fait .go{visibility:hidden}
+.act .urg{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:700;border-radius:99px;padding:1px 8px;background:#FFF1DB;color:#8A4B00;vertical-align:1px}
+:root[data-theme="dark"] .act .urg{background:#4A2E0F;color:#FBBF77}
+.acts-ok{margin:0;padding:14px;text-align:center;background:var(--gold-soft);color:var(--gold-ink);border-radius:10px;font-family:"Sora";font-weight:700;font-size:15px}
+.acts-n{font-size:13px;color:var(--ink-2);margin:-4px 0 12px}
 </style>
 
 <div id="lock" class="wrap">
@@ -809,6 +826,12 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
   <main>
     <section class="view on" id="v-home">
       <div class="panel welcome" id="welcome"></div>
+      <div class="panel" id="homeActionsPanel" hidden>
+        <h2>Mes actions de la semaine</h2>
+        <p class="acts-n" id="homeActionsNote"></p>
+        <div class="acts" id="homeActions"></div>
+        <p class="acts-ok" id="homeActionsOk" hidden>Well done ; tu es à jour !</p>
+      </div>
       <div class="valeurs" id="homeValeurs" hidden></div>
       <div class="bdstrip" id="homeBd" hidden></div>
       <div class="bdstrip surv-strip" id="homeSurv" hidden></div>
@@ -1266,7 +1289,7 @@ function rafraichirListes(){
   try{ buildSimple('reu', R, id=>BASE+'teamMeeting/detail/'+id, 'réunion'); }catch(e){}
   try{ buildSimple('for', F, id=>BASE+'formation/detail/'+id, 'formation'); }catch(e){}
   try{ buildSimple('evt', E, id=>BASE+'event/detail/'+id, 'événement'); }catch(e){}
-  try{ buildHome(); buildSurvAccueil(); }catch(e){}
+  try{ buildHome(); buildSurvAccueil(); buildActions(); }catch(e){}
   try{ routeHash(); }catch(e){}
 }
 function survCarte(o, passe){
@@ -1319,6 +1342,75 @@ function buildSurv(){
   el.innerHTML = html;
 }
 document.addEventListener('change', e=>{ if(e.target.id==='survPast') buildSurv(); });
+/* ---------- Accueil : mes actions de la semaine ----------
+   Une action = quelque chose à faire cette semaine, avec le lien qui y mène. Ce qui est fait est
+   mémorisé par semaine (clé = lundi) et suit la personne d'un appareil à l'autre ; ce qui est
+   constaté sur les données (places qui s'épuisent) disparaît tout seul une fois réglé. */
+const semaineCle = () => vMonday(todayIso);
+const semFait = c => !!(SEM[semaineCle()] || {})[c];
+function semMarquer(c){
+  const k = semaineCle();
+  if(semFait(c)) return;
+  SEM[k] = Object.assign({}, SEM[k] || {}, { [c]: true });
+  // on ne garde que les 8 dernières semaines, inutile d'accumuler
+  const cles = Object.keys(SEM).sort().slice(-8);
+  SEM = cles.reduce((o,x)=>(o[x]=SEM[x], o), {});
+  saveSem();
+  buildActions();
+}
+function buildActions(){
+  const panel = document.getElementById('homeActionsPanel');
+  const liste = document.getElementById('homeActions');
+  const okEl  = document.getElementById('homeActionsOk');
+  const note  = document.getElementById('homeActionsNote');
+  if(!panel || !liste) return;
+
+  const actions = [];
+
+  // 1) Lire la veille de la semaine — validée dès que l'onglet Veille est ouvert
+  const eds = (VEILLE && VEILLE.editions) ? VEILLE.editions.slice().sort((a,b)=>(b.du||'').localeCompare(a.du||'')) : [];
+  if(eds.length){
+    const der = eds[0];
+    actions.push({
+      t: 'Lire la veille de la semaine',
+      d: 'Édition ' + vPeriode(der.du, der.au) + ' — fiscalité, marchés, produits, profession, clients.',
+      href: '#veille', fait: semFait('veille'), go: 'Ouvrir',
+    });
+  }
+
+  // 2) S'inscrire aux sessions enregistrées où les places s'épuisent — visible seulement si besoin
+  const al = (typeof survAlertes === 'function') ? survAlertes() : [];
+  if(al.length){
+    const complets = al.filter(o=>o.p && o.p.complet).length;
+    actions.push({
+      t: 'M\u2019inscrire aux sessions bientôt complètes',
+      urg: al.length + ' session' + (al.length>1?'s':''),
+      d: al.slice(0,3).map(o=>o.a.title).join(' · ')
+         + (al.length>3 ? ' · +' + (al.length-3) + ' autre' + (al.length-4?'s':'') : '')
+         + (complets ? ' — ' + complets + ' déjà complète' + (complets>1?'s':'') : ''),
+      href: '#enregistre', fait: false, go: 'Voir',
+    });
+  }
+
+  // Rien d'évaluable (veille non chargée, aucune alerte) : on n'affiche pas le bloc du tout,
+  // plutôt que d'annoncer « tu es à jour » sans avoir rien pu vérifier.
+  if(!actions.length && !eds.length){ panel.hidden = true; return; }
+  panel.hidden = false;
+
+  const reste = actions.filter(a=>!a.fait).length;
+  if(note) note.textContent = reste
+    ? (reste === 1 ? 'Il te reste 1 action cette semaine.' : 'Il te reste ' + reste + ' actions cette semaine.')
+    : '';
+  liste.innerHTML = actions.map(a =>
+    '<a class="act' + (a.fait?' fait':'') + '" href="' + a.href + '">'
+    + '<span class="ck">' + (a.fait?'✓':'') + '</span>'
+    + '<span class="tx"><b>' + esc(a.t) + (a.urg?'<span class="urg">'+esc(a.urg)+'</span>':'') + '</b>'
+    + '<p>' + esc(a.d) + '</p></span>'
+    + '<span class="go">' + esc(a.go) + ' →</span></a>').join('');
+  liste.hidden = !actions.length;
+  if(okEl) okEl.hidden = reste > 0;
+}
+
 // Encart d'accueil : uniquement s'il y a une alerte
 function buildSurvAccueil(){
   const el = document.getElementById('homeSurv');
@@ -1452,13 +1544,15 @@ function boot(){
   chargerParcours();
   chargerSurv();
   buildMembres();
-  majOngletSurv(); buildSurv(); buildSurvAccueil();
+  majOngletSurv(); buildSurv(); buildSurvAccueil(); buildActions();
 }
 
 /* ---------- Navigation / thème / verrou ---------- */
 function showTab(v){
   document.querySelectorAll('nav.tabs button, nav.botbar button, #plusCard button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
+  // Ouvrir la veille vaut lecture : pas de case à cocher de plus
+  if(v === 'veille' && VEILLE && VEILLE.editions && VEILLE.editions.length){ try{ semMarquer('veille'); }catch(e){} }
 }
 document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('nav.tabs button[data-v], nav.botbar button[data-v], #plusCard button[data-v]');
@@ -1775,7 +1869,7 @@ async function chargerParcours(){
     if(r.error) throw r.error;
     PARCOURS = (r.data && r.data.donnees) || null;
     MOI_ID = (r.data && r.data.membre_id) || null;
-    if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); majOngletSurv(); }catch(e){} }
+    if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); buildActions(); majOngletSurv(); }catch(e){} }
     if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
     return !!PARCOURS;
   }catch(e){ PARCOURS = null; return false; }
@@ -2531,7 +2625,11 @@ const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/su
 const AUTH_MAIL = false;   // connexion par code e-mail : nécessite un SMTP externe (service intégré limité à 2 envois/h)
 let SB=null, SBUSER=null, SYNC_T=null, SYNC_FAIT=false;
 
-const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK], nav:NAV_REPLIE });
+// Actions de la semaine : ce qui est fait est mémorisé par semaine (clé = lundi de la semaine),
+// donc tout repart à zéro chaque lundi sans qu'on ait à purger quoi que ce soit.
+let SEM = {}; try{ SEM = JSON.parse(localStorage.getItem('kairos_sem')||'{}'); }catch(e){}
+const saveSem = ()=>{ try{ localStorage.setItem('kairos_sem', JSON.stringify(SEM)); }catch(e){} planSync(); };
+const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM });
 let ACC_NOM_AFF = null;
 // Prénom de la personne connectée (Google), pour personnaliser l'accueil
 function prenomUser(){
@@ -2587,13 +2685,17 @@ async function syncPull(){
   const c=d.check||{};
   for(const k in c){ if(c[k]&&!CHECK[k]){ CHECK[k]=c[k]; chg=true; } }
   if(typeof d.nav==='boolean' && d.nav!==NAV_REPLIE){ try{ sideReplier(d.nav); }catch(e){} }
+  // Actions de la semaine : fusion par vrai (une action faite sur un appareil l'est partout)
+  const s = d.sem||{};
+  for(const k in s){ if(s[k] && !SEM[k]){ SEM[k]=s[k]; chg=true; } }
   if(chg){
     try{
       localStorage.setItem('kairos_favs', JSON.stringify([...FAVS]));
       localStorage.setItem('kairos_obj', JSON.stringify([...OBJ_OK]));
       localStorage.setItem('kairos_check', JSON.stringify(CHECK));
+      localStorage.setItem('kairos_sem', JSON.stringify(SEM));
     }catch(e){}
-    try{ buildContenu(); buildAnn(); routeHash(); }catch(e){}
+    try{ buildContenu(); buildAnn(); buildActions(); routeHash(); }catch(e){}
   }
   syncPush();
 }
@@ -3142,7 +3244,7 @@ async function chargerVeille(){
     if(last){ const d=new Date(last), z=n=>String(n).padStart(2,'0');
       maj = d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes()); }
     VEILLE = { maj: maj, editions: Object.values(eds), breaking: alertes };
-    if(window.__booted){ try{ buildVeille(); buildSearchIndex(); routeHash(); }catch(err){} }
+    if(window.__booted){ try{ buildVeille(); buildSearchIndex(); buildActions(); routeHash(); }catch(err){} }
     return true;
   }catch(err){ return false; }
 }
