@@ -819,6 +819,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-lig span{display:block;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
 .mm-lig b{font-size:14.5px;font-weight:700}
 .mm-noms{display:block;font-size:11.5px;font-style:normal;color:var(--ink-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mm-aide{border-bottom:1px dotted var(--ink-3);cursor:help}
 
 .mm-tbl{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
 .mm-tbl th,.mm-tbl td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
@@ -2965,10 +2966,15 @@ const MM_PRODE = [['eva','VA équipe acté','€'],['evaec','VA équipe en cours
 const MM_HAB   = [['mia','MIA / Assurance niveau II'],['miobsp','MIOBSP'],['alpsi','ALPSI / CIF']];
 const MM_FC    = [['fmia','FC Assurance (MIA)'],['fiobsp','FC IOBSP'],['fimmo','FC Immobilier'],['falpsi','FC ALPSI / CIF']];
 const MM_ETATS = [['','—'],['afaire','À faire'],['encours','En cours'],['ok','Validé']];
-const MM_OBJS  = [['va','VA perso','€'],['eva','VA équipe','€'],['clients','Nombre de clients',''],
-                  ['filleuls','Filleuls directs',''],['dm','Invités en DM',''],
-                  ['r0sem','R0 par semaine',''],['r1sem','R1 par semaine',''],
-                  ['statut','Statut FORMAN visé','sel']];
+const MM_OBJS  = [
+  ['va','VA perso','€','Volume d’affaires cumulé sur l’exercice (1er août → 31 juillet)'],
+  ['eva','VA équipe','€','Volume d’affaires de l’équipe cumulé sur l’exercice (1er août → 31 juillet)'],
+  ['clients','Nombre de clients','','Total de ton parc à cette date — pas seulement les clients de l’exercice'],
+  ['filleuls','Filleuls directs','','Total de tes filleuls directs à cette date — pas seulement ceux de l’exercice'],
+  ['dm','Invités en DM','','Invités inscrits en Découverte Métier depuis le début de l’exercice'],
+  ['r0sem','R0 par semaine','','Rythme visé, en moyenne par semaine'],
+  ['r1sem','R1 par semaine','','Rythme visé, en moyenne par semaine'],
+  ['statut','Statut FORMAN visé','sel','Le statut que tu veux avoir atteint à cette date']];
 // Statuts du réseau, par ordre croissant
 const MM_NIVEAUX = ['NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
 
@@ -3696,10 +3702,12 @@ function mmObjectifs(){
     + '<p class="mm-sub">Deux échéances pour chaque indicateur : le <b>31 décembre '+ech.dec.slice(0,4)+'</b> (cap de l’année civile) '
     + 'et le <b>31 juillet '+ech.pmr.slice(0,4)+'</b> (fin d’exercice, horizon PMR). '
     + 'Tu les fixes toi-même et tu peux les revoir quand tu veux — chaque modification est archivée.</p>'
+
     + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Indicateur</th>'
     + '<th class="num">Au 31/12 ('+mmSemaines(ech.dec)+' sem.)</th>'
     + '<th class="num">Au 31/07 — PMR ('+mmSemaines(ech.pmr)+' sem.)</th></tr></thead><tbody>'
-    + MM_OBJS.map(([k,lib,u])=>'<tr><td>'+esc(lib)+(u==='€'?' <small style="color:var(--ink-3)">(€)</small>':'')+'</td>'
+    + MM_OBJS.map(([k,lib,u,aide])=>'<tr><td><span class="mm-aide"'+(aide?' title="'+esc(aide)+'"':'')+'>'
+      + esc(lib)+'</span>'+(u==='€'?' <small style="color:var(--ink-3)">(€)</small>':'')+'</td>'
       + '<td>'+mmObjChamp(k,'dec',u,o)+'</td><td>'+mmObjChamp(k,'pmr',u,o)+'</td></tr>').join('')
     + '</tbody></table></div>'
     + '<div class="mm-bar"><button type="button" class="mm-b pri" id="mmObjSave">Enregistrer mes objectifs</button>'
