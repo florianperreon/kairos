@@ -4280,7 +4280,10 @@ function mmTexte(d, nom, sem){
   const iP = invL(a.invP, a.invPN);
   if(iP.length){ L.push('Invités en séance :'); iP.forEach(x=>L.push(x)); }
   if((a.sp||[]).length){ L.push('Sessions suivies :'); a.sp.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t)); }
-  if((a.sh||[]).length) L.push('Sessions suivies depuis le début : '+a.sh.length);
+  if((a.sh||[]).length){
+    L.push('Sessions suivies depuis le début ('+a.sh.length+') :');
+    a.sh.slice().reverse().forEach(x=>L.push('- '+fmtD(x.d)+' : '+x.t));   // la plus récente d'abord
+  }
   libre('Faits marquants', d.pf);
   bloc('2 - Semaine en cours (S'+mmNo(sem)+')','c',MM_CPT);
   const iC = invL(a.invC, a.invCN);

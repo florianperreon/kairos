@@ -978,6 +978,26 @@ test.describe('Mail Manager — invités relevés et lecture du mur', () => {
     expect(a.ag.map(x => x.t), 'une session à 120 jours est bien listée').toContain('Formation à venir');
   });
 
+  test('l’export texte détaille toutes les sessions suivies depuis le début', async ({ page }) => {
+    await ouvrir(page);
+    const t = await page.evaluate(() => {
+      MM_OBJ = {}; MM_PRODUITS = [];
+      return mmTexte({ p: {}, c: {}, av: {}, sous: [], prod: {}, auto: {
+        sp: [{ d: '2026-09-12', t: 'Clefs de la communication - Niveau 1' }], sc: [], ag: [],
+        sh: [{ d: '2026-05-03', t: 'Découverte métier visio' },
+             { d: '2026-05-16', t: 'Atelier Démarrage' },
+             { d: '2026-09-12', t: 'Clefs de la communication - Niveau 1' }] } },
+        'Moi', mmSemCour());
+    });
+    // Avant, l'export ne donnait que le nombre : « Sessions suivies depuis le début : 3 ».
+    expect(t).toContain('Sessions suivies depuis le début (3) :');
+    expect(t, 'la plus récente d’abord').toContain(
+      'Sessions suivies depuis le début (3) :\n'
+      + '- 12/09/2026 : Clefs de la communication - Niveau 1\n'
+      + '- 16/05/2026 : Atelier Démarrage\n'
+      + '- 03/05/2026 : Découverte métier visio');
+  });
+
   test('le mur range les objectifs une nature par ligne', async ({ page }) => {
     await ouvrir(page);
     const r = await page.evaluate(() => {
