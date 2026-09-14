@@ -2962,7 +2962,7 @@ const MM_CPT   = [['edm','EDM / DM'],['r0','R0'],['r1','R1'],['r2','R2'],['r2b',
 const MM_AV    = [['r0','R0'],['r1','R1'],['r2','R2'],['r3','R3'],['rx','RX']];
 const MM_PROD  = [['va','VA acté','€'],['vaec','VA en cours','€'],['vaa','VAA','€'],['vp','VP annualisés','€'],['clients','Nombre de clients','']];
 const MM_PRODE = [['eva','VA équipe acté','€'],['evaec','VA équipe en cours','€']];
-const MM_HAB   = [['mia','MIA / Assurance niveau II'],['miobsp','MIOBSP'],['alpsi','ALPSI / CIF'],['orias','ORIAS']];
+const MM_HAB   = [['mia','MIA / Assurance niveau II'],['miobsp','MIOBSP'],['alpsi','ALPSI / CIF']];
 const MM_FC    = [['fmia','FC Assurance (MIA)'],['fiobsp','FC IOBSP'],['fimmo','FC Immobilier'],['falpsi','FC ALPSI / CIF']];
 const MM_ETATS = [['','—'],['afaire','À faire'],['encours','En cours'],['ok','Validé']];
 const MM_OBJS  = [['va','VA perso','€'],['eva','VA équipe','€'],['clients','Nombre de clients',''],
@@ -3392,19 +3392,21 @@ function mmCorps(d, prive, ro, sem){
 
   // 6 — Habilitations & formations continues
   const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
-  const ligne = (base,k,lib) => '<tr><td>'+esc(lib)+'</td><td>'
-    + (ro ? esc(etat(mmG(d,base+'.'+k+'.s')))
-          : '<select data-mm="'+base+'.'+k+'.s">'+MM_ETATS.map(([v,l])=>'<option value="'+v+'"'
-            +((mmG(d,base+'.'+k+'.s')||'')===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>')
-    + '</td><td>'+(ro ? esc(mmG(d,base+'.'+k+'.d')||'—')
-          : '<input type="text" data-mm="'+base+'.'+k+'.d" value="'+esc(mmG(d,base+'.'+k+'.d')||'')+'" placeholder="JJ/MM/AAAA">')
-    + '</td></tr>';
+  const cellDate = (k,champ) => ro ? esc(mmG(d,'hab.'+k+'.'+champ)||'—')
+    : '<input type="text" data-mm="hab.'+k+'.'+champ+'" value="'+esc(mmG(d,'hab.'+k+'.'+champ)||'')+'" placeholder="JJ/MM/AAAA">';
+  const ligne = (k,lib,orias) => '<tr><td>'+esc(lib)+'</td><td>'
+    + (ro ? esc(etat(mmG(d,'hab.'+k+'.s')))
+          : '<select data-mm="hab.'+k+'.s">'+MM_ETATS.map(([v,l])=>'<option value="'+v+'"'
+            +((mmG(d,'hab.'+k+'.s')||'')===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>')
+    + '</td><td>'+cellDate(k,'d')+'</td>'
+    + (orias ? '<td>'+cellDate(k,'o')+'</td>' : '') + '</tr>';
   h += mmSec(6,'Habilitations & formations continues',(ro?'':'reporté de S-1'),
-      '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Habilitation</th><th>Statut</th><th>Date</th></tr></thead><tbody>'
-    + MM_HAB.map(([k,lib])=>ligne('hab',k,lib)).join('') + '</tbody></table></div>'
+      '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Habilitation</th><th>Statut</th>'
+    + '<th>Date d’examen</th><th>Date ORIAS</th></tr></thead><tbody>'
+    + MM_HAB.map(([k,lib])=>ligne(k,lib,true)).join('') + '</tbody></table></div>'
     + '<label class="mm-lab">Formations continues de l’année</label>'
     + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Formation continue</th><th>Statut</th><th>Validée le</th></tr></thead><tbody>'
-    + MM_FC.map(([k,lib])=>ligne('hab',k,lib)).join('') + '</tbody></table></div>'
+    + MM_FC.map(([k,lib])=>ligne(k,lib,false)).join('') + '</tbody></table></div>'
     + (mmRappelFC(d) ? '<p class="mm-note">⚠︎ '+esc(mmRappelFC(d))+'</p>' : ''));
 
   // 7 — FORMAN
@@ -3523,8 +3525,13 @@ function mmFiche(d, prive, sem, obj){
   // habilitations
   const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
   const hab = MM_HAB.concat(MM_FC).filter(([k])=>mmG(d,'hab.'+k+'.s'))
-    .map(([k,lib])=>{ const st=mmG(d,'hab.'+k+'.s');
-      return '<i class="'+(st==='ok'?'ok':(st==='encours'?'att':'non'))+'">'+esc(lib)+'<b>'+esc(etat(st))+'</b></i>'; });
+    .map(([k,lib])=>{
+      const st=mmG(d,'hab.'+k+'.s'), dts=[], fc=MM_FC.some(x=>x[0]===k);
+      if(mmG(d,'hab.'+k+'.d')) dts.push((fc?'':'examen ')+mmG(d,'hab.'+k+'.d'));
+      if(mmG(d,'hab.'+k+'.o')) dts.push('ORIAS '+mmG(d,'hab.'+k+'.o'));
+      return '<i class="'+(st==='ok'?'ok':(st==='encours'?'att':'non'))+'"'
+        + (dts.length?' title="'+esc(dts.join(' · '))+'"':'')+'>'+esc(lib)+'<b>'+esc(etat(st))+'</b>'
+        + (dts.length?' <span class="mut">'+esc(dts.join(' · '))+'</span>':'')+'</i>'; });
   h += mmLigne('Habilitations', hab.length ? '<div class="kpi">'+hab.join('')+'</div>' : '');
 
   // FORMAN
@@ -3760,9 +3767,13 @@ function mmTexte(d, nom, sem){
     });
   });
   L.push(''); L.push('6 - Habilitations');
+  const estFC = k => MM_FC.some(x=>x[0]===k);
   MM_HAB.concat(MM_FC).forEach(([k,lib])=>{
     const s=mmG(d,'hab.'+k+'.s'); if(!s) return;
-    L.push('- '+lib+' : '+(MM_ETATS.find(x=>x[0]===s)||['',''])[1]+(mmG(d,'hab.'+k+'.d')?' ('+mmG(d,'hab.'+k+'.d')+')':''));
+    const dts=[];
+    if(mmG(d,'hab.'+k+'.d')) dts.push((estFC(k)?'':'examen ')+mmG(d,'hab.'+k+'.d'));
+    if(mmG(d,'hab.'+k+'.o')) dts.push('ORIAS '+mmG(d,'hab.'+k+'.o'));
+    L.push('- '+lib+' : '+(MM_ETATS.find(x=>x[0]===s)||['',''])[1]+(dts.length?' ('+dts.join(' · ')+')':''));
   });
   L.push(''); L.push('7 - Objectifs FORMAN');
   L.push('- Niveau actuel : '+(a.statut||'—'));
