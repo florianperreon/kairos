@@ -1480,7 +1480,7 @@ async function chargerSurv(){
     if(r.error) throw r.error;
     SURV = new Set((r.data||[]).map(x=>x.cle));
   }catch(e){ SURV = new Set(); return false; }
-  if(window.__booted){ try{ buildSurv(); majOngletSurv(); rafraichirListes(); }catch(e){} }
+  if(window.__booted){ try{ buildSurv(); majOngletSurv(); rafraichirListes(); routerQuandPret(); }catch(e){} }
   return true;
 }
 // Les sessions passées restent enregistrées : elles sont simplement masquées par défaut.
@@ -2078,6 +2078,26 @@ function applyState(tab,p){
 document.addEventListener('input',e=>{ if(e.target.closest('section.view')) setTimeout(()=>syncHash(false),0); });
 document.addEventListener('change',e=>{ if(e.target.closest('section.view')) setTimeout(()=>syncHash(false),0); });
 document.addEventListener('click',e=>{ if(e.target.closest('section.view .daybtns button, section.view .chips .chip, section.view .vtoggle button, #annHead th.sortable')) setTimeout(()=>syncHash(false),0); });
+// Lien partagé vers un onglet qui n'apparaît qu'une fois les données chargées (Mail Manager,
+// Veille, Enregistré, Améliorer Kairos, Admin) : routeHash() abandonne tant que le bouton est
+// masqué. On retient donc l'adresse demandée à l'ouverture et on l'applique dès que l'onglet
+// devient visible — une seule fois, et jamais si la personne a navigué entre-temps.
+let HASH_INITIAL = location.hash || '';
+let HASH_APPLIQUE = false;
+function routerQuandPret(){
+  if(HASH_APPLIQUE || !HASH_INITIAL) return;
+  // le retour de connexion Google peut avoir effacé le fragment : on le remet avant de router
+  if(!location.hash){ try{ history.replaceState(null,'',location.pathname+location.search+HASH_INITIAL); }catch(e){} }
+  else if(location.hash !== HASH_INITIAL){ HASH_APPLIQUE = true; return; }
+  if(HASH_INITIAL.startsWith('#p/')){ HASH_APPLIQUE = true; routeHash(); return; }
+  const m = HASH_INITIAL.match(/^#([a-z-]+)(?:\?(.*))?$/);
+  const tab = m ? tabFromSlug(m[1]) : null;
+  if(!tab){ HASH_APPLIQUE = true; return; }
+  const btn = document.querySelector('nav.tabs button[data-v="'+tab+'"]');
+  if(!btn || btn.hidden) return;          // pas encore prêt : on retentera au prochain chargement
+  HASH_APPLIQUE = true;
+  routeHash();
+}
 function routeHash(){
   const h=location.hash||'';
   if(h.startsWith('#p/')){ const slug=decodeURIComponent(h.slice(3)); if(CONTENU&&CONTENU.pages&&CONTENU.pages[slug]) showPage(slug); return; }
@@ -2256,6 +2276,7 @@ async function chargerParcours(){
     if(MOI_ID) chargerMM();
     if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); buildActions(); majOngletSurv(); }catch(e){} }
     if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
+    try{ routerQuandPret(); }catch(e){}
     return !!PARCOURS;
   }catch(e){ PARCOURS = null; return false; }
 }
@@ -3221,6 +3242,7 @@ async function chargerMM(){
   await chargerMMMur();
   document.querySelectorAll('[data-v="mm"]').forEach(b=>b.hidden=false);
   if(window.__booted){ try{ buildMM(); buildActions(); }catch(e){} }
+  try{ routerQuandPret(); }catch(e){}
   return true;
 }
 async function chargerMMMur(){
@@ -4044,6 +4066,7 @@ async function chargerRetours(){
   document.querySelectorAll('[data-v="fb"]').forEach(b=>b.hidden=false);
   const fb=document.getElementById('fbBtn'); if(fb) fb.hidden=false;
   if(window.__booted){ try{ buildRetours(); }catch(e){} }
+  try{ routerQuandPret(); }catch(e){}
   return true;
 }
 function retBadge(){
@@ -4342,6 +4365,7 @@ async function buildMembres(){
   catch(e){ return masquerAdmin(btn); }
   if(btn) btn.hidden=false;
   EST_ADMIN=true;
+  try{ routerQuandPret(); }catch(e){}
   try{ buildRetours(); }catch(e){}
   buildDemandes();
   buildContenuAdmin();
@@ -4834,7 +4858,7 @@ async function chargerVeille(){
     if(last){ const d=new Date(last), z=n=>String(n).padStart(2,'0');
       maj = d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes()); }
     VEILLE = { maj: maj, editions: Object.values(eds), breaking: alertes };
-    if(window.__booted){ try{ buildVeille(); buildSearchIndex(); buildActions(); routeHash(); }catch(err){} }
+    if(window.__booted){ try{ buildVeille(); buildSearchIndex(); buildActions(); routeHash(); routerQuandPret(); }catch(err){} }
     return true;
   }catch(err){ return false; }
 }

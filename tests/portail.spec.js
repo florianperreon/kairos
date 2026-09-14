@@ -360,3 +360,73 @@ test.describe('Parcours « Où en es-tu ? »', () => {
     expect(r.ouvertes, 'plus rien ne doit être ouvert quand tout est fait').toEqual([]);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Liens partagés', () => {
+  // Régression du 14/09/2026 : https://mykairos.fr/#mail-manager ouvrait l'accueil. L'onglet
+  // n'apparaît qu'une fois les données chargées, et routeHash() abandonne quand le bouton est
+  // encore masqué — sans que personne ne repasse ensuite.
+  const arriverAvec = (page, hash) => page.evaluate((h) => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    location.hash = h;
+    HASH_INITIAL = h; HASH_APPLIQUE = false;
+    window.__booted = true;
+    // état du tout début : l'onglet visé n'est pas encore révélé
+    document.querySelectorAll('[data-v="mm"],[data-v="fb"]').forEach(x => x.hidden = true);
+    routeHash();
+    const avant = (document.querySelector('section.view.on') || {}).id;
+    // …puis les données arrivent et l'onglet apparaît
+    document.querySelectorAll('[data-v="mm"],[data-v="fb"]').forEach(x => x.hidden = false);
+    routerQuandPret();
+    return { avant, apres: (document.querySelector('section.view.on') || {}).id };
+  }, hash);
+
+  test('#mail-manager ouvre le Mail Manager, pas l’accueil', async ({ page }) => {
+    await ouvrir(page);
+    const r = await arriverAvec(page, '#mail-manager');
+    expect(r.avant, 'au tout début l’onglet n’est pas encore là').toBe('v-home');
+    expect(r.apres, 'une fois les données chargées, le lien doit aboutir').toBe('v-mm');
+  });
+
+  test('un lien avec des paramètres emmène jusqu’à la bonne sous-vue', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      MOI_ID = 20028; MM_SEM = mmSemCour();
+      MM = { semaine: MM_SEM, donnees: {}, statut: 'brouillon', maj: null };
+      MM_REG = { participe: true, reglages: {} }; MM_OBJ = {}; MM_MUR = []; MM_LIGNES = [];
+      PARCOURS = { statut: 'ROLE_BEMAN', etapes: {} };
+      byId.set(20028, { id: 20028, name: 'Moi', parrain: 'P', mgr: 'M', date: '2025-07-01' });
+      location.hash = '#mail-manager?s=le-mur';
+      HASH_INITIAL = location.hash; HASH_APPLIQUE = false;
+      window.__booted = true;
+      document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = true);
+      routeHash();
+      document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = false);
+      routerQuandPret();
+      return { vue: (document.querySelector('section.view.on') || {}).id, sousVue: MM_SUB };
+    });
+    expect(r.vue).toBe('v-mm');
+    expect(r.sousVue).toBe('mur');
+  });
+
+  test('si la personne a navigué entre-temps, on ne la déplace pas', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      location.hash = '#mail-manager';
+      HASH_INITIAL = '#mail-manager'; HASH_APPLIQUE = false;
+      window.__booted = true;
+      document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = true);
+      // elle est partie sur l'annuaire pendant le chargement
+      showTab('ann'); curTab = 'ann'; location.hash = '#annuaire';
+      document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = false);
+      routerQuandPret();
+      return (document.querySelector('section.view.on') || {}).id;
+    });
+    expect(r, 'le lien ne doit pas reprendre la main après une navigation').toBe('v-ann');
+  });
+});
