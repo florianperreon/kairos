@@ -294,3 +294,69 @@ test.describe('Audit de confidentialité', () => {
       'une adresse e-mail doit être refusée').toBe(1);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Parcours « Où en es-tu ? »', () => {
+  // Règle du 14/09/2026 : la phase ouverte est la première non terminée, et dedans la plus
+  // ancienne étape incomplète. Quand tout est validé, tout reste replié.
+  const CONTENU_TEST = {
+    pages: {},
+    parcours: [
+      { n: 1, t: 'Fondations', etapes: [
+        { t: 'Étape A', check: ['a1', 'a2'] },
+        { t: 'Étape B', check: ['b1'] },
+        { t: 'Étape C', check: ['c1'] } ] },
+      { n: 2, t: 'Lancement', etapes: [ { t: 'Étape D', check: ['d1'] } ] },
+    ],
+  };
+
+  const rendre = (page, check) => page.evaluate(({ contenu, check }) => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    document.getElementById('homeParcoursPanel').hidden = false;
+    CONTENU = contenu; CHECK = check; PARCOURS = null;
+    curPhase = 0; phaseChoisie = false;
+    buildPhases();
+    const details = [...document.querySelectorAll('#homeEtapes details')];
+    return {
+      phase: (document.querySelector('#homePhases .phase.on') || {}).textContent || '',
+      ouvertes: details.map((d, i) => d.open ? details[i].querySelector('summary').textContent : null).filter(Boolean),
+      nbEtapes: details.length,
+    };
+  }, { contenu: CONTENU_TEST, check });
+
+  test('rien de coché : la première étape de la première phase', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, {});
+    expect(r.phase).toContain('Fondations');
+    expect(r.ouvertes.length).toBe(1);
+    expect(r.ouvertes[0]).toContain('Étape A');
+  });
+
+  test('une étape terminée : on ouvre la suivante, pas la première', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, { '0-0-0': true, '0-0-1': true });
+    expect(r.ouvertes[0]).toContain('Étape B');
+  });
+
+  test('un trou au milieu : on ouvre la plus ancienne incomplète', async ({ page }) => {
+    await ouvrir(page);
+    // A et C finies, B non : c'est B qui s'ouvre
+    const r = await rendre(page, { '0-0-0': true, '0-0-1': true, '0-2-0': true });
+    expect(r.ouvertes[0]).toContain('Étape B');
+  });
+
+  test('phase 1 terminée : on passe à la phase 2', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, { '0-0-0': true, '0-0-1': true, '0-1-0': true, '0-2-0': true });
+    expect(r.phase).toContain('Lancement');
+    expect(r.ouvertes[0]).toContain('Étape D');
+  });
+
+  test('tout est validé : tout est replié', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, { '0-0-0': true, '0-0-1': true, '0-1-0': true, '0-2-0': true, '1-0-0': true });
+    expect(r.nbEtapes).toBeGreaterThan(0);
+    expect(r.ouvertes, 'plus rien ne doit être ouvert quand tout est fait').toEqual([]);
+  });
+});

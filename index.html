@@ -2160,7 +2160,7 @@ function buildHome(){
 /* ---------- Contenu éditorial (guide, parcours, FAQ, ressources) ---------- */
 let CHECK={}; try{ CHECK=JSON.parse(localStorage.getItem('kairos_check')||'{}'); }catch(e){}
 const saveCheck=()=>{ try{ localStorage.setItem('kairos_check', JSON.stringify(CHECK)); }catch(e){} planSync(); };
-let curPhase=0;
+let curPhase=0, phaseChoisie=false;   // tant que la personne n'a pas cliqué, on ouvre là où elle en est
 function buildContenu(){
   if(!CONTENU) return;
   const C=CONTENU;
@@ -2271,13 +2271,40 @@ function isLocked(pi){
   for(let i=0;i<pi;i++){ if(C.parcours[i].locked) continue; const pr=phaseProgress(C.parcours[i],i); if(pr.tot&&pr.ok<pr.tot) return true; }
   return false;
 }
+// « Où en es-tu ? » s'ouvre là où on en est : la première phase pas encore terminée, et dedans
+// la plus ancienne étape incomplète. Quand tout est validé, rien ne s'ouvre — on ne demande pas
+// de refermer ce qui est fini.
+function phaseParDefaut(){
+  const C=CONTENU;
+  for(let pi=0; pi<C.parcours.length; pi++){
+    if(isLocked(pi)) continue;
+    const pr=phaseProgress(C.parcours[pi], pi);
+    if(pr.tot && pr.ok < pr.tot) return pi;
+  }
+  return 0;
+}
+// index de l'étape à ouvrir, ou -1 si tout est complet
+function etapeParDefaut(ph, pi){
+  const l = ph.etapes || [];
+  let aCocher = false;
+  for(let ei=0; ei<l.length; ei++){
+    const c = l[ei].check || [];
+    if(!c.length) continue;                       // une étape sans case n'attend rien
+    aCocher = true;
+    if(c.some((x,ci)=>!caseCochee(pi+'-'+ei+'-'+ci, x))) return ei;
+  }
+  // une phase entièrement descriptive : on ouvre la première étape, sinon l'écran paraîtrait vide
+  return aCocher ? -1 : (l.length ? 0 : -1);
+}
 function buildPhases(){
   const C=CONTENU;
+  if(!phaseChoisie) curPhase = phaseParDefaut();
   if(isLocked(curPhase)) curPhase=0;
   document.getElementById('homePhases').innerHTML=C.parcours.map((ph,pi)=>{ const pr=phaseProgress(ph,pi); const lk=isLocked(pi);
     return '<div class="phase '+esc(ph.c||'')+(pi===curPhase?' on':'')+(lk?' locked':'')+(ph.locked&&!lk?' unlocked':'')+'" data-pi="'+pi+'" title="'+(lk?'Se débloque quand toutes les étapes des phases précédentes sont cochées':'')+'"><div class="pn">Phase '+ph.n+'</div><h3>'+esc(ph.t)+'</h3><p>'+esc(ph.obj||'')+'</p>'+(pr.tot?'<div class="prog'+(pr.ok===pr.tot?' fini':'')+'"><i style="width:'+pr.pct+'%"></i></div><div class="pct'+(pr.ok===pr.tot?' fini':'')+'">'+pr.ok+' / '+pr.tot+' étapes cochées'+(pr.ok===pr.tot?' ✓':'')+'</div>':(lk?'<div class="pct neutre">Verrouillée</div>':'<div class="pct neutre">Débloquée 🎉</div>'))+'</div>'; }).join('');
-  document.querySelectorAll('#homePhases .phase').forEach(el=>el.addEventListener('click',()=>{ const pi=+el.dataset.pi; if(isLocked(pi)) return; curPhase=pi; buildPhases(); }));
+  document.querySelectorAll('#homePhases .phase').forEach(el=>el.addEventListener('click',()=>{ const pi=+el.dataset.pi; if(isLocked(pi)) return; curPhase=pi; phaseChoisie=true; buildPhases(); }));
   const ph=C.parcours[curPhase];
+  const etapeOuverte=etapeParDefaut(ph, curPhase);
   document.getElementById('homeEtapes').innerHTML=(ph.intro?'<div class="phase-intro">'+esc(ph.intro)+'</div>':'')+(ph.etapes||[]).map((e,ei)=>{
     const asCards=Array.isArray(e.checkD)&&e.checkD.length===(e.check||[]).length;
     const chk=(e.check||[]).map((c,ci)=>{ const k=curPhase+'-'+ei+'-'+ci;
@@ -2290,9 +2317,9 @@ function buildPhases(){
     const pages=(e.pages||[]).filter(s=>C.pages&&C.pages[s]).map(s=>'<a href="#p/'+s+'">'+(C.pages[s].i?C.pages[s].i+' ':'')+esc(C.pages[s].t)+'</a>').join('')
       +(e.liens||[]).map(l=>'<a class="ext" href="'+esc(l.u)+'" target="_blank" rel="noopener">'+esc(l.t)+' ↗</a>').join('');
     const nOk=(e.check||[]).filter((c,ci)=>caseCochee(curPhase+'-'+ei+'-'+ci, c)).length;
-    return '<details class="etape"'+(ei===0?' open':'')+'><summary><span class="n">'+(ei+1)+'</span>'+esc(e.t)+(e.check&&e.check.length?'<span class="done">'+nOk+'/'+e.check.length+'</span>':'')+'</summary><div class="ebody"><p class="d">'+esc(e.d||'')+'</p>'+(chk?'<div class="chk'+(asCards?' tips':'')+'">'+chk+'</div>':'')+(pages?'<div class="chips-p">'+pages+'</div>':'')+'</div></details>';
+    return '<details class="etape"'+(ei===etapeOuverte?' open':'')+'><summary><span class="n">'+(ei+1)+'</span>'+esc(e.t)+(e.check&&e.check.length?'<span class="done">'+nOk+'/'+e.check.length+'</span>':'')+'</summary><div class="ebody"><p class="d">'+esc(e.d||'')+'</p>'+(chk?'<div class="chk'+(asCards?' tips':'')+'">'+chk+'</div>':'')+(pages?'<div class="chips-p">'+pages+'</div>':'')+'</div></details>';
   }).join('');
-  document.querySelectorAll('#homeEtapes input[type=checkbox]').forEach(cb=>cb.addEventListener('change',()=>{ CHECK[cb.dataset.k]=cb.checked; if(!cb.checked) delete CHECK[cb.dataset.k]; saveCheck(); const open=[...document.querySelectorAll('#homeEtapes details')].map(d=>d.open); buildPhases(); document.querySelectorAll('#homeEtapes details').forEach((d,i)=>d.open=open[i]); }));
+  document.querySelectorAll('#homeEtapes input[type=checkbox]').forEach(cb=>cb.addEventListener('change',()=>{ CHECK[cb.dataset.k]=cb.checked; if(!cb.checked) delete CHECK[cb.dataset.k]; saveCheck(); phaseChoisie=true; const open=[...document.querySelectorAll('#homeEtapes details')].map(d=>d.open); buildPhases(); document.querySelectorAll('#homeEtapes details').forEach((d,i)=>d.open=open[i]); }));
 }
 let faqTheme='';
 function buildFaq(preview){
