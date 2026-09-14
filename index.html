@@ -823,8 +823,13 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-tbl th,.mm-tbl td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
 .mm-tbl th{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
 .mm-tbl td.num,.mm-tbl th.num{text-align:right;font-variant-numeric:tabular-nums}
+.mm-tbl td.num input{text-align:right}
 .mm-tbl select,.mm-tbl input{border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);padding:5px 7px;font:inherit;font-size:13px;width:100%}
 .mm-tbl tr.tot td{font-weight:800;border-top:2px solid var(--line-2);border-bottom:0}
+.mm-x{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-3);border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:15px;line-height:1;padding:0}
+.mm-x:hover{border-color:var(--bad);color:var(--bad)}
+.mm-add{margin-top:10px;padding:7px 13px;font-size:13px}
+.mm-tbl td.vide{color:var(--ink-3);font-style:italic}
 .mm-wrap{overflow-x:auto}
 
 .mm-j{margin-top:9px}
@@ -2930,6 +2935,7 @@ const MM_NIVEAUX = ['NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
 let MM=null, MM_PREC=null, MM_PRIVE='', MM_REG=null, MM_OBJ=null;
 let MM_MUR=[], MM_LIGNES=[], MM_SEM='', MM_SUB='moi', MM_LU=null, MM_T=null, MM_ETAT='';
 let MM_COUR=null;   // ma ligne de la semaine en cours, même quand on consulte une semaine passée
+let MM_PRODUITS=[]; // types de produit des souscriptions, partagés : chacun peut en ajouter un
 
 /* --- semaines --- */
 const mmSemCour = () => vMonday(todayIso);
@@ -3031,11 +3037,12 @@ async function chargerMM(){
   if(!MM_SEM) MM_SEM = mmSemCour();
   try{
     const prec = vAddDays(MM_SEM,-7);
-    const [r,g,o,pv] = await Promise.all([
+    const [r,g,o,pv,pr] = await Promise.all([
       SB.from('mail_manager').select('semaine,donnees,statut,publie_le,maj').eq('membre_id',MOI_ID).in('semaine',[MM_SEM,prec,mmSemCour()]),
       SB.from('mail_manager_membres').select('participe,reglages').eq('membre_id',MOI_ID).maybeSingle(),
       SB.from('mail_manager_objectifs').select('donnees').eq('membre_id',MOI_ID).maybeSingle(),
-      SB.from('mail_manager_prive').select('texte').eq('membre_id',MOI_ID).eq('semaine',MM_SEM).maybeSingle()
+      SB.from('mail_manager_prive').select('texte').eq('membre_id',MOI_ID).eq('semaine',MM_SEM).maybeSingle(),
+      SB.from('mail_manager_produits').select('nom,ordre').order('ordre').order('nom')
     ]);
     if(r.error) throw r.error;
     const lignes=r.data||[];
@@ -3047,6 +3054,7 @@ async function chargerMM(){
     MM_REG.reglages = MM_REG.reglages||{};
     MM_OBJ  = ((o.data||{}).donnees)||{};
     MM_PRIVE= ((pv.data||{}).texte)||'';
+    MM_PRODUITS = (pr.data||[]).map(x=>x.nom);
     // habilitations et activité : reportées de semaine en semaine
     if(!MM.donnees.hab && MM_REG.reglages.hab) MM.donnees.hab = JSON.parse(JSON.stringify(MM_REG.reglages.hab));
     if(!MM.donnees.act && MM_REG.reglages.act) MM.donnees.act = MM_REG.reglages.act;
@@ -3143,6 +3151,18 @@ async function mmParticipe(v){
   await chargerMMMur();
   buildMM(); buildActions();
 }
+// Un type de produit ajouté par quelqu'un devient disponible pour toute la lignée
+async function mmNouveauProduit(chemin){
+  const nom = (prompt('Type de produit à ajouter (il sera proposé à toute la lignée) :')||'').trim();
+  if(!nom){ buildMM(); return; }
+  if(MM_PRODUITS.indexOf(nom)<0){
+    MM_PRODUITS.push(nom);
+    try{ await SB.from('mail_manager_produits').insert({ nom:nom, ajoute_par:(SBUSER&&SBUSER.email)||null }); }
+    catch(e){ /* déjà présent ou refusé : la liste locale suffit pour cette saisie */ }
+  }
+  if(MM && chemin){ MM.donnees=MM.donnees||{}; mmS(MM.donnees, chemin, nom); mmPlanSave(); }
+  buildMM();
+}
 async function mmObjSauver(){
   if(!SB || !SBUSER || !MOI_ID) return;
   MM_ETAT='…'; mmMajEtat();
@@ -3180,6 +3200,37 @@ function mmCompteurs(d, base, liste, ro, prec){
               + '<button type="button" data-mmpm="1" data-p="'+esc(p)+'">+</button></div>')
       + dlt + '</div>';
   }).join('') + '</div>';
+}
+function mmProduitSelect(chemin, val){
+  const l = MM_PRODUITS.slice();
+  if(val && l.indexOf(val)<0) l.push(val);
+  return '<select data-mm="'+esc(chemin)+'" data-mmprod="1"><option value="">—</option>'
+    + l.map(t=>'<option value="'+esc(t)+'"'+(val===t?' selected':'')+'>'+esc(t)+'</option>').join('')
+    + '<option value="__+">+ Ajouter un type…</option></select>';
+}
+function mmSous(d, ro){
+  const L = Array.isArray(d.sous) ? d.sous : [];
+  let h = '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Produit</th>'
+        + '<th class="num">Versement initial</th><th class="num">Versement programmé</th>'
+        + (ro?'':'<th></th>') + '</tr></thead><tbody>';
+  if(!L.length) h += '<tr><td class="vide" colspan="'+(ro?3:4)+'">Aucune souscription cette semaine.</td></tr>';
+  L.forEach((x,i)=>{
+    h += '<tr><td>' + (ro ? esc(x.t||'—') : mmProduitSelect('sous.'+i+'.t', x.t||''))
+      + '</td><td class="num">' + (ro ? esc(mmN(x.vi)?mmEur(x.vi):'—')
+          : '<input type="number" inputmode="decimal" data-mm="sous.'+i+'.vi" value="'+esc(x.vi==null?'':x.vi)+'">')
+      + '</td><td class="num">' + (ro ? esc(mmN(x.vp)?mmEur(x.vp):'—')
+          : '<input type="number" inputmode="decimal" data-mm="sous.'+i+'.vp" value="'+esc(x.vp==null?'':x.vp)+'">')
+      + '</td>' + (ro?'':'<td><button type="button" class="mm-x" data-mmsdel="'+i+'" title="Retirer cette souscription">×</button></td>')
+      + '</tr>';
+  });
+  if(L.length){
+    const ti=L.reduce((n,x)=>n+mmN(x.vi),0), tp=L.reduce((n,x)=>n+mmN(x.vp),0);
+    h += '<tr class="tot"><td>'+L.length+' souscription'+(L.length>1?'s':'')+'</td>'
+       + '<td class="num">'+mmEur(ti)+'</td><td class="num">'+mmEur(tp)+'</td>'+(ro?'':'<td></td>')+'</tr>';
+  }
+  h += '</tbody></table></div>';
+  if(!ro) h += '<button type="button" class="mm-b mm-add" data-mmsadd="1">+ Ajouter une souscription</button>';
+  return h;
 }
 function mmListeAuto(items, vide){
   if(!items || !items.length) return '<p class="mm-vide">'+esc(vide)+'</p>';
@@ -3225,8 +3276,7 @@ function mmCorps(d, prive, ro, sem){
   h += mmSec(1,'Semaine écoulée (S'+mmNo(vAddDays(sem,-7))+')','',
       mmCompteurs(d,'p',MM_CPT,ro,prec)
     + '<label class="mm-lab">Signatures / souscriptions</label>'
-    + '<div class="mm-cpt"><div class="mm-c"><label>Nombre</label><div class="row">'+mmChamp('sig.n',mmG(d,'sig.n'),ro)+'</div></div>'
-    + '<div class="mm-c"><label>Montant</label><div class="row">'+mmChamp('sig.m',mmG(d,'sig.m'),ro,{eur:true})+'</div></div></div>'
+    + mmSous(d, ro)
     + '<label class="mm-lab">Formations, ateliers et événements suivis <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
     + mmListeAuto(a.sp,'Aucune session la semaine dernière.')
     + '<label class="mm-lab">Faits marquants</label>'
@@ -3354,6 +3404,12 @@ function buildMM(){
   // vide tant qu'on n'avait rien enregistré (il n'était écrit qu'à la sauvegarde). Pour une semaine
   // passée ou le mail manager de quelqu'un d'autre, on garde l'instantané enregistré ce jour-là.
   if(cour && MM){ MM.donnees = MM.donnees||{}; MM.donnees.auto = mmAuto(MM_SEM); }
+  // reprise de l'ancien couple nombre/montant vers la liste de souscriptions
+  if(MM && MM.donnees && !Array.isArray(MM.donnees.sous)){
+    const v = mmN(mmG(MM.donnees,'sig.m'));
+    MM.donnees.sous = v ? [{t:'', vi:v, vp:''}] : [];
+    delete MM.donnees.sig;
+  }
 
   /* Ma semaine */
   let h='<div class="panel"><div class="mm-head"><h2>Mon mail manager</h2>'
@@ -3496,7 +3552,15 @@ function mmTexte(d, nom, sem){
   if(d.act) L.push(d.act==='double'?'Double activité':'Activité principale');
   const bloc=(t,base,liste)=>{ L.push(''); L.push(t); liste.forEach(([k,lib])=>L.push('- '+lib+' : '+mmN(mmG(d,base+'.'+k)))); };
   bloc('1 - Semaine passée (S'+mmNo(vAddDays(sem,-7))+')','p',MM_CPT);
-  if(mmN(mmG(d,'sig.n'))) L.push('- Signatures : '+mmN(mmG(d,'sig.n'))+(mmN(mmG(d,'sig.m'))?' ('+mmEur(mmG(d,'sig.m'))+')':''));
+  const sous = Array.isArray(d.sous)?d.sous:[];
+  if(sous.length){
+    L.push('Souscriptions :');
+    sous.forEach(x=>L.push('- '+(x.t||'produit non précisé')
+      + ' : versement initial '+mmEur(x.vi)
+      + (mmN(x.vp)?' · versement programmé '+mmEur(x.vp):'')));
+    const ti=sous.reduce((n,x)=>n+mmN(x.vi),0), tp=sous.reduce((n,x)=>n+mmN(x.vp),0);
+    L.push('- Total : '+mmEur(ti)+(tp?' · '+mmEur(tp)+' programmés':''));
+  }
   if((a.sp||[]).length){ L.push('Sessions suivies :'); a.sp.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t)); }
   if(d.pf) L.push('- '+d.pf);
   bloc('2 - Semaine en cours (S'+mmNo(sem)+')','c',MM_CPT);
@@ -3579,6 +3643,7 @@ function mmSaisie(t){
     MM_OBJ[t.dataset.mmo] = t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value);
     return true;
   }
+  if(t.dataset && t.dataset.mmprod && t.value==='__+'){ mmNouveauProduit(t.dataset.mm); return true; }
   if(t.dataset && t.dataset.mm && MM){
     MM.donnees=MM.donnees||{};
     mmS(MM.donnees, t.dataset.mm, t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value));
@@ -3619,6 +3684,18 @@ document.addEventListener('click', async e=>{
     const nom = lu ? MM_LU.nom : ((MM&&MM.donnees&&MM.donnees.auto&&MM.donnees.auto.nom)||'');
     openModal('mail-manager-S'+mmNo(MM_SEM)+'.txt', mmTexte(src, nom, MM_SEM));
     return;
+  }
+  const add=c.closest('[data-mmsadd]');
+  if(add && MM){
+    MM.donnees=MM.donnees||{};
+    if(!Array.isArray(MM.donnees.sous)) MM.donnees.sous=[];
+    MM.donnees.sous.push({t:'', vi:'', vp:''});
+    mmSauver(false); buildMM(); return;
+  }
+  const del=c.closest('[data-mmsdel]');
+  if(del && MM && Array.isArray(MM.donnees.sous)){
+    MM.donnees.sous.splice(+del.dataset.mmsdel, 1);
+    mmSauver(false); buildMM(); return;
   }
   if(c.closest('#mmObjSave')){ mmObjSauver(); return; }
   if(c.closest('#mmOff')){
