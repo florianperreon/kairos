@@ -976,6 +976,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-f .k{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
 .mm-f .v{min-width:0}
 .mm-f .v p{margin:0}
+.mm-pre{margin:0;white-space:pre-wrap}
 .mm-f .kpi{display:flex;flex-wrap:wrap;gap:5px}
 .mm-f .kpi i{font-style:normal;background:var(--surface-2);border-radius:6px;padding:1px 9px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .mm-f .kpi i b{font-weight:800;margin-left:3px}
@@ -3303,14 +3304,20 @@ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !locat
 
 const MM_CPT   = [['edm','EDM / DM'],['r0','R0'],['r1','R1'],['r2','R2'],['r2b','R2 bis'],['r3','R3'],['rx','RX']];
 const MM_AV    = [['r0','R0'],['r1','R1'],['r2','R2'],['r3','R3'],['rx','RX']];
-const MM_PROD  = [['va','VA acté','€'],['vaec','VA en cours','€'],['vaa','VAA','€'],['vp','VP annualisés','€'],['clients','Nombre de clients','']];
-const MM_PRODE = [['eva','VA équipe acté','€'],['evaec','VA équipe en cours','€']];
+// Production. Le 4e libellé sert là où les deux listes sont fusionnées (fiche de lecture, export
+// texte) : « VA + VAA VC » ne veut rien dire tout seul une fois le personnel et l'équipe mélangés.
+const MM_PROD  = [['va',   'VA + VAA VC',      '€', 'VA + VAA VC personnel'],
+                  ['vaec', 'VA + VAA EC',      '€', 'VA + VAA EC personnel'],
+                  ['vp',   'VP annualisés',    '€', 'VP annualisés'],
+                  ['clients','Nombre de clients','', 'Nombre de clients']];
+const MM_PRODE = [['eva',  'VA + VAA VC',      '€', 'VA + VAA VC équipe'],
+                  ['evaec','VA + VAA EC',      '€', 'VA + VAA EC équipe']];
 const MM_HAB   = [['mia','MIA / Assurance niveau II'],['miobsp','MIOBSP'],['alpsi','ALPSI / CIF']];
 const MM_FC    = [['fmia','FC Assurance (MIA)'],['fiobsp','FC IOBSP'],['fimmo','FC Immobilier'],['falpsi','FC ALPSI / CIF']];
 const MM_ETATS = [['','—'],['afaire','À faire'],['encours','En cours'],['ok','Validé']];
 const MM_OBJS  = [
-  ['va','VA perso','€','Volume d’affaires cumulé sur l’exercice (1er août → 31 juillet)'],
-  ['eva','VA équipe','€','Volume d’affaires de l’équipe cumulé sur l’exercice (1er août → 31 juillet)'],
+  ['va','VA + VAA personnel','€','Volume d’affaires cumulé sur l’exercice (1er août → 31 juillet), validé et en cours'],
+  ['eva','VA + VAA équipe','€','Volume d’affaires de l’équipe (4 niveaux) cumulé sur l’exercice (1er août → 31 juillet)'],
   ['clients','Nombre de clients','','Total de ton parc à cette date — pas seulement les clients de l’exercice'],
   ['filleuls','Filleuls directs','','Total de tes filleuls directs à cette date — pas seulement ceux de l’exercice'],
   ['dm','Invités en DM','','Invités inscrits en Découverte Métier depuis le début de l’exercice'],
@@ -3350,6 +3357,20 @@ function mmEcheances(){
   return { dec:y+'-12-31', pmr:(m>=8?y+1:y)+'-07-31', debut:(m>=8?y:y-1)+'-08-01' };
 }
 const mmSemaines = ech => Math.max(0, Math.ceil((new Date(ech+'T00:00:00') - new Date(todayIso+'T00:00:00'))/604800000));
+
+// Reprise (14/09/2026) : « VAA » était un compteur à part ; il est désormais fondu dans
+// « VA + VAA VC ». On replie l'ancienne valeur au moment de l'affichage — pour ma semaine en
+// cours, la prochaine sauvegarde enregistre le repli ; ailleurs c'est une correction d'affichage.
+function mmMigre(d){
+  d = d||{};
+  if(d.prod && d.prod.vaa != null){
+    d.prod.va = mmN(d.prod.va) + mmN(d.prod.vaa);
+    delete d.prod.vaa;
+  }
+  return d;
+}
+// Un champ de texte libre : les retours à la ligne saisis sont conservés à la lecture.
+const mmPara = t => '<p class="mm-pre">'+esc(t)+'</p>';
 
 /* --- lecture / écriture d'un chemin dans les données --- */
 const mmG = (o,p) => p.split('.').reduce((x,k)=>(x==null?undefined:x[k]), o);
@@ -3451,9 +3472,11 @@ async function chargerMM(){
     // habilitations et activité : reportées de semaine en semaine
     if(!MM.donnees.hab && MM_REG.reglages.hab) MM.donnees.hab = JSON.parse(JSON.stringify(MM_REG.reglages.hab));
     if(!MM.donnees.act && MM_REG.reglages.act) MM.donnees.act = MM_REG.reglages.act;
+    // La production est cumulée sur l'exercice : elle est reportée telle quelle de S-1 à S.
     if(!MM.donnees.prod && MM_PREC && MM_PREC.donnees && MM_PREC.donnees.prod){
-      const p=MM_PREC.donnees.prod;
-      MM.donnees.prod = {va:p.va, vaa:p.vaa, vp:p.vp, clients:p.clients, eva:p.eva};
+      const p = mmMigre(MM_PREC.donnees).prod || {};
+      MM.donnees.prod = {};
+      MM_PROD.concat(MM_PRODE).forEach(([k])=>{ if(p[k]!=null && p[k]!=='') MM.donnees.prod[k]=p[k]; });
     }
   }catch(e){ return false; }
   await chargerMMMur();
@@ -3659,7 +3682,7 @@ function mmJauge(lib, fait, cible, unite){
 
 /* --- rendu : le formulaire (ou sa lecture seule) --- */
 function mmCorps(d, prive, ro, sem){
-  d = d||{}; const a = d.auto||{};
+  d = mmMigre(d); const a = d.auto||{};
   const prec = (!ro && MM_PREC) ? MM_PREC.donnees : null;
   const ech = mmEcheances(), obj = MM_OBJ||{};
   let h='';
@@ -3686,8 +3709,8 @@ function mmCorps(d, prive, ro, sem){
     + '<label class="mm-lab">Formations, ateliers et événements suivis <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
     + mmListeAuto(a.sp,'Aucune session la semaine dernière.')
     + '<label class="mm-lab">Faits marquants</label>'
-    + (ro ? '<p>'+esc(d.pf||'—')+'</p>'
-          : '<textarea class="mm-txt" data-mm="pf" rows="2" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>'), true);
+    + (ro ? mmPara(d.pf||'—')
+          : '<textarea class="mm-txt" data-mm="pf" rows="3" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>'), true);
 
   // 2 — Semaine en cours
   h += mmSec(2,'Semaine en cours (S'+mmNo(sem)+')','',
@@ -3695,8 +3718,8 @@ function mmCorps(d, prive, ro, sem){
     + '<label class="mm-lab">Sessions de la semaine <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
     + mmListeAuto(a.sc,'Aucune session cette semaine.')
     + '<label class="mm-lab">Mon focus de la semaine</label>'
-    + (ro ? '<p>'+esc(d.cf||'—')+'</p>'
-          : '<textarea class="mm-txt" data-mm="cf" rows="2" placeholder="Ce sur quoi je mets l’énergie.">'+esc(d.cf||'')+'</textarea>'), true);
+    + (ro ? mmPara(d.cf||'—')
+          : '<textarea class="mm-txt" data-mm="cf" rows="3" placeholder="Ce sur quoi je mets l’énergie.">'+esc(d.cf||'')+'</textarea>'), true);
 
   // 3 — RDV d'avance
   const tot = MM_AV.reduce((n,[k])=>n+mmN(mmG(d,'av.'+k)),0);
@@ -3719,12 +3742,14 @@ function mmCorps(d, prive, ro, sem){
     + '<p class="mm-note">Invités comptés depuis le '+fmtD(ech.debut)+' (début d’exercice) — un filleul déjà adhérent n’est plus compté comme invité.</p>');
 
   // 5 — Production
-  let prod = '<div class="mm-cpt">' + MM_PROD.map(([k,lib,u])=>
-      '<div class="mm-c"><label>'+esc(lib)+'</label><div class="row">'+mmChamp('prod.'+k,mmG(d,'prod.'+k),ro,{eur:u==='€'})+'</div></div>').join('')
-    + '</div><label class="mm-lab">Équipe</label><div class="mm-cpt">' + MM_PRODE.map(([k,lib,u])=>
-      '<div class="mm-c"><label>'+esc(lib)+'</label><div class="row">'+mmChamp('prod.'+k,mmG(d,'prod.'+k),ro,{eur:u==='€'})+'</div></div>').join('')
-    + '</div>';
-  [['va','VA perso','€'],['eva','VA équipe','€'],['clients','Clients','']].forEach(([k,lib,u])=>{
+  const champProd = ([k,lib,u]) =>
+    '<div class="mm-c"><label>'+esc(lib)+'</label><div class="row">'
+    + mmChamp('prod.'+k, mmG(d,'prod.'+k), ro, {eur:u==='€'})+'</div></div>';
+  let prod = '<label class="mm-lab">Personnel</label>'
+    + '<div class="mm-cpt">' + MM_PROD.map(champProd).join('') + '</div>'
+    + '<label class="mm-lab">Équipe <small style="font-weight:400;color:var(--ink-3)">— sur 4 niveaux</small></label>'
+    + '<div class="mm-cpt">' + MM_PRODE.map(champProd).join('') + '</div>';
+  [['va','VA + VAA personnel','€'],['eva','VA + VAA équipe','€'],['clients','Clients','']].forEach(([k,lib,u])=>{
     const fait = k==='va' ? mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))
                : k==='eva' ? mmN(mmG(d,'prod.eva'))+mmN(mmG(d,'prod.evaec'))
                : mmN(mmG(d,'prod.clients'));
@@ -3773,7 +3798,7 @@ function mmCorps(d, prive, ro, sem){
   // 9 — Un mot pour ma lignée
   h += '<div class="mm-prive"><b>Un mot pour ma lignée</b>'
      + '<p class="mm-note" style="margin:3px 0 7px">Visible de ton parrain et de ta lignée au-dessus de toi, de personne d’autre. Jamais sur le mur, jamais dans le texte copié.</p>'
-     + (ro ? '<p>'+esc(prive||'—')+'</p>'
+     + (ro ? mmPara(prive||'—')
            : '<textarea class="mm-txt" id="mmPrive" rows="3" placeholder="Une difficulté, un sujet sur lequel j’ai besoin d’aide…">'+esc(prive||'')+'</textarea>')
      + '</div>';
   return h;
@@ -3806,7 +3831,7 @@ function mmDates(items){
   return '<ul class="li">'+items.map(s=>'<li><span class="d">'+esc(fmtD(s.d))+'</span><span>'+esc(s.t)+'</span></li>').join('')+'</ul>';
 }
 function mmFiche(d, prive, sem, obj){
-  d = d||{}; const a = d.auto||{}; obj = obj||{};
+  d = mmMigre(d); const a = d.auto||{}; obj = obj||{};
   const ech = mmEcheances();
   let h = '<div class="mm-f">';
 
@@ -3821,12 +3846,12 @@ function mmFiche(d, prive, sem, obj){
   }
   h += mmLigne('Semaine S'+mmNo(vAddDays(sem,-7)), bloc || '<span class="mut">Rien de déclaré.</span>');
   h += mmLigne('Sessions suivies', mmDates(a.sp));
-  h += mmLigne('Faits marquants', d.pf ? '<p>'+esc(d.pf)+'</p>' : '');
+  h += mmLigne('Faits marquants', d.pf ? mmPara(d.pf) : '');
 
   // semaine en cours
   h += mmLigne('Semaine S'+mmNo(sem), mmKpi(d,'c',MM_CPT));
   h += mmLigne('Sessions prévues', mmDates(a.sc));
-  h += mmLigne('Focus', d.cf ? '<p>'+esc(d.cf)+'</p>' : '');
+  h += mmLigne('Focus', d.cf ? mmPara(d.cf) : '');
 
   // RDV d'avance
   const tot = MM_AV.reduce((n,[k])=>n+mmN(mmG(d,'av.'+k)),0);
@@ -3847,15 +3872,15 @@ function mmFiche(d, prive, sem, obj){
 
   // production
   const prod=[];
-  MM_PROD.concat(MM_PRODE).forEach(([k,lib,u])=>{
+  MM_PROD.concat(MM_PRODE).forEach(([k,lib,u,long])=>{
     const v=mmG(d,'prod.'+k);
-    if(mmN(v)) prod.push('<i>'+esc(lib)+'<b>'+(u==='€'?mmEur(v):mmN(v))+'</b></i>');
+    if(mmN(v)) prod.push('<i>'+esc(long||lib)+'<b>'+(u==='€'?mmEur(v):mmN(v))+'</b></i>');
   });
   h += mmLigne('Production', prod.length ? '<div class="kpi">'+prod.join('')+'</div>' : '');
 
   // objectifs
   const obl=[];
-  [['va','VA perso','€'],['eva','VA équipe','€'],['clients','Clients',''],['filleuls','Filleuls',''],['dm','Invités DM',''],['r0sem','R0/semaine',''],['r1sem','R1/semaine','']].forEach(([k,lib,u])=>{
+  [['va','VA + VAA personnel','€'],['eva','VA + VAA équipe','€'],['clients','Clients',''],['filleuls','Filleuls',''],['dm','Invités DM',''],['r0sem','R0/semaine',''],['r1sem','R1/semaine','']].forEach(([k,lib,u])=>{
     [['dec','31/12'],['pmr','31/07']].forEach(([sfx,lab])=>{
       const c=obj[k+'_'+sfx]; if(!mmN(c)) return;
       const fait = k==='va' ? mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))
@@ -3893,7 +3918,7 @@ function mmFiche(d, prive, sem, obj){
   // agenda
   h += mmLigne('À venir', mmDates(a.ag));
 
-  if(prive) h += mmLigne('Mot à la lignée', '<p>'+esc(prive)+'</p>');
+  if(prive) h += mmLigne('Mot à la lignée', mmPara(prive));
   h += '</div>';
   return h;
 }
@@ -4071,7 +4096,7 @@ function mmObjectifs(){
 
 /* --- export texte --- */
 function mmTexte(d, nom, sem){
-  d=d||{}; const a=d.auto||{}, o=MM_OBJ||{}, ech=mmEcheances();
+  d=mmMigre(d); const a=d.auto||{}, o=MM_OBJ||{}, ech=mmEcheances();
   const L=[], ligne=(k,v)=>L.push(k+' : '+v);
   L.push('Mail Manager S'+mmNo(sem)+' — '+mmBornes(sem));
   if(nom) L.push(nom);
@@ -4105,11 +4130,11 @@ function mmTexte(d, nom, sem){
   L.push('- Invités inscrits aux 3 Jours de la Réussite : '+(inv.jr||0));
   L.push('- Filleuls : '+(a.fil||0)+' dont '+(a.filadh||0)+' adhérent'+((a.filadh||0)>1?'s':''));
   L.push(''); L.push('5 - Production');
-  MM_PROD.concat(MM_PRODE).forEach(([k,lib,u])=>{
+  MM_PROD.concat(MM_PRODE).forEach(([k,lib,u,long])=>{
     const v=mmG(d,'prod.'+k); if(v==null||v==='') return;
-    L.push('- '+lib+' : '+(u==='€'?mmEur(v):mmN(v)));
+    L.push('- '+(long||lib)+' : '+(u==='€'?mmEur(v):mmN(v)));
   });
-  [['va','VA perso','€'],['eva','VA équipe','€'],['clients','Clients','']].forEach(([k,lib,u])=>{
+  [['va','VA + VAA personnel','€'],['eva','VA + VAA équipe','€'],['clients','Clients','']].forEach(([k,lib,u])=>{
     [['dec','31/12'],['pmr','31/07']].forEach(([sfx,lab])=>{
       const c=o[k+'_'+sfx]; if(!mmN(c)) return;
       const fait = k==='va' ? mmN(mmG(d,'prod.va'))+mmN(mmG(d,'prod.vaec'))

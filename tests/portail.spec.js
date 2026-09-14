@@ -691,3 +691,88 @@ test.describe('Nouveautés', () => {
     expect(r.titres.sort()).toEqual(['Ajouté hier', 'Déplacé hier']);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Mail Manager — production et texte libre', () => {
+  // Rend le formulaire, la fiche de lecture et l'export texte à partir des mêmes données.
+  async function rendre(page, donnees, prive) {
+    return page.evaluate(({ d, prive }) => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = false);
+      MM_PRODUITS = ['Assurance Vie', 'PER'];
+      MM_OBJ = { va_dec: 120000, eva_pmr: 500000 };
+      const sem = mmSemCour();
+      const copie = () => JSON.parse(JSON.stringify(d));
+      document.getElementById('mmMoi').innerHTML = mmCorps(copie(), '', false, sem);
+      document.getElementById('mmMur').innerHTML = mmFiche(copie(), prive, sem, MM_OBJ);
+      const lire = sel => [...document.querySelectorAll(sel)];
+      const ligne = k => {
+        const l = lire('#mmMur .mm-f .l').find(x => x.querySelector('.k').textContent === k);
+        return l ? l.querySelector('.v') : null;
+      };
+      return {
+        groupes: lire('#mmMoi .mm-lab').map(l => l.textContent).filter(t => /^(Personnel|Équipe)/.test(t)),
+        champs: lire('#mmMoi .mm-cpt .mm-c > label').map(l => l.textContent).slice(-6),
+        production: (ligne('Production') || {}).innerText || '',
+        faits: (ligne('Faits marquants') || {}).innerText || '',
+        blancFaits: ligne('Faits marquants')
+          ? getComputedStyle(ligne('Faits marquants').querySelector('p')).whiteSpace : '',
+        blancFocus: ligne('Focus') ? getComputedStyle(ligne('Focus').querySelector('p')).whiteSpace : '',
+        blancMot: ligne('Mot à la lignée')
+          ? getComputedStyle(ligne('Mot à la lignée').querySelector('p')).whiteSpace : '',
+        migre: mmMigre(copie()).prod,
+        texte: mmTexte(copie(), 'Moi Test', sem).split('\n').filter(l => /VA \+|VP annualisés|Nombre de clients/.test(l)),
+      };
+    }, { d: donnees, prive });
+  }
+
+  const DONNEES = {
+    pf: 'Julie : NC AV\nAlice : SCPI enfin validée',
+    cf: 'Mardi : golf\nVendredi : signer',
+    prod: { va: 30000, vaa: 5000, vaec: 12000, vp: 150, clients: 14, eva: 80000, evaec: 20000 },
+    p: { r0: 3 }, c: { r0: 1 }, av: {}, sous: [], auto: {},
+  };
+
+  test('la section Production demande le personnel puis l’équipe sur 4 niveaux', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, DONNEES, '');
+    expect(r.groupes[0]).toBe('Personnel');
+    expect(r.groupes[1]).toMatch(/^Équipe/);
+    expect(r.groupes[1], 'les quatre niveaux sont précisés').toContain('4 niveaux');
+    expect(r.champs).toEqual([
+      'VA + VAA VC', 'VA + VAA EC', 'VP annualisés', 'Nombre de clients',   // personnel
+      'VA + VAA VC', 'VA + VAA EC',                                          // équipe
+    ]);
+  });
+
+  test('personnel et équipe restent distincts une fois les deux listes fusionnées', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, DONNEES, '');
+    // Les libellés courts sont identiques des deux côtés : sur la fiche et dans l'export, sans
+    // le suffixe, on ne saurait plus lequel est lequel.
+    for (const attendu of ['VA + VAA VC personnel', 'VA + VAA EC personnel',
+                           'VA + VAA VC équipe', 'VA + VAA EC équipe']) {
+      expect(r.production, attendu).toContain(attendu);
+      expect(r.texte.join('\n'), attendu + ' (export texte)').toContain(attendu);
+    }
+  });
+
+  test('l’ancien compteur VAA est replié dans « VA + VAA VC » (reprise du 14/09/2026)', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, DONNEES, '');
+    expect(r.migre.va, '30 000 de VA + 5 000 de VAA').toBe(35000);
+    expect(r.migre.vaa, 'l’ancienne clé disparaît').toBeUndefined();
+    // les montants portent des espaces insécables : on normalise avant de comparer
+    expect(r.production.replace(/[\s\u00a0\u202f]+/g, ' ')).toContain('35 000 €');
+  });
+
+  test('les retours à la ligne saisis sont conservés à la lecture', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, DONNEES, 'Une difficulté\nsur deux lignes');
+    expect(r.faits.replace(/ /g, ' ')).toContain('Julie : NC AV\nAlice');
+    expect(r.blancFaits, 'faits marquants').toBe('pre-wrap');
+    expect(r.blancFocus, 'focus de la semaine').toBe('pre-wrap');
+    expect(r.blancMot, 'mot à la lignée').toBe('pre-wrap');
+  });
+});
