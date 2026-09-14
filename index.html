@@ -1252,6 +1252,9 @@ const urlProfil = id => BASE+'adherents/profil/'+id;
 const esc = s => (s??'').toString().replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmtMaj = meta => meta.maj ? fmtD(meta.maj.slice(0,10))+' à '+meta.maj.slice(11,16).replace(':','h') : fmtD(meta.majAteliers);
 const fmtD = iso => { if(!iso) return ''; const d=new Date(iso+'T00:00:00'); return isNaN(d)?iso:d.toLocaleDateString('fr-FR'); };
+// AAAA-MM-JJ dans le fuseau de la personne. toISOString() convertit en UTC : à Paris, minuit
+// local vaut 22 h la veille, donc toute date calculée reculait d'un jour (lundi → dimanche).
+const isoJour = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const fmtDLong = iso => { const d=new Date(iso+'T00:00:00'); return JOURS[d.getDay()].replace(/^./,c=>c.toUpperCase())+' '+d.getDate()+' '+MOIS[d.getMonth()]+' '+d.getFullYear(); };
 const fmtTel = p => (p&&p.length===10&&/^\d+$/.test(p)) ? p.replace(/(\d\d)(?=\d)/g,'$1 ') : (p||'');
 const isMoins = nme => { const n=norm(nme); return MOINS.some(m=>n.includes(m)); };
@@ -1321,7 +1324,7 @@ document.addEventListener('click',e=>{ const el=e.target.closest('.lig-open'); i
 const lieuHtml = l => (l==='Visio'||l==='Zoom') ? '<span class="lieu-visio">'+esc(l)+'</span>' : '<span class="lieu-ville">'+esc(l)+'</span>';
 const lieuKey = l => (l==='Visio'||l==='Zoom') ? 'Visio / Zoom' : l;
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
-const todayIso = TODAY.getFullYear()+'-'+String(TODAY.getMonth()+1).padStart(2,'0')+'-'+String(TODAY.getDate()).padStart(2,'0');
+const todayIso = isoJour(TODAY);
 
 /* ---------- Sessions enregistrées (signet) ---------- */
 // SURV : clés « type:id » (a = atelier, r = réunion, f = formation, e = événement)
@@ -2005,11 +2008,11 @@ function buildHome(){
   const wEl=document.getElementById('welcome');
   if(wEl) wEl.innerHTML='<div class="wmark">👋</div><div class="wtxt"><h2>'+salut+(ACC_NOM_AFF?' '+esc(ACC_NOM_AFF):'')+', bienvenue sur Kairos !</h2><div class="wdate">'+fmtDLong(todayIso)+'</div><p>Kairos, c\u2019est l\u2019art de reconnaître le bon moment — et d\u2019agir au moment juste. Bonne journée !</p>'+(CONTENU&&CONTENU.accueil&&CONTENU.accueil.intro?'<p class="wintro">'+esc(CONTENU.accueil.intro)+'</p>':'')+'</div>';
   const in7 = new Date(TODAY); in7.setDate(in7.getDate()+7);
-  const iso7 = in7.toISOString().slice(0,10);
+  const iso7 = isoJour(in7);
   const upcoming = A.filter(a=>a.start>=todayIso);
   const week = upcoming.filter(a=>a.start<=iso7);
   const d30 = new Date(TODAY); d30.setDate(d30.getDate()-30);
-  const iso30 = d30.toISOString().slice(0,10);
+  const iso30 = isoJour(d30);
   const news = M.filter(m=>m.date>=iso30);
   const tiles=[
     ['Ateliers à venir', upcoming.length, 'jusqu’au '+fmtD(upcoming[upcoming.length-1]?.start)],
@@ -2598,7 +2601,7 @@ function openSheet(id){
   const pilOf=a=>norm(a.pilotes).includes(m.nn);
   const sub=ALL.filter(o=>!isPast(o.a)&&(o.a.guests||[]).includes(m.id)).sort((p,q)=>p.a.start.localeCompare(q.a.start));
   const anim=ALL.filter(o=>!isPast(o.a)&&pilOf(o.a)).sort((p,q)=>p.a.start.localeCompare(q.a.start));
-  const y1=new Date(TODAY); y1.setFullYear(y1.getFullYear()-1); const iso1=y1.toISOString().slice(0,10);
+  const y1=new Date(TODAY); y1.setFullYear(y1.getFullYear()-1); const iso1=isoJour(y1);
   const allSub=ALL.filter(o=>isPast(o.a)&&(o.a.guests||[]).includes(m.id)), allAnim=ALL.filter(o=>isPast(o.a)&&pilOf(o.a));
   const pastSub=allSub.filter(o=>o.a.start>=iso1), pastAnim=allAnim.filter(o=>o.a.start>=iso1);
   const firstEv=[...allSub,...allAnim].map(o=>o.a.start).sort()[0];
@@ -2732,8 +2735,8 @@ const VAXD = [
 ];
 const vAxes = () => (VEILLE && VEILLE.axes && VEILLE.axes.length) ? VEILLE.axes : VAXD;
 const vAx = id => vAxes().find(a=>a.id===id) || {id:id, t:id, ic:'•'};
-const vMonday = iso => { const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.toISOString().slice(0,10); };
-const vAddDays = (iso,n) => { const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const vMonday = iso => { const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()-((d.getDay()+6)%7)); return isoJour(d); };
+const vAddDays = (iso,n) => { const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return isoJour(d); };
 const vPeriode = (du,au) => {
   if(!du||!au) return '';
   const a=new Date(du+'T00:00:00'), b=new Date(au+'T00:00:00');
@@ -3858,7 +3861,7 @@ function fmtQuand(iso){
   if(j<=0 && d.getDate()===now.getDate()) return "aujourd'hui à "+h;
   if(j<=1) return 'hier à '+h;
   if(j<7) return 'il y a '+j+' jours';
-  return fmtD(d.toISOString().slice(0,10));
+  return fmtD(isoJour(d));
 }
 function masquerAdmin(btn){
   if(btn) btn.hidden=true;
