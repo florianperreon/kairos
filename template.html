@@ -903,6 +903,60 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
   .mm-f .l{grid-template-columns:1fr;gap:3px;padding:8px 0}
   .mm-f .li .d{min-width:62px}
 }
+
+/* ---------- Retours : signaler un bug, proposer une amélioration ---------- */
+#fbBtn{position:fixed;right:18px;bottom:18px;z-index:70;display:flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px 15px 9px 12px;font-family:"Sora";font-weight:700;font-size:13px;cursor:pointer;box-shadow:var(--shadow)}
+#fbBtn:hover{border-color:var(--accent);color:var(--accent)}
+#fbBtn .i{display:flex;color:var(--ink-3)}
+#fbBtn:hover .i{color:var(--accent)}
+#retBox{position:fixed;inset:0;z-index:80;background:rgba(23,26,43,.42);display:flex;align-items:center;justify-content:center;padding:18px}
+.ret-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);width:100%;max-width:520px;max-height:88vh;overflow:auto;padding:20px}
+.ret-card h2{font-size:17px;margin-bottom:4px}
+.ret-card p.s{color:var(--ink-2);font-size:13px;margin:0 0 14px}
+.ret-types{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.ret-types button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:6px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ret-types button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ret-card input[type=text],.ret-card textarea{width:100%;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);padding:9px 11px;font:inherit;font-size:14px;margin-bottom:10px}
+.ret-card textarea{min-height:110px;resize:vertical}
+.ret-joint{font-size:12px;color:var(--ink-3);border:1px dashed var(--line-2);border-radius:9px;padding:8px 11px;margin-bottom:14px}
+.ret-joint summary{cursor:pointer;font-weight:700;color:var(--ink-2)}
+.ret-joint ul{margin:7px 0 0;padding-left:16px;line-height:1.6}
+.ret-acts{display:flex;gap:9px;align-items:center}
+.ret-err{color:var(--bad);font-size:12.5px;margin-left:auto}
+
+.ret-f{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 4px}
+.ret-f button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:5px 13px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.ret-f button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.ret-l{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:13px 15px;margin-top:10px;display:grid;grid-template-columns:auto 1fr;gap:0 14px}
+.ret-v{grid-row:span 3;align-self:start;display:flex;flex-direction:column;align-items:center;gap:1px;border:1px solid var(--line-2);background:var(--ground);border-radius:10px;padding:5px 9px;min-width:46px;cursor:pointer;font:inherit;color:var(--ink-2)}
+.ret-v:hover{border-color:var(--accent);color:var(--accent)}
+.ret-v.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.ret-v b{font-size:15px;font-variant-numeric:tabular-nums}
+.ret-v span{font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.ret-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 9px}
+.ret-h h3{font-size:14.5px;font-family:"Sora"}
+.ret-t{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:5px;padding:1px 7px}
+.ret-t.bug{background:#FDE8E6;color:#9B2C22}
+.ret-t.idee{background:var(--accent-soft);color:var(--accent)}
+.ret-t.question{background:var(--surface-2);color:var(--ink-2)}
+:root[data-theme="dark"] .ret-t.bug{background:#3A1F1C;color:#F0A79B}
+.ret-s{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:5px;padding:1px 7px;background:var(--surface-2);color:var(--ink-2)}
+.ret-s.encours{background:var(--encours);color:#fff}
+.ret-s.fait{background:var(--gold-soft);color:var(--gold-ink)}
+.ret-s.refuse{background:var(--surface-2);color:var(--ink-3);text-decoration:line-through}
+.ret-q{font-size:12px;color:var(--ink-3);flex-basis:100%}
+.ret-x{margin:6px 0 0;font-size:13.5px;white-space:pre-wrap}
+.ret-r{margin-top:9px;border-left:3px solid var(--gold);background:var(--ground);border-radius:0 8px 8px 0;padding:8px 11px;font-size:13px}
+.ret-r b{display:block;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
+.ret-ctx{margin-top:8px;font-size:11.5px;color:var(--ink-3)}
+.ret-ctx summary{cursor:pointer}
+.ret-ctx pre{margin:6px 0 0;padding:8px 10px;background:var(--ground);border-radius:8px;overflow:auto;white-space:pre-wrap;font-size:11px;line-height:1.5}
+.ret-adm{grid-column:2;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.ret-adm select,.ret-adm input{border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);padding:5px 9px;font:inherit;font-size:12.5px}
+.ret-adm input{flex:1;min-width:180px}
+.ret-vide{color:var(--ink-3);font-style:italic;font-size:13.5px;margin-top:12px}
+@media (max-width:860px){ #fbBtn{bottom:70px;padding:9px 13px} #fbBtn .l{display:none} }
+@media (max-width:640px){ .ret-l{grid-template-columns:1fr} .ret-v{grid-row:auto;flex-direction:row;gap:7px;justify-content:flex-start;margin-bottom:8px;width:max-content} .ret-adm{grid-column:1} }
 </style>
 
 <div id="lock" class="wrap">
@@ -938,6 +992,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
       <button data-v="veille" hidden title="Veille"><span class="i" data-i="veille"></span><span class="l">Veille</span></button>
     </div>
     <div class="side-bas">
+      <button data-v="fb" hidden title="Améliorer Kairos"><span class="i" data-i="fb"></span><span class="l">Améliorer Kairos</span></button>
       <button data-v="admin" hidden title="Admin"><span class="i" data-i="admin"></span><span class="l">Admin</span></button>
       <button type="button" class="side-act" id="installBtn" title="Installer Kairos comme une application" hidden><span class="i" data-i="install"></span><span class="l">Installer l’app</span></button>
       <button type="button" class="side-act acc-off" id="accBtn" title="Retrouver ma progression sur tous mes appareils" hidden><span class="i" data-i="cloud"></span><span class="l">Connexion</span></button>
@@ -1111,6 +1166,16 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
       </div>
     </section>
 
+    <section class="view" id="v-fb">
+      <div class="panel">
+        <div class="mm-head"><h2>Améliorer Kairos</h2></div>
+        <p class="mm-sub">Un bug, une idée, une question sur le portail : dis-le ici. Tout le monde voit les retours, peut voter pour ceux qui lui parlent, et suit ce qui a été fait.</p>
+        <div class="mm-bar" style="margin-top:12px;padding-top:0;border:0"><button type="button" class="mm-b pri" id="retNouveau">Faire un retour</button></div>
+        <div class="ret-f" id="retFiltres"></div>
+      </div>
+      <div id="retListe"></div>
+    </section>
+
     <section class="view" id="v-admin">
       <nav class="subtabs" id="adminSub">
         <button data-s="mbr" class="on">Membres</button>
@@ -1244,6 +1309,8 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
   <div id="plusMenu" hidden><div class="plus-card" id="plusCard"></div></div>
 </div>
 
+<button type="button" id="fbBtn" hidden title="Signaler un bug ou proposer une amélioration"><span class="i" data-i="fb"></span><span class="l">Un souci ? Une idée ?</span></button>
+<div id="retBox" hidden><div class="ret-card" id="retCard" role="dialog" aria-modal="true"></div></div>
 <div id="sheet"><div class="sheet-card" id="sheetCard"></div></div>
 <div id="psheet" aria-hidden="true"><div class="psheet-card" id="psheetCard" role="dialog" aria-modal="true"></div></div>
 <div id="modal"><div class="modal-card"><h2 id="modalTitle" style="font-size:17px;margin-bottom:10px"></h2><textarea id="modalTxt" readonly></textarea><div class="modal-actions"><button id="modalCopy">Copier</button><button id="modalDl">Télécharger</button><button id="modalClose">Fermer</button></div></div></div>
@@ -1280,6 +1347,13 @@ const urlAtelier = id => BASE+'workshop/detail/'+id;
 const urlProfil = id => BASE+'adherents/profil/'+id;
 const esc = s => (s??'').toString().replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmtMaj = meta => meta.maj ? fmtD(meta.maj.slice(0,10))+' à '+meta.maj.slice(11,16).replace(':','h') : fmtD(meta.majAteliers);
+// Les dernières erreurs JavaScript de la session : jointes à un retour, « ça marche pas » devient exploitable.
+const JS_ERRS=[];
+const noterErr = m => { JS_ERRS.push(new Date().toTimeString().slice(0,8)+' '+String(m).slice(0,240)); if(JS_ERRS.length>8) JS_ERRS.shift(); };
+try{
+  window.addEventListener('error', e=>noterErr((e.message||'erreur')+(e.filename?' @'+String(e.filename).split('/').pop()+':'+e.lineno:'')));
+  window.addEventListener('unhandledrejection', e=>noterErr('promesse rejetée : '+((e.reason&&e.reason.message)||e.reason)));
+}catch(e){}
 const fmtD = iso => { if(!iso) return ''; const d=new Date(iso+'T00:00:00'); return isNaN(d)?iso:d.toLocaleDateString('fr-FR'); };
 // AAAA-MM-JJ dans le fuseau de la personne. toISOString() convertit en UTC : à Paris, minuit
 // local vaut 22 h la veille, donc toute date calculée reculait d'un jour (lundi → dimanche).
@@ -1822,6 +1896,7 @@ function boot(){
   chargerParcours();
   chargerSurv();
   buildMembres();
+  chargerRetours();
   majOngletSurv(); buildSurv(); buildSurvAccueil(); buildActions();
 }
 
@@ -1830,6 +1905,7 @@ function showTab(v){
   document.querySelectorAll('nav.tabs button, nav.botbar button, #plusCard button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
   if(v === 'mm'){ try{ buildMM(); }catch(e){} }
+  if(v === 'fb'){ try{ buildRetours(); }catch(e){} }
   // Ouvrir la veille vaut lecture : pas de case à cocher de plus
   if(v === 'veille' && VEILLE){
     try{
@@ -1860,6 +1936,7 @@ function sideReplier(on){
 }
 /* ---------- Icônes (tracé fin, même famille pour tout le portail) ---------- */
 const ICO = {
+  fb:'<path d="M20.6 12.3c0 3.9-3.8 7.1-8.6 7.1-1 0-2-.15-2.9-.42L4.2 20.6l1.5-3.7c-1.4-1.3-2.3-3-2.3-4.6 0-3.9 3.8-7.1 8.6-7.1s8.6 3.2 8.6 7.1Z"/><path d="M12 9.4v2.6M12 14.6v.1"/>',
   mm:'<rect x="4.2" y="3.3" width="15.6" height="17.4" rx="2.2"/><path d="M8.4 8.4h7.2M8.4 12h7.2M8.4 15.6h4.2"/>',
   home:'<path d="M3.2 10.6 12 3.5l8.8 7.1"/><path d="M5.4 9.4V20.5h13.2V9.4"/><path d="M9.6 20.5v-6.1h4.8v6.1"/>',
   surv:'<path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
@@ -1930,9 +2007,9 @@ document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('cli
 
 /* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
-const TABS=['home','veille','surv','pd','mm','cat','reu','for','evt','ann','admin'];
+const TABS=['home','veille','surv','pd','mm','cat','reu','for','evt','ann','fb','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',surv:'enregistre',pd:'parcours-decouverte',mm:'mail-manager',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',admin:'admin'};
+const TAB_SLUG={home:'accueil',veille:'veille',surv:'enregistre',pd:'parcours-decouverte',mm:'mail-manager',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',fb:'ameliorer-kairos',admin:'admin'};
 // Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
 const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin'});
 const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
@@ -3899,12 +3976,202 @@ document.addEventListener('click', async e=>{
   if(c.closest('#mmOn')){ mmParticipe(true); return; }
 });
 
+
+/* ---------- Retours : signaler un bug, proposer une amélioration ----------
+   Un bouton présent sur toutes les pages pour dire ce qui coince là où ça coince, et un onglet
+   où tout le monde voit ce qui a été remonté, vote, et constate ce qui a été fait. */
+
+const RET_TYPES  = [['bug','Bug'],['idee','Idée'],['question','Question']];
+const RET_STATUTS= [['nouveau','À traiter'],['encours','En cours'],['fait','Fait'],['refuse','Pas retenu']];
+const RET_FILTRES= [['tous','Tout'],['bug','Bugs'],['idee','Idées'],['question','Questions'],
+                    ['ouvert','À traiter'],['fait','Fait']];
+let RET=[], RET_F='tous', RET_TYPE='bug', RET_ENVOI=false;
+
+const retLib  = (l,v) => (l.find(x=>x[0]===v)||['',v])[1];
+const retNav = () => {
+  const u=navigator.userAgent, n=/Edg\//.test(u)?'Edge':/OPR\//.test(u)?'Opera':/Chrome\//.test(u)?'Chrome'
+    :/Firefox\//.test(u)?'Firefox':/Safari\//.test(u)?'Safari':'navigateur inconnu';
+  const os=/Windows/.test(u)?'Windows':/Android/.test(u)?'Android':/iPhone|iPad/.test(u)?'iOS'
+    :/Mac OS X/.test(u)?'macOS':/Linux/.test(u)?'Linux':'';
+  return n+(os?' · '+os:'');
+};
+function retContexte(){
+  const onglet = (document.querySelector('nav.tabs button[data-v="'+curTab+'"] .l')||{}).textContent || curTab;
+  return {
+    onglet: String(onglet).replace(/\s+\d+$/,'').trim(),
+    url: location.hash || '#accueil',
+    version: (typeof META!=='undefined' && META && META.maj) ? META.maj : '',
+    nav: retNav(),
+    ecran: window.innerWidth+'×'+window.innerHeight,
+    erreurs: JS_ERRS.slice(-5)
+  };
+}
+
+async function chargerRetours(){
+  if(!SB || !SBUSER) return false;
+  try{
+    const r = await SB.rpc('retours_liste');
+    if(r.error) throw r.error;
+    RET = r.data || [];
+  }catch(e){ return false; }
+  document.querySelectorAll('[data-v="fb"]').forEach(b=>b.hidden=false);
+  const fb=document.getElementById('fbBtn'); if(fb) fb.hidden=false;
+  if(window.__booted){ try{ buildRetours(); }catch(e){} }
+  return true;
+}
+function retBadge(){
+  const n = EST_ADMIN ? RET.filter(r=>r.statut==='nouveau').length : 0;
+  document.querySelectorAll('[data-v="fb"] .l').forEach(l=>{
+    l.innerHTML = 'Améliorer Kairos' + (n ? ' <span class="sub-badge">'+n+'</span>' : '');
+  });
+}
+
+/* --- la fenêtre de saisie --- */
+function retOuvrir(type){
+  RET_TYPE = type || 'bug';
+  const c = retContexte();
+  const el = document.getElementById('retCard');
+  el.innerHTML = '<h2>Un souci ? Une idée ?</h2>'
+    + '<p class="s">Ton retour est visible de toute la lignée, signé de ton nom. Sois précis : ce que tu faisais, ce que tu attendais, ce qui s’est passé.</p>'
+    + '<div class="ret-types">' + RET_TYPES.map(([v,l])=>'<button type="button" data-rettype="'+v+'"'
+        + (v===RET_TYPE?' class="on"':'')+'>'+esc(l)+'</button>').join('') + '</div>'
+    + '<input type="text" id="retTitre" maxlength="120" placeholder="En une phrase (ex. « le mur ne montre pas ma série »)">'
+    + '<textarea id="retTexte" placeholder="Ce que tu faisais, ce que tu attendais, ce qui s’est passé."></textarea>'
+    + '<details class="ret-joint"><summary>Ce qui sera joint automatiquement</summary><ul>'
+    + '<li>Onglet : '+esc(c.onglet)+' ('+esc(c.url)+')</li>'
+    + '<li>Version du portail : '+esc(c.version||'inconnue')+'</li>'
+    + '<li>'+esc(c.nav)+' · écran '+esc(c.ecran)+'</li>'
+    + '<li>'+(c.erreurs.length ? c.erreurs.length+' erreur'+(c.erreurs.length>1?'s':'')+' technique'+(c.erreurs.length>1?'s':'')+' relevée'+(c.erreurs.length>1?'s':'')+' pendant ta visite' : 'aucune erreur technique relevée')+'</li>'
+    + '</ul></details>'
+    + '<div class="ret-acts"><button type="button" class="mm-b pri" id="retEnvoyer">Envoyer</button>'
+    + '<button type="button" class="mm-b" id="retAnnuler">Annuler</button>'
+    + '<span class="ret-err" id="retErr"></span></div>';
+  document.getElementById('retBox').hidden = false;
+  setTimeout(()=>{ const t=document.getElementById('retTitre'); if(t) t.focus(); }, 40);
+}
+function retFermer(){ const b=document.getElementById('retBox'); if(b) b.hidden = true; }
+
+async function retEnvoyer(){
+  if(RET_ENVOI) return;
+  const titre=(document.getElementById('retTitre').value||'').trim();
+  const texte=(document.getElementById('retTexte').value||'').trim();
+  const err=document.getElementById('retErr');
+  if(!titre && !texte){ err.textContent='Écris au moins une phrase.'; return; }
+  if(!MOI_ID){ err.textContent='Ta fiche du réseau n’est pas encore rattachée.'; return; }
+  RET_ENVOI=true; err.textContent='Envoi…';
+  const nom = (byId.get(MOI_ID)||{}).name || prenomUser() || '';
+  try{
+    const r = await SB.from('retours').insert({
+      membre_id: MOI_ID, auteur: nom, type: RET_TYPE,
+      titre: titre || texte.slice(0,80), texte: texte, contexte: retContexte()
+    });
+    if(r.error) throw r.error;
+    retFermer();
+    await chargerRetours();
+    showTab('fb'); curTab='fb'; syncHash(true); window.scrollTo({top:0});
+  }catch(e){ err.textContent='Envoi impossible — réessaie.'; }
+  RET_ENVOI=false;
+}
+
+/* --- la liste --- */
+function retVisibles(){
+  if(RET_F==='tous') return RET;
+  if(RET_F==='ouvert') return RET.filter(r=>r.statut==='nouveau'||r.statut==='encours');
+  if(RET_F==='fait') return RET.filter(r=>r.statut==='fait');
+  return RET.filter(r=>r.type===RET_F);
+}
+function retCarte(r){
+  const ctx = r.contexte||{};
+  const det = [];
+  if(ctx.onglet) det.push('Onglet : '+ctx.onglet+(ctx.url?' ('+ctx.url+')':''));
+  if(ctx.version) det.push('Version du portail : '+ctx.version);
+  if(ctx.nav) det.push(ctx.nav+(ctx.ecran?' · écran '+ctx.ecran:''));
+  if(ctx.erreurs && ctx.erreurs.length) det.push('Erreurs techniques :\n  '+ctx.erreurs.join('\n  '));
+  return '<div class="ret-l">'
+    + '<button type="button" class="ret-v'+(r.jai_vote?' on':'')+'" data-retvote="'+r.id+'" title="'
+      + (r.jai_vote?'Retirer ma voix':'Moi aussi')+'"><b>'+(r.votes||0)+'</b><span>voix</span></button>'
+    + '<div><div class="ret-h"><span class="ret-t '+esc(r.type)+'">'+esc(retLib(RET_TYPES,r.type))+'</span>'
+      + '<h3>'+esc(r.titre||'(sans titre)')+'</h3>'
+      + '<span class="ret-s '+esc(r.statut)+'">'+esc(retLib(RET_STATUTS,r.statut))+'</span>'
+      + '<span class="ret-q">'+esc(r.auteur||'—')+' · '+esc(fmtQuand(r.cree_le))+(r.a_moi?' · toi':'')+'</span></div>'
+    + (r.texte?'<p class="ret-x">'+esc(r.texte)+'</p>':'')
+    + (r.reponse?'<div class="ret-r"><b>Réponse'+(r.repondu_par?' de '+esc(r.repondu_par):'')+'</b>'+esc(r.reponse)+'</div>':'')
+    + (det.length?'<details class="ret-ctx"><summary>Contexte technique</summary><pre>'+esc(det.join('\n'))+'</pre></details>':'')
+    + '</div>'
+    + (EST_ADMIN ? '<div class="ret-adm">'
+        + '<select data-retstatut="'+r.id+'">'+RET_STATUTS.map(([v,l])=>'<option value="'+v+'"'
+          +(r.statut===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>'
+        + '<input type="text" data-retrep="'+r.id+'" value="'+esc(r.reponse||'')+'" placeholder="Répondre (visible de tous)">'
+        + '<button type="button" class="mm-b" style="padding:5px 12px;font-size:12.5px" data-retsave="'+r.id+'">Enregistrer</button>'
+        + '</div>' : '')
+    + '</div>';
+}
+function buildRetours(){
+  const f=document.getElementById('retFiltres'), l=document.getElementById('retListe');
+  if(!l) return;
+  if(f) f.innerHTML = RET_FILTRES.map(([v,lib])=>{
+    const n = v==='tous' ? RET.length
+      : v==='ouvert' ? RET.filter(r=>r.statut==='nouveau'||r.statut==='encours').length
+      : v==='fait' ? RET.filter(r=>r.statut==='fait').length
+      : RET.filter(r=>r.type===v).length;
+    return '<button type="button" data-retf="'+v+'"'+(RET_F===v?' class="on"':'')+'>'+esc(lib)+(n?' '+n:'')+'</button>';
+  }).join('');
+  const vis = retVisibles();
+  l.innerHTML = vis.length ? vis.map(retCarte).join('')
+    : '<div class="panel"><p class="ret-vide">'+(RET.length?'Rien dans ce filtre.':'Personne n’a encore fait de retour — sois le premier.')+'</p></div>';
+  retBadge();
+}
+
+/* --- interactions --- */
+async function retVoter(id){
+  if(!SB || !SBUSER || !MOI_ID) return;
+  const r = RET.find(x=>+x.id===+id); if(!r) return;
+  const avant = r.jai_vote;
+  r.jai_vote = !avant; r.votes = Math.max(0, (r.votes||0) + (avant?-1:1));
+  buildRetours();
+  try{
+    if(avant) await SB.from('retours_votes').delete().eq('retour_id',id).eq('membre_id',MOI_ID);
+    else      await SB.from('retours_votes').insert({ retour_id:id, membre_id:MOI_ID });
+  }catch(e){ r.jai_vote = avant; r.votes = Math.max(0,(r.votes||0)+(avant?1:-1)); buildRetours(); }
+}
+async function retEnregistrer(id){
+  if(!EST_ADMIN) return;
+  const st=document.querySelector('[data-retstatut="'+id+'"]'), rp=document.querySelector('[data-retrep="'+id+'"]');
+  if(!st) return;
+  const maj = { statut: st.value, reponse: (rp&&rp.value||'').trim() };
+  if(maj.reponse) maj.repondu_par = (byId.get(MOI_ID)||{}).name || prenomUser() || '';
+  try{
+    const r = await SB.from('retours').update(maj).eq('id', id);
+    if(r.error) throw r.error;
+    await chargerRetours();
+  }catch(e){}
+}
+document.addEventListener('click', e=>{
+  const c = e.target.closest ? e.target : null;
+  if(!c) return;
+  if(c.closest('#fbBtn') || c.closest('#retNouveau')){ retOuvrir('bug'); return; }
+  if(c.closest('#retAnnuler') || e.target.id==='retBox'){ retFermer(); return; }
+  const t=c.closest('[data-rettype]');
+  if(t){ RET_TYPE=t.dataset.rettype;
+    document.querySelectorAll('[data-rettype]').forEach(b=>b.classList.toggle('on', b===t)); return; }
+  if(c.closest('#retEnvoyer')){ retEnvoyer(); return; }
+  const f=c.closest('[data-retf]'); if(f){ RET_F=f.dataset.retf; buildRetours(); return; }
+  const v=c.closest('[data-retvote]'); if(v){ retVoter(+v.dataset.retvote); return; }
+  const s=c.closest('[data-retsave]'); if(s){ retEnregistrer(+s.dataset.retsave); return; }
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ retFermer(); return; }
+  // Ctrl/⌘ + Entrée envoie depuis le champ de saisie
+  if((e.ctrlKey||e.metaKey) && e.key==='Enter' && document.getElementById('retBox') && !document.getElementById('retBox').hidden) retEnvoyer();
+});
+
 /* ---------- Compte personnel & synchronisation ---------- */
 const SB_URL = 'https://xslusoecharxelwmbyal.supabase.co';
 const SB_KEY = 'sb_publishable_WPzpaFRXyczA2lUjIG51vg_PtLFx_XO';
 const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
 const AUTH_MAIL = false;   // connexion par code e-mail : nécessite un SMTP externe (service intégré limité à 2 envois/h)
 let SB=null, SBUSER=null, SYNC_T=null, SYNC_FAIT=false;
+let EST_ADMIN=false;   // renseigné par buildMembres() : seul un admin peut trier les retours
 
 // Actions de la semaine : ce qui est fait est mémorisé par semaine (clé = lundi de la semaine),
 // donc tout repart à zéro chaque lundi sans qu'on ait à purger quoi que ce soit.
@@ -4014,7 +4281,7 @@ async function initSync(){
   SB.auth.onAuthStateChange((ev, session)=>{
     SBUSER = session ? session.user : null;
     accMaj();
-    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); chargerParcours(); chargerSurv(); buildMembres(); }
+    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); chargerParcours(); chargerSurv(); buildMembres(); chargerRetours(); }
     if(!SBUSER) SYNC_FAIT=false;
   });
   try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }
@@ -4034,6 +4301,7 @@ function fmtQuand(iso){
   return fmtD(isoJour(d));
 }
 function masquerAdmin(btn){
+  EST_ADMIN=false;
   if(btn) btn.hidden=true;
   if(curTab==='admin'){ showTab('home'); curTab='home'; syncHash(false); }
   return false;
@@ -4046,6 +4314,8 @@ async function buildMembres(){
   try{ const r=await SB.rpc('membres_connectes'); if(r.error) throw r.error; rows=r.data||[]; }
   catch(e){ return masquerAdmin(btn); }
   if(btn) btn.hidden=false;
+  EST_ADMIN=true;
+  try{ buildRetours(); }catch(e){}
   buildDemandes();
   buildContenuAdmin();
   buildJournal();
