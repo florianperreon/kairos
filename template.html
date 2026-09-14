@@ -302,7 +302,7 @@ tr.colf input:focus{outline:2px solid var(--accent);outline-offset:0}
 :root[data-theme="dark"] .xtra.pub.restreint{background:#4A2E0F;color:#FBBF77}
 .xtra.lig-in{color:var(--gold-ink);background:var(--gold-soft);border-radius:5px;padding:1px 7px}
 .xtra.lig-in .lig-open{cursor:pointer;text-decoration:underline;font-weight:600}
-.xtra.act{color:var(--accent);font-weight:600;text-decoration:none}
+.xtra.act{color:var(--accent);font-weight:600;text-decoration:none;background:var(--accent-soft);border-radius:5px;padding:1px 7px}
 .xtra.act:hover{text-decoration:underline}
 .xtra.alt{flex-basis:100%;color:var(--ink-2)}
 .xtra.alt a{color:var(--accent);font-weight:600;text-decoration:none;white-space:nowrap}
@@ -757,18 +757,18 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 
 /* ---------- Accueil : mes actions de la semaine ---------- */
 .acts{display:grid;gap:8px}
-.act{display:flex;align-items:flex-start;gap:12px;text-decoration:none;color:inherit;background:var(--surface-2);border:1px solid transparent;border-radius:10px;padding:11px 14px;transition:border-color .15s}
-.act:hover{border-color:var(--accent)}
-.act .ck{flex:0 0 auto;width:20px;height:20px;border-radius:50%;border:2px solid var(--line-2);margin-top:2px}
-.act.fait .ck{border-color:var(--gold);background:var(--gold);color:#fff;font-size:13px;line-height:17px;text-align:center;font-weight:800}
-.act .tx{flex:1 1 auto;min-width:0}
-.act .tx b{display:block;font-family:"Sora";font-size:14.5px}
-.act .tx p{margin:2px 0 0;font-size:13px;color:var(--ink-2)}
-.act.fait .tx b{color:var(--ink-2);text-decoration:line-through;text-decoration-color:var(--line-2)}
-.act .go{flex:0 0 auto;color:var(--accent);font-weight:700;font-size:15px;margin-top:2px}
-.act.fait .go{visibility:hidden}
-.act .urg{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:700;border-radius:99px;padding:1px 8px;background:#FFF1DB;color:#8A4B00;vertical-align:1px}
-:root[data-theme="dark"] .act .urg{background:#4A2E0F;color:#FBBF77}
+.sact{display:flex;align-items:flex-start;gap:12px;text-decoration:none;color:inherit;background:var(--surface-2);border:1px solid transparent;border-radius:10px;padding:11px 14px;transition:border-color .15s}
+.sact:hover{border-color:var(--accent)}
+.sact .ck{flex:0 0 auto;width:20px;height:20px;border-radius:50%;border:2px solid var(--line-2);margin-top:2px}
+.sact.fait .ck{border-color:var(--gold);background:var(--gold);color:#fff;font-size:13px;line-height:17px;text-align:center;font-weight:800}
+.sact .tx{flex:1 1 auto;min-width:0}
+.sact .tx b{display:block;font-family:"Sora";font-size:14.5px}
+.sact .tx p{margin:2px 0 0;font-size:13px;color:var(--ink-2)}
+.sact.fait .tx b{color:var(--ink-2);text-decoration:line-through;text-decoration-color:var(--line-2)}
+.sact .go{flex:0 0 auto;color:var(--accent);font-weight:700;font-size:15px;margin-top:2px}
+.sact.fait .go{visibility:hidden}
+.sact .urg{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:700;border-radius:99px;padding:1px 8px;background:#FFF1DB;color:#8A4B00;vertical-align:1px}
+:root[data-theme="dark"] .sact .urg{background:#4A2E0F;color:#FBBF77}
 .acts-ok{margin:0;padding:14px;text-align:center;background:var(--gold-soft);color:var(--gold-ink);border-radius:10px;font-family:"Sora";font-weight:700;font-size:15px}
 .acts-n{font-size:13px;color:var(--ink-2);margin:-4px 0 12px}
 </style>
@@ -1499,7 +1499,7 @@ function buildActions(){
     ? (reste === 1 ? 'Il te reste 1 action cette semaine.' : 'Il te reste ' + reste + ' actions cette semaine.')
     : '';
   liste.innerHTML = actions.map(a =>
-    '<a class="act' + (a.fait?' fait':'') + '" href="' + a.href + '" data-act="' + esc(a.cle) + '"'
+    '<a class="sact' + (a.fait?' fait':'') + '" href="' + a.href + '" data-act="' + esc(a.cle) + '"'
     + (a.manuel?' data-manuel="1"':'') + (a.ancre?' data-ancre="'+esc(a.ancre)+'"':'') + '>'
     + '<span class="ck">' + (a.fait?'✓':'') + '</span>'
     + '<span class="tx"><b>' + esc(a.t) + (a.urg?'<span class="urg">'+esc(a.urg)+'</span>':'') + '</b>'
@@ -1510,7 +1510,7 @@ function buildActions(){
 
 // Une action « manuelle » se valide en cliquant dessus : rien ne peut la constater à notre place.
 document.addEventListener('click', e => {
-  const a = e.target.closest && e.target.closest('.act[data-act]');
+  const a = e.target.closest && e.target.closest('.sact[data-act]');
   if(!a) return;
   const cle = a.dataset.act;
   if(cle === 'etapes'){
