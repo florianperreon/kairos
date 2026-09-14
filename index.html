@@ -4473,10 +4473,12 @@ async function buildJournal(){
 
   let alertes = 0;
   corps.innerHTML = etat.length ? etat.map(x=>{
-    const ko = x.dernier_statut === 'echec' || x.dernier_statut === 'interrompue' || x.en_retard;
+    // Une tâche qui n'a jamais tourné n'est pas une anomalie : elle vient d'être déclarée, ou
+    // elle ne se lance qu'à la demande. « En retard » ne concerne qu'une tâche qui s'est tue.
+    const jamais = !x.derniere_le;
+    const ko = !jamais && (x.dernier_statut === 'echec' || x.dernier_statut === 'interrompue' || x.en_retard);
     if(ko) alertes++;
-    const retard = x.en_retard
-      ? '<span class="jrn-ret">' + (x.derniere_le ? 'en retard' : 'jamais vue') + '</span>' : '';
+    const retard = (x.en_retard && !jamais) ? '<span class="jrn-ret">en retard</span>' : '';
     const detail = x.dernier_statut === 'echec' || x.dernier_statut === 'interrompue'
       ? '<div class="jrn-err">' + esc(x.derniere_erreur || 'Passage interrompu avant la fin.') + '</div>'
       : '<div class="jrn-res">' + esc(x.dernier_resume || '—') + '</div>';
@@ -4497,7 +4499,9 @@ async function buildJournal(){
   const note = document.getElementById('jrnNote');
   if(note) note.textContent = alertes
     ? (alertes === 1 ? '1 tâche demande ton attention.' : alertes + ' tâches demandent ton attention.')
-    : 'Toutes les tâches suivies sont à jour.';
+    : (etat.some(x=>!x.derniere_le)
+       ? 'Toutes les tâches déjà passées sont à jour — certaines n’ont pas encore tourné.'
+       : 'Toutes les tâches suivies sont à jour.');
   majBadgeJrn(alertes);
 
   const libelles = {};

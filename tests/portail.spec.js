@@ -430,3 +430,70 @@ test.describe('Liens partagés', () => {
     expect(r, 'le lien ne doit pas reprendre la main après une navigation').toBe('v-ann');
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Admin → Journal', () => {
+  // Règle du 14/09/2026 : une tâche qui n'a jamais tourné n'est pas une anomalie — elle vient
+  // d'être déclarée, ou elle ne se lance qu'à la demande. Seule une tâche qui tournait et s'est
+  // tue est « en retard ».
+  const rendre = (page, taches) => page.evaluate(async (taches) => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    SB = { rpc: async () => ({ data: taches }),
+           from: () => ({ select: () => ({ order: () => ({ limit: async () => ({ data: [] }) }) }) }) };
+    SBUSER = { id: 'u', email: 'x' };
+    await buildJournal();
+    const badge = document.getElementById('jrnBadge');
+    return {
+      note: document.getElementById('jrnNote').textContent,
+      badge: badge && !badge.hidden ? badge.textContent : '',
+      retards: document.querySelectorAll('#jrnEtat .jrn-ret').length,
+      lignes: document.querySelectorAll('#jrnEtat tr').length,
+      pastilles: [...document.querySelectorAll('#jrnEtat .jrn-p')].map(x => x.textContent),
+    };
+  }, taches);
+
+  // Jeu d'essai volontairement pessimiste : « en_retard: true » sur une tâche jamais vue, ce que
+  // renvoyait le serveur avant le correctif. Le portail doit tenir même si la base le lui redit.
+  const tache = (o) => Object.assign({
+    cle: 't', libelle: 'Une tâche', source: 'github', cadence_h: 24, derniere_le: null,
+    dernier_statut: null, dernier_resume: null, derniere_erreur: null, duree_s: null,
+    heures_depuis: null, en_retard: true, echecs_7j: 0, passages_7j: 0 }, o);
+
+  test('une tâche jamais exécutée n’est pas une alerte', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, [tache({ cle: 'tests', libelle: 'Tests du portail' })]);
+    expect(r.pastilles[0]).toBe('Jamais exécutée');
+    expect(r.retards, 'pas d’étiquette « en retard » sur une tâche jamais vue').toBe(0);
+    expect(r.badge, 'pas de pastille rouge').toBe('');
+    expect(r.note).toContain('n’ont pas encore tourné');
+  });
+
+  test('une tâche qui s’est tue reste une alerte', async ({ page }) => {
+    await ouvrir(page);
+    const vieux = new Date(Date.now() - 4 * 86400e3).toISOString();
+    const r = await rendre(page, [tache({ cle: 'update', libelle: 'Mise à jour',
+      derniere_le: vieux, dernier_statut: 'succes', en_retard: true })]);
+    expect(r.retards).toBe(1);
+    expect(r.note).toContain('demande ton attention');
+  });
+
+  test('un échec reste une alerte', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, [tache({ cle: 'update', libelle: 'Mise à jour',
+      derniere_le: new Date().toISOString(), dernier_statut: 'echec',
+      derniere_erreur: 'quelque chose a cassé', en_retard: false })]);
+    expect(r.note).toContain('demande ton attention');
+  });
+
+  test('le mélange : une jamais vue et une en échec → une seule alerte', async ({ page }) => {
+    await ouvrir(page);
+    const r = await rendre(page, [
+      tache({ cle: 'tests', libelle: 'Tests du portail' }),
+      tache({ cle: 'update', libelle: 'Mise à jour', derniere_le: new Date().toISOString(),
+              dernier_statut: 'echec', derniere_erreur: 'boum', en_retard: false }),
+    ]);
+    expect(r.note).toBe('1 tâche demande ton attention.');
+    expect(r.badge).toBe('1');
+  });
+});
