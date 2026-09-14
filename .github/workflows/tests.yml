@@ -28,6 +28,10 @@ jobs:
           python-version: '3.12'
 
       - name: Garde-fou de la page
+        env:
+          API_BASE: ${{ secrets.API_BASE }}
+          LIGNEE: ${{ secrets.LIGNEE }}
+          LIGNEE_FILLEULS_DE: ${{ secrets.LIGNEE_FILLEULS_DE }}
         run: python tests/garde.py
 
       - uses: actions/setup-node@v4

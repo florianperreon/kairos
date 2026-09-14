@@ -262,3 +262,35 @@ test.describe('Retours', () => {
     expect(erreurs).toEqual([]);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Audit de confidentialité', () => {
+  // Non-régression du 14/09/2026 : l'Action de mise à jour a échoué parce que le Mail Manager
+  // écrivait le nom du réseau dans la page. Le nom est désormais assumé (liste blanche partagée
+  // entre update.py et garde.py) — mais « asso » et les noms de la lignée restent interdits.
+  const { spawnSync } = require('child_process');
+  const os = require('os');
+  const GARDE = path.join(RACINE, 'tests', 'garde.py');
+  const ENV = { API_BASE: 'https://api.asso-forman.fr', LIGNEE: 'Jean Dupont,Marie Martin' };
+
+  const lancer = (fichier) => spawnSync('python3', [GARDE, fichier],
+    { encoding: 'utf8', env: { ...process.env, ...ENV } });
+  const fabriquer = (nom, transforme) => {
+    const f = path.join(os.tmpdir(), nom);
+    fs.writeFileSync(f, transforme(lire('index.html')), 'utf8');
+    return f;
+  };
+
+  test('le nom du réseau est autorisé, « asso » et la lignée ne le sont pas', () => {
+    const vrai = lancer(path.join(RACINE, 'index.html'));
+    test.skip(vrai.error && vrai.error.code === 'ENOENT', 'python3 absent');
+    expect(vrai.status, 'la page réelle doit passer le garde-fou :\n' + vrai.stdout).toBe(0);
+
+    expect(lancer(fabriquer('kairos-lignee.html', s => s.replace('<title>', '<title>Dupont '))).status,
+      'un nom de la lignée doit être refusé').toBe(1);
+    expect(lancer(fabriquer('kairos-asso.html', s => s.replace('<title>', '<title>notre asso '))).status,
+      '« asso » doit rester refusé').toBe(1);
+    expect(lancer(fabriquer('kairos-mail.html', s => s.replace('<title>', '<title>contact@exemple.fr '))).status,
+      'une adresse e-mail doit être refusée').toBe(1);
+  });
+});

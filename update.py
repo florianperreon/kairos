@@ -378,6 +378,13 @@ def dedup(items):
 
 
 
+# Mots que l'audit de confidentialité laisse passer, alors qu'ils viennent du nom de domaine
+# de l'API ou de la lignée. Le nom du réseau est assumé dans le portail depuis le 14/09/2026 :
+# les objectifs et les statuts y sont nommés comme le réseau les nomme.
+# Tout le reste (« asso », les noms de la lignée, les animateurs moins conseillés) reste interdit.
+AUDIT_AUTORISES = {"forman"}
+AUDIT_AUTORISES |= {m.strip().lower() for m in (os.environ.get("AUDIT_AUTORISES") or "").split(",") if m.strip()}
+
 # ---------------- progression individuelle (étapes validées par le réseau) ----------------
 # Correspondance libellé d'atelier -> clé d'étape du parcours Kairos.
 # L'ordre compte : la première règle qui correspond gagne.
@@ -1006,6 +1013,7 @@ def run():
         for tok in str(full).split():
             if len(tok) > 3:
                 needles.add(tok.lower())
+    needles -= AUDIT_AUTORISES
     low = outside.lower()
     bad = [n for n in needles if n in low]
     if re.search(r"[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}", low):
@@ -1013,7 +1021,9 @@ def run():
     if re.search(r"(?<!\d)0[1-9](?:[ .-]?\d\d){4}(?!\d)", outside):
         bad.append("téléphone en clair")
     if bad:
-        raise RuntimeError(f"audit de confidentialité en échec ({len(bad)} motif(s))")
+        raise RuntimeError("audit de confidentialité en échec (%d motif(s) : %s)"
+                           % (len(bad), ", ".join(m if not m.isalpha() or m in ("email en clair", "téléphone en clair")
+                                                  else m[:2] + "…" for m in bad)))
 
     if not base_ecrire(payload):
         raise RuntimeError("écriture en base impossible (KAIROS_TOKEN manquant)")

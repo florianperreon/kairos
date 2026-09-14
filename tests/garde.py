@@ -8,8 +8,9 @@ JavaScript, une substitution ratée, un onglet déclaré sans sa section.
 
     python tests/garde.py [chemin/index.html]
 """
-import json, re, subprocess, sys, tempfile
+import os, re, subprocess, sys, tempfile
 from pathlib import Path
+from urllib.parse import urlparse
 
 RACINE = Path(__file__).resolve().parent.parent
 page = Path(sys.argv[1]) if len(sys.argv) > 1 else RACINE / "index.html"
@@ -52,7 +53,40 @@ else:
             soucis.append(f"adresse « #{s} » utilisée par {vus[s]} et {t}")
         vus[s] = t
 
-# 4. Audit de confidentialité (le même que celui d'update.py, en plus court)
+# 4. Audit de confidentialité — le même que celui d'update.py.
+#    Les mots interdits (nom du réseau, noms de la lignée) ne sont écrits nulle part dans le dépôt :
+#    ils sont dérivés des mêmes secrets que ceux d'update.py, passés par l'Action.
+#    Sans ces variables (exécution locale), ce contrôle est annoncé comme sauté plutôt que faux-vert.
+# Mots que l'audit laisse passer bien qu'ils viennent du domaine de l'API : même liste
+# qu'update.py. Le nom du réseau est assumé dans le portail depuis le 14/09/2026.
+AUTORISES = {"forman"}
+AUTORISES |= {m.strip().lower() for m in (os.environ.get("AUDIT_AUTORISES") or "").split(",") if m.strip()}
+
+def interdits():
+    mots, api = set(), os.environ.get("API_BASE", "")
+    hote = urlparse(api).hostname or ""
+    for part in [hote] + hote.split("."):
+        for tok in re.split(r"[.-]", part):
+            if len(tok) > 3:
+                mots.add(tok.lower())
+    for var in ("LIGNEE", "LIGNEE_FILLEULS_DE", "MOTS_INTERDITS"):
+        for nom in (os.environ.get(var) or "").split(","):
+            for tok in nom.split():
+                if len(tok) > 3:
+                    mots.add(tok.lower())
+    return mots - AUTORISES
+
+mots = interdits()
+if mots:
+    bas = src.lower()
+    trouves = sorted(m for m in mots if m in bas)
+    for m in trouves:
+        # on ne réécrit pas le mot interdit dans la sortie : on dit seulement combien de fois
+        soucis.append("un mot interdit par l'audit (nom du réseau ou de la lignée) apparaît %d fois "
+                      "dans la page — le portail dit « le réseau »" % bas.count(m))
+else:
+    print("  (mots interdits non vérifiés : API_BASE / LIGNEE absents de l'environnement)")
+
 if re.search(r"[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}", src, re.I):
     soucis.append("une adresse e-mail apparaît en clair dans la page")
 if re.search(r"(?<!\d)0[1-9](?:[ .-]?\d\d){4}(?!\d)", src):

@@ -57,6 +57,10 @@ jobs:
         id: garde
         # Quelques secondes, sans navigateur : substitution __CENC__, syntaxe JavaScript, onglets
         # complets, audit de confidentialité. Une page qui ne passe pas ici n'est jamais poussée.
+        env:
+          API_BASE: ${{ secrets.API_BASE }}
+          LIGNEE: ${{ secrets.LIGNEE }}
+          LIGNEE_FILLEULS_DE: ${{ secrets.LIGNEE_FILLEULS_DE }}
         run: python tests/garde.py
 
       - name: Journal — page refusée par le garde-fou
