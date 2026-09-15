@@ -1532,3 +1532,29 @@ test.describe('Ma lignée — tableau de bord, progression, victoires, arbre', (
     expect(r.slug.startsWith('#ma-lignee')).toBe(true);
   });
 });
+
+test.describe('Navigation — le logo mène à l’accueil', () => {
+  test('plus d’entrée « Accueil » dans le menu, le logo et KAIROS ramènent à l’accueil', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      showTab('cat'); curTab = 'cat';
+    });
+    const r = await page.evaluate(() => ({
+      entrees: [...document.querySelectorAll('#side .side-nav button[data-v]')].map(b => b.dataset.v),
+      groupes: [...document.querySelectorAll('#side .grp')].map(g => g.textContent),
+    }));
+    expect(r.entrees).not.toContain('home');
+    expect(r.groupes).toEqual(['Mon espace', 'Le réseau', 'S\'informer & outils']);
+    await page.click('#side .go-home');
+    expect(await page.evaluate(() => document.getElementById('v-home').classList.contains('on'))).toBe(true);
+    expect(page.url()).toContain('#accueil');
+    await page.evaluate(() => { showTab('cat'); curTab = 'cat'; });
+    await page.setViewportSize({ width: 420, height: 800 });
+    await page.click('header.top .go-home');
+    expect(await page.evaluate(() => document.getElementById('v-home').classList.contains('on'))).toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+});

@@ -55,6 +55,14 @@ button{font:inherit}
 nav.tabs.side{position:sticky;top:0;align-self:start;height:100vh;display:flex;flex-direction:column;
   background:var(--surface);border-right:1px solid var(--line);padding:14px 12px 12px}
 .side-head{display:flex;align-items:center;gap:10px;padding:2px 6px 16px;min-height:44px}
+/* Le logo et KAIROS mènent à l'accueil (il n'y a plus d'entrée « Accueil » dans le menu) */
+button.go-home{border:0;background:none;font:inherit;color:inherit;cursor:pointer;text-align:left;width:auto}
+nav.tabs.side button.side-head[data-v]{display:flex;width:auto;align-self:flex-start;gap:10px;padding:2px 6px 16px;margin:0;border-radius:8px;font:inherit;color:var(--ink)}
+nav.tabs.side button.side-head[data-v]:hover,nav.tabs.side button.side-head[data-v].on{background:none;color:var(--ink)}
+#app.replie nav.tabs.side button.side-head[data-v]{align-self:center;justify-content:center;padding:2px 0 16px;gap:0}
+button.go-home:hover .brand{color:var(--accent)}
+button.go-home:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.top-home{display:contents}
 .side-head .mark{margin:0;flex:none}
 .side-head .mark span{border-width:0 9px 17px 9px}
 .side-head .mark .t2{border-width:17px 9px 0 9px}
@@ -1268,13 +1276,12 @@ a.mml-r:hover{border-color:var(--accent)}
 
 <div id="app">
   <nav class="tabs side" id="side" aria-label="Navigation principale">
-    <div class="side-head">
+    <button type="button" class="side-head go-home" data-v="home" title="Accueil" aria-label="Accueil">
       <div class="mark"><span class="t1"></span><span class="t2"></span><span class="t3"></span></div>
       <div class="brand">KAIROS</div>
-    </div>
+    </button>
     <div class="side-nav">
       <div class="grp">Mon espace</div>
-      <button data-v="home" class="on" title="Accueil"><span class="i" data-i="home"></span><span class="l">Accueil</span></button>
       <button data-v="surv" hidden title="Enregistré"><span class="i" data-i="surv"></span><span class="l">Enregistré</span></button>
       <button data-v="mm" hidden title="Mail Manager"><span class="i" data-i="mm"></span><span class="l">Mail Manager</span></button>
       <button data-v="lig" hidden title="Ma lignée"><span class="i" data-i="lig"></span><span class="l">Ma lignée</span></button>
@@ -1285,9 +1292,8 @@ a.mml-r:hover{border-color:var(--accent)}
       <button data-v="for" title="Formations"><span class="i" data-i="for"></span><span class="l">Formations</span></button>
       <button data-v="evt" title="Événements"><span class="i" data-i="evt"></span><span class="l">Événements</span></button>
       <button data-v="ann" title="Annuaire"><span class="i" data-i="ann"></span><span class="l">Annuaire</span></button>
-      <div class="grp">S'informer</div>
+      <div class="grp">S'informer &amp; outils</div>
       <button data-v="veille" hidden title="Veille"><span class="i" data-i="veille"></span><span class="l">Veille</span></button>
-      <div class="grp">Outils</div>
       <button data-v="res" title="Ressources"><span class="i" data-i="res"></span><span class="l">Ressources</span></button>
     </div>
     <div class="side-bas">
@@ -1302,8 +1308,8 @@ a.mml-r:hover{border-color:var(--accent)}
   </nav>
   <div class="content">
   <header class="top">
-    <div class="mark"><span class="t1"></span><span class="t2"></span><span class="t3"></span></div>
-    <div class="brand">KAIROS</div>
+    <button type="button" class="top-home go-home" title="Accueil" aria-label="Accueil"><div class="mark"><span class="t1"></span><span class="t2"></span><span class="t3"></span></div>
+    <div class="brand">KAIROS</div></button>
     <button class="search-big" id="searchBtn" title="Rechercher partout (Ctrl K)">
       <span class="i" data-i="search"></span><span class="ph">Rechercher un atelier, un membre, une question…</span><span class="kbd">Ctrl K</span>
     </button>
@@ -2423,6 +2429,11 @@ function poserIcones(racine){
 poserIcones();
 let NAV_REPLIE = false;
 try{ NAV_REPLIE = localStorage.getItem('kairos_nav')==='1'; }catch(e){}
+document.addEventListener('click', e=>{
+  const h = e.target.closest && e.target.closest('header.top .go-home');
+  if(!h) return;
+  showTab('home'); curTab='home'; fermerPlus(); syncHash(true); window.scrollTo({top:0});
+});
 function fermerPlus(){ const m=document.getElementById('plusMenu'); if(m) m.hidden=true; }
 function ouvrirPlus(){
   const m=document.getElementById('plusMenu'), c=document.getElementById('plusCard');
