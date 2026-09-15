@@ -1379,6 +1379,7 @@ a.mml-r:hover{border-color:var(--accent)}
         <label class="chk"><input type="checkbox" id="pdLig"> Pilotés par ma lignée</label>
         <label class="chk"><input type="checkbox" id="pdPast"> Inclure les passés</label>
         <label class="chk" title="Sessions ajoutées ou modifiées depuis moins de 14 jours"><input type="checkbox" id="pdNeuf"> Nouveautés</label>
+        <label class="chk" id="pdHorsLbl" hidden title="Séances dont le public visé est au-dessus de ton statut"><input type="checkbox" id="pdHors"> Sessions non accessibles</label>
         <button type="button" class="reset-btn" data-reset="pd" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
@@ -1438,6 +1439,7 @@ a.mml-r:hover{border-color:var(--accent)}
         <select id="reuLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="reuPast"> Inclure les passés</label>
         <label class="chk" title="Réunions ajoutées ou modifiées depuis moins de 14 jours"><input type="checkbox" id="reuNeuf"> Nouveautés</label>
+        <label class="chk" id="reuHorsLbl" hidden title="Séances dont le public visé est au-dessus de ton statut"><input type="checkbox" id="reuHors"> Réunions non accessibles</label>
         <button type="button" class="reset-btn" data-reset="reu" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
@@ -1455,6 +1457,7 @@ a.mml-r:hover{border-color:var(--accent)}
         <select id="forLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="forPast"> Inclure les passés</label>
         <label class="chk" title="Formations ajoutées ou modifiées depuis moins de 14 jours"><input type="checkbox" id="forNeuf"> Nouveautés</label>
+        <label class="chk" id="forHorsLbl" hidden title="Séances dont le public visé est au-dessus de ton statut"><input type="checkbox" id="forHors"> Formations non accessibles</label>
         <button type="button" class="reset-btn" data-reset="for" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
@@ -1472,6 +1475,7 @@ a.mml-r:hover{border-color:var(--accent)}
         <select id="evtLieu"><option value="">Tous lieux</option></select>
         <label class="chk"><input type="checkbox" id="evtPast"> Inclure les passés</label>
         <label class="chk" title="Événements ajoutées ou modifiées depuis moins de 14 jours"><input type="checkbox" id="evtNeuf"> Nouveautés</label>
+        <label class="chk" id="evtHorsLbl" hidden title="Séances dont le public visé est au-dessus de ton statut"><input type="checkbox" id="evtHors"> Événements non accessibles</label>
         <button type="button" class="reset-btn" data-reset="evt" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
       </div>
       <div class="filters filters-dates">
@@ -1720,10 +1724,16 @@ const isPast = a => a.end < todayIso;
 const pubLabel = p => p===''?'Ouvert à tous':(p==='?'?'Public restreint':p+' et +');
 // Accès selon le statut : chaque atelier vise un statut minimum (pub), '' = ouvert à tous
 const RANGS=['GUEST','NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
+// Statut : celui de la progression individuelle, sinon celui de l'annuaire (payload `statuts`) —
+// sans ce repli, un compte tout juste rattaché voyait TOUT, y compris ce qu'il ne peut pas réserver.
 const monStatut = () => {
-  const r = PARCOURS && PARCOURS.statut ? String(PARCOURS.statut).toUpperCase().replace('ROLE_','') : '';
+  let r = PARCOURS && PARCOURS.statut ? String(PARCOURS.statut).toUpperCase().replace('ROLE_','') : '';
+  if(!RANGS.includes(r) && MOI_ID && DATA && DATA.statuts){
+    r = String(DATA.statuts[MOI_ID] || DATA.statuts[String(MOI_ID)] || '').toUpperCase().replace('ROLE_','');
+  }
   return RANGS.includes(r) ? r : '';
 };
+const horsTitre = a => ' title="Réservé à '+esc(pubLabel(a.pub))+' — au-dessus de ton statut"';
 function accessible(a){
   const mien = monStatut();
   if(!mien) return true;                       // statut inconnu : on n'exclut rien
@@ -2756,6 +2766,8 @@ async function chargerParcours(){
     if(MOI_ID){ chargerMM(); chargerLig(); }
     if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); buildActions(); majOngletSurv(); }catch(e){} }
     if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
+    // le statut (progression ou annuaire) décide de ce qui est réservable : toutes les listes suivent
+    if(window.__booted){ Object.keys(RENDERS).forEach(k=>{ if(k!=='cat' || !PARCOURS){ try{ RENDERS[k](); }catch(e){} } }); }
     try{ routerQuandPret(); }catch(e){}
     return !!PARCOURS;
   }catch(e){ PARCOURS = null; return false; }
@@ -2963,8 +2975,9 @@ function buildPd(){
   const render=()=>{
     const cat=document.getElementById('pdCat').value, lieu=document.getElementById('pdLieu').value, lig=document.getElementById('pdLig').checked, reco=document.getElementById('pdReco').checked;
     const from=document.getElementById('pdFrom').value, to=document.getElementById('pdTo').value, past=document.getElementById('pdPast').checked;
-    const neuf=document.getElementById('pdNeuf').checked;
-    const rows=pds.filter(a=>(past||!isPast(a))&&(!neuf||neufEtat(a))&&(!reco||!allMoins(a.pilotes))&&(!cat||PD_CAT(a.title)===cat)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!lig||isLigneePilote(a.pilotes))&&dateMatch(a,from,to,pdDaySel));
+    const neuf=document.getElementById('pdNeuf').checked, hors=document.getElementById('pdHors').checked;
+    const hl=document.getElementById('pdHorsLbl'); if(hl) hl.hidden = !monStatut();
+    const rows=pds.filter(a=>(hors||accessible(a))&&(past||!isPast(a))&&(!neuf||neufEtat(a))&&(!reco||!allMoins(a.pilotes))&&(!cat||PD_CAT(a.title)===cat)&&(!lieu||lieuKey(a.lieu)===lieu)&&(!lig||isLigneePilote(a.pilotes))&&dateMatch(a,from,to,pdDaySel));
     document.getElementById('pdCount').textContent=rows.length+' session'+(rows.length>1?'s':'');
     window.__pdRows=rows; calUpdate('pd');
     const byDay={};
@@ -2974,13 +2987,13 @@ function buildPd(){
       const d=new Date(day+'T00:00:00'); const we=d.getDay()===0||d.getDay()===6;
       return '<div class="day"><div class="day-h'+(we?' we':'')+'"><span class="d">'+fmtDLong(day)+'</span></div>'+
         byDay[day].map(a=>{ const c=PD_CAT(a.title); const multi=a.start!==a.end?'<div class="multi num">jusqu\u2019au '+fmtD(a.end)+'</div>':'';
-          const dim=allMoins(a.pilotes);
-          return '<div class="ev'+(dim?' dim':'')+'"'+(dim?' title="Pilote moins recommandé par la lignée"':'')+'><div><span class="chip" style="background:'+CATC[c]+'">'+CATN[c]+'</span></div><div><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes,{moins:true})+'</span></div>'+evExtras(a)+'</div></div>';
+          const dim=allMoins(a.pilotes), inacc=!accessible(a);
+          return '<div class="ev'+(dim?' dim':'')+(inacc?' hors':'')+'"'+(inacc?horsTitre(a):(dim?' title="Pilote moins recommandé par la lignée"':''))+'><div><span class="chip" style="background:'+CATC[c]+'">'+CATN[c]+'</span></div><div><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes,{moins:true})+'</span></div>'+evExtras(a)+'</div></div>';
         }).join('')+'</div>';
     }).join('') || '<p style="color:var(--ink-2)">Aucune session ne correspond aux filtres.</p>';
   };
   const pdDaySel=setupDays('pdDays',()=>render());
-  ['pdCat','pdLieu','pdReco','pdLig','pdFrom','pdTo','pdPast','pdNeuf'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+  ['pdCat','pdLieu','pdReco','pdLig','pdFrom','pdTo','pdPast','pdNeuf','pdHors'].forEach(id=>document.getElementById(id).addEventListener('change',render));
   RENDERS.pd=render; render();
 }
 
@@ -3039,8 +3052,9 @@ function buildSimple(p, items, urlFn, label){
     const q=norm(document.getElementById(p+'Q').value.trim());
     const lieu=document.getElementById(p+'Lieu').value;
     const from=document.getElementById(p+'From').value, to=document.getElementById(p+'To').value, past=document.getElementById(p+'Past').checked;
-    const neuf=document.getElementById(p+'Neuf').checked;
-    const rows=items.filter(a=>(past||!isPast(a))&&(!neuf||neufEtat(a))&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,daySel));
+    const neuf=document.getElementById(p+'Neuf').checked, hors=document.getElementById(p+'Hors').checked;
+    const hl=document.getElementById(p+'HorsLbl'); if(hl) hl.hidden = !monStatut();
+    const rows=items.filter(a=>(hors||accessible(a))&&(past||!isPast(a))&&(!neuf||neufEtat(a))&&(!lieu||lieuKey(a.lieu)===lieu)&&(!q||norm(a.title+' '+a.pilotes+' '+a.lieu).includes(q))&&dateMatch(a,from,to,daySel));
     document.getElementById(p+'Count').textContent=rows.length+' '+label+(rows.length>1?'s':'');
     window['__'+p+'Rows']=rows; calUpdate(p);
     let html='', cur='';
@@ -3048,14 +3062,15 @@ function buildSimple(p, items, urlFn, label){
       const mk=a.start.slice(0,7);
       if(mk!==cur){ if(cur) html+='</div>'; cur=mk; const parts=mk.split('-'); html+='<div class="month-h">'+MOIS[+parts[1]-1]+' '+parts[0]+'</div><div class="day">'; }
       const multi=a.start!==a.end?'<div class="multi num">jusqu\u2019au '+fmtD(a.end)+'</div>':'';
-      html+='<div class="ev ev2"><div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div><b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div class="body"><a class="t" href="'+urlFn(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div>'+evExtras(a)+'</div></div>';
+      const inacc=!accessible(a);
+      html+='<div class="ev ev2'+(inacc?' hors':'')+'"'+(inacc?horsTitre(a):'')+'><div><div class="evday">'+JOURS[new Date(a.start+'T00:00:00').getDay()]+'</div><b class="num">'+fmtD(a.start)+'</b><div class="hor num">'+esc(a.hor)+'</div>'+multi+'</div><div class="body"><a class="t" href="'+urlFn(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div>'+evExtras(a)+'</div></div>';
     });
     if(cur) html+='</div>';
     document.getElementById(p+'List').innerHTML=html||'<p style="color:var(--ink-2)">Aucun résultat ne correspond aux filtres.</p>';
   };
   const daySel=setupDays(p+'Days',()=>render());
   document.getElementById(p+'Q').addEventListener('input',render);
-  ['Lieu','From','To','Past','Neuf'].forEach(k=>document.getElementById(p+k).addEventListener('change',render));
+  ['Lieu','From','To','Past','Neuf','Hors'].forEach(k=>document.getElementById(p+k).addEventListener('change',render));
   RENDERS[p]=render; render();
 }
 
@@ -5518,6 +5533,10 @@ async function buildMembres(){
   const btn=document.querySelector('nav.tabs button[data-v="admin"]');
   const body=document.getElementById('mbrBody');
   if(!SB||!SBUSER||!body) return masquerAdmin(btn);
+  // Le rôle est demandé explicitement : membres_connectes() ne renvoie pas d'erreur à un membre
+  // simple, seulement une liste vide — ce qui suffisait à afficher le menu Admin à tout le monde.
+  try{ const a=await SB.rpc('est_admin'); if(a.error || a.data!==true) return masquerAdmin(btn); }
+  catch(e){ return masquerAdmin(btn); }
   let rows=null;
   try{ const r=await SB.rpc('membres_connectes'); if(r.error) throw r.error; rows=r.data||[]; }
   catch(e){ return masquerAdmin(btn); }

@@ -328,6 +328,14 @@ def nouveautes(old, ateliers, autres, today_iso, horodate, limite):
 
 
 # ---------------- transformations ----------------
+RANGS_STATUT = ["GUEST", "NEOMAN", "BEMAN", "ADMAN", "MAN", "DEVMAN", "DXMAN", "XMAN"]
+
+def statut_de(roles):
+    """Le plus haut statut du parcours parmi les rôles d'une fiche ('' si aucun)."""
+    vus = [str(r).upper().replace("ROLE_", "") for r in (roles or [])]
+    connus = [r for r in vus if r in RANGS_STATUT]
+    return max(connus, key=RANGS_STATUT.index) if connus else ""
+
 def pdate(s):
     return datetime.datetime.fromisoformat(s).astimezone(PARIS).date().isoformat()
 
@@ -909,9 +917,9 @@ def run():
     # avec le payload précédent. Le passage mensuel (--complet), ou ANNUAIRE_COMPLET=1, relit tout
     # et remet d'aplomb les fiches modifiées entre-temps (téléphone, ville, cotisation, parrain…).
     anciennes = {m[0]: list(m) for m in (old.get("adherents") or [])}
-    # adhDates absent = ancien payload : on repart d'un annuaire complet pour l'amorcer.
+    # adhDates ou statuts absents = ancien payload : on repart d'un annuaire complet pour les amorcer.
     annuaire_complet = (complet or os.environ.get("ANNUAIRE_COMPLET") == "1"
-                        or not anciennes or not old.get("adhDates"))
+                        or not anciennes or not old.get("adhDates") or not old.get("statuts"))
     users, total_api = list_users(api, annuaire_complet, len(anciennes))
     users = dedup(users)
     users.sort(key=lambda u: u["id"])
@@ -941,6 +949,10 @@ def run():
     # Dates de cotisation mémorisées d'un passage à l'autre : sans elles, un annuaire lu
     # partiellement ne saurait plus dire qui est à jour (l'échéance glissante, elle, reste juste).
     adh_dates = {int(k): v for k, v in (old.get("adhDates") or {}).items() if v}
+    # Statut de chacun (NEOMAN, BEMAN…), mémorisé de la même façon : il permet au portail de
+    # savoir quels ateliers une personne peut réserver dès son rattachement, sans attendre le
+    # calcul de sa progression individuelle. Les invités (GUEST) ne sont pas stockés.
+    statuts = {int(k): v for k, v in (old.get("statuts") or {}).items() if v}
 
     lues = {}
     for u in users:
@@ -954,10 +966,16 @@ def run():
             adh_dates[i] = pdate(ap)
         else:
             adh_dates.pop(i, None)
+        st = statut_de(u.get("roles"))
+        if st and st != "GUEST":
+            statuts[i] = st
+        else:
+            statuts.pop(i, None)
 
     if annuaire_complet:
         membres = [lues[i] for i in sorted(lues)]
         adh_dates = {i: d for i, d in adh_dates.items() if i in lues}
+        statuts = {i: v for i, v in statuts.items() if i in lues}
     else:
         fusion = dict(anciennes)
         fusion.update(lues)
@@ -1075,6 +1093,7 @@ def run():
                "autres": autres, "adherentIds": adh_ids, "sites": sites,
                "extra": {str(k): v for k, v in extra.items()},
                "adhDates": {str(k): v for k, v in adh_dates.items() if v},
+               "statuts": {str(k): v for k, v in statuts.items() if v},
                "nouv": nouv, "modif": modif}
     # Version du contenu éditorial (lue en base, le contenu n'a plus de fichier)
     contenu_version = ""

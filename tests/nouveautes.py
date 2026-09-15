@@ -120,6 +120,11 @@ verifie("une séance du samedi reste un samedi", update._jour("2026-09-11T22:00:
 verifie("une date seule est gardée telle quelle", update._jour("2026-09-12") == "2026-09-12", "")
 verifie("rien donne rien", update._jour(None) is None and update._jour("") is None, "")
 
+# 11. Statut mémorisé dans le payload (15/09/2026) : le plus haut statut du parcours, jamais GUEST
+verifie("statut simple", update.statut_de(["ROLE_BEMAN"]) == "BEMAN", update.statut_de(["ROLE_BEMAN"]))
+verifie("le plus haut l'emporte", update.statut_de(["ROLE_USER", "ROLE_NEOMAN", "ROLE_MAN"]) == "MAN", "")
+verifie("rôle hors parcours ignoré", update.statut_de(["ROLE_NOMAN"]) == "" and update.statut_de(None) == "", "")
+
 print(f"{essais - len(echecs)}/{essais} vérifications au vert")
 if echecs:
     print("ÉCHECS :")

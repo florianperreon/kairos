@@ -1585,3 +1585,74 @@ test.describe('Parcours — compte tout juste rattaché', () => {
     expect(erreurs).toEqual([]);
   });
 });
+
+test.describe('Accès selon le statut — toutes les listes', () => {
+  test('un compte sans progression complète applique le statut de l’annuaire (régression du 15/09/2026)', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      MOI_ID = 20521;
+      // jeu d'essai pessimiste : la progression provisoire n'a PAS de statut
+      PARCOURS = { provisoire: true, statut: null, etapes: {} };
+      const avant = monStatut();
+      DATA = Object.assign({}, DATA || {}, { statuts: { '20521': 'NEOMAN' } });
+      const futur = vAddDays(todayIso, 5);
+      const s = (id, pub) => ({ id, title: 'Séance ' + id, start: futur, end: futur, lieu: 'Visio', pilotes: '', hor: '',
+                               guests: [], wait: [], pub, max: 20, total: 1, k: 'r', url: '#' });
+      const liste = [s(1, ''), s(2, 'NEOMAN'), s(3, 'ADMAN')];
+      buildSimple('reu', liste, id => '#' + id, 'réunion');
+      const sans = document.querySelectorAll('#reuList .ev').length;
+      const lbl = !document.getElementById('reuHorsLbl').hidden;
+      const cb = document.getElementById('reuHors'); cb.checked = true; cb.dispatchEvent(new Event('change'));
+      const avec = document.querySelectorAll('#reuList .ev').length;
+      const grise = document.querySelectorAll('#reuList .ev.hors').length;
+      return { avant, apres: monStatut(), sans, lbl, avec, grise,
+               adman: accessible(s(9, 'ADMAN')), neo: accessible(s(9, 'NEOMAN')) };
+    });
+    expect(r.avant).toBe('');            // sans le repli, statut inconnu = tout visible
+    expect(r.apres).toBe('NEOMAN');
+    expect(r.sans).toBe(2);              // la séance ADMAN est masquée par défaut
+    expect(r.lbl).toBe(true);            // la case « non accessibles » apparaît
+    expect(r.avec).toBe(3);
+    expect(r.grise).toBe(1);             // et la séance réservée s'affiche grisée
+    expect(r.adman).toBe(false);
+    expect(r.neo).toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('chaque liste de séances a sa case « non accessibles »', async ({ page }) => {
+    await ouvrir(page);
+    const ids = await page.evaluate(() => ['cat', 'pd', 'reu', 'for', 'evt'].map(p => !!document.getElementById(p + 'Hors')));
+    expect(ids).toEqual([true, true, true, true, true]);
+  });
+});
+
+test.describe('Menu Admin', () => {
+  // Jeu d'essai pessimiste : le serveur répond à membres_connectes() SANS erreur pour un membre
+  // simple (liste vide) — c'est ce qui affichait le menu Admin à tout le monde (régression du 15/09/2026).
+  async function avecRole(page, admin) {
+    return page.evaluate(async (admin) => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      SBUSER = { id: 'u1', email: 'membre@test.invalid' };
+      SB = { rpc: async (nom) => nom === 'est_admin' ? { data: admin, error: null }
+                                                     : { data: [], error: null },
+             from: () => ({ select() { return this; }, order() { return this; }, eq() { return this; },
+                            in() { return this; }, gte() { return this; }, limit() { return this; },
+                            then(r) { return Promise.resolve({ data: [], error: null }).then(r); } }) };
+      try { await buildMembres(); } catch (e) {}
+      return !document.querySelector('nav.tabs button[data-v="admin"]').hidden;
+    }, admin);
+  }
+  test('un membre simple ne voit pas le menu Admin', async ({ page }) => {
+    await ouvrir(page);
+    expect(await avecRole(page, false)).toBe(false);
+  });
+  test('un administrateur le voit', async ({ page }) => {
+    await ouvrir(page);
+    expect(await avecRole(page, true)).toBe(true);
+  });
+});
