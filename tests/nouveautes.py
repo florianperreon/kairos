@@ -113,6 +113,13 @@ nouv, modif, _, _ = calcul(old, [atelier(1, lieu="Nantes")])
 verifie("ajout et modification coexistent",
         nouv.get("a:1") == "2026-09-12T10:00:00Z" and modif.get("a:1", [None])[0] == H, str((nouv, modif)))
 
+# 10. Régression du 15/09/2026 : les dates d'étapes du parcours sont des jours à Paris.
+#     Une séance du samedi 9 h (heure de Paris) arrive en « vendredi 22 h Z » dans l'API.
+verifie("une séance du samedi reste un samedi", update._jour("2026-09-11T22:00:00+00:00") == "2026-09-12",
+        update._jour("2026-09-11T22:00:00+00:00"))
+verifie("une date seule est gardée telle quelle", update._jour("2026-09-12") == "2026-09-12", "")
+verifie("rien donne rien", update._jour(None) is None and update._jour("") is None, "")
+
 print(f"{essais - len(echecs)}/{essais} vérifications au vert")
 if echecs:
     print("ÉCHECS :")

@@ -2723,6 +2723,10 @@ function caseCochee(k, lib){
 }
 function autoMention(cle){
   const f = faitAuto(cle);
+  // Progression provisoire (compte tout juste rattaché) : les objectifs officiels n'arrivent
+  // qu'avec le passage suivant de la mise à jour du réseau.
+  if(!f && PARCOURS && PARCOURS.provisoire && cle.indexOf('objectifs_')===0)
+    return '<small class="auto att">Objectifs récupérés au prochain passage du réseau (4 fois par jour)</small>';
   if(!f) return SBUSER ? '<small class="auto att">Validé automatiquement par le réseau</small>'
                        : '<small class="auto att">Automatique — connecte-toi avec ton compte</small>';
   if(estValide(f)){

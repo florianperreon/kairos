@@ -1558,3 +1558,30 @@ test.describe('Navigation — le logo mène à l’accueil', () => {
     expect(erreurs).toEqual([]);
   });
 });
+
+test.describe('Parcours — compte tout juste rattaché', () => {
+  test('la progression provisoire coche DM, AD et 3 Jours (régression du 15/09/2026)', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      // Ce que la base pose au rattachement (parcours_provisoire) : des dates, aucun drapeau ok,
+      // aucun statut, aucun objectif. Avant le correctif, il n'y avait tout simplement pas de ligne.
+      PARCOURS = { provisoire: true, statut: null, formations_mois: [], etapes: {
+        dm: { d: '2026-05-03', f: '2026-09-26', src: 'reseau' },
+        ad: { d: '2026-05-16', f: null, src: 'reseau' },
+        trois_jours: { d: '2026-05-28', f: null, src: 'reseau' },
+        adhesion: { d: '2026-05-31', f: null, src: 'adhesion' },
+      } };
+      return {
+        dm: caseCochee('x', 'Participer à une Découverte Métier'),
+        ad: caseCochee('x', 'Suivre l’Atelier Démarrage'),
+        tj: caseCochee('x', 'Participer aux 3 Jours de la Réussite'),
+        adh: caseCochee('x', 'Régler son adhésion'),
+        obj: caseCochee('x', 'Valider ses objectifs NEOMAN'),
+        mention: autoMention('objectifs_neoman'),
+      };
+    });
+    expect(r).toMatchObject({ dm: true, ad: true, tj: true, adh: true, obj: false });
+    expect(r.mention).toContain('prochain passage');
+    expect(erreurs).toEqual([]);
+  });
+});

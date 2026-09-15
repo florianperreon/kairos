@@ -505,7 +505,18 @@ def _pages(api, endpoint, params):
     return items
 
 def _jour(x):
-    return str(x or "")[:10] or None
+    """Jour calendaire à Paris. L'API renvoie des horodatages UTC : une séance du samedi 9 h
+    part en « vendredi 23 h Z » si l'on se contente de couper la chaîne (décalage d'un jour
+    constaté le 15/09/2026 sur les étapes du parcours)."""
+    s = str(x or "")
+    if not s:
+        return None
+    if len(s) > 10:
+        try:
+            return pdate(s.replace("Z", "+00:00"))
+        except ValueError:
+            pass
+    return s[:10] or None
 
 def _premiere(dates):
     d = sorted([x for x in dates if x])
