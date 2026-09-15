@@ -1125,3 +1125,107 @@ test.describe('Mail Manager — saisie et vocabulaire', () => {
     expect(r).toContain('50 %');
   });
 });
+
+test.describe('Mail Manager — encart « ma lignée » sur l’accueil', () => {
+  // Ma descendance telle que la renvoie la RPC mm_ma_lignee : 7 personnes, 2 publiées.
+  const LIG = [
+    { membre_id: 40001, nom: 'Aline Publiee',  niveau: 1, parrain_id: 20028, statut: 'publie',    publie_le: '2026-01-05T08:10:00Z', serie: 3 },
+    { membre_id: 40002, nom: 'Bruno Rien',     niveau: 1, parrain_id: 20028, statut: 'rien',      publie_le: null, serie: 0 },
+    { membre_id: 40003, nom: 'Chloe Brouillon',niveau: 1, parrain_id: 20028, statut: 'brouillon', publie_le: null, serie: 0 },
+    { membre_id: 40004, nom: 'Denis Niveau2',  niveau: 2, parrain_id: 40002, statut: 'rien',      publie_le: null, serie: 0 },
+    { membre_id: 40005, nom: 'Emma Niveau2',   niveau: 2, parrain_id: 40002, statut: 'publie',    publie_le: '2026-01-05T09:00:00Z', serie: 1 },
+    { membre_id: 40006, nom: 'Fanny Niveau3',  niveau: 3, parrain_id: 40004, statut: 'rien',      publie_le: null, serie: 0 },
+    { membre_id: 40007, nom: 'Gael Niveau3',   niveau: 3, parrain_id: 40004, statut: 'rien',      publie_le: null, serie: 0 },
+  ];
+
+  test('l’encart liste la descendance, non-publiés de niveau 1 en tête, 5 lignes au plus', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE, dm: '2099-01-01' });
+    const r = await page.evaluate((L) => {
+      MM_LIG = L; buildMMLignee();
+      const el = document.getElementById('homeMMLig');
+      const lignes = [...el.querySelectorAll('.mml-r')];
+      return {
+        cache: el.hidden,
+        compteur: el.querySelector('.mml-n').textContent,
+        noms: lignes.map(x => x.querySelector('.nm').firstChild.textContent),
+        liens: lignes.map(x => x.getAttribute('href')),
+        tout: el.querySelector('.mml-tout').textContent,
+        toutHref: el.querySelector('.mml-tout').getAttribute('href'),
+      };
+    }, LIG);
+    expect(r.cache).toBe(false);
+    expect(r.compteur).toBe('2/7 publiés');
+    // niveau 1 non publiés (brouillon avant rien), puis niveaux suivants, puis les publiés
+    expect(r.noms).toEqual(['Chloe Brouillon', 'Bruno Rien', 'Denis Niveau2', 'Fanny Niveau3', 'Gael Niveau3']);
+    expect(r.liens.every(h => h === null)).toBe(true);   // rien de publié parmi eux : pas de lien
+    expect(r.tout).toContain('2 autres');
+    expect(r.toutHref).toBe('#mail-manager?s=le-mur&f=ma-lignee');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('un mail manager publié ouvre sa fiche en lecture, sur la semaine en cours', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE, dm: '2099-01-01' });
+    const r = await page.evaluate(async (L) => {
+      MM_LIG = [L[0], L[1]]; buildMMLignee();
+      MM_SEM = vAddDays(mmSemCour(), -14);          // l'onglet était resté sur une semaine passée
+      const a = document.querySelector('#homeMMLig a.mml-r');
+      a.click();
+      await new Promise(res => setTimeout(res, 150));
+      return { href: a.getAttribute('href'), hash: location.hash, sem: MM_SEM === mmSemCour() };
+    }, LIG);
+    expect(r.href).toBe('#mail-manager?s=le-mur&v=40001');
+    expect(r.hash).toContain('v=40001');
+    expect(r.sem).toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('sans descendance connectée, l’encart ne s’affiche pas', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE, dm: '2099-01-01' });
+    const cache = await page.evaluate(() => { MM_LIG = []; buildMMLignee(); const a = document.getElementById('homeMMLig').hidden;
+                                              MM_LIG = null; buildMMLignee(); return a && document.getElementById('homeMMLig').hidden; });
+    expect(cache).toBe(true);
+  });
+
+  test('le mur se filtre sur ma lignée et le filtre passe dans l’adresse', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE, dm: '2099-01-01' });
+    const r = await page.evaluate((L) => {
+      MM_LIG = [L[0]];
+      MM_MUR = [
+        { membre_id: 40001, nom: 'Aline Publiee', participe: true, statut: 'publie', publie_le: '2026-01-05T08:10:00Z', serie: 3 },
+        { membre_id: 50001, nom: 'Hors Lignee',  participe: true, statut: 'publie', publie_le: '2026-01-05T08:00:00Z', serie: 1 },
+      ];
+      MM_LIGNES = MM_MUR.map(p => ({ membre_id: p.membre_id, statut: 'publie', donnees: {} }));
+      MM_FILTRE = ''; const tous = mmMur();
+      MM_FILTRE = 'lignee'; const lig = mmMur();
+      return { tous: tous.includes('Hors Lignee'), lig: lig.includes('Hors Lignee'), aline: lig.includes('Aline Publiee'),
+               url: tabState('mm').get('f') };
+    }, LIG);
+    expect(r.tous).toBe(true);
+    expect(r.lig).toBe(false);      // ni dans les pastilles, ni dans le tableau
+    expect(r.aline).toBe(true);
+    expect(r.url).toBe('ma-lignee');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('la pastille de retard suit la descendance du serveur, pas l’arbre local', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE, dm: '2099-01-01' });
+    const r = await page.evaluate(() => {
+      if (todayIso <= mmSemCour()) return 'lundi';
+      // Jeu d'essai pessimiste : l'arbre local connaît 30004 comme filleul, mais le serveur ne le
+      // renvoie pas (compte non rattaché, ou hors de ma descendance) — il ne doit pas compter.
+      MM_LIG = [{ membre_id: 40002, nom: 'Bruno Rien', niveau: 1, statut: 'rien', serie: 0 }];
+      MM_MUR = [
+        { membre_id: 40002, nom: 'Bruno Rien', participe: true, statut: 'rien', serie: 0 },
+        { membre_id: 30004, nom: 'Filleul Adherent', participe: true, statut: 'rien', serie: 0 },
+      ];
+      return mmEnRetard().map(p => p.membre_id);
+    });
+    if (r === 'lundi') test.skip(true, 'la pastille ne s’allume qu’à partir du mardi');
+    expect(r).toEqual([40002]);
+  });
+});

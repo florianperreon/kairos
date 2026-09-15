@@ -945,6 +945,34 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-j .r{font-size:11.5px;color:var(--ink-3);margin-top:3px}
 
 .mm-mur{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+/* Encart d'accueil « Mail manager de ma lignée » */
+.mml-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-bottom:4px}
+.mml-h h2{margin:0}
+.mml-h .mml-n{margin-left:auto;font-family:"Sora";font-weight:700;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.mml-sem{font-size:12.5px;color:var(--ink-3);margin:0 0 10px}
+.mml-alerte{background:#FFF8EC;border:1px solid var(--encours);color:var(--encours-ink);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;margin:0 0 10px}
+:root[data-theme="dark"] .mml-alerte{background:#3A2A12}
+.mml-l{display:flex;flex-direction:column;gap:6px}
+.mml-r{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid transparent;border-radius:10px;padding:7px 12px;text-decoration:none;color:inherit}
+a.mml-r:hover{border-color:var(--accent)}
+.mml-r .ic{flex:none;width:22px;text-align:center;font-size:14px}
+.mml-r .nm{flex:1 1 auto;min-width:0;font-weight:700;font-size:14px}
+.mml-r .nv{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:var(--ink-3)}
+.mml-r .st{flex:none;font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.mml-r .st.pub{color:var(--gold-ink);font-weight:600}
+.mml-r .go{flex:none;color:var(--accent);font-weight:700;font-size:13.5px}
+.mml-r .go.off{color:var(--ink-3);font-weight:500}
+.mml-tout{display:inline-block;margin-top:10px;font-weight:700;color:var(--accent);text-decoration:none}
+.mml-tout:hover{text-decoration:underline}
+.mm-filtre{display:inline-flex;gap:4px;margin-top:10px;background:var(--surface-2);border-radius:99px;padding:3px}
+.mm-filtre button{border:0;background:none;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink-2);padding:4px 12px;border-radius:99px;cursor:pointer}
+.mm-filtre button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+@media(max-width:640px){
+  .mml-r{flex-wrap:wrap;row-gap:2px}
+  .mml-r .nm{flex-basis:calc(100% - 32px)}
+  .mml-r .st{margin-left:32px}
+  .mml-r .go{margin-left:auto}
+}
 .mm-p{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:99px;background:var(--surface);padding:5px 13px 5px 5px;cursor:pointer;font:inherit;text-align:left;color:inherit}
 .mm-p:hover{border-color:var(--accent)}
 .mm-p[disabled]{cursor:default;opacity:.62}
@@ -1124,6 +1152,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
         <div class="acts" id="homeActions"></div>
         <p class="acts-ok" id="homeActionsOk" hidden>Well done ; tu es à jour !</p>
       </div>
+      <div class="panel" id="homeMMLig" hidden></div>
       <div class="valeurs" id="homeValeurs" hidden></div>
       <div class="bdstrip" id="homeBd" hidden></div>
       <div class="bdstrip surv-strip" id="homeSurv" hidden></div>
@@ -1735,7 +1764,7 @@ function rafraichirListes(){
   try{ buildSimple('reu', R, id=>BASE+'teamMeeting/detail/'+id, 'réunion'); }catch(e){}
   try{ buildSimple('for', F, id=>BASE+'formation/detail/'+id, 'formation'); }catch(e){}
   try{ buildSimple('evt', E, id=>BASE+'event/detail/'+id, 'événement'); }catch(e){}
-  try{ buildHome(); buildSurvAccueil(); buildActions(); }catch(e){}
+  try{ buildHome(); buildSurvAccueil(); buildActions(); buildMMLignee(); }catch(e){}
   try{ routeHash(); }catch(e){}
 }
 function survCarte(o, passe){
@@ -2261,6 +2290,7 @@ function tabState(tab){
     if(typeof MM_SUB!=='undefined' && MM_SUB!=='moi') p.set('s', MM_SLUG[MM_SUB]);
     if(typeof MM_SEM!=='undefined' && MM_SEM && MM_SEM!==mmSemCour()) p.set('w', MM_SEM);
     if(typeof MM_LU!=='undefined' && MM_LU) p.set('v', MM_LU.id);
+    if(typeof MM_FILTRE!=='undefined' && MM_FILTRE==='lignee' && !MM_LU) p.set('f', 'ma-lignee');
   }
   return p;
 }
@@ -2294,6 +2324,8 @@ function applyState(tab,p){
     if(tab==='mm'){
       const w=p.get('w')||'';
       if(w && /^\d{4}-\d{2}-\d{2}$/.test(w) && w!==MM_SEM){ MM_SEM=vMonday(w); chargerMM(); }
+      const f=p.get('f')||''; const nf=(f==='ma-lignee'||f==='lignee')?'lignee':'';
+      if(nf!==MM_FILTRE){ MM_FILTRE=nf; if(!p.get('v')) buildMM(); }
       const s=p.get('s')||''; showMMSub(SLUG_MM[s]||s||'moi');
       const v=+(p.get('v')||0);
       if(v && (!MM_LU || MM_LU.id!==v)) mmVoir(v); else if(!v && MM_LU){ MM_LU=null; buildMM(); }
@@ -3343,6 +3375,8 @@ const MM_NIVEAUX = ['NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
 let MM=null, MM_PREC=null, MM_PRIVE='', MM_REG=null, MM_OBJ=null;
 let MM_MUR=[], MM_LIGNES=[], MM_SEM='', MM_SUB='moi', MM_LU=null, MM_T=null, MM_ETAT='';
 let MM_COUR=null;   // ma ligne de la semaine en cours, même quand on consulte une semaine passée
+let MM_LIG=null;     // ma descendance connectée pour la semaine en cours (RPC mm_ma_lignee), null = pas encore chargée
+let MM_FILTRE='';    // filtre du mur : '' = tout le monde, 'lignee' = ma descendance
 let MM_PRODUITS=[]; // types de produit des souscriptions, partagés : chacun peut en ajouter un
 
 /* --- semaines --- */
@@ -3525,8 +3559,9 @@ async function chargerMM(){
     }
   }catch(e){ return false; }
   await chargerMMMur();
+  await chargerMMLignee();
   document.querySelectorAll('[data-v="mm"]').forEach(b=>b.hidden=false);
-  if(window.__booted){ try{ buildMM(); buildActions(); }catch(e){} }
+  if(window.__booted){ try{ buildMM(); buildActions(); buildMMLignee(); }catch(e){} }
   try{ routerQuandPret(); }catch(e){}
   return true;
 }
@@ -3549,10 +3584,81 @@ async function chargerMMMur(){
   mmBadge();
   return true;
 }
+// Ma descendance connectée, calculée par le serveur depuis reseau_liens (chaîne de parrainage).
+// Toujours la semaine EN COURS, quelle que soit la semaine consultée dans l'onglet.
+// La RPC part de mon_membre_id() : aucune exemption admin, donc rien à filtrer ici.
+async function chargerMMLignee(){
+  if(!SB || !SBUSER || !MOI_ID){ MM_LIG=null; return false; }
+  try{
+    const r = await SB.rpc('mm_ma_lignee',{p_semaine:mmSemCour()});
+    if(r.error) throw r.error;
+    MM_LIG = r.data || [];
+  }catch(e){ MM_LIG=null; return false; }
+  return true;
+}
+function mmLigIds(){ return new Set((MM_LIG||[]).map(p=>p.membre_id)); }
+// Ordre de l'encart : d'abord ceux qui n'ont pas publié (niveau 1 en tête, brouillon avant rien),
+// puis les publiés dans l'ordre de publication.
+function mmLigTri(liste){
+  const rang = p => p.statut==='publie' ? 2 : (p.statut==='brouillon' ? 0 : 1);
+  return (liste||[]).slice().sort((a,b)=>{
+    const pa = a.statut==='publie', pb = b.statut==='publie';
+    if(pa !== pb) return pa ? 1 : -1;
+    if(pa) return (a.publie_le||'').localeCompare(b.publie_le||'');
+    if(a.niveau !== b.niveau) return a.niveau - b.niveau;
+    if(rang(a) !== rang(b)) return rang(a) - rang(b);
+    return (a.nom||'').localeCompare(b.nom||'','fr');
+  });
+}
+const MML_MAX = 5;
+function mmNiveauLib(n){ return n===1 ? 'filleul direct' : 'niveau '+n; }
+function buildMMLignee(){
+  const el = document.getElementById('homeMMLig');
+  if(!el) return;
+  const liste = MM_LIG || [];
+  el.hidden = !liste.length;
+  if(!liste.length){ el.innerHTML=''; return; }
+  const sc = mmSemCour();
+  const pub = liste.filter(p=>p.statut==='publie').length;
+  const retard = todayIso > sc ? liste.length - pub : 0;
+  const tri = mmLigTri(liste);
+  let h = '<div class="mml-h"><h2>Mail manager de ma lignée</h2>'
+    + '<span class="mml-n">'+pub+'/'+liste.length+' publié'+(pub>1?'s':'')+'</span></div>'
+    + '<p class="mml-sem">'+esc(mmLib(sc))+'</p>';
+  if(retard) h += '<p class="mml-alerte">'+retard+' personne'+(retard>1?'s':'')+' de ta lignée n\u2019'
+    + (retard>1?'ont':'a')+' pas encore publié.</p>';
+  h += '<div class="mml-l">' + tri.slice(0, MML_MAX).map(p=>{
+    const lisible = p.statut==='publie';
+    const ic = lisible ? '✅' : (p.statut==='brouillon' ? '✏️' : '⭕');
+    const st = lisible ? 'publié '+(p.publie_le?fmtQuand(p.publie_le):'')
+             : (p.statut==='brouillon' ? 'brouillon en cours' : 'pas encore');
+    const corps = '<span class="ic">'+ic+'</span>'
+      + '<span class="nm">'+esc(p.nom)+'<span class="nv">'+esc(mmNiveauLib(p.niveau))+'</span></span>'
+      + '<span class="st'+(lisible?' pub':'')+'">'+esc(st.trim())+(p.serie>1?' · 🔥 '+p.serie+' sem.':'')+'</span>';
+    return lisible
+      ? '<a class="mml-r" href="#mail-manager?s=le-mur&v='+p.membre_id+'" data-mmlig="'+p.membre_id+'">'+corps+'<span class="go">Voir →</span></a>'
+      : '<div class="mml-r">'+corps+'<span class="go off">—</span></div>';
+  }).join('') + '</div>';
+  const reste = liste.length - Math.min(MML_MAX, liste.length);
+  h += '<a class="mml-tout" href="#mail-manager?s=le-mur&f=ma-lignee" data-mmlig="0">'
+    + (reste ? 'Voir les '+reste+' autre'+(reste>1?'s':'')+' sur le mur →' : 'Voir toute ma lignée sur le mur →') + '</a>';
+  el.innerHTML = h;
+}
+// Depuis l'accueil, le mur doit s'ouvrir sur la semaine EN COURS, même si l'onglet était resté
+// sur une semaine passée : on recharge d'abord, puis on laisse le routeur faire le reste.
+document.addEventListener('click', async e=>{
+  const a = e.target.closest && e.target.closest('a[data-mmlig]');
+  if(!a) return;
+  e.preventDefault();
+  const href = a.getAttribute('href');
+  if(MM_SEM !== mmSemCour()){ MM_SEM = mmSemCour(); MM_LU = null; await chargerMM(); }
+  if(location.hash === href){ routeHash(); } else { location.hash = href; }
+});
+
 // Pastille du coach : les personnes de ma descendance qui n'ont pas encore publié
 function mmEnRetard(){
   if(MM_SEM !== mmSemCour() || todayIso <= mmSemCour()) return [];
-  const desc = mmDescendants();
+  const desc = MM_LIG ? mmLigIds() : mmDescendants();
   return MM_MUR.filter(p=>p.participe && p.statut!=='publie' && desc.has(p.membre_id));
 }
 function mmBadge(){
@@ -4137,14 +4243,21 @@ function buildMM(){
 }
 
 function mmMur(){
-  const attendus = MM_MUR.filter(p=>p.participe);
-  const absents  = MM_MUR.length - attendus.length;
+  const aLignee = !!(MM_LIG && MM_LIG.length);
+  const filtre = aLignee && MM_FILTRE==='lignee';
+  const ids = filtre ? mmLigIds() : null;
+  const base = filtre ? MM_MUR.filter(p=>ids.has(p.membre_id)) : MM_MUR;
+  const attendus = base.filter(p=>p.participe);
+  const absents  = filtre ? 0 : MM_MUR.length - attendus.length;
   const pub = attendus.filter(p=>p.statut==='publie').length;
   let h='<div class="panel"><div class="mm-head"><h2>Le mur de la semaine</h2>'
       + '<span class="mm-sem"><b>S'+mmNo(MM_SEM)+'</b> · '+esc(mmBornes(MM_SEM))+'</span></div>'
       + '<p class="mm-sub">'+pub+' mail manager'+(pub>1?'s':'')+' publié'+(pub>1?'s':'')+' sur '+attendus.length
+      + (filtre?' dans ta lignée':'')
       + ' — les premiers publiés en tête. Clique sur quelqu’un pour lire le sien.</p>'
-      + mmNav();
+      + mmNav()
+      + (aLignee ? '<div class="mm-filtre"><button type="button" data-mmf=""'+(filtre?'':' class="on"')+'>Tout le monde</button>'
+                 + '<button type="button" data-mmf="lignee"'+(filtre?' class="on"':'')+'>Ma lignée</button></div>' : '');
   h += '<div class="mm-mur">' + (attendus.length ? attendus.map(p=>{
         const cl = p.statut==='publie' ? 'pub' : (p.statut==='brouillon' ? 'bro' : '');
         const st = p.statut==='publie' ? (p.publie_le?fmtQuand(p.publie_le):'publié')
@@ -4161,7 +4274,7 @@ function mmMur(){
   h += '</div>';
 
   /* tableau de la lignée */
-  const pubs = MM_LIGNES.filter(l=>l.statut==='publie');
+  const pubs = MM_LIGNES.filter(l=>l.statut==='publie' && (!ids || ids.has(l.membre_id)));
   if(pubs.length){
     const nom = id => (MM_MUR.find(p=>p.membre_id===id)||{}).nom || ('#'+id);
     const cols = [['R1','p.r1'],['R2','p.r2'],['RDV d’avance',''],['VA + VAA VC','prod.va'],['VA + VAA EC','prod.vaec'],['Filleuls','']];
@@ -4411,6 +4524,8 @@ document.addEventListener('click', async e=>{
     mmAllerSemaine(d===0 ? mmSemCour() : vAddDays(MM_SEM, d*7));
     return;
   }
+  const f=c.closest('[data-mmf]');
+  if(f){ MM_FILTRE=f.dataset.mmf; buildMM(); syncHash(false); return; }
   const v=c.closest('[data-mmv]');
   if(v && !v.disabled){ mmVoir(+v.dataset.mmv); return; }
   if(c.closest('#mmRetour')){ MM_LU=null; buildMM(); syncHash(true); return; }
