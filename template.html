@@ -1497,6 +1497,8 @@ const fmtD = iso => { if(!iso) return ''; const d=new Date(iso+'T00:00:00'); ret
 // AAAA-MM-JJ dans le fuseau de la personne. toISOString() convertit en UTC : à Paris, minuit
 // local vaut 22 h la veille, donc toute date calculée reculait d'un jour (lundi → dimanche).
 const isoJour = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+// « jeudi 24/09/2026 » : le jour de la semaine devant la date courte
+const fmtDJour = iso => { if(!iso) return ''; const d=new Date(iso+'T00:00:00'); return isNaN(d)?iso:JOURS[d.getDay()]+' '+d.toLocaleDateString('fr-FR'); };
 const fmtDLong = iso => { const d=new Date(iso+'T00:00:00'); return JOURS[d.getDay()].replace(/^./,c=>c.toUpperCase())+' '+d.getDate()+' '+MOIS[d.getMonth()]+' '+d.getFullYear(); };
 const fmtTel = p => (p&&p.length===10&&/^\d+$/.test(p)) ? p.replace(/(\d\d)(?=\d)/g,'$1 ') : (p||'');
 const isMoins = nme => { const n=norm(nme); return MOINS.some(m=>n.includes(m)); };
@@ -1586,10 +1588,12 @@ function buildNouv(){
                   : 'Rien de neuf depuis ta dernière visite';
   const ligne = x => {
     const a=x.a, e=x.e;
+    const nvPil = (a.pilotes||'').split(',').map(v=>v.trim()).filter(Boolean).length;
     return '<a class="nv-it" href="'+a.url+'" target="_blank" rel="noopener">'
       + '<span class="nv-k k-'+a.k+'">'+esc(neufType(a))+'</span>'
       + '<b>'+esc(a.title)+'</b>'
-      + '<span class="nv-d">'+fmtD(a.start)+(a.hor?' · '+esc(a.hor):'')+(a.lieu?' · '+esc(a.lieu):'')+'</span>'
+      + '<span class="nv-d">'+fmtDJour(a.start)+(a.hor?' · '+esc(a.hor):'')+(a.lieu?' · '+esc(a.lieu):'')
+      + (nvPil ? ' · <span class="pilotes">'+(nvPil>1?'Pilotes':'Pilote')+' : '+pilotesHtml(a.pilotes,{title:a.title})+'</span>' : '')+'</span>'
       + '<span class="xtra neuf'+(e.q==='m'?' chg':'')+(neufNonVu(e)?' frais':'')+'" title="'+esc(e.tit)+'">'+esc(e.lib)+'</span></a>';
   };
   el.innerHTML = '<div class="nv-h"><h2>'+esc(titre)+'</h2>'

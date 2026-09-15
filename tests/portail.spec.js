@@ -674,6 +674,31 @@ test.describe('Nouveautés', () => {
     expect(r.points, 'le point se pose sur l’onglet du parcours découverte').toContain('pd');
   });
 
+  test('chaque nouveauté annonce le jour de la semaine et le ou les pilotes', async ({ page }) => {
+    await ouvrir(page);
+    await poserNouv(page, '');
+    const r = await page.evaluate(() => {
+      R.length = 0; F.length = 0; E.length = 0;
+      buildNouv();
+      const dates = [...document.querySelectorAll('#homeNouv .nv-d')].map(x => x.textContent);
+      const it = neufTout()[0].a;
+      it.pilotes = 'Diane P., Aymeric A.'; buildNouv();
+      const deux = document.querySelector('#homeNouv .nv-d').textContent;
+      it.pilotes = 'Diane P.'; buildNouv();
+      const un = document.querySelector('#homeNouv .nv-d').textContent;
+      it.pilotes = ''; buildNouv();
+      const aucun = document.querySelector('#homeNouv .nv-d').textContent;
+      return { dates, deux, un, aucun, jeudi: fmtDJour('2026-09-24'), dimanche: fmtDJour('2026-09-20') };
+    });
+    expect(r.jeudi).toBe('jeudi 24/09/2026');
+    expect(r.dimanche).toBe('dimanche 20/09/2026');
+    expect(r.dates.length).toBeGreaterThan(0);
+    expect(r.deux).toContain('Pilotes : Diane P., Aymeric A.');
+    expect(r.un).toContain('Pilote : Diane P.');
+    expect(r.aucun).not.toContain('Pilote');
+    r.dates.forEach(d => expect(d).toMatch(/^(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche) \d{2}\/\d{2}\/\d{4}/));
+  });
+
   test('le filtre « Nouveautés » ne garde que ce qui est récent', async ({ page }) => {
     await ouvrir(page);
     await poserNouv(page, '');
