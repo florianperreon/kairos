@@ -1372,3 +1372,163 @@ test.describe('Ressources — simulateurs et courriers', () => {
     expect(py.stdout).toContain('w:highlight');          // le numéro manquant reste surligné
   });
 });
+
+test.describe('Ma lignée — tableau de bord, progression, victoires, arbre', () => {
+  // Pose une lignée : 101 filleule directe connectée, 102 filleule directe hors Kairos,
+  // 103 niveau 2 sous 101, 104 invité non adhérent, 105 adhérent sous l'invité 104.
+  async function poserLig(page) {
+    return page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Moi Test', parrain: 'Aucun' });
+      DATA = { adhDates: { '101': vAddDays(todayIso, -350), '102': vAddDays(todayIso, -100), '103': vAddDays(todayIso, -20), '105': vAddDays(todayIso, -5) } };
+      ADH.clear(); [101, 102, 103, 105].forEach(i => ADH.add(i));
+      A.length = 0; R.length = 0; F.length = 0; E.length = 0;
+      A.push({ id: 1, title: 'DM', start: vAddDays(todayIso, -10), guests: [101] },
+             { id: 2, title: 'AD', start: vAddDays(todayIso, -90), guests: [102] },
+             { id: 3, title: '3JR', start: vAddDays(todayIso, 9), guests: [102] });
+      const cour = mmSemCour(), w = n => vAddDays(cour, -7 * n);
+      const ligne = (id, n, r1, va) => ({ membre_id: id, semaine: w(n), donnees: { p: { r1 }, av: { r1: 2, r2: 1 }, prod: { va } } });
+      LIG = {
+        liste: [
+          { membre_id: 101, nom: 'Aline', niveau: 1, parrain_id: 20028, connecte: true, participe: true, parcours: { statut: 'ROLE_NEOMAN', etapes: { objectifs_neoman: { n: 3, tot: 12 } } } },
+          { membre_id: 102, nom: 'Bea', niveau: 1, parrain_id: 20028, connecte: false, participe: true, parcours: null },
+          { membre_id: 103, nom: 'Chloe', niveau: 2, parrain_id: 101, connecte: true, participe: true, parcours: { statut: 'ROLE_NEOMAN', etapes: {} } },
+          { membre_id: 104, nom: 'Invite', niveau: 1, parrain_id: 20028, connecte: false, participe: true, parcours: null },
+          { membre_id: 105, nom: 'Sous Invite', niveau: 2, parrain_id: 104, connecte: false, participe: true, parcours: null },
+        ],
+        mm: { 101: [ligne(101, 6, 1, 1000), ligne(101, 1, 2, 5000), ligne(101, 0, 3, 8000)],
+              103: [ligne(103, 0, 4, 2000)] },
+        moi: [{ semaine: w(1), statut: 'publie', donnees: { p: { r1: 5 } } }, { semaine: w(0), statut: 'brouillon', donnees: { p: { r1: 7 } } }],
+        vict: [
+          { membre_id: 101, nom: 'Aline', cle: 'trois_jours', jour: vAddDays(todayIso, -2) },
+          { membre_id: 20028, nom: 'Moi Test', cle: 'client1', jour: vAddDays(todayIso, -5) },
+          { membre_id: 999, nom: 'Hors Lignee', cle: 'hab_mia', jour: vAddDays(todayIso, -8) },
+        ],
+        bravos: {},
+      };
+      LIG_SUB = 'tab'; LIG_PORTEE = ''; LIG_TRI = { col: 'relance', dir: 'desc' }; LIG_QUI = 'moi'; LIG_N = 12; LIG_VF = ''; LIG_INV = false;
+      document.querySelectorAll('[data-v="lig"]').forEach(x => x.hidden = false);
+      window.__booted = true;
+      return true;
+    });
+  }
+
+  test('le tableau ne garde que les adhérents et nomme ce qu’il faut relancer', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserLig(page);
+    const r = await page.evaluate(() => {
+      const l = ligTrier(ligLignes());
+      const par = Object.fromEntries(l.map(x => [x.nom, x]));
+      LIG_PORTEE = 'directs';
+      const directs = ligLignes().map(x => x.nom).sort();
+      LIG_PORTEE = '';
+      showTab('lig'); buildLig();
+      return {
+        noms: l.map(x => x.nom),
+        aline: { sig: par.Aline.sig.map(s => s[0]), r1: par.Aline.r1, obj: par.Aline.obj, mmCour: par.Aline.mmCour },
+        bea: par.Bea.sig.map(s => s[0]),
+        chloe: par.Chloe.sig.map(s => s[0]),
+        directs,
+        lignes: document.querySelectorAll('#ligCorps .lg-tbl tbody tr').length,
+        note: document.querySelector('#ligCorps .mm-note').textContent,
+      };
+    });
+    expect(r.noms).not.toContain('Invite');                   // non adhérent : hors tableau
+    expect(r.noms[r.noms.length - 1]).toBe('Aline');          // la plus à jour en dernier
+    expect(r.aline.sig).toEqual(['adh']);                     // adhésion à renouveler sous 30 jours
+    expect(r.aline.r1).toBe(5);                               // 2 + 3 sur les 4 dernières semaines
+    expect(r.aline.obj).toEqual({ n: 3, tot: 12 });
+    expect(r.aline.mmCour).toBe(true);
+    expect(r.bea).toEqual(['seance', 'kairos']);              // vue il y a 90 jours, pas sur Kairos
+    expect(r.chloe).toEqual(['seance']);                      // son mail manager de la semaine est publié
+    expect(r.directs).toEqual(['Aline', 'Bea']);
+    expect(r.lignes).toBe(4);
+    expect(r.note).toContain('1 membre invité');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('la progression range les R1 sur la semaine où ils ont eu lieu et somme la lignée', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserLig(page);
+    const r = await page.evaluate(() => {
+      const cour = mmSemCour(), w = n => vAddDays(cour, -7 * n);
+      const r1 = LIG_METRIQUES.find(m => m.k === 'r1'), va = LIG_METRIQUES.find(m => m.k === 'va');
+      const moi = ligSerie(r1, 'moi', 12), lig = ligSerie(r1, 'lignee', 12), vaL = ligSerie(va, 'lignee', 12);
+      const at = (s, x) => (s.find(p => p.s === x) || {}).v;
+      LIG_SUB = 'prog'; LIG_QUI = 'lignee'; buildLig();
+      return {
+        finMoi: moi[moi.length - 1].s === w(1),
+        moiW1: at(moi, w(1)), moiW2: at(moi, w(2)),
+        ligW1: at(lig, w(1)), ligW2: at(lig, w(2)),
+        vaCour: at(vaL, w(0)),
+        cartes: document.querySelectorAll('#ligCorps .lg-carte').length,
+        courbes: document.querySelectorAll('#ligCorps .lg-svg').length,
+      };
+    });
+    expect(r.finMoi).toBe(true);        // la série des flux s'arrête à la semaine dernière
+    expect(r.moiW1).toBe(7);            // mon brouillon de la semaine en cours compte pour la semaine écoulée
+    expect(r.moiW2).toBe(5);
+    expect(r.ligW1).toBe(3 + 4);        // Aline + Chloé, publiés cette semaine
+    expect(r.ligW2).toBe(2);
+    expect(r.vaCour).toBe(8000 + 2000);
+    expect(r.cartes).toBe(5);
+    expect(r.courbes).toBe(5);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('le mur des victoires se filtre sur ma lignée et on ne s’applaudit pas soi-même', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserLig(page);
+    const r = await page.evaluate(() => {
+      LIG_SUB = 'vic'; buildLig();
+      const tous = [...document.querySelectorAll('#ligCorps .lg-v')].map(x => x.textContent);
+      const boutons = document.querySelectorAll('#ligCorps button[data-ligb]').length;
+      LIG_VF = 'lignee'; buildLig();
+      const miens = [...document.querySelectorAll('#ligCorps .lg-v')].map(x => x.textContent);
+      return { tous, boutons, miens, url: tabState('lig').toString() };
+    });
+    expect(r.tous.length).toBe(3);
+    expect(r.tous[0]).toContain('3 Jours de la Réussite');
+    expect(r.tous.join(' ')).toContain('premier client');
+    expect(r.tous.join(' ')).toContain('habilitation MIA');
+    expect(r.boutons).toBe(2);                 // pas de bouton sur ma propre victoire
+    expect(r.miens.join(' ')).not.toContain('Hors Lignee');
+    expect(r.miens.length).toBe(2);
+    expect(r.url).toBe('s=victoires&f=ma-lignee');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('l’arbre cache les invités, sauf ceux qui ont un adhérent en dessous', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserLig(page);
+    const r = await page.evaluate(() => {
+      LIG_SUB = 'arb'; buildLig();
+      const noms = () => [...document.querySelectorAll('#ligCorps .lg-an')].map(x => x.textContent);
+      const sans = noms();
+      const cb = document.getElementById('ligInv'); cb.checked = true; cb.dispatchEvent(new Event('change', { bubbles: true }));
+      return { sans, avec: noms(), tete: document.querySelector('#ligCorps .mm-sub').textContent };
+    });
+    expect(r.sans).toEqual(['Moi Test', 'Aline', 'Chloe', 'Bea', 'Invite', 'Sous Invite']);
+    expect(r.tete).toContain('4 adhérents sous toi');
+    expect(r.avec.length).toBe(6);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('l’adresse garde le sous-onglet et les réglages, dans les deux sens', async ({ page }) => {
+    await ouvrir(page);
+    await poserLig(page);
+    const r = await page.evaluate(() => {
+      ligApplyState(new URLSearchParams('s=progression&qui=lignee&n=26'));
+      const a = { sub: LIG_SUB, qui: LIG_QUI, n: LIG_N, url: tabState('lig').toString() };
+      ligApplyState(new URLSearchParams('portee=directs&tri=nom.asc'));
+      const b = { sub: LIG_SUB, portee: LIG_PORTEE, tri: LIG_TRI, url: tabState('lig').toString() };
+      return { a, b, slug: hashFor('lig') };
+    });
+    expect(r.a).toEqual({ sub: 'prog', qui: 'lignee', n: 26, url: 's=progression&qui=lignee&n=26' });
+    expect(r.b.sub).toBe('tab');
+    expect(r.b.tri).toEqual({ col: 'nom', dir: 'asc' });
+    expect(r.b.url).toBe('portee=directs&tri=nom.asc');
+    expect(r.slug.startsWith('#ma-lignee')).toBe(true);
+  });
+});

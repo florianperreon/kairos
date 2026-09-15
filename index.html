@@ -892,6 +892,74 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-noms{display:block;font-size:11.5px;font-style:normal;color:var(--ink-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mm-aide{border-bottom:1px dotted var(--ink-3);cursor:help}
 
+/* Onglet « Ma lignée » (préfixe .lg-) */
+.lg-tw{margin-top:0}
+.lg-tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.lg-tbl th,.lg-tbl td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.lg-tbl th{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap;cursor:pointer}
+.lg-tbl td.num,.lg-tbl th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lg-tbl tr.lg-rel td:first-child{box-shadow:inset 3px 0 0 var(--encours)}
+.lg-nw{white-space:nowrap}
+.lg-tbl td:first-child,.lg-tbl th:first-child{min-width:160px}
+@media(max-width:640px){
+  .lg-tbl td:first-child,.lg-tbl th:first-child{position:sticky;left:0;z-index:1;background:var(--surface);min-width:130px}
+}
+.lg-nv{display:block;font-size:11.5px;color:var(--ink-3);font-weight:500}
+.lg-mu{color:var(--ink-3)}
+.lg-up{color:var(--ok);font-weight:700}
+.lg-dn{color:var(--bad);font-weight:700}
+.lg-okk{font-size:12px;font-weight:700;color:var(--gold-ink)}
+.lg-sig{display:inline-block;margin:0 4px 3px 0;padding:1px 7px;border-radius:5px;font-size:11.5px;font-weight:600;background:#FFF1DB;color:#8A4B00;white-space:nowrap}
+.lg-sig.s-kairos{background:var(--surface-2);color:var(--ink-2)}
+:root[data-theme="dark"] .lg-sig{background:#4A2E0F;color:#FBBF77}
+:root[data-theme="dark"] .lg-sig.s-kairos{background:var(--surface-2);color:var(--ink-2)}
+.lg-st{display:inline-block;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:800;letter-spacing:.03em;background:var(--accent-soft);color:var(--accent);margin-left:6px}
+td>.lg-st:first-child{margin-left:0}
+.lg-jauge{display:inline-block;width:48px;height:6px;border-radius:99px;background:var(--surface-2);vertical-align:middle;overflow:hidden}
+.lg-jauge i{display:block;height:100%;background:var(--gold);border-radius:99px}
+.lg-ctl{display:flex;flex-wrap:wrap;gap:8px}
+.lg-cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.lg-carte{margin:0}
+.lg-ct{font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.lg-cv{font-family:"Sora";font-size:24px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.lg-cv span{font-family:inherit;font-size:12.5px;font-weight:700;margin-left:4px}
+.lg-cs{font-size:12px;color:var(--ink-3);margin-bottom:6px}
+.lg-svg{display:block;width:100%;height:auto;overflow:visible}
+.lg-svg .lg-g{stroke:var(--line);stroke-width:1}
+.lg-svg .lg-ln{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.lg-svg .lg-pt{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.lg-svg .lg-tk{font-size:9.5px;fill:var(--ink-3)}
+.lg-svg .lg-hit{fill:transparent}
+.lg-svg .lg-hit:hover{fill:var(--accent-soft);fill-opacity:.45}
+.lg-vl{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.lg-vm{font-family:"Sora";font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:10px 0 2px}
+.lg-v{display:flex;align-items:center;gap:10px;background:var(--surface-2);border-radius:10px;padding:8px 12px}
+.lg-vi{flex:none;font-size:18px;width:26px;text-align:center}
+.lg-vt{flex:1 1 auto;min-width:0;font-size:14px}
+.lg-bv{flex:none;border:1px solid var(--line-2);background:var(--surface);border-radius:99px;padding:4px 11px;font:inherit;font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.lg-bv:hover{border-color:var(--accent)}
+.lg-bv.on{background:var(--gold-soft);border-color:var(--gold);color:var(--gold-ink)}
+.lg-bv-ro{cursor:default}
+.lg-haut{font-size:13px;color:var(--ink-2);margin:0 0 10px}
+.lg-chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2);margin-bottom:8px;cursor:pointer}
+.lg-arbre,.lg-arbre ul{list-style:none;margin:0;padding:0}
+.lg-arbre ul{margin-left:14px;padding-left:14px;border-left:1px solid var(--line-2)}
+.lg-arbre li{margin:4px 0}
+.lg-ar{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;padding:4px 8px;border-radius:8px}
+summary.lg-ar{cursor:pointer}
+summary.lg-ar:hover{background:var(--surface-2)}
+.lg-ar .lg-nv{display:inline}
+.lg-ar .lg-st{margin-left:0}
+.lg-an{font-weight:700}
+.lg-an.inv{font-weight:500;color:var(--ink-3);font-style:italic}
+.lg-k{display:inline-block;width:17px;height:17px;border-radius:99px;background:var(--gold-soft);color:var(--gold-ink);font-size:10px;font-weight:800;text-align:center;line-height:17px}
+@media(max-width:640px){
+  .lg-cartes{grid-template-columns:1fr}
+  .lg-v{flex-wrap:wrap}
+  .lg-vt{flex-basis:calc(100% - 40px)}
+  .lg-bv{margin-left:36px}
+  .lg-arbre ul{margin-left:6px;padding-left:10px}
+}
 .mm-tbl{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
 .mm-tbl th,.mm-tbl td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
 .mm-tbl th{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
@@ -1209,6 +1277,7 @@ a.mml-r:hover{border-color:var(--accent)}
       <button data-v="home" class="on" title="Accueil"><span class="i" data-i="home"></span><span class="l">Accueil</span></button>
       <button data-v="surv" hidden title="Enregistré"><span class="i" data-i="surv"></span><span class="l">Enregistré</span></button>
       <button data-v="mm" hidden title="Mail Manager"><span class="i" data-i="mm"></span><span class="l">Mail Manager</span></button>
+      <button data-v="lig" hidden title="Ma lignée"><span class="i" data-i="lig"></span><span class="l">Ma lignée</span></button>
       <div class="grp">Le réseau</div>
       <button data-v="cat" title="Ateliers"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></button>
       <button data-v="pd" id="pdTabBtn" title="Parcours Découverte"><span class="i" data-i="pd"></span><span class="l">Parcours</span></button>
@@ -1324,6 +1393,16 @@ a.mml-r:hover{border-color:var(--accent)}
       <div class="subview on" id="sm-moi"><div id="mmMoi"></div></div>
       <div class="subview" id="sm-mur"><div id="mmMur"></div></div>
       <div class="subview" id="sm-obj"><div id="mmObj"></div></div>
+    </section>
+
+    <section class="view" id="v-lig">
+      <nav class="subtabs" id="ligSub">
+        <button data-s="tab" class="on">Tableau de bord</button>
+        <button data-s="prog">Progression</button>
+        <button data-s="vic">Victoires</button>
+        <button data-s="arb">Arbre</button>
+      </nav>
+      <div id="ligCorps"></div>
     </section>
 
     <section class="view" id="v-cat">
@@ -2280,6 +2359,7 @@ function showTab(v){
   document.querySelectorAll('nav.tabs button, nav.botbar button, #plusCard button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
   if(v === 'mm'){ try{ buildMM(); }catch(e){} }
+  if(v === 'lig'){ try{ buildLig(); }catch(e){ console.error(e); } }
   if(v === 'fb'){ try{ buildRetours(); }catch(e){} }
   if(v === 'res'){ try{ buildRes(); }catch(e){ console.error(e); } }
   // Ouvrir la veille vaut lecture : pas de case à cocher de plus
@@ -2314,6 +2394,7 @@ function sideReplier(on){
 const ICO = {
   fb:'<path d="M20.6 12.3c0 3.9-3.8 7.1-8.6 7.1-1 0-2-.15-2.9-.42L4.2 20.6l1.5-3.7c-1.4-1.3-2.3-3-2.3-4.6 0-3.9 3.8-7.1 8.6-7.1s8.6 3.2 8.6 7.1Z"/><path d="M12 9.4v2.6M12 14.6v.1"/>',
   mm:'<rect x="4.2" y="3.3" width="15.6" height="17.4" rx="2.2"/><path d="M8.4 8.4h7.2M8.4 12h7.2M8.4 15.6h4.2"/>',
+  lig:'<circle cx="12" cy="4.8" r="2.2"/><circle cx="5.2" cy="18.6" r="2.2"/><circle cx="12" cy="18.6" r="2.2"/><circle cx="18.8" cy="18.6" r="2.2"/><path d="M12 7v9.4M5.2 16.4v-2.6a1.6 1.6 0 0 1 1.6-1.6h10.4a1.6 1.6 0 0 1 1.6 1.6v2.6"/>',
   home:'<path d="M3.2 10.6 12 3.5l8.8 7.1"/><path d="M5.4 9.4V20.5h13.2V9.4"/><path d="M9.6 20.5v-6.1h4.8v6.1"/>',
   surv:'<path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
   pd:'<circle cx="12" cy="12" r="8.8"/><path d="m15.6 8.4-2.2 5-5 2.2 2.2-5 5-2.2Z"/>',
@@ -2384,9 +2465,9 @@ document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('cli
 
 /* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
-const TABS=['home','veille','res','surv','pd','mm','cat','reu','for','evt','ann','fb','admin'];
+const TABS=['home','veille','res','surv','pd','mm','lig','cat','reu','for','evt','ann','fb','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',res:'ressources',surv:'enregistre',pd:'parcours-decouverte',mm:'mail-manager',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',fb:'ameliorer-kairos',admin:'admin'};
+const TAB_SLUG={home:'accueil',veille:'veille',res:'ressources',surv:'enregistre',pd:'parcours-decouverte',mm:'mail-manager',lig:'ma-lignee',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',fb:'ameliorer-kairos',admin:'admin'};
 // Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
 const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin'});
 const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
@@ -2407,6 +2488,7 @@ function tabState(tab){
   if(tab==='ann'&&typeof ANN_SORT!=='undefined'&&(ANN_SORT.col!=='date'||ANN_SORT.dir!=='desc')) p.set('tri',ANN_SORT.col+'.'+ANN_SORT.dir);
   if(tab==='admin'&&curSub!=='mbr') p.set('s', ADMIN_SLUG[curSub]);
   if(tab==='res') rsTabState(p);
+  if(tab==='lig') ligTabState(p);
   if(tab==='mm'){
     if(typeof MM_SUB!=='undefined' && MM_SUB!=='moi') p.set('s', MM_SLUG[MM_SUB]);
     if(typeof MM_SEM!=='undefined' && MM_SEM && MM_SEM!==mmSemCour()) p.set('w', MM_SEM);
@@ -2443,6 +2525,7 @@ function applyState(tab,p){
     sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ const want=p.get('f_'+i.dataset.f)||''; if(i.value!==want){ i.value=want; fire(i,['input']); } });
     if(tab==='admin'){ const s=p.get('s')||''; showAdminSub(SLUG_ADMIN[s]||s||'mbr'); }
     if(tab==='res') rsApplyState(p);
+    if(tab==='lig') ligApplyState(p);
     if(tab==='mm'){
       const w=p.get('w')||'';
       if(w && /^\d{4}-\d{2}-\d{2}$/.test(w) && w!==MM_SEM){ MM_SEM=vMonday(w); chargerMM(); }
@@ -2655,7 +2738,7 @@ async function chargerParcours(){
     if(r.error) throw r.error;
     PARCOURS = (r.data && r.data.donnees) || null;
     MOI_ID = (r.data && r.data.membre_id) || MOI_ID || null;
-    if(MOI_ID) chargerMM();
+    if(MOI_ID){ chargerMM(); chargerLig(); }
     if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); buildActions(); majOngletSurv(); }catch(e){} }
     if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
     try{ routerQuandPret(); }catch(e){}
@@ -4572,6 +4655,407 @@ function mmTexte(d, nom, sem){
     a.ag.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t));
   }
   return L.join('\n');
+}
+
+/* ==========================================================================
+   Onglet « Ma lignée » — tableau de bord, progression, victoires, arbre
+   Source de vérité : RPC lignee_tableau() (descendance par reseau_liens, bornée à MA fiche),
+   mail managers publiés, RPC victoires(), table victoires_bravos.
+   ========================================================================== */
+let LIG = null;            // { liste, mm:{id:[lignes]}, moi:[lignes], vict:[], bravos:{cle:[membre_id]} }
+let LIG_SUB = 'tab';
+let LIG_TRI = { col:'relance', dir:'desc' };
+let LIG_PORTEE = '';       // '' = toute la descendance, 'directs' = filleuls directs
+let LIG_QUI = 'moi';       // progression : 'moi' | 'lignee'
+let LIG_N = 12;            // progression : nombre de semaines
+let LIG_VF = '';           // victoires : '' = tout le monde, 'lignee' = moi + ma descendance
+let LIG_INV = false;       // arbre : afficher les invités (non adhérents)
+const LIG_SUBS = ['tab','prog','vic','arb'];
+const LIG_SLUG = { tab:'tableau-de-bord', prog:'progression', vic:'victoires', arb:'arbre' };
+const SLUG_LIG = Object.fromEntries(Object.entries(LIG_SLUG).map(([k,v])=>[v,k]));
+const LIG_HAB = { mia:'MIA / Assurance niveau II', miobsp:'MIOBSP', alpsi:'ALPSI / CIF', orias:'ORIAS', immo:'Immobilier' };
+
+async function chargerLig(){
+  if(!SB || !SBUSER || !MOI_ID) return false;
+  const cour = mmSemCour(), depuis = vAddDays(cour, -7*27);
+  try{
+    const t = await SB.rpc('lignee_tableau');
+    if(t.error) throw t.error;
+    const liste = t.data || [];
+    const ids = liste.filter(p=>p.connecte).map(p=>p.membre_id);
+    const [m, o, v, b] = await Promise.all([
+      ids.length ? SB.from('mail_manager').select('membre_id,semaine,donnees')
+                    .eq('statut','publie').gte('semaine', depuis).in('membre_id', ids)
+                 : Promise.resolve({data:[]}),
+      SB.from('mail_manager').select('semaine,donnees,statut').eq('membre_id', MOI_ID).gte('semaine', depuis),
+      SB.rpc('victoires', { p_depuis: vAddDays(todayIso, -90) }),
+      SB.from('victoires_bravos').select('cle,membre_id').gte('cree_le', vAddDays(todayIso, -120)).limit(5000)
+    ]);
+    const mm = {};
+    (m.data||[]).forEach(r=>{ (mm[r.membre_id] = mm[r.membre_id] || []).push(r); });
+    Object.values(mm).forEach(l=>l.sort((x,y)=>x.semaine.localeCompare(y.semaine)));
+    const bravos = {};
+    (b.data||[]).forEach(r=>{ (bravos[r.cle] = bravos[r.cle] || []).push(r.membre_id); });
+    LIG = { liste, mm, moi:(o.data||[]).sort((x,y)=>x.semaine.localeCompare(y.semaine)),
+            vict: v.error ? [] : (v.data||[]), bravos };
+  }catch(e){ return false; }
+  document.querySelectorAll('[data-v="lig"]').forEach(x=>x.hidden=false);
+  if(window.__booted){ try{ buildLig(); }catch(e){} }
+  try{ routerQuandPret(); }catch(e){}
+  return true;
+}
+
+/* --- calculs --- */
+function ligNom(id){
+  const p = LIG && LIG.liste.find(x=>x.membre_id===id);
+  if(p) return p.nom;
+  if(id===MOI_ID){ const m=byId.get(id); return m ? m.name : 'Moi'; }
+  const m = byId.get(id); return m ? m.name : '#'+id;
+}
+const ligStatut = p => String((p && p.parcours && p.parcours.statut) || '').replace('ROLE_','');
+function ligObjectifs(p){
+  const st = ligStatut(p); if(!st) return null;
+  const e = p.parcours && p.parcours.etapes && p.parcours.etapes['objectifs_'+st.toLowerCase()];
+  return e && e.tot ? { n: Math.min(e.n||0, e.tot), tot: e.tot } : null;
+}
+// dernière séance suivie et prochaine séance réservée, pour un ensemble d'identifiants — un seul passage
+function ligSeances(ids){
+  const set = new Set(ids), der = {}, pro = {};
+  [A, R, F, E].forEach(l => (l||[]).forEach(s => {
+    if(!s.start) return;
+    (s.guests||[]).forEach(g => {
+      const id = +g; if(!set.has(id)) return;
+      if(s.start <= todayIso){ if(!der[id] || s.start > der[id].d) der[id] = { d:s.start, t:s.title }; }
+      else if(!pro[id] || s.start < pro[id].d) pro[id] = { d:s.start, t:s.title };
+    });
+  }));
+  return { der, pro };
+}
+const ligR = (d, k) => mmN(mmG(d||{}, k));
+const ligAv = d => MM_AV.reduce((n,[k])=>n + ligR(d, 'av.'+k), 0);
+function ligLignes(){
+  if(!LIG) return [];
+  const cour = mmSemCour();
+  const adh = (DATA && DATA.adhDates) || {};
+  const base = LIG.liste.filter(p => ADH.has(p.membre_id) && (LIG_PORTEE!=='directs' || p.niveau===1));
+  const s = ligSeances(base.map(p=>p.membre_id));
+  return base.map(p => {
+    const id = p.membre_id, rows = LIG.mm[id] || [], der = rows[rows.length-1] || null;
+    const r1 = (a,b) => rows.filter(r=>r.semaine > vAddDays(cour,-7*a) && r.semaine <= vAddDays(cour,-7*b))
+                            .reduce((n,r)=>n+ligR(r.donnees,'p.r1'),0);
+    const r1a = r1(4,0), r1b = r1(8,4);
+    const ad = adh[id] || adh[String(id)] || '';
+    const exp = ad ? vAddDays(ad, 365) : '';
+    const sig = [];
+    const vu = s.der[id];
+    if(!vu || vu.d < vAddDays(todayIso,-60)) sig.push(['seance', vu ? 'sans séance depuis le '+fmtD(vu.d) : 'jamais vu en séance']);
+    if(exp && exp <= vAddDays(todayIso,30)) sig.push(['adh', 'adhésion à renouveler avant le '+fmtD(exp)]);
+    if(!p.connecte) sig.push(['kairos', 'pas encore sur Kairos']);
+    else if(p.participe && (!der || der.semaine < vAddDays(cour,-7))) sig.push(['mm', der ? 'mail manager non publié depuis '+mmLibC(der.semaine) : 'aucun mail manager publié']);
+    const obj = ligObjectifs(p);
+    return {
+      id, nom:p.nom, niveau:p.niveau, parrain:p.parrain_id===MOI_ID ? '' : ligNom(p.parrain_id),
+      connecte:p.connecte, participe:p.participe, statut:ligStatut(p), obj,
+      seance: vu || null, prochaine: s.pro[id] || null,
+      adh: ad, exp, mm: der ? der.semaine : '', mmCour: !!(der && der.semaine===cour),
+      r1: r1a, r1t: der ? (r1a>r1b ? 1 : (r1a<r1b ? -1 : 0)) : null,
+      av: der ? ligAv(der.donnees) : null, va: der ? ligR(der.donnees,'prod.va') : null,
+      sig, relance: sig.reduce((n,[k])=>n + ({seance:3, mm:2, adh:2, kairos:1}[k]||0), 0)
+    };
+  });
+}
+function ligTrier(l){
+  const {col, dir} = LIG_TRI, k = dir==='asc' ? 1 : -1;
+  const val = r => ({ nom:r.nom, niveau:r.niveau, statut:ST_ORDRE.indexOf(r.statut),
+    obj: r.obj ? r.obj.n/r.obj.tot : -1, seance: r.seance ? r.seance.d : '', adh: r.exp || '',
+    mm: r.mm || '', r1: r.r1, av: r.av==null?-1:r.av, va: r.va==null?-1:r.va, relance: r.relance })[col];
+  return l.slice().sort((a,b)=>{
+    const x=val(a), y=val(b);
+    const c = (typeof x==='string') ? x.localeCompare(y,'fr') : (x-y);
+    return c ? c*k : (a.niveau-b.niveau) || a.nom.localeCompare(b.nom,'fr');
+  });
+}
+const ST_ORDRE = ['', 'NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
+
+/* --- rendu --- */
+function buildLig(){
+  const el = document.getElementById('ligCorps');
+  if(!el) return;
+  document.querySelectorAll('#ligSub button').forEach(b=>b.classList.toggle('on', b.dataset.s===LIG_SUB));
+  if(!LIG){ el.innerHTML = '<div class="panel"><p class="mm-vide">Ta lignée s’affiche une fois ton compte rattaché à ta fiche du réseau.</p></div>'; return; }
+  el.innerHTML = LIG_SUB==='prog' ? ligProgression()
+               : LIG_SUB==='vic'  ? ligVictoires()
+               : LIG_SUB==='arb'  ? ligArbre()
+               : ligTableau();
+}
+
+function ligTableau(){
+  const tout = LIG.liste.filter(p=>ADH.has(p.membre_id));
+  const invites = LIG.liste.length - tout.length;
+  const l = ligTrier(ligLignes());
+  const cour = mmSemCour();
+  const aRelancer = l.filter(r=>r.relance>0).length;
+  let h = '<div class="panel"><div class="mm-head"><h2>Tableau de bord de ma lignée</h2></div>'
+    + '<p class="mm-sub">'+tout.length+' adhérent'+(tout.length>1?'s':'')+' dans ta descendance'
+    + (aRelancer ? ' — <b>'+aRelancer+' à relancer</b>' : '')
+    + '. Les séances et l’adhésion viennent du réseau (tout le monde) ; R1, RDV d’avance et VA viennent des mail managers publiés.</p>'
+    + '<div class="mm-filtre"><button type="button" data-ligp=""'+(LIG_PORTEE?'':' class="on"')+'>Toute ma descendance</button>'
+    + '<button type="button" data-ligp="directs"'+(LIG_PORTEE==='directs'?' class="on"':'')+'>Filleuls directs</button></div>';
+  if(!l.length){
+    h += '<p class="mm-vide" style="margin-top:14px">'+(tout.length ? 'Aucun filleul direct adhérent.' : 'Pas encore d’adhérent dans ta descendance.')+'</p></div>';
+    return h;
+  }
+  const th = (c, t, cl) => '<th class="sortable'+(cl?' '+cl:'')+(LIG_TRI.col===c?' '+LIG_TRI.dir:'')+'" data-ligt="'+c+'">'+t+'</th>';
+  h += '</div><div class="tbl-wrap lg-tw"><table class="lg-tbl"><thead><tr>'
+    + th('nom','Personne') + th('relance','À relancer') + th('statut','Statut') + th('obj','Objectifs')
+    + th('seance','Dernière séance') + th('adh','Adhésion') + th('mm','Mail manager')
+    + th('r1','R1 · 4 sem.','num') + th('av','RDV d’avance','num') + th('va','VA + VAA VC','num')
+    + '</tr></thead><tbody>'
+    + l.map(r => {
+        const obj = r.obj ? '<span class="lg-jauge" title="'+r.obj.n+' objectifs validés sur '+r.obj.tot+'"><i style="width:'+Math.round(r.obj.n*100/r.obj.tot)+'%"></i></span> '+r.obj.n+'/'+r.obj.tot : '<span class="lg-mu">—</span>';
+        const tend = r.r1t==null ? '' : (r.r1t>0 ? ' <span class="lg-up" title="en hausse sur les 4 semaines précédentes">↗</span>' : r.r1t<0 ? ' <span class="lg-dn" title="en baisse sur les 4 semaines précédentes">↘</span>' : ' <span class="lg-mu" title="stable">→</span>');
+        const mm = !r.connecte ? '<span class="lg-mu">pas sur Kairos</span>'
+                 : !r.participe ? '<span class="lg-mu">ne participe pas</span>'
+                 : !r.mm ? '<span class="lg-mu">aucun</span>'
+                 : (r.mmCour ? '<a href="#mail-manager?s=le-mur&v='+r.id+'" data-mmlig="'+r.id+'">✅ '+esc(mmLibC(r.mm))+'</a>' : esc(mmLibC(r.mm)));
+        return '<tr'+(r.relance?' class="lg-rel"':'')+'><td><b>'+esc(r.nom)+'</b><span class="lg-nv">'
+          + (r.niveau===1 ? 'filleul direct' : 'niveau '+r.niveau+(r.parrain?' · filleul de '+esc(r.parrain):'')) + '</span></td>'
+          + '<td>'+(r.sig.length ? r.sig.map(([k,t])=>'<span class="lg-sig s-'+k+'">'+esc(t)+'</span>').join('') : '<span class="lg-okk">à jour</span>')+'</td>'
+          + '<td>'+(r.statut ? '<span class="lg-st">'+esc(r.statut)+'</span>' : '<span class="lg-mu">—</span>')+'</td>'
+          + '<td class="lg-nw">'+obj+'</td>'
+          + '<td>'+(r.seance ? '<span title="'+esc(r.seance.t)+'">'+fmtD(r.seance.d)+'</span>' : '<span class="lg-mu">jamais</span>')
+          + (r.prochaine ? '<span class="lg-nv" title="'+esc(r.prochaine.t)+'">inscrit le '+fmtD(r.prochaine.d)+'</span>' : '')+'</td>'
+          + '<td>'+(r.adh ? 'réglée le '+fmtD(r.adh)+'<span class="lg-nv">jusqu’au '+fmtD(r.exp)+'</span>' : '<span class="lg-mu">—</span>')+'</td>'
+          + '<td class="lg-nw">'+mm+'</td>'
+          + '<td class="num">'+(r.mm ? r.r1+tend : '<span class="lg-mu">—</span>')+'</td>'
+          + '<td class="num">'+(r.av==null ? '<span class="lg-mu">—</span>' : r.av)+'</td>'
+          + '<td class="num">'+(r.va==null ? '<span class="lg-mu">—</span>' : mmEur(r.va))+'</td></tr>';
+      }).join('')
+    + '</tbody></table></div>';
+  if(invites) h += '<p class="mm-note">'+invites+' membre'+(invites>1?'s':'')+' invité'+(invites>1?'s':'')+' (non adhérent'+(invites>1?'s':'')+') dans ta descendance — visibles dans l’arbre.</p>';
+  return h;
+}
+
+/* --- progression --- */
+const LIG_METRIQUES = [
+  { k:'r1', t:'R1 réalisés', f:d=>ligR(d,'p.r1'), dec:true, somme:true, u:'' },
+  { k:'r2', t:'R2 réalisés', f:d=>ligR(d,'p.r2'), dec:true, somme:true, u:'' },
+  { k:'av', t:'RDV d’avance', f:ligAv, somme:false, u:'' },
+  { k:'va', t:'VA + VAA VC', f:d=>ligR(d,'prod.va'), somme:false, u:'€' },
+  { k:'cl', t:'Clients', f:d=>ligR(d,'prod.clients'), somme:false, u:'' },
+];
+// Série hebdomadaire. Les compteurs « semaine écoulée » (dec) du mail manager de la semaine S
+// décrivent la semaine S-1 : ils sont rangés sur S-1. Les stocks (RDV d'avance, VA, clients) sont
+// datés de la semaine de publication.
+function ligSerie(met, qui, n){
+  const cour = mmSemCour();
+  // un compteur « semaine écoulée » n'est connu qu'à la publication de la semaine suivante :
+  // sa série s'arrête donc à la semaine dernière
+  const fin = met.dec ? vAddDays(cour,-7) : cour;
+  const sems = []; for(let i=n-1;i>=0;i--) sems.push(vAddDays(fin, -7*i));
+  const val = {}, nb = {};
+  const ajoute = (sem, d) => {
+    const s = met.dec ? vAddDays(sem,-7) : sem;
+    val[s] = (val[s]||0) + met.f(d); nb[s] = (nb[s]||0) + 1;
+  };
+  if(qui==='lignee'){
+    Object.values(LIG.mm).forEach(rows=>rows.forEach(r=>ajoute(r.semaine, r.donnees)));
+  } else {
+    LIG.moi.filter(r=>r.statut==='publie' || r.semaine===cour).forEach(r=>ajoute(r.semaine, r.donnees||{}));
+  }
+  return sems.map(s => ({ s, v: nb[s] ? val[s] : null, nb: nb[s]||0 }));
+}
+const ligFmt = (v,u) => v==null ? '—' : (u==='€' ? mmEur(v) : (Math.round(v*10)/10).toLocaleString('fr-FR'));
+function ligCourbe(met, serie){
+  const W=320, H=124, pl=6, pr=6, pt=16, pb=20;
+  const pts = serie.map((p,i)=>({...p, i})).filter(p=>p.v!=null);
+  const max = Math.max(1, ...pts.map(p=>p.v));
+  const x = i => pl + (serie.length<2 ? 0 : i*(W-pl-pr)/(serie.length-1));
+  const y = v => pt + (H-pt-pb) * (1 - v/max);
+  let path = '', prev = null;
+  pts.forEach(p=>{ path += (prev!=null && p.i===prev+1 ? 'L' : 'M') + x(p.i).toFixed(1)+' '+y(p.v).toFixed(1)+' '; prev=p.i; });
+  const grid = [0, .5, 1].map(f=>'<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(max*f).toFixed(1)+'" y2="'+y(max*f).toFixed(1)+'" class="lg-g"/>').join('');
+  const pas = Math.ceil(serie.length/6), dern = serie.length-1;
+  const ticks = serie.map((p,i)=> (i===dern || (i%pas===0 && dern-i >= pas/2 + .5))
+      ? '<text x="'+x(i).toFixed(1)+'" y="'+(H-5)+'" class="lg-tk" text-anchor="'+(i===0?'start':i===serie.length-1?'end':'middle')+'">S'+mmNo(p.s)+'</text>' : '').join('');
+  // zones de survol plus larges que le point (une colonne par semaine)
+  const col = serie.length>1 ? (W-pl-pr)/(serie.length-1) : W;
+  const hits = serie.map((p,i)=>'<rect x="'+(x(i)-col/2).toFixed(1)+'" y="0" width="'+col.toFixed(1)+'" height="'+(H-pb)+'" class="lg-hit"><title>S'+mmNo(p.s)+' · '+esc(mmBornes(p.s))+' — '
+      + (p.v==null ? 'pas de donnée' : ligFmt(p.v, met.u) + (LIG_QUI==='lignee' ? ' ('+p.nb+' mail manager'+(p.nb>1?'s':'')+')' : '')) + '</title></rect>').join('');
+  const dots = pts.map(p=>'<circle cx="'+x(p.i).toFixed(1)+'" cy="'+y(p.v).toFixed(1)+'" r="3.2" class="lg-pt"/>').join('');
+  return '<svg class="lg-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(met.t)+' par semaine">'
+    + grid + '<text x="'+pl+'" y="'+(y(max)-3).toFixed(1)+'" class="lg-tk">'+esc(ligFmt(max, met.u))+'</text>'
+    + '<path d="'+path+'" class="lg-ln"/>' + dots + ticks + hits + '</svg>';
+}
+function ligProgression(){
+  const aLignee = Object.keys(LIG.mm).length > 0;
+  const qui = aLignee ? LIG_QUI : 'moi';
+  let h = '<div class="panel"><div class="mm-head"><h2>Progression</h2></div>'
+    + '<p class="mm-sub">'+(qui==='lignee'
+        ? 'Somme des mail managers publiés par ta descendance, semaine après semaine.'
+        : 'Tes mail managers, semaine après semaine. Les R1 et R2 sont rangés sur la semaine où ils ont eu lieu.')+'</p>'
+    + '<div class="lg-ctl">'
+    + (aLignee ? '<div class="mm-filtre"><button type="button" data-ligq="moi"'+(qui==='moi'?' class="on"':'')+'>Moi</button>'
+               + '<button type="button" data-ligq="lignee"'+(qui==='lignee'?' class="on"':'')+'>Ma lignée</button></div>' : '')
+    + '<div class="mm-filtre">'+[12,26].map(n=>'<button type="button" data-lign="'+n+'"'+(LIG_N===n?' class="on"':'')+'>'+n+' semaines</button>').join('')+'</div>'
+    + '</div></div>';
+  const saved = LIG_QUI; LIG_QUI = qui;
+  const cartes = LIG_METRIQUES.map(met=>{
+    const s = ligSerie(met, qui, LIG_N);
+    const conn = s.filter(p=>p.v!=null);
+    const der = conn[conn.length-1];
+    let tete, delta = null, sous;
+    if(met.dec){
+      // un flux se lit en cumul : les 4 dernières semaines, comparées aux 4 précédentes
+      const som = (a,b) => s.slice(Math.max(0,s.length-a), s.length-b).reduce((n,p)=>n+(p.v||0),0);
+      const a4 = s.slice(-4).some(p=>p.v!=null), b4 = s.slice(-8,-4).some(p=>p.v!=null);
+      tete = a4 ? som(4,0) : null;
+      if(a4 && b4) delta = som(4,0) - som(8,4);
+      sous = a4 ? 'sur les 4 dernières semaines'+(delta!=null?' (vs 4 précédentes)':'') : 'pas encore de donnée';
+    } else {
+      const avant = der ? conn.filter(p=>p.s <= vAddDays(der.s,-28)).pop() : null;
+      tete = der ? der.v : null;
+      if(der && avant) delta = der.v - avant.v;
+      sous = der ? 'au '+esc(mmBornes(der.s))+(delta!=null?' (vs 4 semaines avant)':'') : 'pas encore de donnée';
+    }
+    return '<div class="panel lg-carte"><div class="lg-ct">'+esc(met.t)+'</div>'
+      + '<div class="lg-cv">'+ligFmt(tete, met.u)
+      + (delta==null ? '' : ' <span class="'+(delta>0?'lg-up':delta<0?'lg-dn':'lg-mu')+'">'+(delta>0?'+':'')+ligFmt(delta, met.u)+'</span>')+'</div>'
+      + '<div class="lg-cs">'+sous+'</div>'
+      + (conn.length ? ligCourbe(met, s) : '') + '</div>';
+  }).join('');
+  LIG_QUI = saved;
+  return h + '<div class="lg-cartes">'+cartes+'</div>';
+}
+
+/* --- victoires --- */
+function ligVictLib(cle){
+  if(cle==='client1') return 'a signé son premier client';
+  if(cle.indexOf('hab_')===0) return 'a obtenu son habilitation '+(LIG_HAB[cle.slice(4)]||cle.slice(4).toUpperCase());
+  if(cle.indexOf('objectifs_')===0) return 'a validé tous ses objectifs '+cle.slice(10).toUpperCase();
+  const l = etapeLib(cle);
+  return 'a validé : '+l;
+}
+const ligVictIco = cle => cle==='client1' ? '🤝' : cle.indexOf('hab_')===0 ? '🎓' : cle.indexOf('objectifs_')===0 ? '🏆'
+  : ({ filleul_adherent:'🌱', invite_dm:'📣', trois_jours:'🚀', udp:'🎓' })[cle] || '✅';
+const ligVictCle = v => v.membre_id+':'+v.cle+':'+v.jour;
+function ligVictoires(){
+  const mien = new Set(LIG.liste.map(p=>p.membre_id)); mien.add(MOI_ID);
+  const l = LIG.vict.filter(v => LIG_VF!=='lignee' || mien.has(v.membre_id));
+  let h = '<div class="panel"><div class="mm-head"><h2>Le mur des victoires</h2></div>'
+    + '<p class="mm-sub">Les étapes validées par le réseau et les jalons des mail managers des 90 derniers jours. Un 👏 fait toujours plaisir.</p>'
+    + '<div class="mm-filtre"><button type="button" data-ligv=""'+(LIG_VF?'':' class="on"')+'>Tout le monde</button>'
+    + '<button type="button" data-ligv="lignee"'+(LIG_VF?' class="on"':'')+'>Moi et ma lignée</button></div>';
+  if(!l.length) return h + '<p class="mm-vide" style="margin-top:14px">Pas encore de victoire sur la période.</p></div>';
+  let mois = '';
+  h += '<div class="lg-vl">';
+  l.forEach(v=>{
+    const m = v.jour.slice(0,7);
+    if(m!==mois){ mois=m; const d=new Date(v.jour+'T00:00:00'); h += '<div class="lg-vm">'+esc(MOIS[d.getMonth()]+' '+d.getFullYear())+'</div>'; }
+    const cle = ligVictCle(v), qui = LIG.bravos[cle] || [], moi = qui.includes(MOI_ID);
+    const noms = qui.map(ligNom).join(', ');
+    h += '<div class="lg-v"><span class="lg-vi">'+ligVictIco(v.cle)+'</span>'
+      + '<span class="lg-vt"><b>'+esc(v.nom)+'</b> '+esc(ligVictLib(v.cle))+'<span class="lg-nv">'+fmtDJour(v.jour)+'</span></span>'
+      + (v.membre_id===MOI_ID
+          ? (qui.length ? '<span class="lg-bv lg-bv-ro" title="'+esc(noms)+'">👏 '+qui.length+'</span>' : '')
+          : '<button type="button" class="lg-bv'+(moi?' on':'')+'" data-ligb="'+esc(cle)+'" title="'+esc(noms||'Sois le premier à féliciter')+'">👏'+(qui.length?' '+qui.length:'')+'</button>')
+      + '</div>';
+  });
+  return h + '</div></div>';
+}
+async function ligBravo(cle){
+  if(!SB || !MOI_ID || !LIG) return;
+  const qui = LIG.bravos[cle] = LIG.bravos[cle] || [];
+  const deja = qui.includes(MOI_ID);
+  // affichage immédiat, puis écriture ; on revient en arrière si le serveur refuse
+  if(deja) qui.splice(qui.indexOf(MOI_ID),1); else qui.push(MOI_ID);
+  buildLig();
+  try{
+    const r = deja
+      ? await SB.from('victoires_bravos').delete().eq('cle', cle).eq('user_id', SBUSER.id)
+      : await SB.from('victoires_bravos').insert({ cle, membre_id: MOI_ID });
+    if(r.error) throw r.error;
+  }catch(e){
+    if(deja) qui.push(MOI_ID); else qui.splice(qui.indexOf(MOI_ID),1);
+    buildLig();
+  }
+}
+
+/* --- arbre --- */
+function ligArbre(){
+  const enfants = {};
+  LIG.liste.forEach(p=>{ (enfants[p.parrain_id] = enfants[p.parrain_id] || []).push(p); });
+  const adhDesc = {};
+  const compte = id => {
+    if(adhDesc[id]!=null) return adhDesc[id];
+    adhDesc[id] = 0;
+    return adhDesc[id] = (enfants[id]||[]).reduce((n,c)=>n + (ADH.has(c.membre_id)?1:0) + compte(c.membre_id), 0);
+  };
+  const visible = p => LIG_INV || ADH.has(p.membre_id) || compte(p.membre_id) > 0;
+  const noeud = (p, prof) => {
+    const kids = (enfants[p.membre_id]||[]).filter(visible)
+      .sort((a,b)=>(ADH.has(b.membre_id)-ADH.has(a.membre_id)) || compte(b.membre_id)-compte(a.membre_id) || a.nom.localeCompare(b.nom,'fr'));
+    const adh = prof===0 || ADH.has(p.membre_id), st = ligStatut(p), n = compte(p.membre_id);
+    const tete = '<span class="lg-an'+(adh?'':' inv')+'">'+esc(p.nom)+'</span>'
+      + (st ? '<span class="lg-st">'+esc(st)+'</span>' : '')
+      + (!adh ? '<span class="lg-nv">invité</span>' : '')
+      + (p.connecte ? '<span class="lg-k" title="sur Kairos">K</span>' : '')
+      + (n ? '<span class="lg-nv">'+n+' adhérent'+(n>1?'s':'')+' dessous</span>' : '');
+    if(!kids.length) return '<li><div class="lg-ar">'+tete+'</div></li>';
+    return '<li><details'+(prof<2?' open':'')+'><summary class="lg-ar">'+tete+'</summary><ul>'
+      + kids.map(c=>noeud(c, prof+1)).join('') + '</ul></details></li>';
+  };
+  // la lignée au-dessus de moi, par les noms de parrain de l'annuaire
+  const haut = []; let cur = byId.get(MOI_ID), garde = 0;
+  while(cur && cur.parrain && cur.parrain!=='Aucun' && garde++ < 15){
+    const p = byNormName.get(norm(cur.parrain)); if(!p || p.id===cur.id) break;
+    haut.unshift(p.name); cur = p;
+  }
+  const racine = { membre_id: MOI_ID, nom: ligNom(MOI_ID), connecte: true,
+                   parcours: PARCOURS ? { statut: PARCOURS.statut } : null };
+  const total = compte(MOI_ID), inv = LIG.liste.filter(p=>!ADH.has(p.membre_id)).length;
+  return '<div class="panel"><div class="mm-head"><h2>L’arbre de ma lignée</h2></div>'
+    + '<p class="mm-sub">'+total+' adhérent'+(total>1?'s':'')+' sous toi'+(inv?' · '+inv+' invité'+(inv>1?'s':''):'')+'. K = connecté à Kairos.</p>'
+    + (haut.length ? '<p class="lg-haut">Au-dessus de toi : '+haut.map(esc).join(' › ')+' › <b>toi</b></p>' : '')
+    + (inv ? '<label class="lg-chk"><input type="checkbox" id="ligInv"'+(LIG_INV?' checked':'')+'> Afficher aussi les invités (non adhérents)</label>' : '')
+    + '<ul class="lg-arbre">'+noeud(racine, 0)+'</ul></div>';
+}
+
+/* --- navigation et interactions --- */
+function showLigSub(s){ LIG_SUB = LIG_SUBS.includes(s) ? s : 'tab'; buildLig(); }
+document.addEventListener('click', e=>{
+  const t = e.target.closest ? e.target : null; if(!t || !t.closest('#v-lig')) return;
+  const sb = t.closest('#ligSub button'); if(sb){ showLigSub(sb.dataset.s); syncHash(true); window.scrollTo({top:0}); return; }
+  const th = t.closest('[data-ligt]');
+  if(th){ const c=th.dataset.ligt; LIG_TRI = { col:c, dir: LIG_TRI.col===c && LIG_TRI.dir==='desc' ? 'asc' : (c==='nom'||c==='niveau' ? (LIG_TRI.col===c?'desc':'asc') : 'desc') }; buildLig(); syncHash(false); return; }
+  const pp = t.closest('[data-ligp]'); if(pp){ LIG_PORTEE = pp.dataset.ligp; buildLig(); syncHash(false); return; }
+  const q = t.closest('[data-ligq]'); if(q){ LIG_QUI = q.dataset.ligq; buildLig(); syncHash(false); return; }
+  const n = t.closest('[data-lign]'); if(n){ LIG_N = +n.dataset.lign; buildLig(); syncHash(false); return; }
+  const v = t.closest('[data-ligv]'); if(v){ LIG_VF = v.dataset.ligv; buildLig(); syncHash(false); return; }
+  const b = t.closest('[data-ligb]'); if(b){ ligBravo(b.dataset.ligb); return; }
+});
+document.addEventListener('change', e=>{
+  if(e.target && e.target.id==='ligInv'){ LIG_INV = e.target.checked; buildLig(); }
+});
+function ligTabState(p){
+  if(LIG_SUB!=='tab') p.set('s', LIG_SLUG[LIG_SUB]);
+  if(LIG_SUB==='tab'){
+    if(LIG_PORTEE) p.set('portee', LIG_PORTEE);
+    if(LIG_TRI.col!=='relance' || LIG_TRI.dir!=='desc') p.set('tri', LIG_TRI.col+'.'+LIG_TRI.dir);
+  }
+  if(LIG_SUB==='prog'){ if(LIG_QUI!=='moi') p.set('qui', LIG_QUI); if(LIG_N!==12) p.set('n', LIG_N); }
+  if(LIG_SUB==='vic' && LIG_VF) p.set('f', 'ma-lignee');
+}
+function ligApplyState(p){
+  const s = p.get('s')||'';
+  LIG_SUB = SLUG_LIG[s] || (LIG_SUBS.includes(s)?s:'tab');
+  LIG_PORTEE = p.get('portee')==='directs' ? 'directs' : '';
+  const [c,d] = (p.get('tri')||'relance.desc').split('.');
+  LIG_TRI = { col:c||'relance', dir: d==='asc'?'asc':'desc' };
+  LIG_QUI = p.get('qui')==='lignee' ? 'lignee' : 'moi';
+  LIG_N = +(p.get('n')||12)===26 ? 26 : 12;
+  LIG_VF = p.get('f')==='ma-lignee' ? 'lignee' : '';
+  buildLig();
 }
 
 /* --- sous-onglets, semaine, lecture --- */
