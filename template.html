@@ -1090,6 +1090,102 @@ a.mml-r:hover{border-color:var(--accent)}
 @media (max-width:860px){ #fbBtn{bottom:70px;padding:9px 13px} #fbBtn .l{display:none} }
 @media (max-width:640px){ .ret-l{grid-template-columns:1fr} .ret-v{grid-row:auto;flex-direction:row;gap:7px;justify-content:flex-start;margin-bottom:8px;width:max-content} .ret-adm{grid-column:1} }
 </style>
+<style id="rsCss">
+/* ---------- Ressources : simulateurs et courriers (15/09/2026) ---------- */
+.rs-intro p{color:var(--ink-2);font-size:14px;margin:0}
+.rs-intro .rs-priv{display:inline-flex;gap:6px;align-items:center;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--gold-ink);background:var(--gold-soft);border-radius:99px;padding:3px 11px}
+.rs-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:18px}
+.rs-card{display:flex;gap:11px;align-items:flex-start;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 13px;cursor:pointer;font:inherit;color:var(--ink);transition:border-color .12s,box-shadow .12s}
+.rs-card:hover{border-color:var(--accent)}
+.rs-card.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.rs-card .ic{font-size:21px;line-height:1.1;flex:none}
+.rs-card b{display:block;font-family:"Sora";font-size:14px;font-weight:700}
+.rs-card span.d{display:block;font-size:12.5px;color:var(--ink-2);line-height:1.4;margin-top:2px}
+.rs-grp-t{font-family:"Sora";font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:4px 0 8px}
+.rs-tool{display:grid;grid-template-columns:minmax(290px,370px) minmax(0,1fr);gap:18px;align-items:start}
+.rs-tool>*{min-width:0}
+.rs-form{position:sticky;top:12px}
+.rs-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rs-head h2{margin:0!important}
+.rs-acts{display:flex;flex-wrap:wrap;gap:6px}
+.rs-btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:9px;padding:7px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.rs-btn:hover{border-color:var(--accent);color:var(--accent)}
+.rs-btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.rs-btn.pri:hover{filter:brightness(1.08);color:var(--accent-ink)}
+.rs-fs{min-width:0;border:0;border-top:1px solid var(--line);margin:0;padding:10px 0 4px}
+.rs-fs:first-of-type{border-top:0;padding-top:0}
+.rs-fs legend{font-family:"Sora";font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);padding:0 0 6px}
+.rs-f{display:grid;grid-template-columns:1fr 132px;gap:4px 10px;align-items:center;margin:0 0 7px}
+.rs-f.wide{grid-template-columns:1fr}
+.rs-f>label{font-size:13.5px;color:var(--ink);line-height:1.3}
+.rs-f .h{grid-column:1/-1;font-size:11.5px;color:var(--ink-3);margin-top:-3px;line-height:1.35}
+.rs-in{position:relative;display:flex;align-items:center}
+.rs-in input,.rs-in select,.rs-f textarea{width:100%;min-width:0;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);padding:7px 9px;font:inherit;font-size:14px}
+.rs-in input[type=number]{text-align:right;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+.rs-in input[type=number]::-webkit-outer-spin-button,.rs-in input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.rs-in .u{position:absolute;right:9px;font-size:12px;color:var(--ink-3);pointer-events:none}
+.rs-in input:focus,.rs-in select:focus,.rs-f textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.rs-f.rs-chk{grid-template-columns:auto 1fr;gap:8px}
+.rs-f.rs-chk input{width:17px;height:17px;accent-color:var(--accent);margin:0}
+.rs-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+.rs-kpi{background:var(--ground);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.rs-kpi .k{font-size:11.5px;font-weight:700;letter-spacing:.03em;color:var(--ink-3);text-transform:uppercase}
+.rs-kpi .v{font-family:"Sora";font-weight:800;font-size:22px;letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin-top:2px}
+.rs-kpi .s{font-size:12px;color:var(--ink-2)}
+.rs-kpi.hl{background:var(--accent-soft);border-color:transparent}
+.rs-kpi.hl .v{color:var(--accent)}
+.rs-kpi.good .v{color:var(--ok)} .rs-kpi.bad .v{color:var(--bad)}
+.rs-chart{margin:4px 0 8px;overflow-x:auto}
+.rs-chart svg{display:block;width:100%;height:auto;min-width:420px}
+.rs-leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--ink-2);margin:4px 0 10px}
+.rs-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.rs-notes{font-size:12.5px;color:var(--ink-2);margin:10px 0 0;padding-left:18px}
+.rs-notes li{margin:3px 0}
+.rs-warn{background:var(--surface-2);border-left:3px solid var(--encours);border-radius:6px;padding:8px 11px;font-size:13px;margin:0 0 12px}
+.rs-tblw{overflow-x:auto;margin-top:6px}
+.rs-tbl{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.rs-tbl th{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3);text-align:right;padding:6px 8px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+.rs-tbl td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rs-tbl th:first-child,.rs-tbl td:first-child{text-align:left}
+.rs-tbl tr.tot td{font-weight:700;border-top:1px solid var(--line-2)}
+.rs-det>summary{cursor:pointer;font-family:"Sora";font-weight:700;font-size:14px;padding:6px 0;list-style:none}
+.rs-det>summary::before{content:'▸ ';color:var(--ink-3)}
+.rs-det[open]>summary::before{content:'▾ '}
+.rs-bien{border:1px solid var(--line);border-radius:10px;padding:10px 11px 4px;margin:0 0 10px;background:var(--ground)}
+.rs-bien .bh{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.rs-bien .bh input{flex:1;font-weight:700}
+.rs-x{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-3);border-radius:7px;width:30px;height:32px;cursor:pointer;flex:none}
+.rs-x:hover{color:var(--bad);border-color:var(--bad)}
+/* Courrier : aperçu façon feuille A4 */
+.rs-paper{background:#fff;color:#1b1b1b;border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);padding:34px 38px;font:13.5px/1.55 Georgia,"Times New Roman",serif;max-width:720px}
+.rs-paper p{margin:0 0 10px}
+.rs-paper .exp{margin-bottom:14px}
+.rs-paper .dest{margin:0 0 18px 55%}
+.rs-paper .dt{text-align:right;margin-bottom:18px}
+.rs-paper .obj{font-weight:700}
+.rs-paper .sig{margin:0 0 0 55%}
+.rs-paper .sig.first{margin-top:26px}
+.rs-paper .pj{margin-top:64px;font-size:12.5px}
+.rs-paper .mention{font-size:11.5px;color:#555;border-top:1px solid #ddd;padding-top:8px;margin-top:22px}
+.rs-paper mark{background:#FFF1B8;color:#6b5200;border-radius:3px;padding:0 2px}
+.rs-miss{font-size:12.5px;color:var(--encours-ink);margin:0 0 10px}
+@media (max-width:980px){
+  .rs-tool{grid-template-columns:minmax(0,1fr)}
+  .rs-form{position:static}
+}
+@media (max-width:640px){
+  .rs-cards{grid-template-columns:1fr 1fr;gap:8px}
+  .rs-card{padding:10px;flex-direction:column;gap:4px}
+  .rs-card span.d{display:none}
+  .rs-f{grid-template-columns:1fr 120px}
+  .rs-kpis{grid-template-columns:1fr 1fr}
+  .rs-kpi .v{font-size:18px}
+  .rs-paper{padding:20px 18px;font-size:13px}
+  .rs-paper .dest,.rs-paper .sig{margin-left:30%}
+  .rs-head .rs-acts{width:100%}
+}
+#resSim,#resDoc{scroll-margin-top:12px}
+</style>
 
 <div id="lock" class="wrap">
   <div class="lock-card">
@@ -1122,6 +1218,8 @@ a.mml-r:hover{border-color:var(--accent)}
       <button data-v="ann" title="Annuaire"><span class="i" data-i="ann"></span><span class="l">Annuaire</span></button>
       <div class="grp">S'informer</div>
       <button data-v="veille" hidden title="Veille"><span class="i" data-i="veille"></span><span class="l">Veille</span></button>
+      <div class="grp">Outils</div>
+      <button data-v="res" title="Ressources"><span class="i" data-i="res"></span><span class="l">Ressources</span></button>
     </div>
     <div class="side-bas">
       <button data-v="fb" hidden title="Améliorer Kairos"><span class="i" data-i="fb"></span><span class="l">Améliorer Kairos</span></button>
@@ -1171,6 +1269,22 @@ a.mml-r:hover{border-color:var(--accent)}
       <div class="panel vbreak" id="veilleBreak"></div>
       <div id="veilleLast"></div>
       <div class="panel" id="veilleHistoPanel" hidden><h2>Historique</h2><div id="veilleHisto"></div></div>
+    </section>
+
+    <section class="view" id="v-res">
+      <div class="panel rs-intro">
+        <h2>Ressources</h2>
+        <p>Les simulateurs et les courriers prêts à l’emploi pour tes rendez-vous. Remplis, ajuste en direct, puis imprime, enregistre en PDF ou télécharge en Word.</p>
+        <span class="rs-priv">🔒 Tout se calcule sur ton appareil : aucune donnée client n’est enregistrée ni envoyée.</span>
+      </div>
+      <nav class="subtabs" id="resSub">
+        <button data-s="sim" class="on">Simulateurs</button>
+        <button data-s="doc">Courriers &amp; attestations</button>
+        <button data-s="lien" id="resLienBtn" hidden>Liens utiles</button>
+      </nav>
+      <div class="subview on" id="sr-sim"><div class="rs-cards" id="resSimCards"></div><div id="resSim"></div></div>
+      <div class="subview" id="sr-doc"><div class="rs-cards" id="resDocCards"></div><div id="resDoc"></div></div>
+      <div class="subview" id="sr-lien"><div class="panel"><h2>Liens utiles</h2><div class="res" id="resLiens"></div></div></div>
     </section>
 
     <section class="view" id="v-surv">
@@ -2167,6 +2281,7 @@ function showTab(v){
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
   if(v === 'mm'){ try{ buildMM(); }catch(e){} }
   if(v === 'fb'){ try{ buildRetours(); }catch(e){} }
+  if(v === 'res'){ try{ buildRes(); }catch(e){ console.error(e); } }
   // Ouvrir la veille vaut lecture : pas de case à cocher de plus
   if(v === 'veille' && VEILLE){
     try{
@@ -2207,6 +2322,7 @@ const ICO = {
   for:'<path d="M12 6.8S9.9 4.6 3.4 4.6v12.6c6.5 0 8.6 2.2 8.6 2.2s2.1-2.2 8.6-2.2V4.6C14.1 4.6 12 6.8 12 6.8Z"/><path d="M12 6.8v12.6"/>',
   evt:'<rect x="3.2" y="5.4" width="17.6" height="15.4" rx="2.6"/><path d="M3.2 10.3h17.6"/><path d="M8.2 3.2v4.2M15.8 3.2v4.2"/><path d="M8 14.2h2M14 14.2h2M8 17.4h2M14 17.4h2"/>',
   ann:'<rect x="3.2" y="4.2" width="17.6" height="15.6" rx="2.6"/><circle cx="9.6" cy="10.6" r="2.4"/><path d="M6 16.4c.6-1.7 1.9-2.6 3.6-2.6s3 .9 3.6 2.6"/><path d="M16.2 9.6h2.6M16.2 13.2h2.6"/>',
+  res:'<rect x="3.2" y="7.4" width="17.6" height="12.6" rx="2.2"/><path d="M8.6 7.4V5.6a1.8 1.8 0 0 1 1.8-1.8h3.2a1.8 1.8 0 0 1 1.8 1.8v1.8"/><path d="M3.2 12.6h17.6"/><path d="M10.4 11.2v2.8h3.2v-2.8"/>',
   veille:'<path d="M3.6 5.4h12.8v13.2H5.6a2 2 0 0 1-2-2V5.4Z"/><path d="M16.4 8.6h2.2a1.8 1.8 0 0 1 1.8 1.8v6.4a2 2 0 0 1-2 2h-2"/><path d="M6.6 8.8h6.8M6.6 12h6.8M6.6 15.2h4"/>',
   admin:'<circle cx="12" cy="12" r="3.1"/><path d="M19.1 14.2a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1Z"/>',
   logout:'<path d="M9.4 20.6H5.6a2 2 0 0 1-2-2V5.4a2 2 0 0 1 2-2h3.8"/><path d="m16.2 16 4.2-4-4.2-4"/><path d="M20.4 12H9.2"/>',
@@ -2268,9 +2384,9 @@ document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('cli
 
 /* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
-const TABS=['home','veille','surv','pd','mm','cat','reu','for','evt','ann','fb','admin'];
+const TABS=['home','veille','res','surv','pd','mm','cat','reu','for','evt','ann','fb','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',surv:'enregistre',pd:'parcours-decouverte',mm:'mail-manager',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',fb:'ameliorer-kairos',admin:'admin'};
+const TAB_SLUG={home:'accueil',veille:'veille',res:'ressources',surv:'enregistre',pd:'parcours-decouverte',mm:'mail-manager',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',fb:'ameliorer-kairos',admin:'admin'};
 // Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
 const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin'});
 const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
@@ -2290,6 +2406,7 @@ function tabState(tab){
   sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ if(i.value) p.set('f_'+i.dataset.f,i.value); });
   if(tab==='ann'&&typeof ANN_SORT!=='undefined'&&(ANN_SORT.col!=='date'||ANN_SORT.dir!=='desc')) p.set('tri',ANN_SORT.col+'.'+ANN_SORT.dir);
   if(tab==='admin'&&curSub!=='mbr') p.set('s', ADMIN_SLUG[curSub]);
+  if(tab==='res') rsTabState(p);
   if(tab==='mm'){
     if(typeof MM_SUB!=='undefined' && MM_SUB!=='moi') p.set('s', MM_SLUG[MM_SUB]);
     if(typeof MM_SEM!=='undefined' && MM_SEM && MM_SEM!==mmSemCour()) p.set('w', MM_SEM);
@@ -2325,6 +2442,7 @@ function applyState(tab,p){
     const vue=p.get('vue')||'list'; const vb=sec.querySelector('.vtoggle button[data-m="'+vue+'"]'); if(vb&&!vb.classList.contains('on')) vb.click();
     sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ const want=p.get('f_'+i.dataset.f)||''; if(i.value!==want){ i.value=want; fire(i,['input']); } });
     if(tab==='admin'){ const s=p.get('s')||''; showAdminSub(SLUG_ADMIN[s]||s||'mbr'); }
+    if(tab==='res') rsApplyState(p);
     if(tab==='mm'){
       const w=p.get('w')||'';
       if(w && /^\d{4}-\d{2}-\d{2}$/.test(w) && w!==MM_SEM){ MM_SEM=vMonday(w); chargerMM(); }
@@ -3245,6 +3363,7 @@ function buildSearchIndex(){
   ev(A,'Ateliers','🎓','cat'); ev(R,'Réunions d’équipe','👥','reu'); ev(F,'Formations','📚','for'); ev(E,'Événements','🎉','evt');
   (C.ressources||[]).forEach(r=>{ if(r.u) SIDX.push({g:'Ressources',ic:'🔗',t:r.t,s:r.k||'',k:norm(r.t),kx:norm(r.d||''),act:()=>window.open(r.u,'_blank','noopener')}); });
   vSearchIndex();
+  rsSearchIndex();
 }
 function ckOpen(){ const el=document.getElementById('cmdk'); el.classList.add('on'); const q=document.getElementById('ckQ'); q.value=''; ckRender(''); setTimeout(()=>q.focus(),30); }
 function ckClose(){ document.getElementById('cmdk').classList.remove('on'); }
@@ -5512,6 +5631,1151 @@ document.addEventListener('keydown', e=>{
   document.documentElement.setAttribute('data-theme', t);
 })();
 demarrer();
+
+/* ======================================================================
+   Ressources (15/09/2026) — simulateurs et générateurs de courriers.
+   Tout est calculé dans le navigateur : aucune donnée n'est écrite en base,
+   dans le stockage local ni dans l'URL (sauf les hypothèses d'un simulateur,
+   jamais les champs d'un courrier, qui portent des données personnelles).
+   ====================================================================== */
+// séparateur de milliers : espace insécable classique (l'espace fine n'existe pas dans toutes les polices)
+const RS_N = (n,d=0) => isFinite(n) ? Number(n).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}).replace(/\u202f/g,'\u00a0') : '—';
+const RS_E = (n,d=0) => RS_N(n,d) + '\u00a0€';
+const RS_P = (x,d=2) => isFinite(x) ? RS_N(x*100,d)+'\u00a0%' : '—';
+const RS_AN = () => new Date().getFullYear();
+const RS_COL = ['var(--accent)','var(--gold)','var(--encours)','var(--bad)','var(--ink-3)'];
+
+/* Mensualité d'un prêt amortissable (hors assurance) */
+function rsPmt(taux, mois, capital){
+  if(!(capital>0) || !(mois>0)) return 0;
+  const k = taux/12;
+  return k ? capital*k/(1-Math.pow(1+k,-mois)) : capital/mois;
+}
+/* Taux de rendement interne annuel de flux {t (années), v} — bissection */
+function rsTri(flux){
+  const van = r => flux.reduce((s,f)=>s+f.v/Math.pow(1+r,f.t),0);
+  let lo=-0.99, hi=1;
+  if(van(lo)*van(hi)>0) return NaN;
+  for(let i=0;i<200;i++){ const mid=(lo+hi)/2; (van(lo)*van(mid)<=0) ? hi=mid : lo=mid; }
+  return (lo+hi)/2;
+}
+
+/* ---------------------------- Simulateurs ----------------------------- */
+const RS_TMI = [['0','0 %'],['11','11 %'],['30','30 %'],['41','41 %'],['45','45 %']];
+const RS_SIMS = [
+{
+  id:'av', slug:'assurance-vie', ic:'🛡️', t:'Assurance vie', d:'Épargne acquise, frais, fiscalité du rachat et comparaison de deux contrats',
+  g:[
+    {t:'Épargne', f:[
+      {k:'age', l:'Âge du souscripteur', t:'num', u:'ans', v:40, min:0, max:100, h:'Facultatif — laisse 0 pour ne pas afficher les âges'},
+      {k:'init', l:'Versement initial', t:'eur', v:10000},
+      {k:'mens', l:'Versement mensuel', t:'eur', v:150},
+      {k:'duree', l:'Durée', t:'num', u:'ans', v:15, min:1, max:60},
+    ]},
+    {t:'Contrat', f:[
+      {k:'rdt', l:'Rendement annuel brut de frais de gestion', t:'pct', v:5, h:'Fonds euros ≈ 2,5 à 3,5 % ; allocation diversifiée ≈ 4 à 6 %'},
+      {k:'fv', l:'Frais sur versements', t:'pct', v:4.8},
+      {k:'fg', l:'Frais de gestion annuels', t:'pct', v:1},
+    ]},
+    {t:'Fiscalité au rachat total', f:[
+      {k:'couple', l:'Situation fiscale', t:'sel', v:'1', o:[['1','Personne seule — abattement de 4 600 €'],['2','Couple (imposition commune) — 9 200 €']], w:1},
+    ]},
+    {t:'Comparer', f:[
+      {k:'cmp', l:'Comparer avec un second contrat', t:'chk', v:0},
+      {k:'rdt2', l:'Rendement brut du contrat 2', t:'pct', v:3, show:v=>v.cmp},
+      {k:'fv2', l:'Frais sur versements du contrat 2', t:'pct', v:0, show:v=>v.cmp},
+      {k:'fg2', l:'Frais de gestion du contrat 2', t:'pct', v:0.6, show:v=>v.cmp},
+    ]},
+  ],
+  calc(v){
+    const run = (rdt,fv,fg) => {
+      const r=rdt/100, pv=fv/100, pg=fg/100, rows=[];
+      let M=0, vb=0, frais=0;
+      for(let y=1;y<=v.duree;y++){
+        const D = y===1 ? v.init*(1-pv) : M;
+        const brut = (y===1?v.init:0) + 12*v.mens;
+        const E = 12*v.mens*(1-pv);
+        // les versements mensuels portent intérêt en moyenne 6,5 mois sur 12 (même règle que le classeur)
+        const G = r*(D + v.mens*(1-pv)*6.5);
+        const H = pg*(D+E+G);
+        M = D+E+G-H; vb += brut; frais += brut*pv + H;
+        rows.push({y, age:v.age?v.age+y-1:null, vb, frais, gain:M-vb, int:G, M});
+      }
+      return rows;
+    };
+    const fisc = (M, vb) => {
+      const gain = Math.max(0, M-vb);
+      let ir;
+      if(v.duree>=8){
+        const base = Math.max(0, gain - (v.couple==='2'?9200:4600));
+        const part = vb<=150000 ? 1 : 150000/vb;
+        ir = base*(part*0.075 + (1-part)*0.128);
+      } else ir = gain*0.128;
+      const ps = gain*0.172;
+      return {gain, ir, ps, net:M-ir-ps};
+    };
+    const A = run(v.rdt, v.fv, v.fg), last = A[A.length-1];
+    const f = fisc(last.M, last.vb);
+    const flux = [{t:0,v:-v.init}];
+    for(let y=1;y<=v.duree;y++) flux.push({t:y-0.5, v:-12*v.mens});
+    flux.push({t:v.duree, v:f.net});
+    const tri = rsTri(flux);
+    const out = {
+      kpis:[
+        {k:'Capital au terme', v:RS_E(last.M), s:'après '+v.duree+' an'+(v.duree>1?'s':'')+(v.age?' · à '+(v.age+v.duree)+' ans':''), cls:'hl'},
+        {k:'Versements cumulés', v:RS_E(last.vb), s:RS_E(v.mens)+' / mois'},
+        {k:'Gains nets de frais', v:RS_E(last.gain), s:'soit '+RS_P(last.vb?last.gain/last.vb:0,1)+' des versements', cls:last.gain>=0?'good':'bad'},
+        {k:'Frais payés', v:RS_E(last.frais), s:'entrée + gestion'},
+        {k:'Net après rachat total', v:RS_E(f.net), s:'impôt '+RS_E(f.ir)+' · prélèvements sociaux '+RS_E(f.ps)},
+        {k:'Rendement net annualisé', v:RS_P(tri), s:'après frais et fiscalité'},
+      ],
+      notes:[
+        v.duree>=8 ? 'Contrat de plus de 8 ans : abattement annuel sur les gains, puis 7,5 % (12,8 % sur la fraction des primes au-delà de 150 000 €) et 17,2 % de prélèvements sociaux.'
+                   : 'Contrat de moins de 8 ans : prélèvement forfaitaire de 12,8 % sur les gains et 17,2 % de prélèvements sociaux (option possible pour le barème).',
+        'Prélèvements sociaux de l’assurance vie maintenus à 17,2 % en 2026 (non concernée par la hausse de la CSG).',
+        'Les prélèvements sociaux du fonds euros sont en réalité prélevés chaque année ; ils sont ici calculés en une fois au rachat.',
+      ],
+    };
+    if(v.cmp){
+      const B = run(v.rdt2, v.fv2, v.fg2), lb = B[B.length-1], fb = fisc(lb.M, lb.vb);
+      const ec = last.M - lb.M;
+      out.kpis.splice(4,0,{k:'Contrat 2 au terme', v:RS_E(lb.M), s:'écart : '+(ec>=0?'+':'')+RS_E(ec)+' pour le contrat 1', cls:ec>=0?'':'bad'});
+      out.chart = {type:'line', x:A.map(r=>v.age?r.age+1+' ans':'An '+r.y), series:[
+        {n:'Contrat 1', c:RS_COL[0], d:A.map(r=>r.M)},
+        {n:'Contrat 2', c:RS_COL[2], d:B.map(r=>r.M)},
+        {n:'Versements', c:RS_COL[4], d:A.map(r=>r.vb), dash:true}]};
+      out.table = {h:['Année'].concat(v.age?['Âge']:[],['Versé','Contrat 1','Contrat 2','Écart']),
+        rows:A.map((r,i)=>[r.y].concat(v.age?[r.age+1]:[],[RS_E(r.vb),RS_E(r.M),RS_E(B[i].M),RS_E(r.M-B[i].M)]))};
+      out.notes.push('Contrat 2 net après rachat total : '+RS_E(fb.net)+'.');
+    } else {
+      out.chart = {type:'bar', x:A.map(r=>v.age?r.age+1+' ans':'An '+r.y), series:[
+        {n:'Versements cumulés', c:RS_COL[0], d:A.map(r=>r.vb)},
+        {n:'Gains nets de frais', c:RS_COL[1], d:A.map(r=>Math.max(0,r.gain))}]};
+      out.table = {h:['Année'].concat(v.age?['Âge']:[],['Versé cumulé','Intérêts de l’année','Frais cumulés','Gains','Capital']),
+        rows:A.map(r=>[r.y].concat(v.age?[r.age+1]:[],[RS_E(r.vb),RS_E(r.int),RS_E(r.frais),RS_E(r.gain),RS_E(r.M)]))};
+    }
+    return out;
+  }
+},
+{
+  id:'scpi', slug:'scpi', ic:'🏢', t:'SCPI', d:'Revenus, réinvestissement des dividendes, délai de jouissance et valeur de retrait',
+  g:[
+    {t:'Souscription', f:[
+      {k:'prix', l:'Prix de la part', t:'eur', v:200},
+      {k:'parts', l:'Parts souscrites au départ', t:'num', u:'parts', v:25, min:0},
+      {k:'mens', l:'Versement programmé mensuel', t:'eur', v:200},
+      {k:'duree', l:'Durée', t:'num', u:'ans', v:15, min:1, max:40},
+      {k:'an0', l:'Année de souscription', t:'num', u:'', v:RS_AN(), min:2000, max:2100, fmt:'an'},
+    ]},
+    {t:'Hypothèses', f:[
+      {k:'rdt', l:'Taux de distribution annuel', t:'pct', v:5.5},
+      {k:'dj', l:'Délai de jouissance', t:'num', u:'mois', v:6, min:0, max:12, h:'Incluant le mois du versement'},
+      {k:'fs', l:'Frais de souscription', t:'pct', v:10, h:'Sert à estimer la valeur de retrait (prix de part supposé constant)'},
+    ]},
+    {t:'Dividendes', f:[
+      {k:'reinv', l:'Réinvestir les dividendes', t:'chk', v:1},
+      {k:'dr', l:'Pendant', t:'num', u:'ans', v:10, min:1, max:40, show:v=>v.reinv},
+    ]},
+    {t:'Fiscalité des revenus', f:[
+      {k:'tmi', l:'Tranche marginale d’imposition', t:'sel', v:'30', o:RS_TMI},
+      {k:'ps', l:'Prélèvements sociaux', t:'pct', v:17.2, h:'17,2 % sur les revenus fonciers en 2026. Les SCPI européennes sont souvent moins imposées : ajuste si besoin.'},
+    ]},
+  ],
+  calc(v){
+    const r=v.rdt/100, dj=Math.min(12,Math.max(0,Math.round(v.dj))), apport=v.prix*v.parts, m=v.mens;
+    const lis = m*((12-dj)*(13-dj)/24);          // versements de l'année déjà en jouissance, en moyenne
+    const tx = (+v.tmi + v.ps)/100, fs=v.fs/100;
+    const rows=[]; let B=0, Gp=0, J=0, cash=0, imp=0, reinvCum=0;
+    for(let y=1;y<=v.duree;y++){
+      let E, F, reinv=0;
+      if(y===1){ E = apport*(12-dj)/12 + lis; F = apport + m*(12-dj); J = apport + 12*m; }
+      else {
+        if(v.reinv && (y-1) < v.dr) reinv = Gp;
+        E = B + lis; F = B + 12*m + reinv; J += 12*m + reinv;
+      }
+      const G = r*E, I = G*tx;
+      reinvCum += reinv; imp += I;
+      // un dividende non réinvesti l'année suivante (ou celui de la dernière année) est perçu
+      const reinvSuiv = v.reinv && y < v.duree && y < v.dr;
+      if(!reinvSuiv) cash += G;
+      const verse = apport + 12*m*y;
+      const retrait = J*(1-fs);
+      const net = cash - imp;
+      rows.push({y, an:v.an0+y-1, F, G, I, reinv, verse, J, retrait, net, rdt:(retrait+net)/verse-1, reinvSuiv});
+      B = F; Gp = G;
+    }
+    const L = rows[rows.length-1];
+    const warn = v.prix>0 && v.parts<1 && !m ? 'Renseigne un nombre de parts ou un versement mensuel.' : '';
+    return {
+      warn,
+      kpis:[
+        {k:'Revenus la dernière année', v:RS_E(L.G/12)+' / mois', s:'net d’impôt : '+RS_E(L.G*(1-tx)/12)+' / mois', cls:'hl'},
+        {k:'Capital souscrit', v:RS_E(L.J), s:RS_N(L.J/(v.prix||1),1)+' parts environ'},
+        {k:'Versé de ta poche', v:RS_E(L.verse), s:'apport '+RS_E(apport)+' + '+RS_E(m)+' / mois'},
+        {k:'Dividendes réinvestis', v:RS_E(reinvCum), s:v.reinv?'pendant '+Math.min(v.dr,v.duree-1)+' an(s)':'aucun'},
+        {k:'Valeur de retrait', v:RS_E(L.retrait), s:'après '+RS_P(fs,1)+' de frais de souscription'},
+        {k:'Rendement global si revente', v:RS_P(L.rdt,1), s:'dividendes nets perçus : '+RS_E(L.net), cls:L.rdt>=0?'good':'bad'},
+      ],
+      chart:{type:'bar', x:rows.map(r=>String(r.an)), series:[
+        {n:'Versé de ta poche', c:RS_COL[0], d:rows.map(r=>r.verse)},
+        {n:'Dividendes réinvestis', c:RS_COL[1], d:rows.map(r=>r.J-r.verse)}]},
+      table:{h:['Année','Capital en jouissance','Dividendes','dont réinvestis l’an suivant','Impôts','Versé cumulé','Valeur de retrait','Rendement si revente'],
+        rows:rows.map(r=>[r.an, RS_E(r.F), RS_E(r.G), r.reinvSuiv?RS_E(r.G):'—', RS_E(r.I), RS_E(r.verse), RS_E(r.retrait), RS_P(r.rdt,1)])},
+      notes:[
+        'Délai de jouissance : les parts ne produisent rien pendant '+dj+' mois après chaque versement.',
+        'Les impôts sur les dividendes sont payés chaque année, même lorsque les dividendes sont réinvestis : c’est un effort d’épargne supplémentaire.',
+        'Le taux de distribution passé ne préjuge pas des performances futures ; le capital n’est pas garanti et la revente dépend de la liquidité de la SCPI.',
+      ]
+    };
+  }
+},
+{
+  id:'per', slug:'per', ic:'🧓', t:'PER', d:'Capital à la retraite, économie d’impôt, rente nette et durée du capital',
+  g:[
+    {t:'Phase d’épargne', f:[
+      {k:'age', l:'Âge à l’ouverture', t:'num', u:'ans', v:43, min:18, max:80},
+      {k:'ret', l:'Âge de départ à la retraite', t:'num', u:'ans', v:65, min:50, max:80},
+      {k:'init', l:'Versement initial', t:'eur', v:0},
+      {k:'transf', l:'Transfert d’une épargne retraite existante', t:'eur', v:0, h:'Non déductible'},
+      {k:'vp', l:'Versements annuels', t:'eur', v:2400},
+    ]},
+    {t:'Fiscalité à l’entrée', f:[
+      {k:'tmi', l:'Tranche marginale à l’entrée', t:'sel', v:'30', o:RS_TMI},
+      {k:'plaf', l:'Plafond de déduction disponible', t:'eur', v:0, h:'Facultatif. Au minimum 4 806 € en 2026 (10 % du PASS) ; laisse 0 pour ne pas plafonner.'},
+    ]},
+    {t:'Contrat', f:[
+      {k:'rdt', l:'Rendement annuel brut de frais de gestion', t:'pct', v:6, h:'Objectif courant : 5 à 7 % sur une gestion pilotée long terme'},
+      {k:'fv', l:'Frais sur versements', t:'pct', v:4.5},
+      {k:'fg', l:'Frais de gestion annuels', t:'pct', v:1},
+    ]},
+    {t:'Sortie', f:[
+      {k:'ret_m', l:'Retrait mensuel souhaité', t:'eur', v:500, h:'0 = retrait calculé pour épuiser le capital à l’âge ci-dessous'},
+      {k:'hor', l:'Épuiser le capital à', t:'num', u:'ans', v:85, min:60, max:110, show:v=>!v.ret_m},
+      {k:'tmis', l:'Tranche marginale à la retraite', t:'sel', v:'30', o:RS_TMI},
+      {k:'pfu', l:'Imposition des gains', t:'pct', v:31.4, h:'Prélèvement forfaitaire : 12,8 % + 18,6 % de prélèvements sociaux en 2026'},
+    ]},
+  ],
+  calc(v){
+    const r=v.rdt/100, fv=v.fv/100, fg=v.fg/100, tmi=v.tmi/100, tmis=v.tmis/100, pfu=v.pfu/100;
+    const N = Math.max(1, v.ret - v.age + 1);
+    const rows=[]; let R=0,P=0,Q=0, vers=0, eco=0, ded=0, vdeduc=0;
+    for(let i=0;i<N;i++){
+      let C,D,E;
+      if(i===0){ C=(v.init+v.transf)*(1-fv); D=C; E=0; }
+      else { C=R; D=P; E=Q; }
+      const F=v.vp, dedY = Math.min(F + (i===0?v.init:0), v.plaf>0 ? v.plaf : Infinity);
+      const K = (1-fv)*F*r*6.5/12 + C*r;
+      const L = D + F*(1-fv), M = K + E, Nn = L + M, O = fg*Nn;
+      P = L - L/Nn*O; Q = M - M/Nn*O; R = P + Q;
+      vers += F + (i===0 ? v.init+v.transf : 0); vdeduc += F + (i===0?v.init:0);
+      ded += dedY; eco += dedY*tmi;
+      rows.push({age:v.age+i, phase:'Épargne', cap:R, part:P, gain:Q, flux:-F-(i===0?v.init+v.transf:0), eco:dedY*tmi, net:0});
+    }
+    const capRet = R, versRet = vers;
+    const share = vers>0 ? Math.min(1, ded/vers) : 0;   // part du capital issue de versements déduits
+    const sortie = (w, simuler) => {
+      let D=P, E=Q, age=v.ret, total=0, lst=[], first=null, fin=null;
+      while(D+E>0.5 && age<120){
+        age++;
+        const C=D+E, F=Math.min(12*w, C);
+        const G=E/C*F, I=D/C*F, H=pfu*G, J=tmis*I*share, K=F-H-J;
+        const Li=(C-F/2)*r;
+        D-=I; E=E-G+Li;
+        const O=(D+E)*fg; if(D+E>0){ const t=D+E; D-=O*D/t; E-=O*E/t; }
+        if(first===null) first=K/12;
+        total+=K;
+        if(!simuler) lst.push({age, phase:'Retraite', cap:D+E, part:D, gain:E, flux:F, eco:0, net:K});
+        if(F<12*w-0.5){ fin=age; break; }
+      }
+      return {total, first, fin, lst, reste:D+E};
+    };
+    let w = v.ret_m;
+    if(!w){
+      let lo=0, hi=capRet;
+      for(let k=0;k<60;k++){ const mid=(lo+hi)/2; const s=sortie(mid,true); (s.fin!==null && s.fin<=v.hor) ? hi=mid : lo=mid; }
+      w = lo;
+    }
+    const S = sortie(w,false);
+    const all = rows.concat(S.lst);
+    const gainGlobal = S.total + eco - versRet;
+    const warn = v.ret<=v.age ? 'L’âge de départ doit être supérieur à l’âge d’ouverture.' :
+      (v.plaf>0 && v.vp>v.plaf ? 'Les versements annuels dépassent le plafond de déduction : l’excédent n’ouvre pas droit à économie d’impôt.' : '');
+    return {
+      warn,
+      kpis:[
+        {k:'Capital à '+v.ret+' ans', v:RS_E(capRet), s:'dont gains '+RS_E(Q), cls:'hl'},
+        {k:'Versements cumulés', v:RS_E(versRet), s:N+' années de versements'},
+        {k:'Économie d’impôt', v:RS_E(eco), s:'effort réel : '+RS_E(versRet-eco)},
+        {k:'Retrait net mensuel', v:RS_E(S.first||0), s:'pour '+RS_E(w)+' bruts / mois'},
+        {k:'Capital épuisé', v:S.fin?'à '+S.fin+' ans':'au-delà de 120 ans', s:'total net perçu '+RS_E(S.total)},
+        {k:'Gain global', v:RS_E(gainGlobal), s:'net perçu + économie d’impôt − versements', cls:gainGlobal>=0?'good':'bad'},
+      ],
+      chart:{type:'bar', x:all.map(r=>r.age+' ans'), series:[
+        {n:'Capital issu des versements', c:RS_COL[0], d:all.map(r=>Math.max(0,r.part))},
+        {n:'Gains', c:RS_COL[1], d:all.map(r=>Math.max(0,r.gain))}], mark:v.ret+' ans'},
+      table:{h:['Âge','Phase','Versé / retiré','Économie d’impôt','Net perçu','Capital fin d’année'],
+        rows:all.map(r=>[r.age, r.phase, RS_E(Math.abs(r.flux)), r.eco?RS_E(r.eco):'—', r.net?RS_E(r.net):'—', RS_E(r.cap)])},
+      notes:[
+        'À la sortie en capital, la part issue des versements déduits est imposée au barème ('+RS_P(share,0)+' du capital ici) et les gains au prélèvement forfaitaire.',
+        'Le transfert d’une épargne retraite existante n’ouvre pas de déduction dans ce calcul.',
+        'Sortie simulée en retraits réguliers ; une rente viagère suit d’autres règles (rente viagère à titre onéreux).',
+      ]
+    };
+  }
+},
+{
+  id:'renta', slug:'rentabilite-locative', ic:'🏠', t:'Rentabilité locative', d:'Rendement brut, net et net-net, cash-flow et effort d’épargne mensuel',
+  g:[
+    {t:'Coût d’achat', f:[
+      {k:'prix', l:'Prix du bien', t:'eur', v:150000},
+      {k:'fa', l:'Frais d’agence', t:'pct', v:5},
+      {k:'fn', l:'Frais de notaire', t:'pct', v:8, h:'≈ 7 à 8 % dans l’ancien, 2 à 3 % dans le neuf'},
+      {k:'trav', l:'Travaux et aménagement', t:'eur', v:10000},
+    ]},
+    {t:'Revenus', f:[
+      {k:'loyer', l:'Loyer mensuel hors charges', t:'eur', v:750},
+      {k:'vac', l:'Vacance locative', t:'num', u:'mois', v:1, min:0, max:36, h:'Nombre de mois vides tous les 3 ans'},
+    ]},
+    {t:'Charges annuelles', f:[
+      {k:'tf', l:'Taxe foncière', t:'eur', v:900},
+      {k:'copro', l:'Charges de copropriété non récupérables', t:'eur', v:600},
+      {k:'pno', l:'Assurance propriétaire non occupant', t:'eur', v:150},
+      {k:'gest', l:'Frais de gestion locative', t:'pct', v:7, h:'En % des loyers — 0 si tu gères toi-même'},
+      {k:'gli', l:'Garantie loyers impayés', t:'pct', v:2.5, h:'En % des loyers'},
+    ]},
+    {t:'Fiscalité', f:[
+      {k:'reg', l:'Régime', t:'sel', v:'lmnp', o:[['lmnp','Meublé (LMNP au réel)'],['micro','Location nue — micro-foncier'],['reel','Location nue — régime réel']], w:1},
+      {k:'tmi', l:'Tranche marginale', t:'sel', v:'30', o:RS_TMI, show:v=>v.reg!=='lmnp'},
+      {k:'ps', l:'Prélèvements sociaux', t:'pct', v:17.2, show:v=>v.reg!=='lmnp'},
+    ]},
+    {t:'Financement', f:[
+      {k:'apport', l:'Apport personnel', t:'eur', v:20000},
+      {k:'taux', l:'Taux du crédit', t:'pct', v:3.4},
+      {k:'duree', l:'Durée du crédit', t:'num', u:'ans', v:20, min:1, max:30},
+      {k:'ass', l:'Assurance emprunteur', t:'pct', v:0.3, h:'En % du capital emprunté par an'},
+    ]},
+  ],
+  calc(v){
+    const fraisAg=v.prix*v.fa/100, fraisNot=v.prix*v.fn/100;
+    const cout = v.prix + fraisAg + fraisNot + v.trav;
+    const loyerA = v.loyer*12;
+    const ch = [
+      ['Taxe foncière', v.tf], ['Frais de gestion locative', loyerA*v.gest/100], ['Copropriété non récupérable', v.copro],
+      ['Assurance propriétaire non occupant', v.pno], ['Garantie loyers impayés', loyerA*v.gli/100],
+      ['Vacance locative ('+RS_N(v.vac,1)+' mois / 3 ans)', loyerA*v.vac/36]];
+    const charges = ch.reduce((s,c)=>s+c[1],0);
+    const emprunt = Math.max(0, cout - v.apport), n=v.duree*12;
+    const mensHA = rsPmt(v.taux/100, n, emprunt), assM = emprunt*v.ass/100/12, mens = mensHA+assM;
+    let crd=emprunt, int1=0; for(let i=0;i<12 && i<n;i++){ const it=crd*v.taux/100/12; int1+=it; crd-=mensHA-it; }
+    const tx = (+v.tmi + v.ps)/100;
+    let impot=0, base=0;
+    if(v.reg==='micro'){ base=0.7*loyerA; impot=base*tx; }
+    else if(v.reg==='reel'){ base=Math.max(0, loyerA - charges - int1 - assM*12); impot=base*tx; }
+    const netAn = loyerA - charges - impot;
+    const cf = (netAn - mens*12)/12;
+    const warn = v.reg==='micro' && loyerA>15000 ? 'Le micro-foncier est réservé aux revenus fonciers bruts jusqu’à 15 000 € par an : passe au régime réel.' : '';
+    return {
+      warn,
+      kpis:[
+        {k:'Coût total du projet', v:RS_E(cout), s:'dont frais '+RS_E(fraisAg+fraisNot)},
+        {k:'Rendement brut', v:RS_P(loyerA/cout), s:RS_E(loyerA)+' de loyers / an'},
+        {k:'Rendement net de charges', v:RS_P((loyerA-charges)/cout), s:RS_E(charges)+' de charges / an'},
+        {k:'Rendement net-net', v:RS_P(netAn/cout), s:'après '+RS_E(impot)+' d’impôt / an', cls:'hl'},
+        {k:'Mensualité du crédit', v:RS_E(mens), s:RS_E(emprunt)+' sur '+v.duree+' ans, assurance comprise'},
+        {k:cf>=0?'Cash-flow mensuel':'Effort d’épargne mensuel', v:RS_E(Math.abs(cf)), s:cf>=0?'le bien s’autofinance':'à sortir chaque mois', cls:cf>=0?'good':'bad'},
+      ],
+      bars:{t:'Où va le loyer (par mois)', total:v.loyer, items:[
+        ['Charges', charges/12, RS_COL[2]], ['Impôt', impot/12, RS_COL[3]], ['Crédit', mens, RS_COL[0]],
+        [cf>=0?'Cash-flow':'Effort d’épargne', cf, cf>=0?RS_COL[1]:RS_COL[3]]]},
+      tables:[
+        {t:'Coût d’achat', h:['Poste','Montant'], rows:[['Prix du bien',RS_E(v.prix)],['Frais d’agence',RS_E(fraisAg)],['Frais de notaire',RS_E(fraisNot)],['Travaux et aménagement',RS_E(v.trav)]], tot:['Total',RS_E(cout)]},
+        {t:'Charges annuelles', h:['Poste','Montant'], rows:ch.map(c=>[c[0],RS_E(c[1])]), tot:['Total',RS_E(charges)]},
+        {t:'Impôt annuel', h:['Poste','Montant'], rows:[['Régime', {lmnp:'Meublé LMNP au réel',micro:'Micro-foncier (abattement 30 %)',reel:'Régime réel'}[v.reg]],['Base imposable',RS_E(base)],['Taux ('+(v.reg==='lmnp'?'—':v.tmi+' % + '+RS_N(v.ps,1)+' %')+')',RS_E(impot)]]},
+      ],
+      notes:[
+        v.reg==='lmnp' ? 'En meublé au réel, l’amortissement du bien et du mobilier neutralise généralement l’impôt pendant de nombreuses années ; à la revente, les amortissements déduits sont réintégrés dans la plus-value (loi de finances 2025).'
+          : v.reg==='reel' ? 'Régime réel : intérêts de la 1re année, charges et assurance déduits ; un déficit foncier éventuel n’est pas pris en compte ici.'
+          : 'Micro-foncier : abattement forfaitaire de 30 % sur les loyers, imposés au taux marginal plus les prélèvements sociaux.',
+        'Rendement calculé sur le coût total (prix + frais + travaux), hors taxe d’habitation et hors revalorisation des loyers.',
+      ]
+    };
+  }
+},
+{
+  id:'parc', slug:'parc-immobilier', ic:'🏘️', t:'Parc immobilier', d:'Performance réelle de biens déjà détenus : rentabilité avant et après impôts, net vendeur', custom:true,
+  g:[
+    {t:'Fiscalité du foyer', f:[
+      {k:'tmi', l:'Tranche marginale', t:'sel', v:'30', o:RS_TMI},
+      {k:'ps', l:'Prélèvements sociaux', t:'pct', v:17.2},
+    ]},
+  ]
+},
+{
+  id:'credit', slug:'credit-immobilier', ic:'🏦', t:'Crédit immobilier', d:'Capacité d’emprunt, mensualité, taux d’endettement et coût du crédit',
+  g:[
+    {t:'Foyer', f:[
+      {k:'rev', l:'Revenus nets mensuels du foyer', t:'eur', v:4500, h:'Avant impôt sur le revenu, loyers perçus retenus à 70 %'},
+      {k:'chg', l:'Crédits en cours (mensualités)', t:'eur', v:0},
+      {k:'endet', l:'Taux d’endettement maximal', t:'pct', v:35, h:'Norme HCSF : 35 % assurance comprise'},
+      {k:'apport', l:'Apport', t:'eur', v:30000},
+    ]},
+    {t:'Crédit', f:[
+      {k:'taux', l:'Taux nominal', t:'pct', v:3.3},
+      {k:'duree', l:'Durée', t:'num', u:'ans', v:25, min:5, max:30, h:'25 ans maximum (27 ans dans le neuf avec différé)'},
+      {k:'ass', l:'Assurance emprunteur', t:'pct', v:0.3, h:'En % du capital par an'},
+      {k:'montant', l:'Montant à emprunter', t:'eur', v:0, h:'0 = calculer la capacité maximale'},
+    ]},
+  ],
+  calc(v){
+    const n=v.duree*12, parEuro = rsPmt(v.taux/100, n, 1) + v.ass/100/12;
+    const mensMax = Math.max(0, v.rev*v.endet/100 - v.chg);
+    const capa = parEuro>0 ? mensMax/parEuro : 0;
+    const K = v.montant>0 ? v.montant : capa;
+    const mensHA = rsPmt(v.taux/100, n, K), assM=K*v.ass/100/12, mens=mensHA+assM;
+    const endet = v.rev>0 ? (mens+v.chg)/v.rev : 0;
+    const coutInt = mensHA*n - K, coutAss = assM*n;
+    const rows=[]; let crd=K;
+    for(let a=1;a<=v.duree;a++){
+      let it=0, am=0;
+      for(let mth=0;mth<12;mth++){ const i=crd*v.taux/100/12; it+=i; am+=mensHA-i; crd-=mensHA-i; }
+      rows.push([a, RS_E(mensHA*12), RS_E(am), RS_E(it), RS_E(assM*12), RS_E(Math.max(0,crd))]);
+    }
+    const warn = v.montant>0 && endet > v.endet/100 + 1e-9 ? 'Ce montant porte l’endettement à '+RS_P(endet,1)+', au-delà de la limite de '+RS_P(v.endet/100,0)+'.' : '';
+    return {
+      warn,
+      kpis:[
+        {k:'Capacité d’emprunt', v:RS_E(capa), s:'mensualité max '+RS_E(mensMax), cls:v.montant>0?'':'hl'},
+        {k:'Budget total', v:RS_E(K+v.apport), s:'emprunt + apport'},
+        {k:'Mensualité', v:RS_E(mens), s:'dont assurance '+RS_E(assM), cls:v.montant>0?'hl':''},
+        {k:'Taux d’endettement', v:RS_P(endet,1), s:'limite '+RS_P(v.endet/100,0), cls:endet>v.endet/100+1e-9?'bad':'good'},
+        {k:'Coût des intérêts', v:RS_E(coutInt), s:'sur '+v.duree+' ans'},
+        {k:'Coût de l’assurance', v:RS_E(coutAss), s:'coût total '+RS_E(coutInt+coutAss)},
+      ],
+      chart:{type:'bar', x:rows.map(r=>'An '+r[0]), series:[
+        {n:'Capital restant dû', c:RS_COL[0], d:(()=>{ let c=K; const o=[]; for(let a=0;a<v.duree;a++){ for(let m=0;m<12;m++){ c-=mensHA-c*v.taux/100/12; } o.push(Math.max(0,c)); } return o; })()}]},
+      table:{h:['Année','Échéances (hors ass.)','Capital remboursé','Intérêts','Assurance','Capital restant dû'], rows},
+      notes:['Simulation indicative : chaque banque apprécie aussi le reste à vivre, la stabilité des revenus et le saut de charge.']
+    };
+  }
+},
+{
+  id:'activite', slug:'objectif-activite', ic:'🎯', t:'Objectif d’activité', d:'Combien de R1 par semaine pour atteindre ton objectif de volume d’affaires',
+  g:[
+    {t:'Objectif', f:[
+      {k:'va', l:'Volume d’affaires annuel visé', t:'eur', v:500000},
+      {k:'vpm', l:'Versements programmés déjà en place', t:'eur', v:1800, h:'Montant mensuel de ton portefeuille, compté sur 12 mois'},
+    ]},
+    {t:'Tes ratios', f:[
+      {k:'panier', l:'Panier moyen par nouveau client', t:'eur', v:5000},
+      {k:'conv', l:'Taux de conversion R1 → client', t:'pct', v:48.5},
+      {k:'sem', l:'Semaines travaillées dans l’année', t:'num', u:'sem.', v:47, min:1, max:52},
+    ]},
+  ],
+  calc(v){
+    const reste = Math.max(0, v.va - v.vpm*12);
+    const clients = v.panier>0 ? reste/v.panier : 0;
+    const r1 = v.conv>0 ? clients/(v.conv/100) : 0;
+    const parSem = r1/(v.sem||1);
+    return {
+      kpis:[
+        {k:'VA restant à réaliser', v:RS_E(reste), s:'après '+RS_E(v.vpm*12)+' de VP annuels'},
+        {k:'Nouveaux clients', v:RS_N(Math.ceil(clients-1e-9)), s:RS_N(clients,1)+' au panier de '+RS_E(v.panier)},
+        {k:'R1 à réaliser', v:RS_N(Math.ceil(r1-1e-9)), s:'sur l’année'},
+        {k:'R1 par semaine', v:RS_N(parSem,1), s:'soit '+RS_N(r1/12,1)+' par mois', cls:'hl'},
+      ],
+      notes:['Pour tenir le rythme, compte le nombre d’appels nécessaires pour caler un R1 et bloque ces créneaux dans ton agenda.']
+    };
+  }
+},
+];
+
+/* ------------------------------ Courriers ----------------------------- */
+const RS_CIV = [['M.','Monsieur'],['Mme','Madame']];
+const RS_P_F = [
+  {k:'civ', l:'Civilité', t:'sel', v:'M.', o:RS_CIV},
+  {k:'prenom', l:'Prénom', t:'txt', req:1},
+  {k:'nom', l:'Nom', t:'txt', req:1},
+  {k:'adr', l:'Adresse', t:'txt', req:1},
+  {k:'cpv', l:'Code postal et ville', t:'txt', req:1},
+];
+const RS_ETAB_F = (l) => [
+  {k:'etab', l:l||'Établissement', t:'txt', req:1},
+  {k:'etabAdr', l:'Adresse de l’établissement', t:'txt'},
+  {k:'etabCpv', l:'Code postal et ville', t:'txt'},
+];
+const RS_FIN_F = (lrar) => [
+  {k:'lieu', l:'Fait à', t:'txt', h:'Par défaut : la ville de l’adresse'},
+  {k:'date', l:'Date', t:'date'},
+].concat(lrar!==undefined ? [{k:'lrar', l:'Envoi en recommandé avec accusé de réception', t:'chk', v:lrar?1:0}] : []);
+const RS_FISC = [['pfu','Prélèvement forfaitaire unique'],['bareme','Barème progressif de l’impôt sur le revenu'],['','Ne pas préciser']];
+
+// Marqueurs d'un champ manquant : rendus en surligné dans l'aperçu et dans le fichier Word
+const RS_MQ = (l) => ''+l+'';
+const rsV = (v,k,l) => (v[k]||'').toString().trim() || RS_MQ(l);
+const rsFem = v => v.civ==='Mme';
+const rsDateL = iso => { if(!iso) return ''; const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); };
+const rsVille = v => { const m=(v.cpv||'').trim().match(/^\d{4,5}\s+(.+)$/); return m ? m[1] : (v.cpv||'').trim(); };
+
+function rsLettre(v, o){
+  // o : {dest:bool, objet, lrar, corps:[…], pj:[…], mention, titre}
+  const P=[];
+  P.push({t:(v.prenom||'').trim()||(v.nom||'').trim() ? ((v.prenom||'').trim()+' '+(v.nom||'').trim().toUpperCase()).trim() : RS_MQ('Prénom Nom'), c:'exp'});
+  P.push({t:rsV(v,'adr','Adresse'), c:'exp'});
+  P.push({t:rsV(v,'cpv','Code postal et ville'), c:'exp', gap:1});
+  if(o.dest!==false){
+    P.push({t:rsV(v,'etab','Établissement'), c:'dest'});
+    if((v.etabAdr||'').trim()) P.push({t:v.etabAdr.trim(), c:'dest'});
+    if((v.etabCpv||'').trim()) P.push({t:v.etabCpv.trim(), c:'dest'});
+    P[P.length-1].gap=1;
+  }
+  const lieu = (v.lieu||'').trim() || rsVille(v) || RS_MQ('Ville');
+  P.push({t:'Fait à '+lieu+', le '+(rsDateL(v.date)||RS_MQ('date')), c:'dt', gap:1});
+  if(o.titre) P.push({t:o.titre, c:'titre', b:1, gap:1});
+  if(o.objet) P.push({t:'Objet : '+o.objet, c:'obj', b:1});
+  if(o.lrar) P.push({t:'Lettre recommandée avec accusé de réception', c:'obj'});
+  if(o.objet||o.lrar) P[P.length-1].gap=1;
+  if(o.dest!==false) P.push({t:'Madame, Monsieur,', c:'p'});
+  o.corps.forEach(t=>P.push({t, c:'p'}));
+  if(o.dest!==false) P.push({t:'Dans l’attente de votre retour, je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.', c:'p'});
+  P.push({t:((v.prenom||'')+' '+(v.nom||'').toUpperCase()).trim() || RS_MQ('Prénom Nom'), c:'sig', x:'first'});
+  P.push({t:'Signature', c:'sig'});
+  if(o.pj && o.pj.length) P.push({t:'Pièces jointes : '+o.pj.join(' ; '), c:'pj'});
+  if(o.mention) P.push({t:o.mention, c:'mention'});
+  return P;
+}
+
+const RS_DOCS = [
+{
+  id:'heb', slug:'attestation-hebergement', ic:'🏡', t:'Attestation d’hébergement', d:'Sur l’honneur, avec les mentions et pièces attendues',
+  g:[
+    {t:'Hébergeant (qui signe)', f:RS_P_F.concat([
+      {k:'nDate', l:'Né(e) le', t:'date', req:1},
+      {k:'nLieu', l:'À', t:'txt', req:1},
+    ])},
+    {t:'Personne hébergée', f:[
+      {k:'hCiv', l:'Civilité', t:'sel', v:'Mme', o:RS_CIV},
+      {k:'hPrenom', l:'Prénom', t:'txt', req:1},
+      {k:'hNom', l:'Nom', t:'txt', req:1},
+      {k:'hDate', l:'Né(e) le', t:'date', req:1},
+      {k:'hLieu', l:'À', t:'txt', req:1},
+      {k:'hLien', l:'Lien avec l’hébergeant', t:'txt', h:'Facultatif — ex. « ma fille », « mon frère »'},
+      {k:'depuis', l:'Hébergé(e) depuis le', t:'date', req:1},
+      {k:'gratuit', l:'Hébergement à titre gratuit', t:'chk', v:1},
+    ]},
+    {t:'Signature', f:RS_FIN_F()},
+  ],
+  build(v){
+    const e = rsFem(v)?'e':'', he = v.hCiv==='Mme'?'e':'';
+    return rsLettre(v, {dest:false, titre:'ATTESTATION D’HÉBERGEMENT SUR L’HONNEUR',
+      corps:[
+        'Je soussigné'+e+' '+(v.civ==='Mme'?'Madame':'Monsieur')+' '+rsV(v,'prenom','Prénom')+' '+rsV(v,'nom','Nom').toUpperCase()+', né'+e+' le '+(rsDateL(v.nDate)||RS_MQ('date de naissance'))+' à '+rsV(v,'nLieu','lieu de naissance')+', demeurant '+rsV(v,'adr','adresse')+', '+rsV(v,'cpv','code postal et ville')+',',
+        'atteste sur l’honneur héberger à mon domicile, depuis le '+(rsDateL(v.depuis)||RS_MQ('date de début'))+', '+(v.hCiv==='Mme'?'Madame':'Monsieur')+' '+rsV(v,'hPrenom','Prénom')+' '+rsV(v,'hNom','Nom').toUpperCase()+', né'+he+' le '+(rsDateL(v.hDate)||RS_MQ('date de naissance'))+' à '+rsV(v,'hLieu','lieu de naissance')+((v.hLien||'').trim()?', '+v.hLien.trim():'')+'.',
+      ].concat(v.gratuit?['Cet hébergement est consenti à titre gratuit.']:[], [
+        'Je certifie l’exactitude des informations ci-dessus. Attestation établie pour servir et valoir ce que de droit.'
+      ]),
+      pj:['copie recto verso de la pièce d’identité de l’hébergeant','justificatif de domicile de moins de trois mois au nom de l’hébergeant'],
+      mention:'Article 441-7 du Code pénal : est puni d’un an d’emprisonnement et de 15 000 € d’amende le fait d’établir une attestation faisant état de faits matériellement inexacts, ou d’en faire usage.'
+    });
+  }
+},
+{
+  id:'avt', slug:'rachat-total-assurance-vie', ic:'🛡️', t:'Rachat total d’assurance vie', d:'Demande de rachat total et de clôture du contrat',
+  g:[
+    {t:'Souscripteur', f:RS_P_F},
+    {t:'Contrat', f:RS_ETAB_F('Assureur').concat([
+      {k:'contrat', l:'Numéro de contrat', t:'txt', req:1},
+      {k:'fisc', l:'Option fiscale', t:'sel', v:'pfu', o:RS_FISC, h:'Pour les primes versées depuis le 27/09/2017, l’option pour le barème se fait aussi dans la déclaration de revenus'},
+    ])},
+    {t:'Envoi', f:RS_FIN_F(true)},
+  ],
+  build(v){
+    return rsLettre(v, {objet:'Demande de rachat total et clôture de mon contrat d’assurance vie n° '+rsV(v,'contrat','n° de contrat'), lrar:v.lrar,
+      corps:[
+        'Par la présente, je vous informe de ma volonté de procéder au rachat total de mon contrat d’assurance vie n° '+rsV(v,'contrat','n° de contrat')+', souscrit auprès de votre établissement, et de mettre ainsi définitivement fin à ce contrat, conformément à l’article L132-21 du Code des assurances.',
+        'Je vous remercie de bien vouloir me verser la valeur de rachat dans les meilleurs délais, et au plus tard dans les deux mois suivant la réception de ce courrier, sur le compte bancaire dont vous trouverez le relevé d’identité bancaire ci-joint.',
+      ].concat(v.fisc?['Pour l’imposition des produits, je retiens l’option suivante : '+(v.fisc==='pfu'?'prélèvement forfaitaire unique':'imposition au barème progressif de l’impôt sur le revenu')+'.']:[]),
+      pj:['RIB','copie de ma pièce d’identité']});
+  }
+},
+{
+  id:'avp', slug:'rachat-partiel-assurance-vie', ic:'💶', t:'Rachat partiel d’assurance vie', d:'Retrait d’une partie de l’épargne, contrat maintenu',
+  g:[
+    {t:'Souscripteur', f:RS_P_F},
+    {t:'Contrat', f:RS_ETAB_F('Assureur').concat([
+      {k:'contrat', l:'Numéro de contrat', t:'txt', req:1},
+      {k:'montant', l:'Montant du rachat', t:'eur', v:0, req:1},
+      {k:'repart', l:'Répartition', t:'sel', v:'prorata', o:[['prorata','Au prorata des supports'],['supports','Sur des supports précis']]},
+      {k:'supports', l:'Supports concernés', t:'area', show:v=>v.repart==='supports', h:'Nom du support et montant, un par ligne'},
+      {k:'fisc', l:'Option fiscale', t:'sel', v:'pfu', o:RS_FISC},
+    ])},
+    {t:'Envoi', f:RS_FIN_F(false)},
+  ],
+  build(v){
+    const mt = v.montant>0 ? RS_E(v.montant,2).replace(/ /g,' ') : RS_MQ('montant');
+    const sup = (v.supports||'').split('\n').map(s=>s.trim()).filter(Boolean);
+    return rsLettre(v, {objet:'Demande de rachat partiel sur mon contrat d’assurance vie n° '+rsV(v,'contrat','n° de contrat'), lrar:v.lrar,
+      corps:[
+        'Par la présente, je souhaite procéder à un rachat partiel d’un montant de '+mt+' sur mon contrat d’assurance vie n° '+rsV(v,'contrat','n° de contrat')+', souscrit auprès de votre établissement, conformément à l’article L132-21 du Code des assurances.',
+        v.repart==='supports' ? 'Ce rachat sera effectué sur les supports suivants : '+(sup.length?sup.join(' ; '):RS_MQ('supports'))+'.' : 'Ce rachat sera effectué au prorata de la répartition actuelle de mon épargne entre les supports.',
+        'Je vous remercie de bien vouloir verser cette somme, dans les deux mois suivant la réception de ce courrier, sur le compte bancaire dont vous trouverez le relevé d’identité bancaire ci-joint. Le contrat reste en vigueur pour le solde.',
+      ].concat(v.fisc?['Pour l’imposition des produits, je retiens l’option suivante : '+(v.fisc==='pfu'?'prélèvement forfaitaire unique':'imposition au barème progressif de l’impôt sur le revenu')+'.']:[]),
+      pj:['RIB','copie de ma pièce d’identité']});
+  }
+},
+{
+  id:'livret', slug:'cloture-livret', ic:'📘', t:'Clôture de livret', d:'Livret A, LDDS, LEP, Livret jeune ou CEL',
+  g:[
+    {t:'Titulaire', f:RS_P_F},
+    {t:'Livret', f:RS_ETAB_F('Banque').concat([
+      {k:'type', l:'Type de livret', t:'sel', v:'Livret A', o:[['Livret A','Livret A'],['Livret de développement durable et solidaire (LDDS)','LDDS'],['Livret d’épargne populaire (LEP)','LEP'],['Livret jeune','Livret jeune'],['Compte épargne logement (CEL)','CEL']]},
+      {k:'numero', l:'Numéro du livret', t:'txt', req:1},
+    ])},
+    {t:'Envoi', f:RS_FIN_F(false)},
+  ],
+  build(v){
+    const nm = ((v.prenom||'')+' '+(v.nom||'').toUpperCase()).trim() || RS_MQ('Prénom Nom');
+    return rsLettre(v, {objet:'Demande de clôture de mon '+v.type, lrar:v.lrar,
+      corps:[
+        'Je vous prie de bien vouloir procéder à la clôture de mon '+v.type+', dont les références sont les suivantes : titulaire '+nm+', numéro '+rsV(v,'numero','numéro du livret')+'.',
+        'Je vous remercie de virer l’intégralité du solde disponible, intérêts inclus, sur le compte bancaire dont le RIB est joint à ce courrier.',
+        'Je vous remercie également de me confirmer par écrit la prise en compte de cette demande et de m’adresser une attestation de clôture une fois l’opération effectuée.',
+      ],
+      pj:['RIB','copie de ma pièce d’identité']});
+  }
+},
+{
+  id:'pel', slug:'cloture-pel', ic:'🏗️', t:'Clôture de PEL', d:'Clôture du plan épargne logement et transfert du solde',
+  g:[
+    {t:'Titulaire', f:RS_P_F},
+    {t:'Plan', f:RS_ETAB_F('Banque').concat([
+      {k:'numero', l:'Numéro du PEL', t:'txt', req:1},
+      {k:'dest', l:'Compte de destination', t:'txt', h:'Facultatif — ex. « mon compte courant n° … » ; sinon le RIB joint fait foi'},
+    ])},
+    {t:'Envoi', f:RS_FIN_F(false)},
+  ],
+  build(v){
+    return rsLettre(v, {objet:'Demande de clôture du plan épargne logement n° '+rsV(v,'numero','n° du PEL')+' et transfert du solde', lrar:v.lrar,
+      corps:[
+        'Par ce courrier, je vous informe de mon intention de clôturer le plan d’épargne logement n° '+rsV(v,'numero','n° du PEL')+' que je détiens au sein de votre établissement.',
+        'Je souhaite que le solde de ce plan soit transféré sur '+(((v.dest||'').trim())||'le compte dont vous trouverez le relevé d’identité bancaire ci-joint')+'.',
+        'Vous trouverez ci-joint un relevé d’identité bancaire, une copie de ma pièce d’identité et un justificatif de domicile.',
+      ],
+      pj:['RIB','copie de ma pièce d’identité','justificatif de domicile']});
+  }
+},
+{
+  id:'parts', slug:'remboursement-parts-sociales', ic:'🧾', t:'Remboursement de parts sociales', d:'Banque mutualiste : remboursement total des parts',
+  g:[
+    {t:'Sociétaire', f:RS_P_F},
+    {t:'Parts', f:RS_ETAB_F('Banque').concat([
+      {k:'matricule', l:'Numéro de sociétaire', t:'txt', req:1},
+      {k:'compte', l:'Numéro de compte', t:'txt', req:1},
+      {k:'nb', l:'Nombre de parts', t:'num', u:'parts', v:0, req:1},
+      {k:'nominal', l:'Valeur nominale d’une part', t:'eur', v:0, req:1},
+    ])},
+    {t:'Envoi', f:RS_FIN_F(true)},
+  ],
+  build(v){
+    const e = rsFem(v)?'e':'';
+    const nb = v.nb>0 ? RS_N(v.nb) : RS_MQ('nombre'), nom = v.nominal>0 ? RS_E(v.nominal,2) : RS_MQ('valeur'), tot = v.nb>0&&v.nominal>0 ? RS_E(v.nb*v.nominal,2) : RS_MQ('total');
+    return rsLettre(v, {objet:'Demande de remboursement total de mes parts sociales', lrar:v.lrar,
+      corps:[
+        'Je soussigné'+e+' '+rsV(v,'prenom','Prénom')+' '+rsV(v,'nom','Nom').toUpperCase()+', sociétaire de '+rsV(v,'etab','la banque')+' sous le numéro '+rsV(v,'matricule','n° de sociétaire')+' et titulaire du compte n° '+rsV(v,'compte','n° de compte')+', vous adresse par la présente une demande de remboursement de la totalité de mes parts sociales.',
+        'Je détiens actuellement '+nb+' parts sociales d’une valeur nominale de '+nom+' chacune, soit un total de '+tot+'.',
+        'Je sollicite le remboursement intégral de ces parts par virement sur mon compte n° '+rsV(v,'compte','n° de compte')+'. Je prends acte que cette opération entraîne la perte de ma qualité de sociétaire.',
+      ],
+      pj:['RIB']}).map(p=>{ if(p.t) p.t=p.t.replace(/ /g,' '); return p; });
+  }
+},
+{
+  id:'perT', slug:'transfert-per', ic:'🔁', t:'Transfert de PER', d:'Transfert d’un plan d’épargne retraite vers un nouveau PER',
+  g:[
+    {t:'Titulaire', f:RS_P_F},
+    {t:'Plan actuel', f:RS_ETAB_F('Gestionnaire actuel').concat([
+      {k:'type', l:'Nature du plan', t:'sel', v:'plan d’épargne retraite individuel', o:[['plan d’épargne retraite individuel','PER individuel'],['plan d’épargne retraite d’entreprise collectif','PER collectif (PERECO)'],['plan d’épargne retraite obligatoire','PER obligatoire'],['contrat Madelin','Madelin'],['plan d’épargne retraite populaire (PERP)','PERP'],['contrat de retraite supplémentaire (article 83)','Article 83']], h:'Un plan collectif ne se transfère qu’après le départ de l’entreprise'},
+      {k:'contrat', l:'Numéro du plan', t:'txt', req:1},
+      {k:'plus5', l:'Plan ouvert depuis plus de cinq ans', t:'chk', v:0},
+    ])},
+    {t:'Nouveau plan', f:[
+      {k:'nouv', l:'Nouvel organisme', t:'txt', req:1},
+      {k:'nouvN', l:'Numéro du nouveau PER', t:'txt', req:1},
+    ]},
+    {t:'Envoi', f:RS_FIN_F(true)},
+  ],
+  build(v){
+    return rsLettre(v, {objet:'Demande de transfert de mon '+v.type+' n° '+rsV(v,'contrat','n° du plan'), lrar:v.lrar,
+      corps:[
+        'Conformément à l’article L224-40 du Code monétaire et financier, je vous prie de bien vouloir procéder au transfert de l’intégralité des droits que je détiens sur mon '+v.type+' n° '+rsV(v,'contrat','n° du plan')+' vers le plan d’épargne retraite n° '+rsV(v,'nouvN','n° du nouveau PER')+' ouvert auprès de '+rsV(v,'nouv','nouvel organisme')+'.',
+        'Je vous remercie de transmettre directement à ce nouvel organisme les sommes transférées ainsi que l’ensemble des informations nécessaires à la gestion du plan, notamment l’historique des versements par compartiment, dans le délai réglementaire de deux mois.',
+      ].concat(v.plus5?['Mon plan ayant été ouvert depuis plus de cinq ans, ce transfert ne peut donner lieu à aucun frais.']:[]),
+      pj:['copie de ma pièce d’identité','bulletin d’adhésion au nouveau plan']});
+  }
+},
+{
+  id:'compte', slug:'cloture-compte-bancaire', ic:'🏦', t:'Clôture de compte bancaire', d:'Compte courant : clôture et virement du solde',
+  g:[
+    {t:'Titulaire', f:RS_P_F},
+    {t:'Compte', f:RS_ETAB_F('Banque').concat([
+      {k:'numero', l:'Numéro de compte', t:'txt', req:1},
+      {k:'moyens', l:'Je restitue carte et chéquier avec ce courrier', t:'chk', v:1},
+    ])},
+    {t:'Envoi', f:RS_FIN_F(true)},
+  ],
+  build(v){
+    return rsLettre(v, {objet:'Demande de clôture de mon compte n° '+rsV(v,'numero','n° de compte'), lrar:v.lrar,
+      corps:[
+        'Par la présente, je vous prie de bien vouloir procéder à la clôture de mon compte de dépôt n° '+rsV(v,'numero','n° de compte')+' ouvert dans votre établissement.',
+        'Je vous remercie de virer le solde créditeur, après dénouement des opérations en cours, sur le compte dont vous trouverez le relevé d’identité bancaire ci-joint, et de mettre fin à l’ensemble des services rattachés à ce compte.',
+        v.moyens ? 'Vous trouverez également ci-joints mes moyens de paiement (carte bancaire et chéquier), que je vous restitue.' : 'Je m’engage à vous restituer mes moyens de paiement (carte bancaire et chéquier) dans les meilleurs délais.',
+        'Je vous rappelle que, conformément à l’article L312-1-7 du Code monétaire et financier, la clôture d’un compte de dépôt est gratuite. Je vous remercie de me confirmer la clôture par écrit.',
+      ],
+      pj:['RIB du compte de destination'].concat(v.moyens?['carte bancaire et chéquier']:[])});
+  }
+},
+{
+  id:'lemoine', slug:'resiliation-assurance-emprunteur', ic:'📄', t:'Résiliation d’assurance emprunteur', d:'Loi Lemoine : changement d’assurance à tout moment',
+  g:[
+    {t:'Assuré', f:RS_P_F},
+    {t:'Contrat actuel', f:RS_ETAB_F('Assureur actuel').concat([
+      {k:'contrat', l:'Numéro de contrat ou d’adhésion', t:'txt', req:1},
+      {k:'pret', l:'Numéro du prêt', t:'txt', req:1},
+      {k:'preteur', l:'Établissement prêteur', t:'txt', req:1},
+      {k:'nouv', l:'Nouvel assureur', t:'txt', req:1},
+    ])},
+    {t:'Envoi', f:RS_FIN_F(true)},
+  ],
+  build(v){
+    return rsLettre(v, {objet:'Résiliation de mon contrat d’assurance emprunteur n° '+rsV(v,'contrat','n° de contrat'), lrar:v.lrar,
+      corps:[
+        'Conformément à l’article L113-12-2 du Code des assurances, issu de la loi n° 2022-270 du 28 février 2022, je vous informe de ma décision de résilier le contrat d’assurance emprunteur n° '+rsV(v,'contrat','n° de contrat')+', souscrit en garantie du prêt n° '+rsV(v,'pret','n° du prêt')+' consenti par '+rsV(v,'preteur','établissement prêteur')+'.',
+        'J’ai souscrit auprès de '+rsV(v,'nouv','nouvel assureur')+' un nouveau contrat présentant un niveau de garanties équivalent, soumis à l’acceptation de l’établissement prêteur.',
+        'Cette résiliation prendra effet dix jours après la réception par vos services de la décision de l’établissement prêteur acceptant ce contrat de substitution, ou à la date de prise d’effet du nouveau contrat si celle-ci est postérieure. Je vous remercie de me rembourser, le cas échéant, la part de cotisation correspondant à la période non couverte.',
+      ],
+      pj:['copie du nouveau contrat d’assurance','décision d’acceptation de l’établissement prêteur (si déjà reçue)']});
+  }
+},
+{
+  id:'libre', slug:'attestation-sur-l-honneur', ic:'✍️', t:'Attestation sur l’honneur', d:'Modèle libre : tu écris l’objet de la déclaration',
+  g:[
+    {t:'Déclarant', f:RS_P_F.concat([
+      {k:'nDate', l:'Né(e) le', t:'date'},
+      {k:'nLieu', l:'À', t:'txt'},
+    ])},
+    {t:'Déclaration', f:[
+      {k:'texte', l:'J’atteste sur l’honneur que…', t:'area', req:1, h:'Une idée par ligne ; chaque ligne devient un paragraphe'},
+    ]},
+    {t:'Signature', f:RS_FIN_F()},
+  ],
+  build(v){
+    const e = rsFem(v)?'e':'';
+    const nais = v.nDate ? ', né'+e+' le '+rsDateL(v.nDate)+((v.nLieu||'').trim()?' à '+v.nLieu.trim():'') : '';
+    const lignes = (v.texte||'').split('\n').map(s=>s.trim()).filter(Boolean);
+    return rsLettre(v, {dest:false, titre:'ATTESTATION SUR L’HONNEUR',
+      corps:[
+        'Je soussigné'+e+' '+(v.civ==='Mme'?'Madame':'Monsieur')+' '+rsV(v,'prenom','Prénom')+' '+rsV(v,'nom','Nom').toUpperCase()+nais+', demeurant '+rsV(v,'adr','adresse')+', '+rsV(v,'cpv','code postal et ville')+', atteste sur l’honneur :',
+      ].concat(lignes.length?lignes:[RS_MQ('objet de la déclaration')], ['Fait pour servir et valoir ce que de droit.']),
+      mention:'Article 441-7 du Code pénal : est puni d’un an d’emprisonnement et de 15 000 € d’amende le fait d’établir une attestation faisant état de faits matériellement inexacts, ou d’en faire usage.'});
+  }
+},
+];
+
+/* ------------------------------ Formulaires --------------------------- */
+let RS_SUB='sim', RS_SIM='av', RS_DOC='heb', RS_FAIT=false;
+const RS_VAL={};               // valeurs en mémoire, par outil
+let RS_PARC=null;              // biens du simulateur « Parc immobilier »
+const RS_SUBS=['sim','doc','lien'];
+const RS_SLUG={sim:'simulateurs', doc:'courriers', lien:'liens-utiles'};
+const RS_SLUG_INV=Object.fromEntries(Object.entries(RS_SLUG).map(([k,v])=>[v,k]));
+const rsTools = () => RS_SIMS.concat(RS_DOCS);
+const rsDef = id => rsTools().find(t=>t.id===id);
+const rsChamps = def => def.g.flatMap(g=>g.f);
+function rsDefaut(f){
+  if(f.v!==undefined) return f.v;
+  if(f.t==='date') return f.k==='date' ? isoJour(new Date()) : '';
+  if(f.t==='eur'||f.t==='num'||f.t==='pct') return 0;
+  return '';
+}
+function rsVals(def){
+  if(!RS_VAL[def.id]){ const o={}; rsChamps(def).forEach(f=>o[f.k]=rsDefaut(f)); RS_VAL[def.id]=o; }
+  return RS_VAL[def.id];
+}
+function rsChampHtml(def, f, v){
+  const id='rs_'+def.id+'_'+f.k, vis = f.show ? f.show(v) : true;
+  const h = f.h ? '<div class="h">'+esc(f.h)+'</div>' : '';
+  const att = 'id="'+id+'" data-k="'+f.k+'"';
+  if(f.t==='chk') return '<div class="rs-f rs-chk"'+(vis?'':' hidden')+' data-f="'+f.k+'"><input type="checkbox" '+att+(v[f.k]?' checked':'')+'><label for="'+id+'">'+esc(f.l)+'</label>'+h+'</div>';
+  let ctl;
+  if(f.t==='sel') ctl='<div class="rs-in"><select '+att+'>'+f.o.map(o=>'<option value="'+esc(o[0])+'"'+(String(v[f.k])===o[0]?' selected':'')+'>'+esc(o[1])+'</option>').join('')+'</select></div>';
+  else if(f.t==='area') ctl='<textarea '+att+' rows="4">'+esc(v[f.k])+'</textarea>';
+  else if(f.t==='txt') ctl='<div class="rs-in"><input type="text" '+att+' value="'+esc(v[f.k])+'" autocomplete="off"></div>';
+  else if(f.t==='date') ctl='<div class="rs-in"><input type="date" '+att+' value="'+esc(v[f.k])+'"></div>';
+  else {
+    const u = f.t==='eur'?'€':f.t==='pct'?'%':(f.u||'');
+    const st = f.step || (f.t==='pct'?'0.1':'any');
+    ctl='<div class="rs-in"><input type="number" inputmode="decimal" step="'+st+'" '+(f.min!==undefined?'min="'+f.min+'" ':'')+(f.max!==undefined?'max="'+f.max+'" ':'')+att+' value="'+esc(v[f.k])+'" style="padding-right:'+(u?12+u.length*7:9)+'px">'+(u?'<span class="u">'+esc(u)+'</span>':'')+'</div>';
+  }
+  const large = f.w || f.t==='area' || (def.build && (f.t==='txt'||f.t==='sel'));
+  return '<div class="rs-f'+(large?' wide':'')+'"'+(vis?'':' hidden')+' data-f="'+f.k+'"><label for="'+id+'">'+esc(f.l)+(f.req&&def.build?' <span style="color:var(--bad)">*</span>':'')+'</label>'+ctl+h+'</div>';
+}
+function rsFormHtml(def){
+  const v=rsVals(def);
+  return def.g.map(g=>'<fieldset class="rs-fs"><legend>'+esc(g.t)+'</legend>'+g.f.map(f=>rsChampHtml(def,f,v)).join('')+'</fieldset>').join('');
+}
+function rsLire(def, el){
+  const v=rsVals(def), f=rsChamps(def).find(x=>x.k===el.dataset.k);
+  if(!f) return;
+  if(f.t==='chk') v[f.k]=el.checked?1:0;
+  else if(f.t==='eur'||f.t==='num'||f.t==='pct'){ const n=parseFloat(String(el.value).replace(',','.')); v[f.k]=isFinite(n)?n:0; }
+  else v[f.k]=el.value;
+}
+function rsVisibilite(def, racine){
+  const v=rsVals(def);
+  rsChamps(def).forEach(f=>{ if(!f.show) return; const e=racine.querySelector('[data-f="'+f.k+'"]'); if(e) e.hidden=!f.show(v); });
+}
+
+/* ------------------------------ Graphiques ---------------------------- */
+function rsChartSvg(ch){
+  const W=760, H=270, pl=62, pr=12, pt=12, pb=28, iw=W-pl-pr, ih=H-pt-pb, n=ch.x.length;
+  const tot = i => ch.type==='bar' ? ch.series.reduce((s,se)=>s+Math.max(0,se.d[i]||0),0) : Math.max(...ch.series.map(se=>se.d[i]||0));
+  let max=0; for(let i=0;i<n;i++) max=Math.max(max,tot(i));
+  if(!(max>0)) max=1;
+  const pas = Math.pow(10, Math.floor(Math.log10(max/4))); const st=[1,2,2.5,5,10].map(k=>k*pas).find(s=>max/s<=5)||pas*10;
+  const top = Math.ceil(max/st)*st, y=val=>pt+ih-(val/top)*ih;
+  const fmtA = x => x>=1e6 ? RS_N(x/1e6,x%1e6?1:0)+' M' : x>=1e3 ? RS_N(x/1e3,x%1e3?1:0)+' k' : RS_N(x);
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Graphique">';
+  for(let g=0; g<=top+1e-9; g+=st) s+='<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(g)+'" y2="'+y(g)+'" style="stroke:var(--line)" stroke-width="1"/><text x="'+(pl-8)+'" y="'+(y(g)+4)+'" text-anchor="end">'+fmtA(g)+' €</text>';
+  const bw = iw/n, lab = Math.ceil(n/12);
+  ch.x.forEach((l,i)=>{ if(i%lab===0 || i===n-1) s+='<text x="'+(pl+bw*(i+0.5))+'" y="'+(H-8)+'" text-anchor="middle">'+esc(l)+'</text>'; });
+  if(ch.mark){ const i=ch.x.indexOf(ch.mark); if(i>=0) s+='<line x1="'+(pl+bw*(i+1))+'" x2="'+(pl+bw*(i+1))+'" y1="'+pt+'" y2="'+(pt+ih)+'" style="stroke:var(--ink-3)" stroke-dasharray="4 4"/>'; }
+  if(ch.type==='bar'){
+    const w=Math.max(2,bw*0.7);
+    for(let i=0;i<n;i++){
+      let base=0;
+      const tip = esc(ch.x[i])+' — '+ch.series.map(se=>se.n+' : '+RS_E(se.d[i])).join(' · ');
+      s+='<g><title>'+tip+'</title>';
+      ch.series.forEach(se=>{ const val=Math.max(0,se.d[i]||0); if(val<=0) return; s+='<rect x="'+(pl+bw*i+(bw-w)/2).toFixed(1)+'" y="'+y(base+val).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+(y(base)-y(base+val)).toFixed(1)+'" rx="2" style="fill:'+se.c+'"/>'; base+=val; });
+      s+='</g>';
+    }
+  } else {
+    ch.series.forEach(se=>{
+      const pts=se.d.map((val,i)=>(pl+bw*(i+0.5)).toFixed(1)+','+y(val).toFixed(1)).join(' ');
+      s+='<polyline points="'+pts+'" fill="none" style="stroke:'+se.c+'" stroke-width="2.5"'+(se.dash?' stroke-dasharray="5 4"':'')+'/>';
+      se.d.forEach((val,i)=>{ s+='<circle cx="'+(pl+bw*(i+0.5)).toFixed(1)+'" cy="'+y(val).toFixed(1)+'" r="3" style="fill:'+se.c+'"><title>'+esc(ch.x[i])+' — '+esc(se.n)+' : '+RS_E(val)+'</title></circle>'; });
+    });
+  }
+  return s+'</svg>';
+}
+const rsLegende = series => '<div class="rs-leg">'+series.map(se=>'<span><i style="background:'+se.c+'"></i>'+esc(se.n)+'</span>').join('')+'</div>';
+function rsBarsHtml(b){
+  const max=Math.max(b.total, ...b.items.map(i=>Math.abs(i[1])))||1;
+  return '<div class="rs-grp-t">'+esc(b.t)+' — loyer '+RS_E(b.total)+'</div>'+b.items.map(i=>
+    '<div style="display:grid;grid-template-columns:130px 1fr 90px;gap:8px;align-items:center;font-size:13px;margin:5px 0"><span>'+esc(i[0])+'</span>'
+    +'<span style="background:var(--surface-2);border-radius:5px;height:14px;overflow:hidden"><span style="display:block;height:100%;width:'+(Math.abs(i[1])/max*100).toFixed(1)+'%;background:'+i[2]+'"></span></span>'
+    +'<b class="num" style="text-align:right">'+(i[1]<0?'−':'')+RS_E(Math.abs(i[1]))+'</b></div>').join('');
+}
+const rsTableHtml = (t) => '<div class="rs-tblw"><table class="rs-tbl"><thead><tr>'+t.h.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'
+  +t.rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')
+  +(t.tot?'<tr class="tot">'+t.tot.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>':'')+'</tbody></table></div>';
+
+function rsResultHtml(r){
+  let h='';
+  if(r.warn) h+='<div class="rs-warn">'+esc(r.warn)+'</div>';
+  h+='<div class="rs-kpis">'+r.kpis.map(k=>'<div class="rs-kpi '+(k.cls||'')+'"><div class="k">'+esc(k.k)+'</div><div class="v">'+esc(k.v)+'</div>'+(k.s?'<div class="s">'+esc(k.s)+'</div>':'')+'</div>').join('')+'</div>';
+  if(r.chart){ h+='<div class="rs-chart">'+rsChartSvg(r.chart)+'</div>'+rsLegende(r.chart.series); }
+  if(r.bars) h+=rsBarsHtml(r.bars);
+  (r.tables||[]).forEach(t=>{ h+='<div class="rs-grp-t" style="margin-top:14px">'+esc(t.t)+'</div>'+rsTableHtml(t); });
+  if(r.table) h+='<details class="rs-det"><summary>Détail année par année</summary>'+rsTableHtml(r.table)+'</details>';
+  if(r.notes&&r.notes.length) h+='<ul class="rs-notes">'+r.notes.map(n=>'<li>'+esc(n)+'</li>').join('')+'<li>Simulation indicative et non contractuelle, établie sur des hypothèses constantes ; elle ne constitue pas un conseil personnalisé.</li></ul>';
+  return h;
+}
+
+/* ------------------------- Parc immobilier (liste) -------------------- */
+const RS_BIEN_F = [
+  ['nom','Nom du bien','txt'],['achat','Prix d’acquisition','eur'],['an','Année d’acquisition','an'],['valeur','Valeur estimée aujourd’hui','eur'],
+  ['loyer','Loyer mensuel','eur'],['chg','Charges locatives / mois','eur'],['tf','Taxe foncière / an','eur'],['ass','Assurance / an','eur'],
+  ['ent','Entretien, copropriété / an','eur'],['trav','Travaux / an','eur'],['agence','Frais de gestion / an','eur'],
+];
+const rsBienNeuf = i => ({nom:'Bien '+i, achat:120000, an:2010, valeur:180000, loyer:650, chg:30, tf:800, ass:200, ent:400, trav:0, agence:0});
+function rsParcAbatt(ans){
+  const ir = ans<6?0 : ans<22 ? 0.06*(ans-5) : 1;
+  const ps = ans<6?0 : ans<22 ? 0.0165*(ans-5) : ans===22 ? 0.28 : ans<30 ? 0.28+0.09*(ans-22) : 1;
+  return {ir:Math.min(1,ir), ps:Math.min(1,ps)};
+}
+function rsParcCalc(v){
+  const tx=(+v.tmi+v.ps)/100, an=RS_AN();
+  const L = RS_PARC.map(b=>{
+    const ans = Math.max(0, an - b.an);
+    const ab = rsParcAbatt(ans);
+    const prixCorr = b.achat*1.075 + (ans>5 ? b.achat*0.15 : 0);   // forfaits frais d'acquisition 7,5 % et travaux 15 %
+    const pv = Math.max(0, b.valeur - prixCorr);
+    const impPv = pv*(1-ab.ir)*0.19 + pv*(1-ab.ps)*0.172;
+    const net = b.valeur - impPv;
+    const rev = 12*(b.loyer + b.chg);
+    const dep = b.tf + b.ass + b.ent + b.trav + b.agence + rev/36;
+    const imp = 0.7*rev*tx;
+    return {b, ans, pv, impPv, net, rev, dep, imp, av:net>0?(rev-dep)/net:0, ap:net>0?(rev-dep-imp)/net:0};
+  });
+  const S = k => L.reduce((s,x)=>s+x[k],0);
+  const net=S('net'), rev=S('rev'), dep=S('dep'), imp=S('imp');
+  return {
+    kpis:[
+      {k:'Net vendeur du parc', v:RS_E(net), s:'après impôt sur la plus-value '+RS_E(S('impPv'))},
+      {k:'Rentabilité avant impôts', v:RS_P(net?(rev-dep)/net:0), s:RS_E((rev-dep)/12)+' / mois'},
+      {k:'Rentabilité après impôts', v:RS_P(net?(rev-dep-imp)/net:0), s:RS_E((rev-dep-imp)/12)+' / mois', cls:'hl'},
+      {k:'Impôts sur les loyers', v:RS_E(imp), s:'micro-foncier, par an'},
+    ],
+    tables:[{t:'Comparatif des biens', h:['Bien','Détention','Net vendeur','Revenus / an','Dépenses / an','Rentabilité avant impôts','après impôts','Revenu net / mois'],
+      rows:L.map(x=>[x.b.nom||'—', x.ans+' ans', RS_E(x.net), RS_E(x.rev), RS_E(x.dep), RS_P(x.av), RS_P(x.ap), RS_E((x.rev-x.dep-x.imp)/12)]),
+      tot:['Total','', RS_E(net), RS_E(rev), RS_E(dep), RS_P(net?(rev-dep)/net:0), RS_P(net?(rev-dep-imp)/net:0), RS_E((rev-dep-imp)/12)]}],
+    chart: L.length ? {type:'bar', x:L.map(x=>x.b.nom||'—'), series:[{n:'Revenu net d’impôt par an', c:RS_COL[1], d:L.map(x=>Math.max(0,x.rev-x.dep-x.imp))},{n:'Impôts sur les loyers', c:RS_COL[2], d:L.map(x=>x.imp)}]} : null,
+    notes:[
+      'Rentabilité mesurée sur ce que rapporterait la vente aujourd’hui (net vendeur), c’est-à-dire le capital réellement immobilisé.',
+      'Plus-value : forfaits de 7,5 % (frais d’acquisition) et 15 % (travaux, après 5 ans), abattements pour durée de détention, 19 % d’impôt et 17,2 % de prélèvements sociaux. Surtaxe au-delà de 50 000 € et résidence principale non prises en compte.',
+      'Vacance locative comptée à un mois tous les trois ans ; loyers imposés au micro-foncier (abattement 30 %).',
+    ]
+  };
+}
+function rsParcFormHtml(){
+  return RS_PARC.map((b,i)=>'<div class="rs-bien" data-i="'+i+'"><div class="bh"><div class="rs-in" style="flex:1"><input type="text" data-b="nom" value="'+esc(b.nom)+'" aria-label="Nom du bien" autocomplete="off"></div>'
+    +'<button type="button" class="rs-x" data-del="'+i+'" title="Retirer ce bien">✕</button></div>'
+    +RS_BIEN_F.slice(1).map(f=>'<div class="rs-f"><label>'+esc(f[1])+'</label><div class="rs-in"><input type="number" inputmode="decimal" step="any" data-b="'+f[0]+'" value="'+esc(b[f[0]])+'"'+(f[2]==='an'?' style="padding-right:9px"':'')+'>'+(f[2]==='eur'?'<span class="u">€</span>':'')+'</div></div>').join('')
+    +'</div>').join('') + (RS_PARC.length<10?'<button type="button" class="rs-btn" id="rsParcAdd">+ Ajouter un bien</button>':'');
+}
+
+/* ------------------------------- Rendu -------------------------------- */
+function rsCartes(list, cur, attr){
+  return list.map(t=>'<button type="button" class="rs-card'+(t.id===cur?' on':'')+'" '+attr+'="'+t.id+'"><span class="ic">'+t.ic+'</span><span><b>'+esc(t.t)+'</b><span class="d">'+esc(t.d)+'</span></span></button>').join('');
+}
+function rsRenderSim(){
+  const def=rsDef(RS_SIM); if(!def) return;
+  document.getElementById('resSimCards').innerHTML = rsCartes(RS_SIMS, RS_SIM, 'data-sim');
+  const box=document.getElementById('resSim');
+  if(def.custom && !RS_PARC) RS_PARC=[rsBienNeuf(1), rsBienNeuf(2)];
+  box.innerHTML='<div class="rs-tool">'
+    +'<div class="panel rs-form" id="rsForm">'+rsFormHtml(def)+(def.custom?'<fieldset class="rs-fs"><legend>Biens</legend><div id="rsParc">'+rsParcFormHtml()+'</div></fieldset>':'')+'</div>'
+    +'<div class="panel"><div class="rs-head"><h2>'+def.ic+' '+esc(def.t)+'</h2><div class="rs-acts">'
+    +'<button type="button" class="rs-btn" id="rsReset">↺ Réinitialiser</button>'
+    +(def.custom?'':'<button type="button" class="rs-btn" id="rsLien">🔗 Copier le lien</button>')
+    +'<button type="button" class="rs-btn pri" id="rsPrint">🖨️ Imprimer / PDF</button></div></div>'
+    +'<div id="rsOut"></div></div></div>';
+  rsCalculer();
+}
+function rsResultat(def){
+  const v=rsVals(def);
+  try{ return def.custom ? rsParcCalc(v) : def.calc(v); }
+  catch(e){ return {kpis:[], warn:'Calcul impossible avec ces valeurs.'}; }
+}
+function rsCalculer(){
+  const def=rsDef(RS_SIM), out=document.getElementById('rsOut');
+  if(def && out) out.innerHTML = rsResultHtml(rsResultat(def));
+}
+function rsRenderDoc(){
+  const def=rsDef(RS_DOC); if(!def) return;
+  document.getElementById('resDocCards').innerHTML = rsCartes(RS_DOCS, RS_DOC, 'data-doc');
+  document.getElementById('resDoc').innerHTML='<div class="rs-tool">'
+    +'<div class="panel rs-form" id="rsFormD">'+rsFormHtml(def)+'</div>'
+    +'<div class="panel"><div class="rs-head"><h2>'+def.ic+' '+esc(def.t)+'</h2><div class="rs-acts">'
+    +'<button type="button" class="rs-btn" id="rsVider">↺ Vider</button>'
+    +'<button type="button" class="rs-btn" id="rsDocx">⬇ Word</button>'
+    +'<button type="button" class="rs-btn pri" id="rsPrintD">🖨️ Imprimer / PDF</button></div></div>'
+    +'<p class="rs-miss" id="rsMiss"></p><div class="rs-paper" id="rsPaper"></div></div></div>';
+  rsApercu();
+}
+const rsSeg = (t, mk) => esc(t).replace(/([^]*)/g, (_,l)=>mk(l));
+function rsLettreHtml(P){
+  let h='';
+  P.forEach(p=>{
+    const cls={exp:'exp',dest:'dest',dt:'dt',obj:'obj',sig:'sig',pj:'pj',mention:'mention',titre:'titre'}[p.c]||'';
+    const st = (p.gap && p.c!=='p' ? 'margin-bottom:16px;' : (['exp','dest','sig','obj'].includes(p.c) ? 'margin-bottom:0;' : '')) + (p.c==='titre'?'text-align:center;letter-spacing:.04em;':'') + (p.c==='p'?'text-align:justify;':'');
+    h+='<p class="'+cls+(p.x?' '+p.x:'')+'" style="'+st+'">'+(p.b?'<b>':'')+rsSeg(p.t, l=>'<mark>['+esc(l)+']</mark>')+(p.b?'</b>':'')+'</p>';
+  });
+  return h;
+}
+function rsApercu(){
+  const def=rsDef(RS_DOC), el=document.getElementById('rsPaper'); if(!def||!el) return;
+  const P = def.build(rsVals(def));
+  el.innerHTML = rsLettreHtml(P);
+  const manq = el.querySelectorAll('mark').length;
+  const m=document.getElementById('rsMiss');
+  if(m) m.textContent = manq ? manq+' information'+(manq>1?'s':'')+' à compléter (surlignée'+(manq>1?'s':'')+' en jaune). Tu peux aussi télécharger le courrier tel quel et compléter à la main.' : '';
+}
+
+/* ------------------------ Impression / PDF / Word --------------------- */
+function rsImprimer(titre, corps){
+  const css = ':root{--ground:#F4F5FB;--surface:#fff;--surface-2:#ECEEF7;--ink:#171A2B;--ink-2:#61667F;--ink-3:#8B90A8;--line:#E2E4F0;--line-2:#D0D3E6;--accent:#4338CA;--accent-soft:#E8E7FB;--gold:#22C58B;--encours:#E8A33D;--encours-ink:#8A5A00;--ok:#149467;--bad:#D64545}'
+    +'body{font:12px/1.5 Inter,Arial,sans-serif;color:#171A2B;margin:0}h1{font:700 18px Arial,sans-serif;margin:0 0 4px}.sub{color:#61667F;margin:0 0 14px}'
+    +'@page{size:A4;margin:16mm}svg text{fill:#61667F;font-size:11px}'
+    +document.getElementById('rsCss').textContent
+    +'.rs-kpi .v,.rs-grp-t,.rs-det>summary,h1{font-family:Inter,Arial,sans-serif}.rs-paper{border:0;box-shadow:none;padding:0;max-width:none;font-size:12pt}.rs-paper mark{background:none;color:inherit}.rs-kpi{break-inside:avoid}.rs-chart svg{min-width:0}details.rs-det>*{display:block}.rs-det>summary::before{content:""}';
+  let f=document.getElementById('rsFrame');
+  if(!f){ f=document.createElement('iframe'); f.id='rsFrame'; f.setAttribute('aria-hidden','true'); f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden'; document.body.appendChild(f); }
+  const d=f.contentWindow.document;
+  d.open(); d.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>'+esc(titre)+'</title><style>'+css+'</style></head><body>'+corps+'</body></html>'); d.close();
+  setTimeout(()=>{ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){} }, 150);
+}
+function rsImprimerSim(){
+  const def=rsDef(RS_SIM), v=rsVals(def);
+  const hyp = def.g.map(g=>g.f.filter(f=>!f.show||f.show(v)).map(f=>{
+    const x=v[f.k]; const val = f.t==='chk'?(x?'oui':'non') : f.t==='sel'?(f.o.find(o=>o[0]===String(x))||[])[1] : f.t==='eur'?RS_E(x) : f.t==='pct'?RS_N(x,2)+' %' : f.fmt==='an'?String(x) : RS_N(x, x%1?1:0)+(f.u?' '+f.u:'');
+    return [f.l, val];
+  })).flat();
+  if(def.custom) RS_PARC.forEach(b=>hyp.push([b.nom, 'acheté '+RS_E(b.achat)+' en '+b.an+', estimé '+RS_E(b.valeur)+', loyer '+RS_E(b.loyer)+' / mois']));
+  const r=rsResultat(def);
+  if(r.table) r.tables=(r.tables||[]).concat([Object.assign({t:'Détail année par année'}, r.table)]), delete r.table;
+  const corps='<h1>'+esc(def.t)+'</h1><p class="sub">Simulation du '+fmtDLong(isoJour(new Date()))+'</p>'
+    +'<div class="rs-grp-t">Hypothèses</div>'+rsTableHtml({h:['Paramètre','Valeur'], rows:hyp})
+    +'<div class="rs-grp-t" style="margin-top:14px">Résultats</div>'+rsResultHtml(r);
+  rsImprimer(def.t, corps);
+}
+const rsNomFichier = def => { const v=rsVals(def); return (def.t+(v.nom?' - '+v.nom:'')).replace(/’/g,"'").replace(/[\\/:*?"<>|]/g,' ').replace(/\s+/g,' ').trim(); };
+
+// Fichier .docx minimal (Office Open XML), écrit sans bibliothèque : archive ZIP non compressée
+const RS_CRC = (()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+const rsCrc32 = b => { let c=0xFFFFFFFF; for(let i=0;i<b.length;i++) c=RS_CRC[(c^b[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; };
+function rsZip(fichiers){
+  const enc=new TextEncoder(), parts=[], centr=[]; let off=0;
+  const u16=n=>[n&255,(n>>>8)&255], u32=n=>[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255];
+  fichiers.forEach(([nom, txt])=>{
+    const nb=enc.encode(nom), data=enc.encode(txt), crc=rsCrc32(data);
+    const loc=new Uint8Array([0x50,0x4B,3,4, ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(nb.length), ...u16(0)]);
+    parts.push(loc, nb, data);
+    centr.push(new Uint8Array([0x50,0x4B,1,2, ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(nb.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), nb);
+    off += loc.length + nb.length + data.length;
+  });
+  const tailleC = centr.reduce((s,p)=>s+p.length,0);
+  const fin = new Uint8Array([0x50,0x4B,5,6, ...u16(0), ...u16(0), ...u16(fichiers.length), ...u16(fichiers.length), ...u32(tailleC), ...u32(off), ...u16(0)]);
+  return new Blob(parts.concat(centr,[fin]), {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+const rsXml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function rsDocxXml(P){
+  const run = (t,b,hl) => '<w:r><w:rPr>'+(b?'<w:b/>':'')+(hl?'<w:highlight w:val="yellow"/>':'')+'</w:rPr><w:t xml:space="preserve">'+rsXml(t)+'</w:t></w:r>';
+  const body = P.map(p=>{
+    const ind = (p.c==='dest'||p.c==='sig') ? '<w:ind w:left="5100"/>' : '';
+    const jc = p.c==='dt' ? 'right' : p.c==='titre' ? 'center' : p.c==='p' ? 'both' : 'left';
+    const after = p.gap ? 360 : (['exp','dest','sig','obj'].includes(p.c) ? 0 : 160);
+    const before = p.c==='sig' && P.find(q=>q.c==='sig')===p ? 360 : p.c==='pj' ? 1000 : p.c==='mention' ? 360 : 0;
+    const sz = p.c==='mention' ? '<w:rPr><w:sz w:val="17"/></w:rPr>' : '';
+    const runs = p.t.split(/([^]*)/).filter(Boolean).map(s=>s[0]==='' ? run('['+s.slice(1,-1)+']', p.b, true) : run(s, p.b, false)).join('');
+    return '<w:p><w:pPr><w:spacing w:before="'+before+'" w:after="'+after+'"/>'+ind+'<w:jc w:val="'+jc+'"/>'+sz+'</w:pPr>'+(p.c==='mention'?runs.replace(/<w:rPr>/g,'<w:rPr><w:sz w:val="17"/>'):runs)+'</w:p>';
+  }).join('');
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+body
+    +'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1417" w:right="1417" w:bottom="1417" w:left="1417" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>';
+}
+function rsDocx(def){
+  const P = def.build(rsVals(def));
+  const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri" w:eastAsia="Calibri"/><w:sz w:val="22"/><w:lang w:val="fr-FR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults></w:styles>';
+  const blob = rsZip([
+    ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>'],
+    ['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
+    ['word/_rels/document.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['word/document.xml', rsDocxXml(P)],
+    ['word/styles.xml', styles],
+  ]);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=rsNomFichier(def)+'.docx';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  return blob;
+}
+
+/* ------------------------------ Navigation ---------------------------- */
+function showResSub(s){
+  if(!RS_SUBS.includes(s)) s='sim';
+  RS_SUB=s;
+  document.querySelectorAll('#resSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+  document.querySelectorAll('#v-res .subview').forEach(v=>v.classList.toggle('on', v.id==='sr-'+s));
+}
+function buildRes(){
+  if(!RS_FAIT){
+    RS_FAIT=true;
+    rsRenderSim(); rsRenderDoc();
+  }
+  const C=(typeof CONTENU!=='undefined'&&CONTENU)||{};
+  const btn=document.getElementById('resLienBtn');
+  if(C.ressources&&C.ressources.length){
+    btn.hidden=false;
+    document.getElementById('resLiens').innerHTML=document.getElementById('homeRes').innerHTML || C.ressources.map(r=>'<a class="resc" href="'+esc(r.u||'#')+'" target="_blank" rel="noopener"><b>'+esc(r.t)+'</b><p>'+esc(r.d||'')+'</p></a>').join('');
+  }
+}
+function rsOuvrirSim(id){ if(!rsDef(id)) return; RS_SIM=id; rsRenderSim(); }
+function rsOuvrirDoc(id){ if(!rsDef(id)) return; RS_DOC=id; rsRenderDoc(); }
+function rsTabState(p){
+  if(RS_SUB!=='sim') p.set('s', RS_SLUG[RS_SUB]);
+  if(RS_SUB==='doc' && RS_DOC!=='heb') p.set('modele', rsDef(RS_DOC).slug);
+  if(RS_SUB==='sim'){
+    const def=rsDef(RS_SIM);
+    if(RS_SIM!=='av') p.set('outil', def.slug);
+    if(!def.custom && RS_VAL[def.id]){
+      const v=RS_VAL[def.id];
+      rsChamps(def).forEach(f=>{ if(f.t!=='txt' && f.t!=='area' && f.t!=='date' && String(v[f.k])!==String(rsDefaut(f))) p.set(f.k, String(v[f.k])); });
+    }
+  }
+}
+function rsApplyState(p){
+  if(!RS_FAIT) buildRes();
+  const s=p.get('s')||'';
+  showResSub(RS_SLUG_INV[s]||s||'sim');
+  const o=RS_SIMS.find(t=>t.slug===(p.get('outil')||'assurance-vie'));
+  if(o){
+    const v=rsVals(o);
+    rsChamps(o).forEach(f=>{
+      if(f.t==='txt'||f.t==='area'||f.t==='date') return;
+      const brut=p.get(f.k), def=rsDefaut(f);
+      if(brut===null){ v[f.k]=def; return; }
+      if(f.t==='sel') v[f.k] = f.o.some(x=>x[0]===brut) ? brut : def;
+      else { const n=parseFloat(brut); v[f.k]=isFinite(n)?n:def; }
+    });
+    RS_SIM=o.id; rsRenderSim();
+  }
+  const d=RS_DOCS.find(t=>t.slug===(p.get('modele')||''));
+  if(d && d.id!==RS_DOC) rsOuvrirDoc(d.id);
+}
+function rsSearchIndex(){
+  RS_SIMS.forEach(t=>SIDX.push({g:'Ressources — simulateurs', ic:t.ic, t:t.t, s:t.d, k:norm(t.t), kx:norm(t.d+' simulateur simulation calcul'), act:()=>{ showTab('res'); curTab='res'; buildRes(); showResSub('sim'); rsOuvrirSim(t.id); syncHash(true); window.scrollTo({top:0}); }}));
+  RS_DOCS.forEach(t=>SIDX.push({g:'Ressources — courriers', ic:t.ic, t:t.t, s:t.d, k:norm(t.t), kx:norm(t.d+' courrier lettre modele attestation word pdf'), act:()=>{ showTab('res'); curTab='res'; buildRes(); showResSub('doc'); rsOuvrirDoc(t.id); syncHash(true); window.scrollTo({top:0}); }}));
+}
+
+document.getElementById('resSub').addEventListener('click', e=>{
+  const b=e.target.closest('button[data-s]'); if(!b) return;
+  showResSub(b.dataset.s); syncHash(true); window.scrollTo({top:0});
+});
+document.getElementById('v-res').addEventListener('click', e=>{
+  const t=e.target.closest('button'); if(!t) return;
+  const versOutil = id => { if(window.innerWidth<980){ const e=document.getElementById(id); if(e) e.scrollIntoView({behavior:'smooth',block:'start'}); } };
+  if(t.dataset.sim){ rsOuvrirSim(t.dataset.sim); syncHash(true); versOutil('resSim'); return; }
+  if(t.dataset.doc){ rsOuvrirDoc(t.dataset.doc); syncHash(true); versOutil('resDoc'); return; }
+  const sub = t.closest('.subview'); if(!sub) return;
+  const def = sub.id==='sr-sim' ? rsDef(RS_SIM) : rsDef(RS_DOC);
+  if(t.id==='rsReset'){ delete RS_VAL[def.id]; if(def.custom) RS_PARC=null; rsRenderSim(); syncHash(false); }
+  else if(t.id==='rsVider'){ delete RS_VAL[def.id]; rsRenderDoc(); }
+  else if(t.id==='rsLien'){
+    const url=location.href.split('#')[0]+hashFor('res');
+    const ok=()=>{ t.textContent='✓ Lien copié'; setTimeout(()=>t.textContent='🔗 Copier le lien',1800); };
+    try{ navigator.clipboard.writeText(url).then(ok, ok); }catch(_){ ok(); }
+  }
+  else if(t.id==='rsPrint') rsImprimerSim();
+  else if(t.id==='rsPrintD'){
+    rsImprimer(rsNomFichier(def), '<div class="rs-paper">'+rsLettreHtml(def.build(rsVals(def)))+'</div>');
+  }
+  else if(t.id==='rsDocx') rsDocx(def);
+  else if(t.id==='rsParcAdd'){ RS_PARC.push(rsBienNeuf(RS_PARC.length+1)); document.getElementById('rsParc').innerHTML=rsParcFormHtml(); rsCalculer(); }
+  else if(t.dataset.del!==undefined){ RS_PARC.splice(+t.dataset.del,1); document.getElementById('rsParc').innerHTML=rsParcFormHtml(); rsCalculer(); }
+});
+const rsSurSaisie = e=>{
+  const el=e.target, sub=el.closest('#v-res .subview'); if(!sub) return;
+  if(el.dataset.b!==undefined){
+    const i=+el.closest('.rs-bien').dataset.i, k=el.dataset.b;
+    RS_PARC[i][k] = k==='nom' ? el.value : (parseFloat(el.value)||0);
+    rsCalculer(); return;
+  }
+  if(el.dataset.k===undefined) return;
+  const def = sub.id==='sr-sim' ? rsDef(RS_SIM) : rsDef(RS_DOC);
+  rsLire(def, el); rsVisibilite(def, sub);
+  sub.id==='sr-sim' ? rsCalculer() : rsApercu();
+};
+document.getElementById('v-res').addEventListener('input', rsSurSaisie);
+document.getElementById('v-res').addEventListener('change', rsSurSaisie);
+
 </script>
 
 </body></html>

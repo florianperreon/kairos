@@ -1254,3 +1254,121 @@ test.describe('Mail Manager — encart « ma lignée » sur l’accueil', () => 
     expect(r).toEqual([40002]);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Ressources — simulateurs et courriers', () => {
+  // Onglet ajouté le 15/09/2026. Les calculs reprennent les classeurs de Florian : les valeurs
+  // attendues ci-dessous sont celles que calcule Excel sur les mêmes hypothèses.
+  const entrer = (page, hash) => page.evaluate((h) => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    if (h) { location.hash = h; routeHash(); } else { showTab('res'); curTab = 'res'; }
+    return (document.querySelector('section.view.on') || {}).id;
+  }, hash);
+
+  test('assurance vie : même épargne acquise que le classeur « Épargne acquise »', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page);
+    const r = await page.evaluate(() => {
+      const d = RS_SIMS.find(t => t.id === 'av');
+      const v = Object.assign({}, rsVals(d), { age: 0, init: 700, mens: 150, rdt: 5.5, fv: 4.8, fg: 1, cmp: 0 });
+      const an = n => { const o = d.calc(Object.assign({}, v, { duree: n })); return o.table.rows[n - 1]; };
+      return { un: an(1), huit: an(8) };
+    });
+    const sp = s => s.replace(/\s/g, ' ');       // séparateur de milliers : espace fine insécable
+    expect(sp(r.un[r.un.length - 1])).toBe('2 443 €');       // Excel : 2 443,03
+    expect(sp(r.huit[r.huit.length - 1])).toBe('17 298 €');  // Excel : 17 298,49
+    expect(erreurs).toEqual([]);
+  });
+
+  test('SCPI : dividendes et réinvestissement conformes au classeur « SCPI »', async ({ page }) => {
+    await ouvrir(page);
+    await entrer(page);
+    const r = await page.evaluate(() => {
+      const d = RS_SIMS.find(t => t.id === 'scpi');
+      const base = Object.assign({}, rsVals(d), { prix: 250, parts: 20, mens: 200, rdt: 5.5, dj: 6, duree: 5, dr: 35 });
+      const sans = d.calc(Object.assign({}, base, { reinv: 0 })).table.rows;
+      const avec = d.calc(Object.assign({}, base, { reinv: 1 })).table.rows;
+      return { div1: sans[0][2], cap2: avec[1][1], div2: sans[1][2] };
+    });
+    const sp = s => s.replace(/\s/g, ' ');
+    expect(sp(r.div1)).toBe('157 €');        // 156,75
+    expect(sp(r.div2)).toBe('360 €');        // 360,25
+    expect(sp(r.cap2)).toBe('8 757 €');      // 8 756,75 : le dividende de l'an 1 est réinvesti
+  });
+
+  test('objectif d’activité : 4,2 R1 par semaine comme dans « Projection »', async ({ page }) => {
+    await ouvrir(page);
+    await entrer(page);
+    const k = await page.evaluate(() => RS_SIMS.find(t => t.id === 'activite').calc({ va: 500000, vpm: 1800, panier: 5000, conv: 48.5, sem: 47 }).kpis);
+    expect(k[3].v).toBe('4,2');
+    expect(k[1].v).toBe('96');
+  });
+
+  test('chaque simulateur et chaque courrier se rend sans erreur, y compris sur téléphone', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const erreurs = await ouvrir(page);
+    await entrer(page);
+    const r = await page.evaluate(() => {
+      const res = [];
+      RS_SIMS.forEach(t => { rsOuvrirSim(t.id); res.push([t.id, document.querySelectorAll('#rsOut .rs-kpi').length, document.documentElement.scrollWidth]); });
+      showResSub('doc');
+      RS_DOCS.forEach(t => { rsOuvrirDoc(t.id); res.push([t.id, document.querySelectorAll('#rsPaper p').length, document.documentElement.scrollWidth]); });
+      return res;
+    });
+    for (const [id, n, w] of r) {
+      expect(n, id + ' ne rend rien').toBeGreaterThan(0);
+      expect(w, id + ' déborde en largeur sur téléphone').toBeLessThanOrEqual(390);
+    }
+    expect(erreurs).toEqual([]);
+  });
+
+  test('les hypothèses d’un simulateur passent dans l’adresse, jamais les champs d’un courrier', async ({ page }) => {
+    await ouvrir(page);
+    const vue = await entrer(page, '#ressources?outil=per&rdt=4');
+    expect(vue).toBe('v-res');
+    const r = await page.evaluate(async () => {
+      const avant = { outil: RS_SIM, rdt: RS_VAL.per.rdt, champ: document.getElementById('rs_per_rdt').value };
+      const i = document.getElementById('rs_per_vp');
+      i.value = '3000'; i.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise(ok => setTimeout(ok, 20));
+      const hSim = location.hash;
+      showResSub('doc'); rsOuvrirDoc('avt'); curTab = 'res';
+      const n = document.getElementById('rs_avt_nom');
+      n.value = 'Durand'; n.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise(ok => setTimeout(ok, 20));
+      return { avant, hSim, hDoc: location.hash, apercu: document.getElementById('rsPaper').textContent };
+    });
+    expect(r.avant).toEqual({ outil: 'per', rdt: 4, champ: '4' });
+    expect(r.hSim).toContain('outil=per');
+    expect(r.hSim).toContain('vp=3000');
+    expect(r.hDoc).toContain('modele=rachat-total-assurance-vie');
+    expect(r.hDoc).not.toContain('Durand');
+    expect(r.apercu).toContain('DURAND');
+  });
+
+  test('le courrier Word est un .docx valide qui contient le texte saisi', async ({ page }) => {
+    await ouvrir(page);
+    await entrer(page, '#ressources?s=courriers&modele=cloture-livret');
+    await page.fill('#rs_livret_prenom', 'Léa');
+    await page.fill('#rs_livret_nom', 'Durand');
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#rsDocx')]);
+    // en file:// Chromium ignore le nom proposé pour un blob ; en ligne, le fichier porte ce nom
+    if (!page.url().startsWith('file:')) expect(dl.suggestedFilename()).toBe('Clôture de livret - Durand.docx');
+    expect(await page.evaluate(() => rsNomFichier(rsDef('livret')))).toBe('Clôture de livret - Durand');
+    const f = path.join(require('os').tmpdir(), 'kairos-test.docx');
+    await dl.saveAs(f);
+    const py = require('child_process').spawnSync('python3', ['-c', [
+      'import sys, zipfile, xml.dom.minidom as m',
+      'z = zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None',
+      'for n in z.namelist():',
+      '    if n.endswith(".xml") or n.endswith(".rels"): m.parseString(z.read(n))',
+      'print(z.read("word/document.xml").decode())'].join('\n'), f], { encoding: 'utf8' });
+    test.skip(py.error && py.error.code === 'ENOENT', 'python3 absent');
+    expect(py.status, py.stderr).toBe(0);
+    expect(py.stdout).toContain('Léa DURAND');
+    expect(py.stdout).toContain('Livret A');
+    expect(py.stdout).toContain('w:highlight');          // le numéro manquant reste surligné
+  });
+});
