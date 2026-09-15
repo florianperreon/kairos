@@ -1,1 +1,1 @@
-window.KAIROS_META={"maj": "2026-09-14T22:53", "majDonnees": "2026-09-14", "versionContenu": "2026-09-13"};
+window.KAIROS_META={"maj": "2026-09-15T02:41", "majDonnees": "2026-09-15", "versionContenu": "2026-09-13"};
