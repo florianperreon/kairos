@@ -972,7 +972,7 @@ test.describe('Mail Manager — invités relevés et lecture du mur', () => {
   test('EDM / DM ne se saisit plus à la main', async ({ page }) => {
     await ouvrir(page);
     const champs = await page.evaluate(() => MM_CPT.map(c => c[1]));
-    expect(champs).toEqual(['R0', 'R1', 'R2', 'R2 bis', 'R3', 'RX']);
+    expect(champs).toEqual(['R0', 'R1', 'R2', 'R-signature', 'R3', 'RX']);   // « R2 bis » renommé le 17/09/2026
     expect(champs, 'le compteur manuel a disparu').not.toContain('EDM / DM');
   });
 
@@ -1234,6 +1234,70 @@ test.describe('Mail Manager — encart « ma lignée » sur l’accueil', () => 
     expect(r.aline).toBe(true);
     expect(r.url).toBe('ma-lignee');
     expect(erreurs).toEqual([]);
+  });
+
+  test('le tableau du mur affiche les dix colonnes demandées, et le nom ouvre le mail manager', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE, dm: '2099-01-01' });
+    const r = await page.evaluate(() => {
+      MM_LIG = []; MM_FILTRE = '';
+      MM_MUR = [
+        { membre_id: 40001, nom: 'Aline Publiee', participe: true, statut: 'publie', publie_le: '2026-01-05T08:10:00Z', serie: 1 },
+        { membre_id: 40002, nom: 'Bruno Publie',  participe: true, statut: 'publie', publie_le: '2026-01-05T08:20:00Z', serie: 1 },
+        { membre_id: 40003, nom: 'Carla Brouillon', participe: true, statut: 'brouillon', serie: 1 },
+      ];
+      // « p.* » = la semaine écoulée, « prod.* » = l'exercice, « auto.inv » = les invités relevés
+      const ligne = (id, p, prod, inv) => ({ membre_id: id, statut: 'publie',
+        donnees: { p, prod, auto: { inv, statut: 'BEMAN', filadh: 7 } } });
+      MM_LIGNES = [
+        ligne(40001, { r0: 4, r1: 3, r2: 2, r2b: 1, r3: 9, rx: 5 }, { va: 12000, vaec: 3000 }, { dm: 2, ad: 1, jr: 0 }),
+        ligne(40002, { r0: 1, r1: 1, r2: 0, r2b: 2, r3: 4, rx: 0 }, { va: 500, vaec: 0 }, { dm: 0, ad: 3, jr: 4 }),
+        { membre_id: 40003, statut: 'brouillon', donnees: { p: { r0: 99 } } },   // pas publié : hors tableau
+      ];
+      document.getElementById('mmMur').innerHTML = mmMur();
+      const t = document.querySelector('#mmMur .mm-mw');
+      // les montants français portent une espace insécable fine : on la ramène à une espace simple
+      const lire = tr => [...tr.querySelectorAll('td')].map(td => td.textContent.replace(/[\u202f\u00a0]/g, ' ').trim());
+      return {
+        entetes: [...t.querySelectorAll('thead th')].map(th => th.textContent.replace(/\s+/g, ' ').trim()),
+        aline: lire(t.querySelectorAll('tbody tr')[0]),
+        bruno: lire(t.querySelectorAll('tbody tr')[1]),
+        total: lire(t.querySelector('tbody tr.tot')),
+        nLignes: t.querySelectorAll('tbody tr').length,
+        lien: !!t.querySelector('tbody tr td .mm-lien[data-mmv="40001"]'),
+        brouillon: t.textContent.includes('Carla'),
+      };
+    });
+    expect(r.entetes).toEqual(['Personne', 'R0', 'R1', 'R2', 'RX', 'R-signature',
+      'VA + VAA VC perso', 'VA + VAA EC perso', 'DM', 'AD', '3 Jours']);
+    // RX avant R-signature, comme demandé ; R3 n'est pas au mur
+    expect(r.aline).toEqual(['Aline Publiee', '4', '3', '2', '5', '1', '12 000 €', '3 000 €', '2', '1', '0']);
+    expect(r.bruno).toEqual(['Bruno Publie', '1', '1', '0', '0', '2', '500 €', '0 €', '0', '3', '4']);
+    expect(r.total).toEqual(['Total (2)', '5', '4', '2', '5', '3', '12 500 €', '3 000 €', '2', '4', '4']);
+    expect(r.nLignes, 'deux publiés plus la ligne de total').toBe(3);
+    expect(r.brouillon, 'un brouillon n’entre pas dans le tableau').toBe(false);
+    expect(r.lien).toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('un clic sur le nom dans le tableau ouvre le mail manager de la personne', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE, dm: '2099-01-01' });
+    const r = await page.evaluate(async () => {
+      MM_LIG = []; MM_FILTRE = ''; MM_SUB = 'mur'; MM_LU = null;
+      MM_MUR = [{ membre_id: 40001, nom: 'Aline Publiee', participe: true, statut: 'publie', publie_le: '2026-01-05T08:10:00Z', serie: 1 }];
+      MM_LIGNES = [{ membre_id: 40001, statut: 'publie', donnees: { p: { r1: 3 }, auto: { statut: 'BEMAN' } } }];
+      SB = { from: () => ({ select() { return this; }, eq() { return this; },
+                            maybeSingle: async () => ({ data: null, error: null }) }) };
+      document.getElementById('mmMur').innerHTML = mmMur();
+      document.querySelector('#mmMur .mm-mw .mm-lien').click();
+      await new Promise(r => setTimeout(r, 60));
+      return { lu: MM_LU && MM_LU.id, nom: MM_LU && MM_LU.nom,
+               fiche: document.getElementById('mmMur').textContent.includes('Retour au mur') };
+    });
+    expect(r.lu, 'le clic ouvre bien sa fiche').toBe(40001);
+    expect(r.nom).toBe('Aline Publiee');
+    expect(r.fiche).toBe(true);
   });
 
   test('la pastille de retard suit la descendance du serveur, pas l’arbre local', async ({ page }) => {
@@ -2153,5 +2217,138 @@ test.describe('Mes sessions — inscriptions et enregistrements', () => {
     expect(r.revenu).toBe('ins');
     expect(r.raccourci).toBe('gardes');
     expect(r.vue, 'un lien #enregistre déjà partagé doit continuer d’ouvrir l’onglet').toBe('v-surv');
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Mail Manager — alléger la saisie', () => {
+  // Le formulaire faisait 1 578 px sur ordinateur et 2 022 px sur téléphone quel que soit son
+  // remplissage. Trois changements : ce qui est relevé par le réseau sort du formulaire, chaque
+  // section repliée dit ce qu'elle contient, et les compteurs tiennent moins de place.
+  const poserMM = page => page.evaluate(() => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true; MOI_ID = 20028; MM_SEM = mmSemCour(); MM_OBJ = {}; MM_PREC = null;
+    MM_PRODUITS = ['Assurance Vie']; MM_TOUT = false;
+    document.querySelectorAll('section.view').forEach(v => v.classList.remove('on'));
+    document.getElementById('v-mm').classList.add('on');
+    document.querySelectorAll('#v-mm .subview').forEach(v => v.classList.toggle('on', v.id === 'sm-moi'));
+    window.__auto = { statut: 'BEMAN', parrain: 'Diane P.', mgr: 'Marc L.', entree: '2024-03-01',
+                      fn: 8, ftot: 13, filadh: 6, fil: 9, inv: { dm: 3, ad: 2, jr: 1 },
+                      ag: [{ d: ajouterJours(todayIso, 12), t: 'Formation conformité' }] };
+    window.__plein = { auto: window.__auto, p: { r0: 4, r1: 3, r2: 2, r2b: 1, rx: 1 },
+                       c: { r0: 2 }, av: { r1: 3, r2: 3 },
+                       prod: { va: 24500, vaec: 8200 }, hab: { mia: { s: 'ok' } },
+                       sous: [{ t: 'Assurance Vie', vi: 24500, vp: 0 }] };
+    window.__rendre = d => { document.getElementById('mmMoi').innerHTML = mmCorps(d, '', false, MM_SEM); };
+  });
+
+  test('ce que le réseau relève sort du formulaire et tient dans un bandeau', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserMM(page);
+    const r = await page.evaluate(() => {
+      window.__rendre({ auto: window.__auto });
+      const el = document.getElementById('mmMoi');
+      const syn = el.querySelector('details.mm-syn');
+      return {
+        bandeau: !!syn,
+        replie: syn && !syn.open,
+        puces: [...syn.querySelectorAll('summary .mmpu i')].map(i => i.textContent.replace(/\s+/g, ' ').trim()),
+        // les quatre blocs automatiques sont dans le bandeau, plus dans les sections
+        dansBandeau: ['Statut FORMAN', 'Développement d’équipe', 'Objectifs FORMAN', 'Formations et événements à venir']
+          .every(t => syn.textContent.includes(t)),
+        sections: [...el.querySelectorAll('details.mm-sec')].map(d => d.querySelector('.n').textContent + ' ' + d.querySelector('.mmti').textContent),
+        // plus aucune section du formulaire n'est purement automatique
+        sansChamp: [...el.querySelectorAll('details.mm-sec')].filter(d => !d.querySelectorAll('input,select,textarea').length).length,
+        // « Activité » reste saisissable, dans le bandeau
+        activite: !!syn.querySelector('select[data-mm="act"]'),
+      };
+    });
+    expect(r.bandeau).toBe(true);
+    expect(r.replie, 'le bandeau est replié par défaut').toBe(true);
+    // 9 filleuls déclarés dont 6 adhérents : 3 invités pas encore adhérents
+    expect(r.puces).toEqual(['BEMAN', 'Objectifs 8/13', 'Filleuls 6', 'DM 3', 'AD 2', '3 Jours 1',
+      'Pas encore adhérents 3', 'À venir 1']);
+    expect(r.dansBandeau).toBe(true);
+    expect(r.sections).toEqual(['1 Semaine écoulée (S' + (await page.evaluate(() => mmNo(vAddDays(MM_SEM, -7)))) + ')',
+      '2 Semaine en cours (S' + (await page.evaluate(() => mmNo(MM_SEM))) + ')',
+      '3 RDV d’avance (à date)', '4 Production', '5 Habilitations & formations continues']);
+    expect(r.sansChamp, 'toutes les sections restantes ont des champs').toBe(0);
+    expect(r.activite).toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('une section repliée dit ce qu’elle contient, et une section vide reste ouverte', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserMM(page);
+    const vide = await page.evaluate(() => {
+      window.__rendre({ auto: window.__auto });
+      return [...document.querySelectorAll('#mmMoi details.mm-sec')].map(d => ({
+        n: d.querySelector('.n').textContent, ouvert: d.open,
+        res: (d.querySelector('.mmres') || {}).textContent || '' }));
+    });
+    // rien de saisi : les deux sections de la semaine s'ouvrent, les trois autres attendent
+    expect(vide.map(x => x.ouvert)).toEqual([true, true, false, false, false]);
+    expect(vide.every(x => x.res === '')).toBe(true);
+
+    const plein = await page.evaluate(() => {
+      window.__rendre(window.__plein);
+      return [...document.querySelectorAll('#mmMoi details.mm-sec')].map(d => ({
+        ouvert: d.open, res: (d.querySelector('.mmres') || {}).textContent.replace(/[  ]/g, ' ').trim() }));
+    });
+    expect(plein.map(x => x.ouvert), 'une section remplie se replie').toEqual([false, false, false, false, false]);
+    expect(plein[0].res).toBe('R0 4 · R1 3 · R2 2 · R-signature 1 · RX 1 · 24 500 € signé');
+    expect(plein[1].res).toBe('R0 2');
+    expect(plein[2].res).toBe('Total 6');
+    expect(plein[3].res).toBe('VA VC 24 500 € · VA EC 8 200 €');
+    expect(plein[4].res).toBe('1 / 7 validées');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('« Tout déplier » ouvre tout et le choix reste sur l’appareil', async ({ page }) => {
+    await ouvrir(page);
+    await poserMM(page);
+    const r = await page.evaluate(() => {
+      window.__rendre(window.__plein);
+      // l'historique des sessions (details.mm-hist, imbriqué) garde son propre pliage
+      const plis = () => [...document.querySelectorAll('#mmMoi details.mm-sec, #mmMoi details.mm-syn')];
+      const avant = plis().filter(d => d.open).length;
+      MM_TOUT = true;
+      window.__rendre(window.__plein);
+      const apres = plis().filter(d => d.open).length;
+      const total = plis().length;
+      const hist = document.querySelector('#mmMoi details.mm-hist');
+      const libelle = document.getElementById('mmPlier').textContent;
+      MM_TOUT = false;
+      return { avant, apres, total, libelle, hist: !hist || !hist.open };
+    });
+    expect(r.avant, 'rempli, tout est replié').toBe(0);
+    expect(r.apres, 'tout déplié : bandeau compris').toBe(r.total);
+    expect(r.total).toBe(6);
+    expect(r.hist, 'l’historique imbriqué garde son pliage').toBe(true);
+    expect(r.libelle).toBe('Tout replier');
+  });
+
+  test('le formulaire rempli tient sur un écran, et Entrée passe au compteur suivant', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserMM(page);
+    const h = await page.evaluate(() => {
+      window.__rendre(window.__plein);
+      return Math.round(document.getElementById('mmMoi').getBoundingClientRect().height);
+    });
+    // avant : 1 578 px quel que soit le remplissage
+    expect(h, 'formulaire rempli, état par défaut').toBeLessThan(900);
+
+    const nav = await page.evaluate(() => {
+      MM_TOUT = true; window.__rendre(window.__plein); MM_TOUT = false;
+      const champs = [...document.querySelectorAll('#mmMoi input[type=number]')];
+      champs[0].focus();
+      champs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      const apres = document.activeElement;
+      return { suivant: apres === champs[1], nom: apres.dataset.mm };
+    });
+    expect(nav.suivant, 'Entrée descend au compteur suivant').toBe(true);
+    expect(nav.nom).toBe('p.r1');
+    expect(erreurs).toEqual([]);
   });
 });

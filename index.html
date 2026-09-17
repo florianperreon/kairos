@@ -932,17 +932,41 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-sec>summary .n{width:21px;height:21px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font-size:11.5px;display:grid;place-items:center;flex:none}
 .mm-sec>summary .auto{margin-left:auto;font-size:11px;font-weight:700;color:var(--ink-3);background:var(--surface-2);border-radius:99px;padding:2px 8px}
 .mm-bd{padding:2px 14px 14px;border-top:1px solid var(--line)}
+.mm-sec>summary .mmti{flex:none}
+/* Le résumé d'une section repliée : lisible d'un coup d'œil, tronqué plutôt que de faire wrapper */
+.mm-sec>summary .mmres,.mm-syn>summary .mmpu{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:"Inter",system-ui,sans-serif;font-weight:500;font-size:12.5px;color:var(--ink-3)}
+.mm-sec>summary .mmres b{color:var(--ink-2);font-weight:700}
+.mm-sec>summary .mmres b.alr{color:var(--encours)}
+.mm-outils{display:flex;justify-content:flex-end;margin:0 0 4px}
+.mm-plier{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:99px;
+  padding:4px 13px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.mm-plier:hover{border-color:var(--accent);color:var(--accent)}
+/* Bandeau « ce que le réseau sait déjà » : aucun champ, donc hors du formulaire */
+.mm-syn{border:1px dashed var(--line-2);border-radius:var(--r);margin:0 0 12px;background:var(--surface-2);overflow:hidden}
+.mm-syn>summary{cursor:pointer;list-style:none;padding:9px 14px;display:flex;align-items:center;gap:9px}
+.mm-syn>summary::-webkit-details-marker{display:none}
+.mm-syn>summary::before{content:'▸';color:var(--ink-3);font-size:12px;transition:transform .15s;flex:none}
+.mm-syn[open]>summary::before{transform:rotate(90deg)}
+.mm-syn>summary .mmti{font-family:"Sora";font-weight:700;font-size:13px;flex:none}
+.mm-syn>summary .auto{margin-left:auto;font-size:11px;font-weight:700;color:var(--ink-3);background:var(--surface);border-radius:99px;padding:2px 8px;flex:none}
+.mm-syn .mmpu i{font-style:normal;display:inline-block;margin-right:12px}
+.mm-syn .mmpu i b{color:var(--ink);font-weight:700}
+.mm-syn .mmpu i.st{font-weight:800;color:var(--accent)}
+.mm-syn .mmpu i.att b{color:var(--encours)}
+.mm-syn .mmpu i.mut{color:var(--ink-3)}
+.mm-synbd{padding:2px 14px 14px;border-top:1px solid var(--line);background:var(--surface)}
 
-.mm-cpt{display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:9px;margin:12px 0}
+.mm-cpt{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:7px;margin:10px 0}
 #v-mm input[type=number]{-moz-appearance:textfield}
 #v-mm input[type=number]::-webkit-outer-spin-button,#v-mm input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.mm-c{background:var(--ground);border:1px solid var(--line);border-radius:10px;padding:8px 9px}
-.mm-c label{display:block;font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--ink-3);text-transform:uppercase;margin-bottom:4px}
-.mm-c .row{display:flex;align-items:center;gap:5px}
-.mm-c input{width:100%;min-width:0;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);padding:6px 4px;font:inherit;font-size:15px;font-variant-numeric:tabular-nums;text-align:center}
-.mm-c button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:7px;width:25px;height:30px;flex:none;cursor:pointer;font-size:15px;line-height:1;padding:0}
+.mm-c{background:var(--ground);border:1px solid var(--line);border-radius:9px;padding:6px 8px}
+.mm-c label{display:flex;align-items:baseline;justify-content:space-between;gap:5px;font-size:10px;font-weight:800;letter-spacing:.03em;color:var(--ink-3);text-transform:uppercase;margin-bottom:3px;line-height:1.3}
+.mm-c .row{display:flex;align-items:center;gap:4px}
+.mm-c input{width:100%;min-width:0;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);padding:4px 2px;font:inherit;font-size:14.5px;font-variant-numeric:tabular-nums;text-align:center}
+.mm-c button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:7px;width:22px;height:28px;flex:none;cursor:pointer;font-size:14px;line-height:1;padding:0}
 .mm-c button:hover{border-color:var(--accent);color:var(--accent)}
-.mm-c .dlt{font-size:11px;color:var(--ink-3);margin-top:3px;min-height:14px}
+.mm-c .dlt{font-size:10px;font-weight:700;color:var(--ink-3);flex:none}
 .mm-c .dlt.up{color:var(--ok)} .mm-c .dlt.dn{color:var(--bad)}
 
 .mm-txt{width:100%;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);padding:9px 10px;font:inherit;font-size:14px;resize:vertical;min-height:62px}
@@ -1041,6 +1065,15 @@ summary.lg-ar:hover{background:var(--surface-2)}
 .mm-x:hover{border-color:var(--bad);color:var(--bad)}
 .mm-add{margin-top:10px;padding:7px 13px;font-size:13px}
 .mm-tbl td.vide{color:var(--ink-3);font-style:italic}
+.mm-lien{border:0;background:none;padding:0;margin:0;font:inherit;font-weight:700;color:var(--accent);cursor:pointer;text-align:left}
+.mm-lien:hover{text-decoration:underline}
+.mm-lien:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+/* Le mur en un coup d'œil : tableau de lecture, dix colonnes — il défile latéralement au lieu
+   de se déplier en pile, et la colonne des noms reste visible pendant le défilement. */
+.mm-mw th,.mm-mw td{white-space:nowrap}
+.mm-mw th small{display:block;font-size:9.5px;font-weight:700;letter-spacing:.03em;color:var(--ink-3);text-transform:none}
+.mm-mw td:first-child,.mm-mw th:first-child{position:sticky;left:0;background:var(--surface);z-index:1;min-width:140px}
+.mm-mw tr.tot td:first-child{background:var(--surface)}
 .mm-wrap{overflow-x:auto}
 .mm-hist{margin-top:8px}
 .mm-hist>summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--accent);list-style:none;padding:4px 0}
@@ -1066,8 +1099,25 @@ summary.lg-ar:hover{background:var(--surface-2)}
   .mm-tbl td[data-l]::before{content:attr(data-l);font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
   .mm-tbl td.num,.mm-tbl td.num input{text-align:left}
   .mm-tbl td.mm-del{display:none}
+  .mm-wx{overflow-x:auto}
+  .mm-mw,.mm-mw tbody,.mm-mw tr{display:table;width:100%}
+  .mm-mw{display:table}
+  .mm-mw tbody{display:table-row-group}
+  .mm-mw tr{display:table-row;padding:0}
+  .mm-mw thead{position:static;width:auto;height:auto;clip:auto}
+  .mm-mw td,.mm-mw th{display:table-cell;border-bottom:1px solid var(--line);padding:6px 8px}
+  .mm-mw td.num,.mm-mw th.num{text-align:right}
+  .mm-mw td[data-l]::before{content:none}
   .mm-tbl tr.tot{border-top:2px solid var(--line-2);border-bottom:0}
   .mm-tbl select,.mm-tbl input{font-size:16px}
+  .mm-cpt{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}
+  .mm-c input{font-size:16px;padding:5px 2px}
+  .mm-c button{width:26px;height:32px}
+  .mm-sec>summary{flex-wrap:wrap}
+  .mm-sec>summary .mmres{flex:1 0 100%;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;margin-left:30px}
+  .mm-syn>summary{flex-wrap:wrap}
+  .mm-syn>summary .mmpu{flex:1 0 100%;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;margin-left:21px}
+  .mm-bar.fix{margin:14px -14px -16px;padding:10px 14px}
   .mm-tbl tbody tr{position:relative}
   .mm-tbl td.mm-del:has(.mm-x){display:block;position:absolute;top:4px;right:0;padding:0}
   .mm-tbl tbody tr:has(.mm-x) td[data-l]:first-child{padding-right:36px}
@@ -1124,6 +1174,11 @@ a.mml-r:hover{border-color:var(--accent)}
 .mm-p-sr{font-size:11.5px;font-weight:700;color:var(--encours-ink);background:var(--surface-2);border-radius:99px;padding:2px 9px}
 
 .mm-bar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+/* Publier était à 3 000 px du haut : la barre suit le défilement tant que le formulaire est à l'écran */
+.mm-bar.fix{position:sticky;bottom:0;background:var(--surface);margin:14px -22px -20px;padding:11px 22px;
+  border-top:1px solid var(--line-2);box-shadow:0 -6px 18px rgba(23,26,43,.07);z-index:6;border-radius:0 0 var(--r) var(--r)}
+:root[data-theme="dark"] .mm-bar.fix{box-shadow:0 -6px 18px rgba(0,0,0,.35)}
+.mm-rempli{font-size:12.5px;color:var(--ink-3)}
 .mm-b{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:9px;padding:9px 15px;font-family:"Sora";font-weight:700;font-size:13.5px;cursor:pointer}
 .mm-b:hover{border-color:var(--accent);color:var(--accent)}
 .mm-b.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -3812,7 +3867,7 @@ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !locat
    saisit que ce qu'elle seule connaît. Une ligne par personne et par semaine (clé = lundi ISO). */
 
 // EDM / DM ne se saisit plus : les invités présents en DM / AD / 3 Jours sont relevés dans le réseau.
-const MM_CPT   = [['r0','R0'],['r1','R1'],['r2','R2'],['r2b','R2 bis'],['r3','R3'],['rx','RX']];
+const MM_CPT   = [['r0','R0'],['r1','R1'],['r2','R2'],['r2b','R-signature'],['r3','R3'],['rx','RX']];
 const MM_AV    = [['r0','R0'],['r1','R1'],['r2','R2'],['r3','R3'],['rx','RX']];
 // Production. Le 4e libellé sert là où les deux listes sont fusionnées (fiche de lecture, export
 // texte) : « VA + VAA VC » ne veut rien dire tout seul une fois le personnel et l'équipe mélangés.
@@ -3839,6 +3894,11 @@ const MM_NIVEAUX = ['NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
 
 let MM=null, MM_PREC=null, MM_PRIVE='', MM_REG=null, MM_OBJ=null;
 let MM_MUR=[], MM_LIGNES=[], MM_SEM='', MM_SUB='moi', MM_LU=null, MM_T=null, MM_ETAT='';
+// « Tout déplier » : préférence de la personne, gardée sur son appareil. Par défaut les sections
+// déjà remplies sont repliées et disent leur contenu dans leur intitulé.
+let MM_TOUT=false; try{ MM_TOUT = localStorage.getItem('kairos_mm_deplie')==='1'; }catch(e){}
+// Renseigné par mmCorps à chaque rendu du formulaire, lu par la barre d'action collante
+let MM_REMPLI={n:0, tot:0};
 let MM_COUR=null;   // ma ligne de la semaine en cours, même quand on consulte une semaine passée
 let MM_LIG=null;     // ma descendance connectée pour la semaine en cours (RPC mm_ma_lignee), null = pas encore chargée
 let MM_FILTRE='';    // filtre du mur : '' = tout le monde, 'lignee' = ma descendance
@@ -4219,15 +4279,16 @@ function mmCompteurs(d, base, liste, ro, prec){
     let dlt='';
     if(prec!==undefined && prec!==null){
       const av=mmN(mmG(prec,p)), ap=mmN(v), df=ap-av;
-      if(df) dlt='<div class="dlt '+(df>0?'up':'dn')+'">'+(df>0?'+':'')+df+' vs S-1</div>';
-      else dlt='<div class="dlt"></div>';
+      if(df) dlt='<span class="dlt '+(df>0?'up':'dn')+'" title="Écart avec la semaine précédente">'+(df>0?'+':'')+df+'</span>';
     }
-    return '<div class="mm-c"><label>'+esc(lib)+'</label>'
+    // L'écart vs S-1 tient sur la ligne de l'intitulé et n'est rendu que s'il existe : une ligne
+    // vide réservée sous chaque compteur coûtait 17 px × 17 compteurs.
+    return '<div class="mm-c"><label>'+esc(lib)+dlt+'</label>'
       + (ro ? '<div class="row"><b>'+esc(mmN(v))+'</b></div>'
-            : '<div class="row"><button type="button" data-mmpm="-1" data-p="'+esc(p)+'">−</button>'
+            : '<div class="row"><button type="button" data-mmpm="-1" data-p="'+esc(p)+'" tabindex="-1" aria-label="Retirer 1">−</button>'
               + '<input type="number" inputmode="numeric" min="0" data-mm="'+esc(p)+'" value="'+esc(v==null||v===''?0:v)+'">'
-              + '<button type="button" data-mmpm="1" data-p="'+esc(p)+'">+</button></div>')
-      + dlt + '</div>';
+              + '<button type="button" data-mmpm="1" data-p="'+esc(p)+'" tabindex="-1" aria-label="Ajouter 1">+</button></div>')
+      + '</div>';
   }).join('') + '</div>';
 }
 function mmProduitSelect(chemin, val){
@@ -4292,9 +4353,19 @@ function mmListeAuto(items, vide){
   if(!items || !items.length) return '<p class="mm-vide">'+esc(vide)+'</p>';
   return '<ul class="mm-auto">'+items.map(s=>'<li><span class="d">'+esc(fmtD(s.d))+'</span><span>'+esc(s.t)+'</span></li>').join('')+'</ul>';
 }
-function mmSec(n, titre, auto, corps, ouvert){
-  return '<details class="mm-sec"'+(ouvert?' open':'')+'><summary><span class="n">'+esc(n)+'</span>'+esc(titre)
+// Une section repliée doit dire ce qu'elle contient, sinon on déplie tout « au cas où ».
+// `resume` est du balisage écrit ici (jamais de la saisie brute) ; `ouvert` ne vaut que si la
+// personne n'a pas demandé « tout déplier ».
+function mmSec(n, titre, auto, corps, ouvert, resume){
+  return '<details class="mm-sec"'+((MM_TOUT||ouvert)?' open':'')+'><summary><span class="n">'+esc(n)+'</span>'
+       + '<span class="mmti">'+esc(titre)+'</span>'
+       + (resume?'<span class="mmres">'+resume+'</span>':'')
        + (auto?'<span class="auto">'+esc(auto)+'</span>':'') + '</summary><div class="mm-bd">'+corps+'</div></details>';
+}
+// Les compteurs non nuls d'un bloc, pour l'intitulé replié : « R0 4 · R1 3 · R-signature 1 »
+function mmResumeCpt(d, base, liste){
+  return liste.filter(([k])=>mmN(mmG(d,base+'.'+k)))
+              .map(([k,lib])=>esc(lib)+' <b>'+mmN(mmG(d,base+'.'+k))+'</b>').join(' · ');
 }
 function mmJauge(lib, fait, cible, unite){
   const c=mmN(cible);
@@ -4365,15 +4436,25 @@ function mmProdMaj(){
 }
 
 /* --- rendu : le formulaire (ou sa lecture seule) --- */
-function mmCorps(d, prive, ro, sem){
-  d = mmMigre(d); const a = d.auto||{};
-  const prec = (!ro && MM_PREC) ? MM_PREC.donnees : null;
-  const ech = mmEcheances(), obj = MM_OBJ||{};
-  let h='';
+// Tout ce qui est relevé par le réseau : aucun champ à saisir, donc hors du formulaire. Replié,
+// le bandeau tient en une ligne de chiffres ; ouvert, il montre les quatre blocs d'avant.
+// Seule « Activité » y reste saisissable : elle se règle une fois, pas toutes les semaines.
+function mmSynthese(d, a, ro, obj, ech){
+  const inv=a.inv||{}, invN=a.invN||{}, court={dm:'DM', ad:'AD', jr:'3 Jours'};
+  const tt = l => (l&&l.length) ? ' title="'+esc(l.join(' · '))+'"' : '';
+  const puces=[];
+  if(a.statut) puces.push('<i class="st">'+esc(a.statut)+'</i>');
+  if(a.ftot) puces.push('<i>Objectifs <b>'+a.fn+'/'+a.ftot+'</b></i>');
+  if(a.filadh) puces.push('<i>Filleuls <b>'+a.filadh+'</b></i>');
+  MM_INV.forEach(([k])=>{ if(inv[k]) puces.push('<i>'+court[k]+' <b>'+inv[k]+'</b></i>'); });
+  if(mmInvEnAttente(a)) puces.push('<i class="att">Pas encore adhérents <b>'+mmInvEnAttente(a)+'</b></i>');
+  if((a.ag||[]).length) puces.push('<i>À venir <b>'+a.ag.length+'</b></i>');
+  return '<details class="mm-syn"'+(MM_TOUT?' open':'')+'><summary><span class="mmti">Ce que le réseau sait déjà</span>'
+    + '<span class="mmpu">'+(puces.join('')||'<i class="mut">rien de relevé pour l’instant</i>')+'</span>'
+    + '<span class="auto">automatique</span></summary><div class="mm-synbd">'
 
-  // 0 — Ma lignée
-  h += mmSec(0,'Ma lignée','automatique',
-      '<div class="mm-lig">'
+    + '<label class="mm-lab">Ma lignée</label>'
+    + '<div class="mm-lig">'
     + '<div><span>Statut FORMAN</span><b>'+esc(a.statut||'—')+'</b></div>'
     + '<div><span>Parrain / marraine</span><b>'+esc(a.parrain||'—')+'</b></div>'
     + '<div><span>Manager</span><b>'+esc(a.mgr||'—')+'</b></div>'
@@ -4383,9 +4464,46 @@ function mmCorps(d, prive, ro, sem){
     + (ro ? '<b>'+esc(d.act==='double'?'Double activité':(d.act==='simple'?'Activité principale':'—'))+'</b>'
           : '<select data-mm="act" class="mm-txt" style="min-height:0;max-width:280px">'
             + ['','simple','double'].map(v=>'<option value="'+v+'"'+((d.act||'')===v?' selected':'')+'>'
-              + (v==='double'?'Double activité':(v==='simple'?'Activité principale':'—'))+'</option>').join('')+'</select>'));
+              + (v==='double'?'Double activité':(v==='simple'?'Activité principale':'—'))+'</option>').join('')+'</select>')
+
+    + '<label class="mm-lab">Développement d’équipe</label>'
+    + '<div class="mm-lig">'
+    + '<div'+tt(invN.dm)+'><span>Invités inscrits en DM</span><b>'+(inv.dm||0)+(obj.dm_pmr?' / '+obj.dm_pmr:'')+'</b>'+mmNoms(invN.dm)+'</div>'
+    + '<div'+tt(invN.ad)+'><span>Invités à l’Atelier Démarrage</span><b>'+(inv.ad||0)+'</b>'+mmNoms(invN.ad)+'</div>'
+    + '<div'+tt(invN.jr)+'><span>Invités aux 3 Jours</span><b>'+(inv.jr||0)+'</b>'+mmNoms(invN.jr)+'</div>'
+    + '<div'+tt(a.filN)+'><span>Filleuls</span><b>'+(a.filadh||0)+'</b>'+mmNoms(a.filN)+'</div>'
+    + (mmInvEnAttente(a) ? '<div'+tt(a.filIN)+'><span>Invités pas encore adhérents</span><b>'
+        + mmInvEnAttente(a)+'</b>'+mmNoms(a.filIN)+'</div>' : '')
+    + '</div>'
+    + (a.dorm ? '<p class="mm-note">⚠︎ '+a.dorm+' filleul'+(a.dorm>1?'s':'')+' adhérent'+(a.dorm>1?'s':'')+' sans séance depuis plus de 60 jours.</p>' : '')
+    + '<p class="mm-note">Invités comptés depuis le '+fmtD(ech.debut)+' (début d’exercice) — un filleul déjà adhérent n’est plus compté comme invité.</p>'
+    + '<label class="mm-lab">Depuis le début <small style="font-weight:400;color:var(--ink-3)">— tous exercices, celles et ceux devenus adhérents compris</small></label>'
+    + mmInvBloc(a.invT, a.invTN, 'Aucun invité en séance pour l’instant.')
+
+    + '<label class="mm-lab">Objectifs FORMAN</label>'
+    + '<div class="mm-lig">'
+    + '<div><span>Niveau actuel</span><b>'+esc(a.statut||'—')+'</b></div>'
+    + '<div><span>Objectifs validés</span><b>'+(a.ftot?(a.fn+' / '+a.ftot):'—')+'</b></div>'
+    + '<div><span>Restants</span><b>'+(a.ftot?Math.max(0,a.ftot-a.fn):'—')+'</b></div>'
+    + '</div>' + (a.ftot ? mmJauge('Progression '+(a.statut||''), a.fn, a.ftot, '') : '')
+
+    + '<label class="mm-lab">Formations et événements à venir</label>'
+    + mmListeAuto(a.ag,'Rien d’inscrit à venir.')
+    + '</div></details>';
+}
+function mmCorps(d, prive, ro, sem){
+  d = mmMigre(d); const a = d.auto||{};
+  const prec = (!ro && MM_PREC) ? MM_PREC.donnees : null;
+  const ech = mmEcheances(), obj = MM_OBJ||{};
+  let h='';
+  if(!ro) h += '<div class="mm-outils"><button type="button" class="mm-plier" id="mmPlier" aria-pressed="'+(MM_TOUT?'true':'false')+'">'
+    + (MM_TOUT?'Tout replier':'Tout déplier')+'</button></div>';
+  h += mmSynthese(d, a, ro, obj, ech);
 
   // 1 — Semaine écoulée
+  const sousL = Array.isArray(d.sous)?d.sous:[];
+  const sousTot = sousL.reduce((n,x)=>n+mmN(x.vi),0);
+  const resP = [mmResumeCpt(d,'p',MM_CPT), sousTot?'<b>'+mmEur(sousTot)+'</b> signé':''].filter(Boolean).join(' · ');
   h += mmSec(1,'Semaine écoulée (S'+mmNo(vAddDays(sem,-7))+')','',
       mmCompteurs(d,'p',MM_CPT,ro,prec)
     + '<label class="mm-lab">Invités en séance <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
@@ -4397,9 +4515,10 @@ function mmCorps(d, prive, ro, sem){
     + mmHistorique(a.sh)
     + '<label class="mm-lab">Faits marquants</label>'
     + (ro ? mmPara(d.pf||'—')
-          : '<textarea class="mm-txt" data-mm="pf" rows="3" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>'), true);
+          : '<textarea class="mm-txt" data-mm="pf" rows="3" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>'), !resP, resP);
 
   // 2 — Semaine en cours
+  const resC = mmResumeCpt(d,'c',MM_CPT);
   h += mmSec(2,'Semaine en cours (S'+mmNo(sem)+')','',
       mmCompteurs(d,'c',MM_CPT,ro,null)
     + '<label class="mm-lab">Invités en séance <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
@@ -4408,33 +4527,17 @@ function mmCorps(d, prive, ro, sem){
     + mmListeAuto(a.sc,'Aucune session cette semaine.')
     + '<label class="mm-lab">Mon focus de la semaine</label>'
     + (ro ? mmPara(d.cf||'—')
-          : '<textarea class="mm-txt" data-mm="cf" rows="3" placeholder="Ce sur quoi je mets l’énergie.">'+esc(d.cf||'')+'</textarea>'), true);
+          : '<textarea class="mm-txt" data-mm="cf" rows="3" placeholder="Ce sur quoi je mets l’énergie.">'+esc(d.cf||'')+'</textarea>'), !resC, resC);
 
   // 3 — RDV d'avance
   const tot = MM_AV.reduce((n,[k])=>n+mmN(mmG(d,'av.'+k)),0);
   const totP = prec ? MM_AV.reduce((n,[k])=>n+mmN(mmG(prec,'av.'+k)),0) : null;
   h += mmSec(3,'RDV d’avance (à date)','',
       mmCompteurs(d,'av',MM_AV,ro,prec)
-    + '<p class="mm-note"><b>Total : '+tot+'</b>'+(totP!==null?' · '+(tot-totP>=0?'+':'')+(tot-totP)+' vs la semaine dernière':'')+'</p>');
+    + '<p class="mm-note"><b>Total : '+tot+'</b>'+(totP!==null?' · '+(tot-totP>=0?'+':'')+(tot-totP)+' vs la semaine dernière':'')+'</p>',
+      false, tot?'Total <b>'+tot+'</b>':'');
 
-  // 4 — Développement d'équipe
-  const inv=a.inv||{}, invN=a.invN||{};
-  const tt = l => (l&&l.length) ? ' title="'+esc(l.join(' · '))+'"' : '';
-  h += mmSec(4,'Développement d’équipe','automatique',
-      '<div class="mm-lig">'
-    + '<div'+tt(invN.dm)+'><span>Invités inscrits en DM</span><b>'+(inv.dm||0)+(obj.dm_pmr?' / '+obj.dm_pmr:'')+'</b>'+mmNoms(invN.dm)+'</div>'
-    + '<div'+tt(invN.ad)+'><span>Invités à l’Atelier Démarrage</span><b>'+(inv.ad||0)+'</b>'+mmNoms(invN.ad)+'</div>'
-    + '<div'+tt(invN.jr)+'><span>Invités aux 3 Jours</span><b>'+(inv.jr||0)+'</b>'+mmNoms(invN.jr)+'</div>'
-    + '<div'+tt(a.filN)+'><span>Filleuls</span><b>'+(a.filadh||0)+'</b>'+mmNoms(a.filN)+'</div>'
-    + (mmInvEnAttente(a) ? '<div'+tt(a.filIN)+'><span>Invités pas encore adhérents</span><b>'
-        + mmInvEnAttente(a)+'</b>'+mmNoms(a.filIN)+'</div>' : '')
-    + '</div>'
-    + (a.dorm ? '<p class="mm-note">⚠︎ '+a.dorm+' filleul'+(a.dorm>1?'s':'')+' adhérent'+(a.dorm>1?'s':'')+' sans séance depuis plus de 60 jours.</p>' : '')
-    + '<p class="mm-note">Invités comptés depuis le '+fmtD(ech.debut)+' (début d’exercice) — un filleul déjà adhérent n’est plus compté comme invité.</p>'
-    + '<label class="mm-lab">Depuis le début <small style="font-weight:400;color:var(--ink-3)">— tous exercices, celles et ceux devenus adhérents compris</small></label>'
-    + mmInvBloc(a.invT, a.invTN, 'Aucun invité en séance pour l’instant.'));
-
-  // 5 — Production
+  // 4 — Production
   const champProd = ([k,lib,u]) =>
     '<div class="mm-c"><label>'+esc(lib)+'</label><div class="row">'
     + mmChamp('prod.'+k, mmG(d,'prod.'+k), ro, {eur:u==='€', zero:u!=='€'})+'</div></div>';
@@ -4448,7 +4551,10 @@ function mmCorps(d, prive, ro, sem){
     // toucher au formulaire, donc sans perdre le curseur (même principe que les totaux des
     // souscriptions). Sans ça elles restaient figées sur les valeurs d'ouverture de la page.
     + '<div id="mmProdJ">' + mmProdJauges(d, obj) + '</div>';
-  h += mmSec(5,'Production',(ro?'':'reporté de S-1'), prod);
+  const resProd = [['va','VA VC','€'],['vaec','VA EC','€'],['eva','Équipe VC','€'],['evaec','Équipe EC','€'],['clients','Clients','']]
+    .filter(([k])=>mmN(mmG(d,'prod.'+k)))
+    .map(([k,lib,u])=>esc(lib)+' <b>'+(u==='€'?mmEur(mmG(d,'prod.'+k)):mmN(mmG(d,'prod.'+k)))+'</b>').join(' · ');
+  h += mmSec(4,'Production',(ro?'':'reporté de S-1'), prod, false, resProd);
 
   // 6 — Habilitations & formations continues
   const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
@@ -4460,27 +4566,22 @@ function mmCorps(d, prive, ro, sem){
             +((mmG(d,'hab.'+k+'.s')||'')===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>')
     + '</td><td data-l="'+(orias?'Date d\u2019examen':'Validée le')+'">'+cellDate(k,'d')+'</td>'
     + (orias ? '<td data-l="Date ORIAS">'+cellDate(k,'o')+'</td>' : '') + '</tr>';
-  h += mmSec(6,'Habilitations & formations continues',(ro?'':'reporté de S-1'),
+  if(!ro) MM_REMPLI = { n:[resP,resC,tot,resProd].filter(Boolean).length, tot:5 };
+  const habTot = MM_HAB.length + MM_FC.length;
+  const habOk = MM_HAB.concat(MM_FC).filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
+  const resHab = habOk ? habOk+' / '+habTot+' validées' : '';
+  if(!ro && resHab) MM_REMPLI.n++;
+  h += mmSec(5,'Habilitations & formations continues',(ro?'':'reporté de S-1'),
       '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Habilitation</th><th>Statut</th>'
     + '<th>Date d’examen</th><th>Date ORIAS</th></tr></thead><tbody>'
     + MM_HAB.map(([k,lib])=>ligne(k,lib,true)).join('') + '</tbody></table></div>'
     + '<label class="mm-lab">Formations continues de l’année</label>'
     + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Formation continue</th><th>Statut</th><th>Validée le</th></tr></thead><tbody>'
     + MM_FC.map(([k,lib])=>ligne(k,lib,false)).join('') + '</tbody></table></div>'
-    + (mmRappelFC(d) ? '<p class="mm-note">⚠︎ '+esc(mmRappelFC(d))+'</p>' : ''));
+    + (mmRappelFC(d) ? '<p class="mm-note">⚠︎ '+esc(mmRappelFC(d))+'</p>' : ''),
+      false, [resHab, mmRappelFC(d)?'<b class="alr">⚠︎ FC à valider</b>':''].filter(Boolean).join(' · '));
 
-  // 7 — FORMAN
-  h += mmSec(7,'Objectifs FORMAN','automatique',
-      '<div class="mm-lig">'
-    + '<div><span>Niveau actuel</span><b>'+esc(a.statut||'—')+'</b></div>'
-    + '<div><span>Objectifs validés</span><b>'+(a.ftot?(a.fn+' / '+a.ftot):'—')+'</b></div>'
-    + '<div><span>Restants</span><b>'+(a.ftot?Math.max(0,a.ftot-a.fn):'—')+'</b></div>'
-    + '</div>' + (a.ftot ? mmJauge('Progression '+(a.statut||''), a.fn, a.ftot, '') : ''));
-
-  // 8 — Agenda
-  h += mmSec(8,'Formations et événements à venir','automatique', mmListeAuto(a.ag,'Rien d’inscrit à venir.'));
-
-  // 9 — Un mot pour ma lignée
+  // Un mot pour ma lignée
   h += '<div class="mm-prive"><b>Un mot pour ma lignée</b>'
      + '<p class="mm-note" style="margin:3px 0 7px">Visible de ton parrain et de ta lignée au-dessus de toi, de personne d’autre. Jamais sur le mur, jamais dans le texte copié.</p>'
      + (ro ? mmPara(prive||'—')
@@ -4684,9 +4785,10 @@ function buildMM(){
   } else {
     h += '<div class="panel">' + (cour ? mmCorps(MM.donnees, MM_PRIVE, false, MM_SEM)
                                           : mmFiche(MM.donnees, MM_PRIVE, MM_SEM, MM_OBJ))
-       + '<div class="mm-bar">'
+       + '<div class="mm-bar'+(cour?' fix':'')+'">'
        + (cour ? '<button type="button" class="mm-b pri" id="mmPub">'+(MM.statut==='publie'?'Republier':'Publier mon mail manager')+'</button>' : '')
        + '<button type="button" class="mm-b" data-mmcopy="moi">Copier en texte</button>'
+       + (cour ? '<span class="mm-rempli">'+MM_REMPLI.n+' section'+(MM_REMPLI.n>1?'s':'')+' sur '+MM_REMPLI.tot+' remplie'+(MM_REMPLI.n>1?'s':'')+'</span>' : '')
        + '<span class="mm-sav"></span></div>'
        + (cour ? '<div class="mm-off"><span>Le mail manager, ce n’est pas pour toi ?</span><button type="button" id="mmOff">Je ne souhaite pas le faire</button></div>' : '')
        + '</div>';
@@ -4736,25 +4838,31 @@ function mmMur(){
   const pubs = MM_LIGNES.filter(l=>l.statut==='publie' && (!ids || ids.has(l.membre_id)));
   if(pubs.length){
     const nom = id => (MM_MUR.find(p=>p.membre_id===id)||{}).nom || ('#'+id);
-    const cols = [['R1','p.r1'],['R2','p.r2'],['RDV d’avance',''],['VA + VAA VC','prod.va'],['VA + VAA EC','prod.vaec'],['Filleuls','']];
+    // Colonnes arrêtées le 17/09/2026 : l'activité de la semaine écoulée (compteurs « p. »), la
+    // production personnelle de l'exercice, puis les invités relevés depuis le début d'exercice.
+    // « inv.* » ne se lit pas dans les données saisies mais dans le bloc automatique (d.auto.inv).
+    const cols = [['R0','p.r0'],['R1','p.r1'],['R2','p.r2'],['RX','p.rx'],['R-signature','p.r2b'],
+                  ['VA + VAA VC <small>perso</small>','prod.va','€'],['VA + VAA EC <small>perso</small>','prod.vaec','€'],
+                  ['DM','inv.dm'],['AD','inv.ad'],['3 Jours','inv.jr']];
+    const valeur = (d,a,cle) => cle.startsWith('inv.') ? ((a.inv||{})[cle.slice(4)]||0) : mmN(mmG(d,cle));
     const somme = {};
     let lignes = pubs.map(l=>{
       const d=l.donnees||{}, a=d.auto||{};
-      const av = MM_AV.reduce((n,[k])=>n+mmN(mmG(d,'av.'+k)),0);
-      const v=[mmN(mmG(d,'p.r1')), mmN(mmG(d,'p.r2')), av, mmN(mmG(d,'prod.va')), mmN(mmG(d,'prod.vaec')), (a.filadh||0)];
-      v.forEach((x,i)=>{ somme[i]=(somme[i]||0)+x; });
-      return '<tr><td><b>'+esc(nom(l.membre_id))+'</b></td>'
-        + '<td class="num">'+v[0]+'</td><td class="num">'+v[1]+'</td><td class="num">'+v[2]+'</td>'
-        + '<td class="num">'+mmEur(v[3])+'</td><td class="num">'+mmEur(v[4])+'</td><td class="num">'+v[5]+'</td>'
-        + '<td>'+esc(a.statut||'—')+'</td></tr>';
+      return '<tr><td><button type="button" class="mm-lien" data-mmv="'+l.membre_id+'"'
+        + ' title="Ouvrir le mail manager de '+esc(nom(l.membre_id))+'">'+esc(nom(l.membre_id))+'</button></td>'
+        + cols.map(([lib,cle,u],i)=>{ const v=valeur(d,a,cle); somme[i]=(somme[i]||0)+v;
+            return '<td class="num">'+(u==='€'?mmEur(v):v)+'</td>'; }).join('')
+        + '</tr>';
     }).join('');
-    lignes += '<tr class="tot"><td>Total ('+pubs.length+')</td><td class="num">'+(somme[0]||0)+'</td><td class="num">'+(somme[1]||0)
-      + '</td><td class="num">'+(somme[2]||0)+'</td><td class="num">'+mmEur(somme[3]||0)+'</td><td class="num">'+mmEur(somme[4]||0)
-      + '</td><td class="num">'+(somme[5]||0)+'</td><td></td></tr>';
+    lignes += '<tr class="tot"><td>Total ('+pubs.length+')</td>'
+      + cols.map(([lib,cle,u],i)=>'<td class="num">'+(u==='€'?mmEur(somme[i]||0):(somme[i]||0))+'</td>').join('')
+      + '</tr>';
     h += '<div class="panel"><h2>La lignée en un coup d’œil</h2>'
-       + '<p class="mm-sub">Les mail managers publiés de la semaine '+esc(mmLibC(MM_SEM))+'.</p>'
-       + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Personne</th>'
-       + cols.map(c=>'<th class="num">'+esc(c[0])+'</th>').join('') + '<th>FORMAN</th></tr></thead>'
+       + '<p class="mm-sub">Les mail managers publiés de la semaine '+esc(mmLibC(MM_SEM))
+       + ' — R0 à R-signature sur la semaine écoulée, production et invités sur l’exercice en cours. '
+       + 'Clique sur un prénom pour ouvrir son mail manager.</p>'
+       + '<div class="mm-wrap mm-wx"><table class="mm-tbl mm-mw"><thead><tr><th>Personne</th>'
+       + cols.map(c=>'<th class="num">'+c[0]+'</th>').join('') + '</tr></thead>'
        + '<tbody>'+lignes+'</tbody></table></div></div>';
   }
   return h;
@@ -5419,6 +5527,25 @@ document.addEventListener('click', async e=>{
     return;
   }
   if(c.closest('#mmOn')){ mmParticipe(true); return; }
+  // « Tout déplier » / « Tout replier » : la préférence reste sur l'appareil
+  if(c.closest('#mmPlier')){
+    MM_TOUT = !MM_TOUT;
+    try{ localStorage.setItem('kairos_mm_deplie', MM_TOUT?'1':'0'); }catch(e){}
+    buildMM();
+    return;
+  }
+});
+// Entrée passe au compteur suivant : on saisit 31 nombres à la file sans quitter le clavier
+// (les flèches ↑ ↓ incrémentent déjà, c'est le comportement natif d'un champ nombre).
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Enter') return;
+  const el=e.target;
+  if(!el || el.tagName!=='INPUT' || el.type!=='number' || !el.closest || !el.closest('#v-mm')) return;
+  e.preventDefault();
+  const champs=[...document.querySelectorAll('#v-mm input[type=number]')].filter(x=>x.offsetParent!==null);
+  const i=champs.indexOf(el);
+  if(i>=0 && i<champs.length-1){ const n=champs[i+1]; n.focus(); if(n.select) n.select(); }
+  else el.blur();
 });
 
 
