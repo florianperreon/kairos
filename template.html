@@ -1123,13 +1123,15 @@ summary.lg-ar:hover{background:var(--surface-2)}
   .mm-rdv{display:table;width:100%}
   .mm-rdv thead{position:static;width:auto;height:auto;clip:auto}
   .mm-rdv td,.mm-rdv th{display:table-cell;border-bottom:1px solid var(--line);padding:5px 4px}
-  .mm-rdv td[data-l]::before{content:none}
-  .mm-tbl.mm-rdv{min-width:0;width:100%}
-  .mm-tbl.mm-rdv td.num,.mm-tbl.mm-rdv th.num{text-align:center}
-  .mm-tbl.mm-rdv td.lb{padding-right:4px}
-  .mm-rdv .row input{width:44px;font-size:16px}
-  .mm-rdv .row button{width:26px;height:32px}
-  .mm-rdv td.lb{font-size:12.5px}
+  /* Huit colonnes : le tableau défile latéralement, la colonne des périodes reste visible.
+     Les boutons − / + sortent pour gagner la largeur ; on saisit au clavier numérique. */
+  .mm-tbl.mm-rdv{width:auto}
+  .mm-tbl.mm-rdv td.num,.mm-tbl.mm-rdv th.num{text-align:center;padding:5px 4px}
+  .mm-tbl.mm-rdv td.lb{padding-right:8px;font-size:12px}
+  .mm-tbl.mm-rdv .row button{display:none}
+  .mm-tbl.mm-rdv .row input{width:42px}
+  .mm-deux{grid-template-columns:1fr}
+  .mm-rdv .row input{font-size:16px}
   .mm-tbl tbody tr{position:relative}
   .mm-tbl td.mm-del:has(.mm-x){display:block;position:absolute;top:4px;right:0;padding:0}
   .mm-tbl tbody tr:has(.mm-x) td[data-l]:first-child{padding-right:36px}
@@ -1192,21 +1194,37 @@ a.mml-r:hover{border-color:var(--accent)}
 :root[data-theme="dark"] .mm-bar.fix{box-shadow:0 -6px 18px rgba(0,0,0,.35)}
 .mm-rempli{font-size:12.5px;color:var(--ink-3)}
 /* Les deux semaines dans un tableau : il reste un tableau sur téléphone (3 colonnes, ça tient) */
-.mm-rdv{width:auto;min-width:340px;margin-top:10px}
+.mm-rdv{width:auto;margin-top:10px}
 .mm-rdv th{white-space:nowrap}
-.mm-rdv th small{display:block;font-size:9.5px;font-weight:700;color:var(--ink-3);text-transform:none;letter-spacing:.03em}
-.mm-rdv td,.mm-rdv th{padding:5px 8px}
-.mm-rdv td.lb{font-weight:700;font-size:13px;white-space:nowrap;padding-right:22px}
+.mm-rdv td,.mm-rdv th{padding:5px 6px}
+.mm-rdv td.lb{font-weight:700;font-size:13px;white-space:nowrap;padding-right:18px;
+  position:sticky;left:0;background:var(--surface);z-index:1}
+.mm-rdv td.lb small{display:block;font-size:10px;font-weight:600;color:var(--ink-3)}
 .mm-rdv td.num,.mm-rdv th.num{text-align:center;white-space:nowrap}
+.mm-rdv .tt{font-weight:800;border-left:1px solid var(--line-2)}
+.mm-rdv .mut{color:var(--ink-3)}
+/* Les blocs relevés par le réseau, une colonne par semaine */
+.mm-deux{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px 22px;margin-top:6px}
+/* Pliage secondaire, à l'intérieur d'un encadré : ce que le réseau a relevé sur les deux semaines */
+.mm-sous{margin-top:14px;border-top:1px dashed var(--line-2)}
+.mm-sous>summary{cursor:pointer;list-style:none;padding:9px 0 2px;font-size:12.5px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:7px}
+.mm-sous>summary::-webkit-details-marker{display:none}
+.mm-sous>summary::before{content:'▸';color:var(--ink-3);font-size:11px;transition:transform .15s}
+.mm-sous[open]>summary::before{transform:rotate(90deg)}
+.mm-sous>summary:hover{color:var(--accent)}
+.mm-sous-bd{padding-bottom:4px}
+.mm-per{display:block;font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3);margin-bottom:2px}
+.mm-rempli.ok{color:var(--ok);font-weight:700}
 .mm-rdv .row{display:inline-flex;align-items:center;gap:4px;vertical-align:middle}
-.mm-rdv .row input{width:52px;min-width:0;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);
+.mm-rdv .row input{width:46px;min-width:0;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);
   padding:4px 2px;font:inherit;font-size:14.5px;font-variant-numeric:tabular-nums;text-align:center}
 .mm-rdv .row button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:7px;
-  width:22px;height:28px;flex:none;cursor:pointer;font-size:14px;line-height:1;padding:0}
+  width:21px;height:28px;flex:none;cursor:pointer;font-size:14px;line-height:1;padding:0}
 .mm-rdv .row button:hover{border-color:var(--accent);color:var(--accent)}
-.mm-rdv .dlt{display:inline-block;margin-left:6px;font-size:10px;font-weight:700;color:var(--ink-3);min-width:16px;text-align:left}
+/* L'écart passe SOUS le compteur : à côté, six colonnes de plus faisaient déborder le tableau
+   et rognaient la colonne Total. Trois lignes seulement, la hauteur gagnée est négligeable. */
+.mm-rdv .dlt{display:block;margin:2px 0 0;font-size:10px;font-weight:700;color:var(--ink-3);text-align:center}
 .mm-rdv .dlt.up{color:var(--ok)} .mm-rdv .dlt.dn{color:var(--bad)}
-.mm-rdv tr.tot td{font-weight:800}
 /* Renvoi vers la page des habilitations, à la place des 17 champs d'avant */
 .mm-habl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;
   border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);padding:10px 14px;margin:12px 0;font-size:13.5px}
@@ -3934,8 +3952,9 @@ let MM_MUR=[], MM_LIGNES=[], MM_SEM='', MM_SUB='moi', MM_LU=null, MM_T=null, MM_
 // « Tout déplier » : préférence de la personne, gardée sur son appareil. Par défaut les sections
 // déjà remplies sont repliées et disent leur contenu dans leur intitulé.
 let MM_TOUT=false; try{ MM_TOUT = localStorage.getItem('kairos_mm_deplie')==='1'; }catch(e){}
-// Renseigné par mmCorps à chaque rendu du formulaire, lu par la barre d'action collante
-let MM_REMPLI={n:0, tot:0};
+// Renseigné par mmCorps à chaque rendu du formulaire, lu par la barre d'action collante :
+// la liste des blocs encore vides.
+let MM_REMPLI=[];
 let MM_COUR=null;   // ma ligne de la semaine en cours, même quand on consulte une semaine passée
 let MM_LIG=null;     // ma descendance connectée pour la semaine en cours (RPC mm_ma_lignee), null = pas encore chargée
 let MM_FILTRE='';    // filtre du mur : '' = tout le monde, 'lignee' = ma descendance
@@ -4310,57 +4329,49 @@ function mmChamp(p, val, ro, opt){
   return '<input type="'+t+'" inputmode="'+(opt.txt?'text':'decimal')+'" data-mm="'+esc(p)+'" value="'+esc(v)+'"'
        + (opt.ph?' placeholder="'+esc(opt.ph)+'"':'') + '>';
 }
-function mmCompteurs(d, base, liste, ro, prec){
-  return '<div class="mm-cpt">' + liste.map(([k,lib])=>{
-    const p=base+'.'+k, v=mmG(d,p);
-    let dlt='';
-    if(prec!==undefined && prec!==null){
-      const av=mmN(mmG(prec,p)), ap=mmN(v), df=ap-av;
-      if(df) dlt='<span class="dlt '+(df>0?'up':'dn')+'" title="Écart avec la semaine précédente">'+(df>0?'+':'')+df+'</span>';
-    }
-    // L'écart vs S-1 tient sur la ligne de l'intitulé et n'est rendu que s'il existe : une ligne
-    // vide réservée sous chaque compteur coûtait 17 px × 17 compteurs.
-    return '<div class="mm-c"><label>'+esc(lib)+dlt+'</label>'
-      + (ro ? '<div class="row"><b>'+esc(mmN(v))+'</b></div>'
-            : '<div class="row"><button type="button" data-mmpm="-1" data-p="'+esc(p)+'" tabindex="-1" aria-label="Retirer 1">−</button>'
-              + '<input type="number" inputmode="numeric" min="0" data-mm="'+esc(p)+'" value="'+esc(v==null||v===''?0:v)+'">'
-              + '<button type="button" data-mmpm="1" data-p="'+esc(p)+'" tabindex="-1" aria-label="Ajouter 1">+</button></div>')
-      + '</div>';
-  }).join('') + '</div>';
-}
-// Les deux semaines portent exactement les mêmes compteurs : un seul tableau, une colonne par
-// semaine, six lignes au lieu de douze cartes — et la comparaison saute aux yeux.
-// L'écart vs S-1 n'est montré que sur la semaine écoulée, la seule qui ait un précédent.
-function mmCompteursDuo(d, ro, prec, sem){
+// Un seul tableau pour tous les compteurs : les types de rendez-vous en colonnes, les trois
+// périodes en lignes (semaine écoulée, semaine en cours, d'avance à date). Trois lignes au lieu
+// de dix-sept cartes, et la comparaison d'une période à l'autre se lit verticalement.
+// L'écart vs S-1 n'apparaît que là où il y a un précédent : l'écoulée et l'avance.
+const MM_RDV_LIGNES = [
+  ['p',  'Écoulée',  sem=>'S'+mmNo(vAddDays(sem,-7)), 'mmRdvTotP', true],
+  ['c',  'En cours', sem=>'S'+mmNo(sem),              'mmRdvTotC', false],
+  ['av', 'D’avance', ()=>'à date',                    'mmRdvTotA', true],
+];
+function mmCompteursTri(d, ro, prec, sem){
   const cell = (base,k) => {
+    // « R-signature » n'existe pas en RDV d'avance : la case reste vide plutôt que fausse
+    if(base==='av' && !MM_AV.some(x=>x[0]===k)) return '<span class="mut">—</span>';
     const p=base+'.'+k, v=mmG(d,p);
     if(ro) return '<b>'+esc(mmN(v))+'</b>';
     return '<span class="row"><button type="button" data-mmpm="-1" data-p="'+esc(p)+'" tabindex="-1" aria-label="Retirer 1">−</button>'
       + '<input type="number" inputmode="numeric" min="0" data-mm="'+esc(p)+'" value="'+esc(v==null||v===''?0:v)+'">'
       + '<button type="button" data-mmpm="1" data-p="'+esc(p)+'" tabindex="-1" aria-label="Ajouter 1">+</button></span>';
   };
-  const dlt = k => {
+  const dlt = (base,k) => {
     if(!prec) return '';
-    const df = mmN(mmG(d,'p.'+k)) - mmN(mmG(prec,'p.'+k));
+    const df = mmN(mmG(d,base+'.'+k)) - mmN(mmG(prec,base+'.'+k));
     return df ? '<span class="dlt '+(df>0?'up':'dn')+'" title="Écart avec la semaine précédente">'+(df>0?'+':'')+df+'</span>' : '';
   };
-  return '<div class="mm-wrap"><table class="mm-tbl mm-rdv"><thead><tr><th>Rendez-vous</th>'
-    + '<th class="num">Écoulée<small>S'+mmNo(vAddDays(sem,-7))+'</small></th>'
-    + '<th class="num">En cours<small>S'+mmNo(sem)+'</small></th></tr></thead><tbody>'
-    + MM_CPT.map(([k,lib])=>'<tr><td class="lb">'+esc(lib)+'</td>'
-        + '<td class="num" data-l="'+esc(lib)+' — écoulée">'+cell('p',k)+dlt(k)+'</td>'
-        + '<td class="num" data-l="'+esc(lib)+' — en cours">'+cell('c',k)+'</td></tr>').join('')
-    + '<tr class="tot"><td>Total</td><td class="num" id="mmRdvTotP">'+mmTotCpt(d,'p')+'</td>'
-    + '<td class="num" id="mmRdvTotC">'+mmTotCpt(d,'c')+'</td></tr>'
+  return '<div class="mm-wrap mm-wx"><table class="mm-tbl mm-rdv"><thead><tr><th>Période</th>'
+    + MM_CPT.map(([k,lib])=>'<th class="num">'+esc(lib)+'</th>').join('')
+    + '<th class="num tt">Total</th></tr></thead><tbody>'
+    + MM_RDV_LIGNES.map(([base,lib,sfx,id,avecDlt])=>'<tr><td class="lb">'+esc(lib)
+        + '<small>'+esc(sfx(sem))+'</small></td>'
+        // Pas de data-l ici : ce tableau reste un tableau sur téléphone, et la règle mobile
+        // « .mm-tbl td[data-l] » (plus spécifique) le transformait en grille, écrasant les cases.
+        + MM_CPT.map(([k])=>'<td class="num">'+cell(base,k)+(avecDlt?dlt(base,k):'')+'</td>').join('')
+        + '<td class="num tt" id="'+id+'">'+mmTotCpt(d,base)+'</td></tr>').join('')
     + '</tbody></table></div>';
 }
-const mmTotCpt = (d, base) => MM_CPT.reduce((n,[k])=>n+mmN(mmG(d,base+'.'+k)),0);
+const mmTotCpt = (d, base) => (base==='av'?MM_AV:MM_CPT).reduce((n,[k])=>n+mmN(mmG(d,base+'.'+k)),0);
 // Les totaux suivent la frappe sans redessiner le tableau (sinon le curseur saute)
 function mmRdvTotaux(){
   if(!MM || !MM.donnees) return;
-  const p=document.getElementById('mmRdvTotP'), c=document.getElementById('mmRdvTotC');
-  if(p) p.textContent = mmTotCpt(MM.donnees,'p');
-  if(c) c.textContent = mmTotCpt(MM.donnees,'c');
+  MM_RDV_LIGNES.forEach(([base,,,id])=>{
+    const e=document.getElementById(id);
+    if(e) e.textContent = mmTotCpt(MM.donnees,base);
+  });
 }
 function mmProduitSelect(chemin, val){
   const l = MM_PRODUITS.slice();
@@ -4606,48 +4617,50 @@ function mmCorps(d, prive, ro, sem){
     + (MM_TOUT?'Tout replier':'Tout déplier')+'</button></div>';
   h += mmSynthese(d, a, ro, obj, ech);
 
-  // 1 — Mes rendez-vous : les deux semaines dans le même tableau
-  const resRdv = [mmResumeCpt(d,'p',MM_CPT) ? 'Écoulée : '+mmResumeCpt(d,'p',MM_CPT) : '',
-                  mmResumeCpt(d,'c',MM_CPT) ? 'En cours : '+mmResumeCpt(d,'c',MM_CPT) : ''].filter(Boolean).join(' — ');
-  h += mmSec(1,'Mes rendez-vous (S'+mmNo(vAddDays(sem,-7))+' et S'+mmNo(sem)+')','',
-      mmCompteursDuo(d, ro, prec, sem), !resRdv, resRdv);
-
-  // 2 — Semaine écoulée : ce qui lui est propre
+  // 1 — Mes rendez-vous : le tableau des trois périodes, puis tout ce qui se rattache aux deux
+  // semaines. Un seul encadré au lieu de quatre : c'est le cœur du mail manager.
   const sousL = Array.isArray(d.sous)?d.sous:[];
   const sousTot = sousL.reduce((n,x)=>n+mmN(x.vi),0);
-  const resP = [sousTot?'<b>'+mmEur(sousTot)+'</b> signé':'', d.pf?'faits marquants notés':''].filter(Boolean).join(' · ');
-  h += mmSec(2,'Semaine écoulée (S'+mmNo(vAddDays(sem,-7))+')','',
-      '<label class="mm-lab">Signatures / souscriptions</label>'
+  const tot = mmTotCpt(d,'av');
+  const mut = t => '<small style="font-weight:400;color:var(--ink-3)">'+t+'</small>';
+  const petitAuto = mut('— relevé automatiquement');
+  // « Invités » = mes filleuls qui n'ont pas encore réglé leur cotisation. Le libellé d'avant,
+  // « Invités en séance », ne disait ni de qui ni de quelles séances il s'agissait.
+  const invExpl = mut('— mes filleuls pas encore adhérents, inscrits à une Découverte Métier, '
+    + 'un Atelier Démarrage ou un 3 Jours, relevé automatiquement');
+  const resRdv = [
+    mmResumeCpt(d,'p',MM_CPT) ? 'Écoulée : '+mmResumeCpt(d,'p',MM_CPT) : '',
+    mmResumeCpt(d,'c',MM_CPT) ? 'En cours : '+mmResumeCpt(d,'c',MM_CPT) : '',
+    tot ? 'D’avance : <b>'+tot+'</b>' : '',
+    sousTot ? '<b>'+mmEur(sousTot)+'</b> signé' : ''].filter(Boolean).join(' — ');
+  h += mmSec(1,'Mes rendez-vous','',
+      mmCompteursTri(d, ro, prec, sem)
+    + '<label class="mm-lab">Signatures / souscriptions ' + mut('— semaine écoulée') + '</label>'
     + mmSous(d, ro)
-    + '<label class="mm-lab">Invités en séance <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
-    + mmInvBloc(a.invP, a.invPN, 'Aucun invité en séance la semaine dernière.')
-    + '<label class="mm-lab">Formations, ateliers et événements suivis <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
-    + mmListeAuto(a.sp,'Aucune session la semaine dernière.')
-    + mmHistorique(a.sh)
-    + '<label class="mm-lab">Faits marquants</label>'
+    + '<label class="mm-lab">Faits marquants ' + mut('— semaine écoulée (S'+mmNo(vAddDays(sem,-7))+')') + '</label>'
     + (ro ? mmPara(d.pf||'—')
-          : '<textarea class="mm-txt" data-mm="pf" rows="3" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>'), false, resP);
-
-  // 3 — Semaine en cours : ce qui lui est propre
-  const resC = d.cf ? 'focus noté' : '';
-  h += mmSec(3,'Semaine en cours (S'+mmNo(sem)+')','',
-      '<label class="mm-lab">Mon focus de la semaine</label>'
+          : '<textarea class="mm-txt" data-mm="pf" rows="3" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>')
+    + '<label class="mm-lab">Mon focus ' + mut('— semaine en cours (S'+mmNo(sem)+')') + '</label>'
     + (ro ? mmPara(d.cf||'—')
           : '<textarea class="mm-txt" data-mm="cf" rows="3" placeholder="Ce sur quoi je mets l’énergie.">'+esc(d.cf||'')+'</textarea>')
-    + '<label class="mm-lab">Invités en séance <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
-    + mmInvBloc(a.invC, a.invCN, 'Aucun invité en séance cette semaine.')
-    + '<label class="mm-lab">Sessions de la semaine <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
-    + mmListeAuto(a.sc,'Aucune session cette semaine.'), false, resC);
+    // Invités et séances sont relevés par le réseau : c'est du contexte, pas de la saisie.
+    // Replié, pour que l'encadré ouvert ne montre que ce qu'on a à remplir.
+    + '<details class="mm-sous"><summary>Invités et séances relevés sur ces deux semaines</summary>'
+    + '<div class="mm-sous-bd">'
+    + '<label class="mm-lab">Mes invités en séance ' + invExpl + '</label>'
+    + '<div class="mm-deux"><div><span class="mm-per">Semaine écoulée (S'+mmNo(vAddDays(sem,-7))+')</span>'
+    + mmInvBloc(a.invP, a.invPN, 'Aucun invité inscrit.')+'</div>'
+    + '<div><span class="mm-per">Semaine en cours (S'+mmNo(sem)+')</span>'
+    + mmInvBloc(a.invC, a.invCN, 'Aucun invité inscrit.')+'</div></div>'
+    + '<label class="mm-lab">Mes séances ' + petitAuto + '</label>'
+    + '<div class="mm-deux"><div><span class="mm-per">Suivies la semaine écoulée</span>'
+    + mmListeAuto(a.sp,'Aucune session la semaine dernière.')+'</div>'
+    + '<div><span class="mm-per">Cette semaine</span>'
+    + mmListeAuto(a.sc,'Aucune session cette semaine.')+'</div></div>'
+    + mmHistorique(a.sh)
+    + '</div></details>', !resRdv, resRdv);
 
-  // 4 — RDV d'avance
-  const tot = MM_AV.reduce((n,[k])=>n+mmN(mmG(d,'av.'+k)),0);
-  const totP = prec ? MM_AV.reduce((n,[k])=>n+mmN(mmG(prec,'av.'+k)),0) : null;
-  h += mmSec(4,'RDV d’avance (à date)','',
-      mmCompteurs(d,'av',MM_AV,ro,prec)
-    + '<p class="mm-note"><b>Total : '+tot+'</b>'+(totP!==null?' · '+(tot-totP>=0?'+':'')+(tot-totP)+' vs la semaine dernière':'')+'</p>',
-      false, tot?'Total <b>'+tot+'</b>':'');
-
-  // 4 — Production
+  // 2 — Production
   const champProd = ([k,lib,u]) =>
     '<div class="mm-c"><label>'+esc(lib)+'</label><div class="row">'
     + mmChamp('prod.'+k, mmG(d,'prod.'+k), ro, {eur:u==='€', zero:u!=='€'})+'</div></div>';
@@ -4664,9 +4677,17 @@ function mmCorps(d, prive, ro, sem){
   const resProd = [['va','VA VC','€'],['vaec','VA EC','€'],['eva','Équipe VC','€'],['evaec','Équipe EC','€'],['clients','Clients','']]
     .filter(([k])=>mmN(mmG(d,'prod.'+k)))
     .map(([k,lib,u])=>esc(lib)+' <b>'+(u==='€'?mmEur(mmG(d,'prod.'+k)):mmN(mmG(d,'prod.'+k)))+'</b>').join(' · ');
-  h += mmSec(5,'Production',(ro?'':'reporté de S-1'), prod, false, resProd);
+  h += mmSec(2,'Production',(ro?'':'reporté de S-1'), prod, false, resProd);
 
-  if(!ro) MM_REMPLI = { n:[resRdv,resP,resC,tot,resProd].filter(Boolean).length, tot:5 };
+  // Le formulaire n'a plus que deux encadrés : un ratio de sections ne dit plus rien. On annonce
+  // ce qui reste à renseigner, bloc par bloc.
+  if(!ro) MM_REMPLI = [
+      [mmTotCpt(d,'p')||mmTotCpt(d,'c')||tot, 'rendez-vous'],
+      [sousL.length,                          'signatures'],
+      [d.pf,                                  'faits marquants'],
+      [d.cf,                                  'focus'],
+      [resProd,                               'production'],
+    ].filter(x=>!x[0]).map(x=>x[1]);
   // Les habilitations ont leur page : ici, un simple renvoi avec l'essentiel
   const habTot = MM_HAB.length + MM_FC.length, habOk = mmHabValidees(d), rappel = mmRappelFC(d);
   if(!ro) h += '<div class="mm-habl'+(rappel?' alr':'')+'"><span><b>Habilitations</b> — '+habOk+' / '+habTot+' validées'
@@ -4880,7 +4901,8 @@ function buildMM(){
        + '<div class="mm-bar'+(cour?' fix':'')+'">'
        + (cour ? '<button type="button" class="mm-b pri" id="mmPub">'+(MM.statut==='publie'?'Republier':'Publier mon mail manager')+'</button>' : '')
        + '<button type="button" class="mm-b" data-mmcopy="moi">Copier en texte</button>'
-       + (cour ? '<span class="mm-rempli">'+MM_REMPLI.n+' section'+(MM_REMPLI.n>1?'s':'')+' sur '+MM_REMPLI.tot+' remplie'+(MM_REMPLI.n>1?'s':'')+'</span>' : '')
+       + (cour ? '<span class="mm-rempli'+(MM_REMPLI.length?'':' ok')+'">'
+           + (MM_REMPLI.length ? 'À compléter : '+esc(MM_REMPLI.join(', ')) : 'Tout est renseigné ✓')+'</span>' : '')
        + '<span class="mm-sav"></span></div>'
        + (cour ? '<div class="mm-off"><span>Le mail manager, ce n’est pas pour toi ?</span><button type="button" id="mmOff">Je ne souhaite pas le faire</button></div>' : '')
        + '</div>';
@@ -5579,7 +5601,7 @@ function mmSaisie(t){
     mmS(MM.donnees, t.dataset.mm, t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value));
     if(t.dataset.mm.indexOf('sous.')===0) mmSousTotaux();
     if(t.dataset.mm.indexOf('prod.')===0) mmProdMaj();
-    if(t.dataset.mm.indexOf('p.')===0 || t.dataset.mm.indexOf('c.')===0) mmRdvTotaux();
+    if(/^(p|c|av)\./.test(t.dataset.mm)) mmRdvTotaux();
     mmPlanSave(); return true;
   }
   return false;
@@ -5653,21 +5675,9 @@ document.addEventListener('keydown', e=>{
   const el=e.target;
   if(!el || el.tagName!=='INPUT' || el.type!=='number' || !el.closest || !el.closest('#v-mm')) return;
   e.preventDefault();
+  // L'ordre du document suffit : dans le tableau, une ligne = une période, donc on remplit toute
+  // la semaine écoulée, puis toute la semaine en cours, puis les RDV d'avance.
   const champs=[...document.querySelectorAll('#v-mm input[type=number]')].filter(x=>x.offsetParent!==null);
-  // Dans le tableau des deux semaines, on saisit colonne par colonne — toute la semaine écoulée,
-  // puis toute la semaine en cours : c'est l'ordre dans lequel on relit son agenda.
-  const tbl=document.querySelector('#v-mm .mm-rdv');
-  if(tbl){
-    const dans=champs.filter(x=>tbl.contains(x));
-    if(dans.length>1){
-      const debut=champs.indexOf(dans[0]);
-      dans.sort((x,y)=>{ const cx=x.closest('td').cellIndex, cy=y.closest('td').cellIndex;
-                         return cx-cy || x.closest('tr').rowIndex-y.closest('tr').rowIndex; });
-      const reste=champs.filter(x=>!tbl.contains(x));
-      reste.splice(debut, 0, ...dans);
-      champs.length=0; champs.push(...reste);
-    }
-  }
   const i=champs.indexOf(el);
   if(i>=0 && i<champs.length-1){ const n=champs[i+1]; n.focus(); if(n.select) n.select(); }
   else el.blur();

@@ -2276,64 +2276,66 @@ test.describe('Mail Manager — alléger la saisie', () => {
     expect(erreurs).toEqual([]);
   });
 
-  test('cinq sections : un tableau de rendez-vous, chaque semaine, l’avance et la production', async ({ page }) => {
+  test('deux encadrés seulement : « Mes rendez-vous » et « Production »', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poserMM(page);
     const r = await page.evaluate((src) => {
       window.__rendre({ auto: window.__auto });
       const lire = new Function('return (' + src + ')()')();
+      const s1 = document.querySelectorAll('#mmMoi details.mm-sec')[0];
       return { sections: lire.map(x => x.n + ' ' + x.titre),
+               // tout ce qui touche aux deux semaines est dans le premier encadré
+               dansRdv: ['Signatures / souscriptions', 'Faits marquants', 'Mon focus',
+                         'Mes invités en séance', 'Mes séances'].every(t => s1.textContent.includes(t)),
                // plus de section « Habilitations » : elle a sa page
                hab: !!document.querySelector('#mmMoi [data-mm^="hab."]'),
                renvoi: !!document.querySelector('#mmMoi .mm-habl [data-mms="hab"]') };
     }, lireSections.toString());
-    const [sP, sC] = await page.evaluate(() => [mmNo(vAddDays(MM_SEM, -7)), mmNo(MM_SEM)]);
-    expect(r.sections).toEqual([
-      `1 Mes rendez-vous (S${sP} et S${sC})`,
-      `2 Semaine écoulée (S${sP})`,
-      `3 Semaine en cours (S${sC})`,
-      '4 RDV d’avance (à date)',
-      '5 Production']);
+    expect(r.sections).toEqual(['1 Mes rendez-vous', '2 Production']);
+    expect(r.dansRdv, 'les trois anciens encadrés sont réunis dans le premier').toBe(true);
     expect(r.hab, 'aucun champ d’habilitation dans le formulaire').toBe(false);
     expect(r.renvoi, 'un renvoi vers la page des habilitations').toBe(true);
     expect(erreurs).toEqual([]);
   });
 
-  test('les deux semaines partagent un tableau à deux colonnes, totaux vivants', async ({ page }) => {
+  test('un seul tableau : les rendez-vous en colonnes, les trois périodes en lignes', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poserMM(page);
     const r = await page.evaluate(() => {
       MM = { semaine: MM_SEM, statut: 'brouillon', donnees: JSON.parse(JSON.stringify(window.__plein)) };
-      MM_PREC = { donnees: { p: { r0: 3, r1: 4, r2: 2, r2b: 0, rx: 0 } } };
+      MM_PREC = { donnees: { p: { r0: 3, r1: 4, r2: 2, r2b: 0, rx: 0 }, av: { r1: 1 } } };
       window.__rendre(MM.donnees);
       const t = document.querySelector('#mmMoi .mm-rdv');
-      const lignes = [...t.querySelectorAll('tbody tr:not(.tot)')].map(tr => ({
-        lib: tr.querySelector('td.lb').textContent,
-        p: (tr.querySelectorAll('td')[1].querySelector('input') || {}).dataset,
-        c: (tr.querySelectorAll('td')[2].querySelector('input') || {}).dataset,
-        dlt: (tr.querySelectorAll('td')[1].querySelector('.dlt') || {}).textContent || '',
-        dltC: !!tr.querySelectorAll('td')[2].querySelector('.dlt'),
+      const lignes = [...t.querySelectorAll('tbody tr')].map(tr => ({
+        lib: tr.querySelector('td.lb').textContent.replace(/\s+/g, ' ').trim(),
+        champs: [...tr.querySelectorAll('td.num')].map(td => {
+          const i = td.querySelector('input');
+          return i ? i.dataset.mm : td.textContent.trim();
+        }),
+        dlt: [...tr.querySelectorAll('td.num .dlt')].map(x => x.textContent),
       }));
-      const avant = [document.getElementById('mmRdvTotP').textContent, document.getElementById('mmRdvTotC').textContent];
-      // une frappe dans la colonne « en cours » met le total à jour sans redessiner le tableau
+      const tot = () => ['mmRdvTotP', 'mmRdvTotC', 'mmRdvTotA'].map(i => document.getElementById(i).textContent);
+      const avant = tot();
+      // une frappe met le total de SA ligne à jour, sans redessiner le tableau
       const champ = t.querySelector('input[data-mm="c.r1"]');
       champ.value = '5'; champ.dispatchEvent(new Event('input', { bubbles: true }));
-      const apres = [document.getElementById('mmRdvTotP').textContent, document.getElementById('mmRdvTotC').textContent];
-      const memeChamp = document.querySelector('#mmMoi .mm-rdv input[data-mm="c.r1"]') === champ;
-      return { entetes: [...t.querySelectorAll('thead th')].map(th => th.textContent.replace(/\s+/g, ' ').trim()),
-               lignes: lignes.map(l => [l.lib, l.p.mm, l.c.mm]),
-               dlt: lignes.map(l => l.dlt), dltC: lignes.some(l => l.dltC), avant, apres, memeChamp };
+      return { entetes: [...t.querySelectorAll('thead th')].map(th => th.textContent.trim()),
+               lignes, avant, apres: tot(),
+               memeChamp: document.querySelector('#mmMoi .mm-rdv input[data-mm="c.r1"]') === champ };
     });
     const [nP, nC] = await page.evaluate(() => [mmNo(vAddDays(MM_SEM, -7)), mmNo(MM_SEM)]);
-    expect(r.entetes).toEqual(['Rendez-vous', 'ÉcouléeS' + nP, 'En coursS' + nC]);
-    expect(r.lignes).toEqual([
-      ['R0', 'p.r0', 'c.r0'], ['R1', 'p.r1', 'c.r1'], ['R2', 'p.r2', 'c.r2'],
-      ['R-signature', 'p.r2b', 'c.r2b'], ['R3', 'p.r3', 'c.r3'], ['RX', 'p.rx', 'c.rx']]);
-    // l'écart n'a de sens que sur la semaine écoulée, la seule qui ait un précédent
-    expect(r.dlt).toEqual(['+1', '-1', '', '+1', '', '+1']);
-    expect(r.dltC).toBe(false);
-    expect(r.avant).toEqual(['11', '2']);
-    expect(r.apres, 'les totaux suivent la frappe').toEqual(['11', '7']);
+    expect(r.entetes).toEqual(['Période', 'R0', 'R1', 'R2', 'R-signature', 'R3', 'RX', 'Total']);
+    expect(r.lignes.map(l => l.lib)).toEqual([`ÉcouléeS${nP}`, `En coursS${nC}`, 'D’avanceà date']);
+    expect(r.lignes[0].champs).toEqual(['p.r0', 'p.r1', 'p.r2', 'p.r2b', 'p.r3', 'p.rx', '11']);
+    expect(r.lignes[1].champs).toEqual(['c.r0', 'c.r1', 'c.r2', 'c.r2b', 'c.r3', 'c.rx', '2']);
+    // « R-signature » n'existe pas en RDV d'avance : la case reste vide plutôt que fausse
+    expect(r.lignes[2].champs).toEqual(['av.r0', 'av.r1', 'av.r2', '—', 'av.r3', 'av.rx', '6']);
+    // l'écart n'a de sens que là où il y a un précédent : l'écoulée et l'avance
+    expect(r.lignes[0].dlt).toEqual(['+1', '-1', '+1', '+1']);
+    expect(r.lignes[1].dlt, 'la semaine en cours n’a pas de précédent').toEqual([]);
+    expect(r.lignes[2].dlt, 'av.r1 : 3 contre 1 · av.r2 : 3 contre 0').toEqual(['+2', '+3']);
+    expect(r.avant).toEqual(['11', '2', '6']);
+    expect(r.apres, 'seul le total de la ligne saisie bouge').toEqual(['11', '7', '6']);
     expect(r.memeChamp, 'le tableau n’est pas redessiné : le curseur reste dans le champ').toBe(true);
     expect(erreurs).toEqual([]);
   });
@@ -2346,20 +2348,18 @@ test.describe('Mail Manager — alléger la saisie', () => {
       return new Function('return (' + src + ')()')();
     }, lireSections.toString());
     // formulaire neuf : seul le tableau des rendez-vous s'ouvre — c'est ce qu'on vient remplir.
-    // Les autres annoncent leur contenu dans leur intitulé et s'ouvrent à la demande.
-    expect(vide.map(x => x.ouvert)).toEqual([true, false, false, false, false]);
+    // La production annonce son contenu dans son intitulé et s'ouvre à la demande.
+    expect(vide.map(x => x.ouvert)).toEqual([true, false]);
     expect(vide.every(x => x.res === '')).toBe(true);
 
     const plein = await page.evaluate((src) => {
       window.__rendre(window.__plein);
       return new Function('return (' + src + ')()')();
     }, lireSections.toString());
-    expect(plein.map(x => x.ouvert), 'une section remplie se replie').toEqual([false, false, false, false, false]);
-    expect(plein[0].res).toBe('Écoulée : R0 4 · R1 3 · R2 2 · R-signature 1 · RX 1 — En cours : R0 2');
-    expect(plein[1].res).toBe('24 500 € signé · faits marquants notés');
-    expect(plein[2].res).toBe('focus noté');
-    expect(plein[3].res).toBe('Total 6');
-    expect(plein[4].res).toBe('VA VC 24 500 € · VA EC 8 200 €');
+    expect(plein.map(x => x.ouvert), 'une section remplie se replie').toEqual([false, false]);
+    expect(plein[0].res).toBe('Écoulée : R0 4 · R1 3 · R2 2 · R-signature 1 · RX 1'
+      + ' — En cours : R0 2 — D’avance : 6 — 24 500 € signé');
+    expect(plein[1].res).toBe('VA VC 24 500 € · VA EC 8 200 €');
     expect(erreurs).toEqual([]);
   });
 
@@ -2382,12 +2382,12 @@ test.describe('Mail Manager — alléger la saisie', () => {
     });
     expect(r.avant, 'rempli, tout est replié').toBe(0);
     expect(r.apres, 'tout déplié : bandeau compris').toBe(r.total);
-    expect(r.total).toBe(6);
+    expect(r.total, 'le bandeau et les deux encadrés').toBe(3);
     expect(r.hist, 'l’historique imbriqué garde son pliage').toBe(true);
     expect(r.libelle).toBe('Tout replier');
   });
 
-  test('le formulaire rempli tient sur un écran, et Entrée descend colonne par colonne', async ({ page }) => {
+  test('le formulaire rempli tient sur un écran, et Entrée suit les périodes', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poserMM(page);
     const h = await page.evaluate(() => {
@@ -2395,7 +2395,7 @@ test.describe('Mail Manager — alléger la saisie', () => {
       return Math.round(document.getElementById('mmMoi').getBoundingClientRect().height);
     });
     // avant : 1 578 px quel que soit le remplissage
-    expect(h, 'formulaire rempli, état par défaut').toBeLessThan(800);
+    expect(h, 'formulaire rempli, état par défaut').toBeLessThan(700);
 
     const nav = await page.evaluate(() => {
       MM_TOUT = true; window.__rendre(window.__plein); MM_TOUT = false;
@@ -2405,13 +2405,47 @@ test.describe('Mail Manager — alléger la saisie', () => {
         el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
         return document.activeElement.dataset.mm;
       };
-      return { depuisR0: suivant('p.r0'), finColonne: suivant('p.rx'), colonne2: suivant('c.r0') };
+      return { depuisR0: suivant('p.r0'), finLigne: suivant('p.rx'), ligne2: suivant('c.rx') };
     });
-    // on remplit toute la semaine écoulée, puis toute la semaine en cours
+    // une ligne = une période : on remplit toute la semaine écoulée, puis la suivante
     expect(nav.depuisR0).toBe('p.r1');
-    expect(nav.finColonne, 'en bas de colonne on passe en haut de la suivante').toBe('c.r0');
-    expect(nav.colonne2).toBe('c.r1');
+    expect(nav.finLigne, 'en fin de ligne on passe à la période suivante').toBe('c.r0');
+    expect(nav.ligne2).toBe('av.r0');
     expect(erreurs).toEqual([]);
+  });
+
+  test('téléphone : le tableau reste un tableau et défile, la colonne des périodes suit', async ({ browser }) => {
+    // Régression du 17/09/2026 : la règle mobile « .mm-tbl td[data-l] » (plus spécifique que
+    // « .mm-rdv td ») transformait chaque case en grille — les compteurs tombaient à 6 px de large.
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, timezoneId: 'Europe/Paris', locale: 'fr-FR' });
+    const page = await ctx.newPage();
+    await ouvrir(page);
+    await poserMM(page);
+    const r = await page.evaluate(() => {
+      window.__rendre(window.__plein);
+      document.querySelector('#mmMoi details.mm-sec').open = true;
+      const t = document.querySelector('#mmMoi .mm-rdv'), wrap = t.parentElement;
+      const cs = e => getComputedStyle(e), L = document.documentElement.clientWidth;
+      const td = t.querySelectorAll('tbody tr td')[1];
+      return { ecran: L,
+               cellule: cs(td).display,
+               champ: Math.round(td.querySelector('input').getBoundingClientRect().width),
+               table: Math.round(t.getBoundingClientRect().width),
+               dispo: Math.round(wrap.getBoundingClientRect().width),
+               defile: cs(wrap).overflowX,
+               periodeCollante: cs(t.querySelector('td.lb')).position,
+               // les boutons ± sortent sur téléphone : on saisit au clavier numérique
+               boutons: cs(td.querySelector('button')).display,
+               pageDeborde: document.documentElement.scrollWidth > L };
+    });
+    expect(r.cellule, 'une vraie cellule de tableau, pas une grille').toBe('table-cell');
+    expect(r.champ, 'le compteur reste saisissable').toBeGreaterThan(35);
+    expect(r.table, 'le tableau garde sa largeur naturelle').toBeGreaterThan(r.dispo);
+    expect(r.defile, 'et c’est le conteneur qui défile').toBe('auto');
+    expect(r.periodeCollante).toBe('sticky');
+    expect(r.boutons).toBe('none');
+    expect(r.pageDeborde, 'la page elle-même ne défile pas latéralement').toBe(false);
+    await ctx.close();
   });
 
   test('les habilitations ont leur page, après « Mes objectifs »', async ({ page }) => {
