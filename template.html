@@ -339,6 +339,8 @@ tr.colf input:focus{outline:2px solid var(--accent);outline-offset:0}
 .xtra.pub{background:var(--surface-2);border-radius:5px;padding:1px 7px;font-weight:600;color:var(--ink-2)}
 .xtra.pub.restreint{background:#FFF1DB;color:#8A4B00}
 :root[data-theme="dark"] .xtra.pub.restreint{background:#4A2E0F;color:#FBBF77}
+.xtra.insc{background:var(--gold);color:#06301F;border-radius:5px;padding:1px 7px;font-weight:700}
+:root[data-theme="dark"] .xtra.insc{background:var(--gold-soft);color:var(--gold-ink)}
 .xtra.lig-in{color:var(--gold-ink);background:var(--gold-soft);border-radius:5px;padding:1px 7px}
 .xtra.lig-in .lig-open{cursor:pointer;text-decoration:underline;font-weight:600}
 .xtra.act{color:var(--accent);font-weight:600;text-decoration:none;background:var(--accent-soft);border-radius:5px;padding:1px 7px}
@@ -844,8 +846,14 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 :root[data-theme="dark"] .surv-p.complet{background:#4A1717;color:#F5A3A3}
 .ev.surv-full{opacity:.75}
 .chip.surv-type{background:var(--surface-2);color:var(--ink-2);font-weight:600;margin-right:6px}
+.surv-n{font-family:"Inter",system-ui,sans-serif;font-size:11.5px;font-weight:700;letter-spacing:0;text-transform:none;background:var(--surface-2);color:var(--ink-3);border-radius:20px;padding:1px 8px}
+/* pastille de comptage d'un sous-onglet : un nombre, pas une alerte */
+.subtabs .sub-badge.cnt{background:var(--surface-2);color:var(--ink-2)}
+.subtabs button.on .sub-badge.cnt{background:rgba(255,255,255,.22);color:var(--accent-ink)}
+:root[data-theme="dark"] .subtabs button.on .sub-badge.cnt{background:rgba(0,0,0,.25)}
+#survList > .month-h:first-child{margin-top:0}
 .surv-vide{color:var(--ink-2);line-height:2}
-#survPastLbl{margin:2px 0 12px}
+#survPastLbl{margin:2px 0 22px}
 .month-h.passe-h{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);color:var(--ink-3)}
 .surv-vide svg{width:15px;height:15px;vertical-align:-3px;color:var(--ink-3)}
 .surv-strip{background:#FFF8EC;border-color:var(--encours)}
@@ -1336,7 +1344,7 @@ a.mml-r:hover{border-color:var(--accent)}
     </button>
     <div class="side-nav">
       <div class="grp">Mon espace</div>
-      <button data-v="surv" hidden title="Enregistré"><span class="i" data-i="surv"></span><span class="l">Enregistré</span></button>
+      <button data-v="surv" hidden title="Mes sessions" data-l="Mes sessions"><span class="i" data-i="surv"></span><span class="l">Mes sessions</span></button>
       <button data-v="mm" hidden title="Mail Manager"><span class="i" data-i="mm"></span><span class="l">Mail Manager</span></button>
       <button data-v="lig" hidden title="Ma lignée"><span class="i" data-i="lig"></span><span class="l">Ma lignée</span></button>
       <div class="grp">Le réseau</div>
@@ -1418,7 +1426,11 @@ a.mml-r:hover{border-color:var(--accent)}
 
     <section class="view" id="v-surv">
       <div class="panel">
-        <h2>Mes sessions enregistrées</h2>
+        <h2>Mes sessions</h2>
+        <nav class="subtabs" id="survSub">
+          <button data-s="ins" class="on">Mes inscriptions <span class="sub-badge cnt" id="survNIns" hidden></span></button>
+          <button data-s="gardes">Mes enregistrements <span class="sub-badge cnt" id="survNGar" hidden></span></button>
+        </nav>
         <p class="mbr-sub" id="survNote"></p>
         <label class="chk" id="survPastLbl" hidden><input type="checkbox" id="survPast"> Sessions passées <span id="survPastN"></span></label>
         <div id="survList"></div>
@@ -1698,7 +1710,7 @@ a.mml-r:hover{border-color:var(--accent)}
   <nav class="botbar" aria-label="Navigation">
     <button data-v="home"><span class="i" data-i="home"></span><span class="l">Accueil</span></button>
     <button data-v="pd"><span class="i" data-i="pd"></span><span class="l">Parcours</span></button>
-    <button data-v="surv" hidden><span class="i" data-i="surv"></span><span class="l">Enregistré</span></button>
+    <button data-v="surv" hidden data-l="Sessions"><span class="i" data-i="surv"></span><span class="l">Sessions</span></button>
     <button data-v="cat"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></button>
     <button type="button" id="plusBtn"><span class="i" data-i="plus"></span><span class="l">Plus</span></button>
   </nav>
@@ -2029,12 +2041,16 @@ async function poserVu(tout_de_suite){
 function evExtras(a){
   const parts=[];
   const nv=neufBadge(a); if(nv) parts.push(nv);
+  const insc=dejaInscrit(a);
+  if(insc) parts.push('<span class="xtra insc" title="Tu es inscrit à cette séance">Inscrit</span>');
   const fe=ferieDans(a); if(fe) parts.push('<span class="xtra ferie" title="'+esc(fmtDLong(fe.iso))+' est un jour férié">Férié · '+esc(fe.nom)+'</span>');
   if(a.pub!=null) parts.push('<span class="xtra pub'+(a.pub?' restreint':'')+'" title="Public visé (statut minimum requis)">'+esc(pubLabel(a.pub))+'</span>');
   if(a.hab) parts.push('<span class="xtra pub restreint" title="Habilitation requise">Habilitation : '+esc(a.hab)+'</span>');
   const isFull=x=>x.max>0&&x.total>=x.max;
   if(a.max>0){ const full=isFull(a), pl=survPlaces(a);
-    // même règle partout : alerte sous 3 places, ou sous 5 % de la capacité si c'est plus large
+    // même règle partout : alerte sous 3 places, ou sous 5 % de la capacité si c'est plus large.
+    // Ces mentions restent affichées même quand je suis inscrit : savoir qu'une séance se remplit
+    // ou qu'elle est complète sert à orienter un invité ou un filleul vers une autre date.
     parts.push('<span class="xtra places'+(full?' full':(pl&&pl.tendu&&!isPast(a)?' tendu':''))+'" title="Inscrits / places">'
       +a.total+'/'+a.max+(full?' · complet':(pl&&pl.tendu&&!isPast(a)?' · plus que '+pl.reste+' place'+(pl.reste>1?'s':''):''))+'</span>');
     if(full&&!isPast(a)){
@@ -2103,6 +2119,17 @@ function survObjets(){
 // Déjà inscrit à la session : plus rien à surveiller, l'alerte ne me concerne plus
 let MOI_ID = null;
 const dejaInscrit = a => !!(MOI_ID && (a.guests||[]).some(id=>+id===+MOI_ID));
+// Mes inscriptions : relevées sur la liste des invités de chaque séance, dans les quatre listes et
+// sur tout l'historique (le payload remonte à 2022). Rien n'est stocké : la source est le réseau.
+// Tant que MOI_ID n'est pas résolu, la liste est vide — buildSurv() est rejoué dès qu'il l'est.
+function inscritObjets(){
+  const out = [];
+  if(!MOI_ID) return out;
+  [['a',A],['r',R],['f',F],['e',E]].forEach(([t,liste])=>{
+    (liste||[]).forEach(a=>{ if(dejaInscrit(a)) out.push({ cle:(a.k||t)+':'+a.id, t:(a.k||t), a }); });
+  });
+  return out.sort((x,y)=>(x.a.start||'').localeCompare(y.a.start||''));
+}
 function survAlertes(){
   return survObjets().filter(o=>!isPast(o.a) && !dejaInscrit(o.a))
                      .map(o=>Object.assign({}, o, {p:survPlaces(o.a)}))
@@ -2135,7 +2162,7 @@ function majOngletSurv(){
   document.querySelectorAll('[data-v="surv"]').forEach(btn=>{
     btn.hidden = !SBUSER;
     const l = btn.querySelector('.l');
-    if(l) l.innerHTML = 'Enregistré' + (n ? ' <span class="sub-badge">'+n+'</span>' : '');
+    if(l) l.innerHTML = (btn.dataset.l||'Mes sessions') + (n ? ' <span class="sub-badge">'+n+'</span>' : '');
   });
 }
 // redessine les listes qui portent l'étoile
@@ -2162,33 +2189,60 @@ function survCarte(o, passe){
 function survMois(liste, passe){
   return grouperMoisSemaines(liste, o=>survCarte(o, passe), o=>o.a);
 }
+// Deux sous-onglets, comme le Mail Manager : « Mes inscriptions » (relevées sur les invités de
+// chaque séance) et « Mes enregistrements » (le signet). Une session à la fois inscrite et
+// enregistrée ne compte que comme inscription — elle n'apparaît que dans le premier sous-onglet.
+// La case « Sessions passées » porte sur le sous-onglet affiché : elle ouvre aussi, côté
+// inscriptions, mon historique de participation (le payload du réseau remonte à 2022).
+const SURV_SUBS=['ins','gardes'];
+const SURV_SLUG={ins:'mes-inscriptions', gardes:'mes-enregistrements'};
+// raccourcis également acceptés dans l'URL
+const SLUG_SURV=Object.assign(Object.fromEntries(Object.entries(SURV_SLUG).map(([k,v])=>[v,k])),
+  {inscriptions:'ins', inscrit:'ins', enregistres:'gardes', enregistrements:'gardes', signets:'gardes'});
+let SURV_SUB='ins';
+function showSurvSub(s){
+  if(!SURV_SUBS.includes(s)) s='ins';
+  SURV_SUB=s;
+  document.querySelectorAll('#survSub button').forEach(b=>b.classList.toggle('on', b.dataset.s===s));
+}
+document.querySelectorAll('#survSub button').forEach(b=>b.addEventListener('click',()=>{
+  showSurvSub(b.dataset.s); buildSurv(); syncHash(true); window.scrollTo({top:0});
+}));
 function buildSurv(){
   const el = document.getElementById('survList');
   if(!el) return;
-  const tous = survObjets();
-  const avenir = tous.filter(o=>!isPast(o.a));
-  const passes = tous.filter(o=>isPast(o.a)).reverse();   // les plus récentes d'abord
+  const ins = inscritObjets();
+  const insCles = new Set(ins.map(o=>o.cle));
+  const gardes = survObjets().filter(o=>!insCles.has(o.cle));
+  const trier = l => ({ avenir:l.filter(o=>!isPast(o.a)), passes:l.filter(o=>isPast(o.a)).slice().reverse() });
+  const I = trier(ins), G = trier(gardes);          // les passées : les plus récentes d'abord
+  // Pastilles des sous-onglets : ce qui reste à venir de chaque côté
+  const pastille = (id, n) => { const b=document.getElementById(id); if(b){ b.hidden = !n; b.textContent = n||''; } };
+  pastille('survNIns', I.avenir.length); pastille('survNGar', G.avenir.length);
+
+  const insc = SURV_SUB==='ins';
+  const p = insc ? I : G;
+  const tout = insc ? ins : gardes;
   const voirPasses = (document.getElementById('survPast')||{}).checked;
   const releve = (META&&META.maj) ? fmtMaj(META) : (DATA&&DATA.meta?fmtMaj(DATA.meta):'');
   const note = document.getElementById('survNote');
-  if(note) note.textContent = avenir.length
-    ? 'Places relevées le '+releve+' — la liste du réseau est synchronisée quatre fois par jour.'
-    : '';
+  if(note) note.textContent = !p.avenir.length ? ''
+    : insc ? 'Inscriptions relevées le '+releve+' — la liste du réseau est synchronisée quatre fois par jour.'
+           : 'Places relevées le '+releve+' — la liste du réseau est synchronisée quatre fois par jour.';
   const lbl = document.getElementById('survPastLbl');
   if(lbl){
-    lbl.hidden = !passes.length;
+    lbl.hidden = !p.passes.length;
     const n = document.getElementById('survPastN');
-    if(n) n.textContent = passes.length ? '('+passes.length+')' : '';
+    if(n) n.textContent = p.passes.length ? '('+p.passes.length+')' : '';
   }
-  if(!tous.length){
-    el.innerHTML = '<p class="surv-vide">Rien d’enregistré pour l’instant.<br>Dans les onglets Parcours, Ateliers, Réunions, Formations et Événements, le signet '
-      + SIGNET_VIDE + ' en haut à droite d’une session la garde de côté ici — et te prévient quand les places s’épuisent.</p>';
-    return;
-  }
-  let html = survMois(avenir, false);
-  if(!avenir.length) html = '<p class="surv-vide">Aucune session à venir dans tes enregistrements.</p>';
-  if(voirPasses && passes.length) html += '<div class="month-h passe-h">Sessions passées</div>' + survMois(passes, true);
-  el.innerHTML = html;
+  const vide = !tout.length
+    ? (insc
+        ? '<p class="surv-vide">Aucune inscription pour l’instant.<br>Tes inscriptions apparaissent ici d’elles-mêmes, dès la mise à jour qui suit ton inscription sur le site du réseau.</p>'
+        : '<p class="surv-vide">Rien d’enregistré pour l’instant.<br>Dans les onglets Parcours, Ateliers, Réunions, Formations et Événements, le signet '
+          + SIGNET_VIDE + ' en haut à droite d’une session la garde de côté ici — et te prévient quand les places s’épuisent.</p>')
+    : '<p class="surv-vide">'+(insc?'Aucune inscription à venir.':'Aucune session enregistrée à venir.')+'</p>';
+  el.innerHTML = (p.avenir.length ? survMois(p.avenir, false) : vide)
+    + (voirPasses && p.passes.length ? '<div class="month-h passe-h">Sessions passées <span class="surv-n">'+p.passes.length+'</span></div>'+survMois(p.passes, true) : '');
 }
 document.addEventListener('change', e=>{ if(e.target.id==='survPast') buildSurv(); });
 /* ---------- Accueil : mes actions de la semaine ----------
@@ -2309,7 +2363,7 @@ function buildActions(){
       d: al.slice(0,3).map(o=>o.a.title).join(' · ')
          + (al.length>3 ? ' · +' + (al.length-3) + ' autre' + (al.length-4?'s':'') : '')
          + (complets ? ' — ' + complets + ' déjà complète' + (complets>1?'s':'') : ''),
-      href:'#enregistre', fait:false, go:'Voir' });
+      href:'#mes-sessions', fait:false, go:'Voir' });
   }
 
   // 5) Sessions enregistrées de la semaine prochaine, pas encore réservées
@@ -2323,7 +2377,7 @@ function buildActions(){
       urg: sem1.length + ' session' + (sem1.length>1?'s':''),
       d: sem1.slice(0,3).map(o=>fmtD(o.a.start) + ' · ' + o.a.title).join(' — ')
          + (sem1.length>3 ? ' · +' + (sem1.length-3) : ''),
-      href:'#enregistre', fait:semFait('sem1'), go:'Voir' });
+      href:'#mes-sessions', fait:semFait('sem1'), go:'Voir' });
   }
 
   // 6) Prendre des nouvelles d'un filleul sans séance depuis 60 jours
@@ -2399,7 +2453,7 @@ function buildSurvAccueil(){
   el.hidden = !al.length;
   if(!al.length) return;
   el.innerHTML = '<span class="bl">'+al.length+' session'+(al.length>1?'s':'')+' enregistrée'+(al.length>1?'s':'')+' où les places s’épuisent</span>'
-    + al.slice(0,4).map(o=>'<a class="surv-a" href="#enregistre">'+esc(o.a.title)+' <span class="w">'
+    + al.slice(0,4).map(o=>'<a class="surv-a" href="#mes-sessions">'+esc(o.a.title)+' <span class="w">'
       + (o.p.complet?'complet':'plus que '+o.p.reste)+'</span></a>').join('');
 }
 document.addEventListener('click', e=>{
@@ -2650,9 +2704,10 @@ document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('cli
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
 const TABS=['home','veille','res','surv','pd','mm','lig','cat','reu','for','evt','ann','fb','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',res:'ressources',surv:'enregistre',pd:'parcours-decouverte',mm:'mail-manager',lig:'ma-lignee',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',fb:'ameliorer-kairos',admin:'admin'};
+const TAB_SLUG={home:'accueil',veille:'veille',res:'ressources',surv:'mes-sessions',pd:'parcours-decouverte',mm:'mail-manager',lig:'ma-lignee',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',fb:'ameliorer-kairos',admin:'admin'};
 // Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
-const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin'});
+// « enregistre » : ancienne adresse de l'onglet, gardée pour que les liens déjà partagés fonctionnent
+const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin',enregistre:'surv'});
 const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
 let curTab='home', APPLYING=false;
 const ctrlKey=(el,tab)=>(el.id.startsWith(tab)?el.id.slice(tab.length):el.id).toLowerCase();
@@ -2670,6 +2725,7 @@ function tabState(tab){
   sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ if(i.value) p.set('f_'+i.dataset.f,i.value); });
   if(tab==='ann'&&typeof ANN_SORT!=='undefined'&&(ANN_SORT.col!=='date'||ANN_SORT.dir!=='desc')) p.set('tri',ANN_SORT.col+'.'+ANN_SORT.dir);
   if(tab==='admin'&&curSub!=='mbr') p.set('s', ADMIN_SLUG[curSub]);
+  if(tab==='surv'&&typeof SURV_SUB!=='undefined'&&SURV_SUB!=='ins') p.set('s', SURV_SLUG[SURV_SUB]);
   if(tab==='res') rsTabState(p);
   if(tab==='lig') ligTabState(p);
   if(tab==='mm'){
@@ -2707,6 +2763,7 @@ function applyState(tab,p){
     const vue=p.get('vue')||'list'; const vb=sec.querySelector('.vtoggle button[data-m="'+vue+'"]'); if(vb&&!vb.classList.contains('on')) vb.click();
     sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ const want=p.get('f_'+i.dataset.f)||''; if(i.value!==want){ i.value=want; fire(i,['input']); } });
     if(tab==='admin'){ const s=p.get('s')||''; showAdminSub(SLUG_ADMIN[s]||s||'mbr'); }
+    if(tab==='surv'&&typeof showSurvSub==='function'){ const s=p.get('s')||''; showSurvSub(SLUG_SURV[s]||s||'ins'); buildSurv(); }
     if(tab==='res') rsApplyState(p);
     if(tab==='lig') ligApplyState(p);
     if(tab==='mm'){

@@ -53,6 +53,7 @@ python calendrier.py         # le relevé des vacances scolaires
 | Mail Manager — production | les champs personnel / équipe 4 niveaux · les deux listes restent distinguables une fois fusionnées · la reprise de l'ancien compteur VAA · les retours à la ligne conservés à la lecture |
 | Nouveautés | la fenêtre de 14 jours · les séances passées ne sont jamais neuves · le repère « depuis ta dernière visite » · le filtre, le bandeau d'accueil et les points sur les onglets |
 | Semaines, fériés, vacances | le numéro de semaine ISO (S53 fin 2026, S1 le 4 janvier 2027) · les onze fériés dont Pâques, Ascension et Pentecôte · les vacances par zone, payload puis table de repli · les en-têtes de semaine des listes et du Parcours, la gouttière et les cases du calendrier · le choix de zone dans Mon compte, mémorisé et synchronisé · l'accueil · le tout sur téléphone |
+| Mes sessions | les inscriptions relevées sur les invités des quatre listes · deux sous-onglets, inscriptions par défaut, pastilles de ce qui reste à venir · une session inscrite ET enregistrée ne compte que côté inscriptions · les passées repliées, comptées par sous-onglet · le badge « Inscrit », les alertes de places conservées · le nom de l'onglet, le sous-onglet dans l'adresse et l'ancienne adresse #enregistre |
 | Téléphone (390 px) | la carte de session passe sur une colonne · les filtres et les sept jours tiennent dans la largeur · le tableau des souscriptions ne défile pas latéralement |
 
 ## Ajouter un test

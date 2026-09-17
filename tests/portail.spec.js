@@ -1927,3 +1927,231 @@ test.describe('Semaines ISO, jours fériés, vacances scolaires', () => {
     await ctx.close();
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Mes sessions — inscriptions et enregistrements', () => {
+  // L'onglet ne montrait que les sessions mises de côté au signet. Il a désormais deux sous-onglets,
+  // comme le Mail Manager : « Mes inscriptions » (relevées sur la liste des invités du réseau,
+  // passées comprises) et « Mes enregistrements » (le signet).
+  const preparer = page => page.evaluate(() => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    SBUSER = { id: 'u1', email: 'moi@test.invalid' };
+    MOI_ID = 20028;
+    A.length = 0; R.length = 0; F.length = 0; E.length = 0;
+    SURV = new Set();
+    document.querySelectorAll('[data-v="surv"]').forEach(x => x.hidden = false);
+    const futur = ajouterJours(todayIso, 10), passe = ajouterJours(todayIso, -20);
+    window.__d = { futur, passe };
+    // s(liste, type, id, date, invités) — « guests » est la liste des inscrits venue du réseau
+    window.__s = (liste, k, id, start, guests) => {
+      const a = { id, title: 'Séance ' + id, start, end: start, lieu: 'Visio', pilotes: 'Diane P.',
+                  hor: '09:00', guests: guests || [], wait: [], pub: '', max: 20, total: 5,
+                  k, url: '#', th: '', thRaw: '' };
+      liste.push(a); return a;
+    };
+  });
+  const rendu = (page, sub) => page.evaluate((sub) => {
+    if (sub) showSurvSub(sub);
+    buildSurv();
+    const pastille = id => { const b = document.getElementById(id); return b.hidden ? '' : b.textContent; };
+    return {
+      sub: SURV_SUB,
+      onglets: [...document.querySelectorAll('#survSub button')].map(b => b.dataset.s + (b.classList.contains('on') ? '*' : '')),
+      pastilles: [pastille('survNIns'), pastille('survNGar')],
+      cartes: [...document.querySelectorAll('#survList .ev .body a.t')].map(a => a.textContent),
+      passees: !!document.querySelector('#survList .passe-h'),
+      vide: (document.querySelector('#survList > .surv-vide') || {}).textContent || '',
+      casePassees: !document.getElementById('survPastLbl').hidden,
+      nPassees: document.getElementById('survPastN').textContent,
+      note: document.getElementById('survNote').textContent,
+    };
+  }, sub);
+
+  test('les inscriptions des quatre listes remontent, sans rien de ce qui ne me concerne pas', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      const { futur, passe } = window.__d, s = window.__s;
+      s(A, 'a', 1, futur, [20028]);            // atelier à venir, je suis inscrit
+      s(A, 'a', 2, futur, [30001]);            // atelier où quelqu'un d'autre est inscrit
+      s(A, 'a', 3, passe, [20028, 30001]);     // atelier passé : mon historique
+      s(R, 'r', 4, futur, [20028]);
+      s(F, 'f', 5, futur, ['20028']);          // le réseau renvoie parfois l'identifiant en texte
+      s(E, 'e', 6, futur, []);
+      const ids = inscritObjets().map(o => o.cle);
+      MOI_ID = null;
+      const sansMoi = inscritObjets().length;   // tant que l'identité n'est pas résolue : rien
+      MOI_ID = 20028;
+      return { ids, sansMoi };
+    });
+    expect(r.ids).toEqual(['a:3', 'a:1', 'r:4', 'f:5']);   // triés par date : le passé d'abord
+    expect(r.sansMoi).toBe(0);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('deux sous-onglets : les inscriptions par défaut, les enregistrements à côté', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    await page.evaluate(() => {
+      const { futur } = window.__d, s = window.__s;
+      s(A, 'a', 1, futur, [20028]);            // inscrit
+      s(A, 'a', 2, futur, []);                 // enregistré seulement
+      s(R, 'r', 3, futur, []);                 // enregistré seulement
+      SURV = new Set(['a:2', 'r:3']);
+    });
+    const ins = await rendu(page);
+    expect(ins.sub, 'on arrive sur les inscriptions').toBe('ins');
+    expect(ins.onglets).toEqual(['ins*', 'gardes']);
+    expect(ins.pastilles, 'chaque sous-onglet annonce ce qui lui reste à venir').toEqual(['1', '2']);
+    expect(ins.cartes).toEqual(['Séance 1']);
+    expect(ins.note).toContain('Inscriptions relevées');
+    const gardes = await rendu(page, 'gardes');
+    expect(gardes.onglets).toEqual(['ins', 'gardes*']);
+    expect(gardes.cartes).toEqual(['Séance 2', 'Séance 3']);
+    expect(gardes.note).toContain('Places relevées');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('une session à la fois inscrite et enregistrée ne compte que côté inscriptions', async ({ page }) => {
+    await ouvrir(page);
+    await preparer(page);
+    await page.evaluate(() => {
+      const { futur } = window.__d, s = window.__s;
+      s(A, 'a', 1, futur, [20028]);
+      SURV = new Set(['a:1']);                 // je l'avais mise de côté avant de m'inscrire
+    });
+    const ins = await rendu(page);
+    expect(ins.pastilles).toEqual(['1', '']);
+    expect(ins.cartes).toEqual(['Séance 1']);
+    const signet = await page.evaluate(() => document.querySelectorAll('#survList .surv-btn.on').length);
+    expect(signet, 'le signet reste allumé sur la carte').toBe(1);
+    const gardes = await rendu(page, 'gardes');
+    expect(gardes.cartes, 'elle n’est pas comptée une deuxième fois').toEqual([]);
+    expect(gardes.vide).toContain('Rien d’enregistré');
+  });
+
+  test('les passées sont repliées, et la case porte sur le sous-onglet affiché', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    await page.evaluate(() => {
+      const { futur, passe } = window.__d, s = window.__s;
+      s(A, 'a', 1, futur, [20028]);
+      s(A, 'a', 2, passe, [20028]);            // historique de participation
+      s(A, 'a', 3, passe, [20028]);
+      s(R, 'r', 4, futur, []);
+      s(R, 'r', 5, passe, []);                 // enregistrée passée
+      SURV = new Set(['r:4', 'r:5']);
+    });
+    const ins = await rendu(page);
+    expect(ins.cartes).toEqual(['Séance 1']);
+    expect(ins.passees).toBe(false);
+    expect(ins.casePassees, 'la case apparaît dès qu’il y a du passé').toBe(true);
+    expect(ins.nPassees, 'le compte est celui du sous-onglet affiché').toBe('(2)');
+    const insOuvert = await page.evaluate(() => {
+      document.getElementById('survPast').checked = true;
+      buildSurv();
+      return { cartes: [...document.querySelectorAll('#survList .ev .body a.t')].map(a => a.textContent),
+               passees: !!document.querySelector('#survList .passe-h') };
+    });
+    expect(insOuvert.cartes).toEqual(['Séance 1', 'Séance 3', 'Séance 2']);   // les plus récentes d'abord
+    expect(insOuvert.passees).toBe(true);
+    const gardes = await rendu(page, 'gardes');
+    expect(gardes.nPassees, 'l’autre sous-onglet a son propre compte').toBe('(1)');
+    expect(gardes.cartes).toEqual(['Séance 4', 'Séance 5']);   // la case reste cochée
+    expect(erreurs).toEqual([]);
+  });
+
+  test('chaque sous-onglet dit ce qu’il faut quand il est vide', async ({ page }) => {
+    await ouvrir(page);
+    await preparer(page);
+    const insVide = await rendu(page);
+    expect(insVide.vide).toContain('Aucune inscription pour l’instant');
+    expect(insVide.casePassees).toBe(false);
+    expect(insVide.pastilles).toEqual(['', '']);
+    const gardesVide = await rendu(page, 'gardes');
+    expect(gardesVide.vide).toContain('Rien d’enregistré');
+    // seulement du passé : le sous-onglet le dit, et la case permet de l'ouvrir
+    const passeSeul = await page.evaluate(() => {
+      window.__s(A, 'a', 1, window.__d.passe, [20028]);
+      showSurvSub('ins'); buildSurv();
+      return { vide: (document.querySelector('#survList > .surv-vide') || {}).textContent || '',
+               casePassees: !document.getElementById('survPastLbl').hidden,
+               note: document.getElementById('survNote').textContent };
+    });
+    expect(passeSeul.vide).toBe('Aucune inscription à venir.');
+    expect(passeSeul.casePassees).toBe(true);
+    expect(passeSeul.note, 'rien à venir : pas de relevé à annoncer').toBe('');
+  });
+
+  test('inscrit : un badge sur la carte, et les alertes de places restent affichées', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      const { futur } = window.__d;
+      const base = { title: 'Tendu', start: futur, end: futur, lieu: 'Visio', pilotes: '', hor: '',
+                     wait: [], pub: '', max: 20, k: 'a', url: '#', tkey: 'x' };
+      const tendu = Object.assign({}, base, { id: 1, total: 19, guests: [20028] });
+      const tenduSansMoi = Object.assign({}, base, { id: 2, total: 19, guests: [] });
+      const complet = Object.assign({}, base, { id: 3, total: 20, guests: [20028] });
+      SAME = new Map([['x', [tendu, tenduSansMoi, complet,
+                             { id: 9, title: 'Autre date', start: ajouterJours(futur, 7), end: ajouterJours(futur, 7),
+                               lieu: 'Visio', max: 20, total: 1, guests: [], url: '#', tkey: 'x', hor: '' }]]]);
+      const lire = x => { const d = document.createElement('div'); d.innerHTML = evExtras(x); return {
+        badge: !!d.querySelector('.xtra.insc'),
+        tendu: !!d.querySelector('.xtra.places.tendu'),
+        full: !!d.querySelector('.xtra.places.full'),
+        places: (d.querySelector('.xtra.places') || {}).textContent || '',
+        alt: !!d.querySelector('.xtra.alt'),
+      }; };
+      return { moi: lire(tendu), autre: lire(tenduSansMoi), moiComplet: lire(complet) };
+    });
+    expect(r.moi.badge, 'ma séance porte le badge Inscrit').toBe(true);
+    expect(r.autre.badge).toBe(false);
+    // Inscrit ou non, savoir qu'une séance se remplit sert à orienter un invité vers une autre date
+    expect(r.moi.tendu, 'l’alerte reste même inscrit').toBe(true);
+    expect(r.moi.places).toBe('19/20 · plus que 1 place');
+    expect(r.autre.tendu).toBe(true);
+    expect(r.moiComplet.badge).toBe(true);
+    expect(r.moiComplet.full, 'complet reste signalé').toBe(true);
+    expect(r.moiComplet.alt, 'et les autres dates restent proposées').toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('l’onglet s’appelle « Mes sessions », le sous-onglet passe dans l’adresse, #enregistre marche encore', async ({ page }) => {
+    await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      majOngletSurv();
+      const b = document.querySelector('nav.tabs button[data-v="surv"]');
+      showSurvSub('ins');
+      const hashIns = hashFor('surv');
+      showSurvSub('gardes');
+      const hashGardes = hashFor('surv');
+      applyState('surv', new URLSearchParams('s=mes-inscriptions'));
+      const revenu = SURV_SUB;
+      applyState('surv', new URLSearchParams('s=signets'));   // raccourci accepté
+      const raccourci = SURV_SUB;
+      showSurvSub('ins');
+      location.hash = '#enregistre';
+      HASH_INITIAL = location.hash; HASH_APPLIQUE = false;
+      routeHash();
+      return { titre: b.title, libelle: b.querySelector('.l').textContent,
+               bas: document.querySelector('nav.botbar button[data-v="surv"] .l').textContent,
+               slug: TAB_SLUG.surv, alias: SLUG_TAB.enregistre,
+               hashIns, hashGardes, revenu, raccourci,
+               vue: (document.querySelector('section.view.on') || {}).id };
+    });
+    expect(r.titre).toBe('Mes sessions');
+    expect(r.libelle).toBe('Mes sessions');
+    expect(r.bas, 'la barre du bas est étroite : libellé court').toBe('Sessions');
+    expect(r.slug).toBe('mes-sessions');
+    expect(r.alias).toBe('surv');
+    expect(r.hashIns, 'le sous-onglet par défaut n’encombre pas l’adresse').toBe('#mes-sessions');
+    expect(r.hashGardes).toBe('#mes-sessions?s=mes-enregistrements');
+    expect(r.revenu).toBe('ins');
+    expect(r.raccourci).toBe('gardes');
+    expect(r.vue, 'un lien #enregistre déjà partagé doit continuer d’ouvrir l’onglet').toBe('v-surv');
+  });
+});
