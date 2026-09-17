@@ -2223,8 +2223,9 @@ test.describe('Mes sessions — inscriptions et enregistrements', () => {
 /* ------------------------------------------------------------------ */
 test.describe('Mail Manager — alléger la saisie', () => {
   // Le formulaire faisait 1 578 px sur ordinateur et 2 022 px sur téléphone quel que soit son
-  // remplissage. Trois changements : ce qui est relevé par le réseau sort du formulaire, chaque
-  // section repliée dit ce qu'elle contient, et les compteurs tiennent moins de place.
+  // remplissage. Ce qui est relevé par le réseau en est sorti, chaque section repliée dit ce
+  // qu'elle contient, les deux semaines partagent un seul tableau et les habilitations ont leur
+  // propre page.
   const poserMM = page => page.evaluate(() => {
     document.getElementById('lock').style.display = 'none';
     document.getElementById('app').style.display = 'grid';
@@ -2239,9 +2240,13 @@ test.describe('Mail Manager — alléger la saisie', () => {
     window.__plein = { auto: window.__auto, p: { r0: 4, r1: 3, r2: 2, r2b: 1, rx: 1 },
                        c: { r0: 2 }, av: { r1: 3, r2: 3 },
                        prod: { va: 24500, vaec: 8200 }, hab: { mia: { s: 'ok' } },
+                       pf: 'Deux signatures.', cf: 'Relancer les R1.',
                        sous: [{ t: 'Assurance Vie', vi: 24500, vp: 0 }] };
     window.__rendre = d => { document.getElementById('mmMoi').innerHTML = mmCorps(d, '', false, MM_SEM); };
   });
+  const lireSections = () => [...document.querySelectorAll('#mmMoi details.mm-sec')].map(d => ({
+    n: d.querySelector('.n').textContent, titre: d.querySelector('.mmti').textContent, ouvert: d.open,
+    res: (d.querySelector('.mmres') || {}).textContent ? d.querySelector('.mmres').textContent.replace(/[  ]/g, ' ').trim() : '' }));
 
   test('ce que le réseau relève sort du formulaire et tient dans un bandeau', async ({ page }) => {
     const erreurs = await ouvrir(page);
@@ -2254,13 +2259,9 @@ test.describe('Mail Manager — alléger la saisie', () => {
         bandeau: !!syn,
         replie: syn && !syn.open,
         puces: [...syn.querySelectorAll('summary .mmpu i')].map(i => i.textContent.replace(/\s+/g, ' ').trim()),
-        // les quatre blocs automatiques sont dans le bandeau, plus dans les sections
         dansBandeau: ['Statut FORMAN', 'Développement d’équipe', 'Objectifs FORMAN', 'Formations et événements à venir']
           .every(t => syn.textContent.includes(t)),
-        sections: [...el.querySelectorAll('details.mm-sec')].map(d => d.querySelector('.n').textContent + ' ' + d.querySelector('.mmti').textContent),
-        // plus aucune section du formulaire n'est purement automatique
         sansChamp: [...el.querySelectorAll('details.mm-sec')].filter(d => !d.querySelectorAll('input,select,textarea').length).length,
-        // « Activité » reste saisissable, dans le bandeau
         activite: !!syn.querySelector('select[data-mm="act"]'),
       };
     });
@@ -2270,38 +2271,95 @@ test.describe('Mail Manager — alléger la saisie', () => {
     expect(r.puces).toEqual(['BEMAN', 'Objectifs 8/13', 'Filleuls 6', 'DM 3', 'AD 2', '3 Jours 1',
       'Pas encore adhérents 3', 'À venir 1']);
     expect(r.dansBandeau).toBe(true);
-    expect(r.sections).toEqual(['1 Semaine écoulée (S' + (await page.evaluate(() => mmNo(vAddDays(MM_SEM, -7)))) + ')',
-      '2 Semaine en cours (S' + (await page.evaluate(() => mmNo(MM_SEM))) + ')',
-      '3 RDV d’avance (à date)', '4 Production', '5 Habilitations & formations continues']);
     expect(r.sansChamp, 'toutes les sections restantes ont des champs').toBe(0);
     expect(r.activite).toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('cinq sections : un tableau de rendez-vous, chaque semaine, l’avance et la production', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserMM(page);
+    const r = await page.evaluate((src) => {
+      window.__rendre({ auto: window.__auto });
+      const lire = new Function('return (' + src + ')()')();
+      return { sections: lire.map(x => x.n + ' ' + x.titre),
+               // plus de section « Habilitations » : elle a sa page
+               hab: !!document.querySelector('#mmMoi [data-mm^="hab."]'),
+               renvoi: !!document.querySelector('#mmMoi .mm-habl [data-mms="hab"]') };
+    }, lireSections.toString());
+    const [sP, sC] = await page.evaluate(() => [mmNo(vAddDays(MM_SEM, -7)), mmNo(MM_SEM)]);
+    expect(r.sections).toEqual([
+      `1 Mes rendez-vous (S${sP} et S${sC})`,
+      `2 Semaine écoulée (S${sP})`,
+      `3 Semaine en cours (S${sC})`,
+      '4 RDV d’avance (à date)',
+      '5 Production']);
+    expect(r.hab, 'aucun champ d’habilitation dans le formulaire').toBe(false);
+    expect(r.renvoi, 'un renvoi vers la page des habilitations').toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('les deux semaines partagent un tableau à deux colonnes, totaux vivants', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserMM(page);
+    const r = await page.evaluate(() => {
+      MM = { semaine: MM_SEM, statut: 'brouillon', donnees: JSON.parse(JSON.stringify(window.__plein)) };
+      MM_PREC = { donnees: { p: { r0: 3, r1: 4, r2: 2, r2b: 0, rx: 0 } } };
+      window.__rendre(MM.donnees);
+      const t = document.querySelector('#mmMoi .mm-rdv');
+      const lignes = [...t.querySelectorAll('tbody tr:not(.tot)')].map(tr => ({
+        lib: tr.querySelector('td.lb').textContent,
+        p: (tr.querySelectorAll('td')[1].querySelector('input') || {}).dataset,
+        c: (tr.querySelectorAll('td')[2].querySelector('input') || {}).dataset,
+        dlt: (tr.querySelectorAll('td')[1].querySelector('.dlt') || {}).textContent || '',
+        dltC: !!tr.querySelectorAll('td')[2].querySelector('.dlt'),
+      }));
+      const avant = [document.getElementById('mmRdvTotP').textContent, document.getElementById('mmRdvTotC').textContent];
+      // une frappe dans la colonne « en cours » met le total à jour sans redessiner le tableau
+      const champ = t.querySelector('input[data-mm="c.r1"]');
+      champ.value = '5'; champ.dispatchEvent(new Event('input', { bubbles: true }));
+      const apres = [document.getElementById('mmRdvTotP').textContent, document.getElementById('mmRdvTotC').textContent];
+      const memeChamp = document.querySelector('#mmMoi .mm-rdv input[data-mm="c.r1"]') === champ;
+      return { entetes: [...t.querySelectorAll('thead th')].map(th => th.textContent.replace(/\s+/g, ' ').trim()),
+               lignes: lignes.map(l => [l.lib, l.p.mm, l.c.mm]),
+               dlt: lignes.map(l => l.dlt), dltC: lignes.some(l => l.dltC), avant, apres, memeChamp };
+    });
+    const [nP, nC] = await page.evaluate(() => [mmNo(vAddDays(MM_SEM, -7)), mmNo(MM_SEM)]);
+    expect(r.entetes).toEqual(['Rendez-vous', 'ÉcouléeS' + nP, 'En coursS' + nC]);
+    expect(r.lignes).toEqual([
+      ['R0', 'p.r0', 'c.r0'], ['R1', 'p.r1', 'c.r1'], ['R2', 'p.r2', 'c.r2'],
+      ['R-signature', 'p.r2b', 'c.r2b'], ['R3', 'p.r3', 'c.r3'], ['RX', 'p.rx', 'c.rx']]);
+    // l'écart n'a de sens que sur la semaine écoulée, la seule qui ait un précédent
+    expect(r.dlt).toEqual(['+1', '-1', '', '+1', '', '+1']);
+    expect(r.dltC).toBe(false);
+    expect(r.avant).toEqual(['11', '2']);
+    expect(r.apres, 'les totaux suivent la frappe').toEqual(['11', '7']);
+    expect(r.memeChamp, 'le tableau n’est pas redessiné : le curseur reste dans le champ').toBe(true);
     expect(erreurs).toEqual([]);
   });
 
   test('une section repliée dit ce qu’elle contient, et une section vide reste ouverte', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poserMM(page);
-    const vide = await page.evaluate(() => {
+    const vide = await page.evaluate((src) => {
       window.__rendre({ auto: window.__auto });
-      return [...document.querySelectorAll('#mmMoi details.mm-sec')].map(d => ({
-        n: d.querySelector('.n').textContent, ouvert: d.open,
-        res: (d.querySelector('.mmres') || {}).textContent || '' }));
-    });
-    // rien de saisi : les deux sections de la semaine s'ouvrent, les trois autres attendent
-    expect(vide.map(x => x.ouvert)).toEqual([true, true, false, false, false]);
+      return new Function('return (' + src + ')()')();
+    }, lireSections.toString());
+    // formulaire neuf : seul le tableau des rendez-vous s'ouvre — c'est ce qu'on vient remplir.
+    // Les autres annoncent leur contenu dans leur intitulé et s'ouvrent à la demande.
+    expect(vide.map(x => x.ouvert)).toEqual([true, false, false, false, false]);
     expect(vide.every(x => x.res === '')).toBe(true);
 
-    const plein = await page.evaluate(() => {
+    const plein = await page.evaluate((src) => {
       window.__rendre(window.__plein);
-      return [...document.querySelectorAll('#mmMoi details.mm-sec')].map(d => ({
-        ouvert: d.open, res: (d.querySelector('.mmres') || {}).textContent.replace(/[  ]/g, ' ').trim() }));
-    });
+      return new Function('return (' + src + ')()')();
+    }, lireSections.toString());
     expect(plein.map(x => x.ouvert), 'une section remplie se replie').toEqual([false, false, false, false, false]);
-    expect(plein[0].res).toBe('R0 4 · R1 3 · R2 2 · R-signature 1 · RX 1 · 24 500 € signé');
-    expect(plein[1].res).toBe('R0 2');
-    expect(plein[2].res).toBe('Total 6');
-    expect(plein[3].res).toBe('VA VC 24 500 € · VA EC 8 200 €');
-    expect(plein[4].res).toBe('1 / 7 validées');
+    expect(plein[0].res).toBe('Écoulée : R0 4 · R1 3 · R2 2 · R-signature 1 · RX 1 — En cours : R0 2');
+    expect(plein[1].res).toBe('24 500 € signé · faits marquants notés');
+    expect(plein[2].res).toBe('focus noté');
+    expect(plein[3].res).toBe('Total 6');
+    expect(plein[4].res).toBe('VA VC 24 500 € · VA EC 8 200 €');
     expect(erreurs).toEqual([]);
   });
 
@@ -2329,7 +2387,7 @@ test.describe('Mail Manager — alléger la saisie', () => {
     expect(r.libelle).toBe('Tout replier');
   });
 
-  test('le formulaire rempli tient sur un écran, et Entrée passe au compteur suivant', async ({ page }) => {
+  test('le formulaire rempli tient sur un écran, et Entrée descend colonne par colonne', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poserMM(page);
     const h = await page.evaluate(() => {
@@ -2337,18 +2395,55 @@ test.describe('Mail Manager — alléger la saisie', () => {
       return Math.round(document.getElementById('mmMoi').getBoundingClientRect().height);
     });
     // avant : 1 578 px quel que soit le remplissage
-    expect(h, 'formulaire rempli, état par défaut').toBeLessThan(900);
+    expect(h, 'formulaire rempli, état par défaut').toBeLessThan(800);
 
     const nav = await page.evaluate(() => {
       MM_TOUT = true; window.__rendre(window.__plein); MM_TOUT = false;
-      const champs = [...document.querySelectorAll('#mmMoi input[type=number]')];
-      champs[0].focus();
-      champs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-      const apres = document.activeElement;
-      return { suivant: apres === champs[1], nom: apres.dataset.mm };
+      const suivant = (sel) => {
+        const el = document.querySelector('#mmMoi input[data-mm="' + sel + '"]');
+        el.focus();
+        el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        return document.activeElement.dataset.mm;
+      };
+      return { depuisR0: suivant('p.r0'), finColonne: suivant('p.rx'), colonne2: suivant('c.r0') };
     });
-    expect(nav.suivant, 'Entrée descend au compteur suivant').toBe(true);
-    expect(nav.nom).toBe('p.r1');
+    // on remplit toute la semaine écoulée, puis toute la semaine en cours
+    expect(nav.depuisR0).toBe('p.r1');
+    expect(nav.finColonne, 'en bas de colonne on passe en haut de la suivante').toBe('c.r0');
+    expect(nav.colonne2).toBe('c.r1');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('les habilitations ont leur page, après « Mes objectifs »', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserMM(page);
+    const r = await page.evaluate(() => {
+      const onglets = [...document.querySelectorAll('#mmSub button')].map(b => b.dataset.s);
+      MM = { semaine: MM_SEM, statut: 'brouillon', donnees: JSON.parse(JSON.stringify(window.__plein)) };
+      document.getElementById('mmHab').innerHTML = mmHabPage();
+      const page1 = document.getElementById('mmHab');
+      // une semaine passée : la page passe en lecture
+      const cour = MM_SEM;
+      MM_SEM = vAddDays(MM_SEM, -7);
+      const lecture = mmHabPage();
+      MM_SEM = cour;
+      showMMSub('hab');
+      const url = tabState('mm').get('s');
+      showMMSub('moi');
+      return { onglets, url,
+               champs: page1.querySelectorAll('[data-mm^="hab."]').length,
+               compte: page1.querySelector('.mm-sem').textContent,
+               vue: document.querySelector('#sm-hab') !== null,
+               lectureSansChamp: !/data-mm="hab\./.test(lecture),
+               lectureNote: lecture.includes('reviens à la semaine en cours') };
+    });
+    expect(r.onglets, '« Mes habilitations » vient après « Mes objectifs »').toEqual(['moi', 'mur', 'obj', 'hab']);
+    expect(r.vue).toBe(true);
+    expect(r.champs, '3 habilitations × 3 champs + 4 formations × 2 champs').toBe(17);
+    expect(r.compte).toBe('1 / 7 validées');
+    expect(r.url).toBe('mes-habilitations');
+    expect(r.lectureSansChamp, 'une semaine passée s’affiche en lecture').toBe(true);
+    expect(r.lectureNote).toBe(true);
     expect(erreurs).toEqual([]);
   });
 });

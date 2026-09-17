@@ -1118,6 +1118,18 @@ summary.lg-ar:hover{background:var(--surface-2)}
   .mm-syn>summary{flex-wrap:wrap}
   .mm-syn>summary .mmpu{flex:1 0 100%;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;margin-left:21px}
   .mm-bar.fix{margin:14px -14px -16px;padding:10px 14px}
+  /* le tableau des deux semaines ne se déplie pas en pile : trois colonnes tiennent dans 390 px */
+  .mm-rdv,.mm-rdv thead,.mm-rdv tbody,.mm-rdv tr,.mm-rdv td,.mm-rdv th{display:revert}
+  .mm-rdv{display:table;width:100%}
+  .mm-rdv thead{position:static;width:auto;height:auto;clip:auto}
+  .mm-rdv td,.mm-rdv th{display:table-cell;border-bottom:1px solid var(--line);padding:5px 4px}
+  .mm-rdv td[data-l]::before{content:none}
+  .mm-tbl.mm-rdv{min-width:0;width:100%}
+  .mm-tbl.mm-rdv td.num,.mm-tbl.mm-rdv th.num{text-align:center}
+  .mm-tbl.mm-rdv td.lb{padding-right:4px}
+  .mm-rdv .row input{width:44px;font-size:16px}
+  .mm-rdv .row button{width:26px;height:32px}
+  .mm-rdv td.lb{font-size:12.5px}
   .mm-tbl tbody tr{position:relative}
   .mm-tbl td.mm-del:has(.mm-x){display:block;position:absolute;top:4px;right:0;padding:0}
   .mm-tbl tbody tr:has(.mm-x) td[data-l]:first-child{padding-right:36px}
@@ -1179,6 +1191,29 @@ a.mml-r:hover{border-color:var(--accent)}
   border-top:1px solid var(--line-2);box-shadow:0 -6px 18px rgba(23,26,43,.07);z-index:6;border-radius:0 0 var(--r) var(--r)}
 :root[data-theme="dark"] .mm-bar.fix{box-shadow:0 -6px 18px rgba(0,0,0,.35)}
 .mm-rempli{font-size:12.5px;color:var(--ink-3)}
+/* Les deux semaines dans un tableau : il reste un tableau sur téléphone (3 colonnes, ça tient) */
+.mm-rdv{width:auto;min-width:340px;margin-top:10px}
+.mm-rdv th{white-space:nowrap}
+.mm-rdv th small{display:block;font-size:9.5px;font-weight:700;color:var(--ink-3);text-transform:none;letter-spacing:.03em}
+.mm-rdv td,.mm-rdv th{padding:5px 8px}
+.mm-rdv td.lb{font-weight:700;font-size:13px;white-space:nowrap;padding-right:22px}
+.mm-rdv td.num,.mm-rdv th.num{text-align:center;white-space:nowrap}
+.mm-rdv .row{display:inline-flex;align-items:center;gap:4px;vertical-align:middle}
+.mm-rdv .row input{width:52px;min-width:0;border:1px solid var(--line-2);border-radius:7px;background:var(--surface);color:var(--ink);
+  padding:4px 2px;font:inherit;font-size:14.5px;font-variant-numeric:tabular-nums;text-align:center}
+.mm-rdv .row button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:7px;
+  width:22px;height:28px;flex:none;cursor:pointer;font-size:14px;line-height:1;padding:0}
+.mm-rdv .row button:hover{border-color:var(--accent);color:var(--accent)}
+.mm-rdv .dlt{display:inline-block;margin-left:6px;font-size:10px;font-weight:700;color:var(--ink-3);min-width:16px;text-align:left}
+.mm-rdv .dlt.up{color:var(--ok)} .mm-rdv .dlt.dn{color:var(--bad)}
+.mm-rdv tr.tot td{font-weight:800}
+/* Renvoi vers la page des habilitations, à la place des 17 champs d'avant */
+.mm-habl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);padding:10px 14px;margin:12px 0;font-size:13.5px}
+.mm-habl.alr{border-color:var(--encours)}
+.mm-habl button{border:1px solid var(--line-2);background:var(--surface);color:var(--accent);border-radius:8px;
+  padding:5px 12px;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.mm-habl button:hover{border-color:var(--accent)}
 .mm-b{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:9px;padding:9px 15px;font-family:"Sora";font-weight:700;font-size:13.5px;cursor:pointer}
 .mm-b:hover{border-color:var(--accent);color:var(--accent)}
 .mm-b.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -1517,10 +1552,12 @@ a.mml-r:hover{border-color:var(--accent)}
         <button data-s="moi" class="on">Ma semaine</button>
         <button data-s="mur">Le mur <span class="sub-badge" id="mmBadge" hidden></span></button>
         <button data-s="obj">Mes objectifs</button>
+        <button data-s="hab">Mes habilitations <span class="sub-badge cnt" id="mmHabN" hidden></span></button>
       </nav>
       <div class="subview on" id="sm-moi"><div id="mmMoi"></div></div>
       <div class="subview" id="sm-mur"><div id="mmMur"></div></div>
       <div class="subview" id="sm-obj"><div id="mmObj"></div></div>
+      <div class="subview" id="sm-hab"><div id="mmHab"></div></div>
     </section>
 
     <section class="view" id="v-lig">
@@ -4291,6 +4328,40 @@ function mmCompteurs(d, base, liste, ro, prec){
       + '</div>';
   }).join('') + '</div>';
 }
+// Les deux semaines portent exactement les mêmes compteurs : un seul tableau, une colonne par
+// semaine, six lignes au lieu de douze cartes — et la comparaison saute aux yeux.
+// L'écart vs S-1 n'est montré que sur la semaine écoulée, la seule qui ait un précédent.
+function mmCompteursDuo(d, ro, prec, sem){
+  const cell = (base,k) => {
+    const p=base+'.'+k, v=mmG(d,p);
+    if(ro) return '<b>'+esc(mmN(v))+'</b>';
+    return '<span class="row"><button type="button" data-mmpm="-1" data-p="'+esc(p)+'" tabindex="-1" aria-label="Retirer 1">−</button>'
+      + '<input type="number" inputmode="numeric" min="0" data-mm="'+esc(p)+'" value="'+esc(v==null||v===''?0:v)+'">'
+      + '<button type="button" data-mmpm="1" data-p="'+esc(p)+'" tabindex="-1" aria-label="Ajouter 1">+</button></span>';
+  };
+  const dlt = k => {
+    if(!prec) return '';
+    const df = mmN(mmG(d,'p.'+k)) - mmN(mmG(prec,'p.'+k));
+    return df ? '<span class="dlt '+(df>0?'up':'dn')+'" title="Écart avec la semaine précédente">'+(df>0?'+':'')+df+'</span>' : '';
+  };
+  return '<div class="mm-wrap"><table class="mm-tbl mm-rdv"><thead><tr><th>Rendez-vous</th>'
+    + '<th class="num">Écoulée<small>S'+mmNo(vAddDays(sem,-7))+'</small></th>'
+    + '<th class="num">En cours<small>S'+mmNo(sem)+'</small></th></tr></thead><tbody>'
+    + MM_CPT.map(([k,lib])=>'<tr><td class="lb">'+esc(lib)+'</td>'
+        + '<td class="num" data-l="'+esc(lib)+' — écoulée">'+cell('p',k)+dlt(k)+'</td>'
+        + '<td class="num" data-l="'+esc(lib)+' — en cours">'+cell('c',k)+'</td></tr>').join('')
+    + '<tr class="tot"><td>Total</td><td class="num" id="mmRdvTotP">'+mmTotCpt(d,'p')+'</td>'
+    + '<td class="num" id="mmRdvTotC">'+mmTotCpt(d,'c')+'</td></tr>'
+    + '</tbody></table></div>';
+}
+const mmTotCpt = (d, base) => MM_CPT.reduce((n,[k])=>n+mmN(mmG(d,base+'.'+k)),0);
+// Les totaux suivent la frappe sans redessiner le tableau (sinon le curseur saute)
+function mmRdvTotaux(){
+  if(!MM || !MM.donnees) return;
+  const p=document.getElementById('mmRdvTotP'), c=document.getElementById('mmRdvTotC');
+  if(p) p.textContent = mmTotCpt(MM.donnees,'p');
+  if(c) c.textContent = mmTotCpt(MM.donnees,'c');
+}
 function mmProduitSelect(chemin, val){
   const l = MM_PRODUITS.slice();
   if(val && l.indexOf(val)<0) l.push(val);
@@ -4491,6 +4562,41 @@ function mmSynthese(d, a, ro, obj, ech){
     + mmListeAuto(a.ag,'Rien d’inscrit à venir.')
     + '</div></details>';
 }
+// Les habilitations et les formations continues changent deux ou trois fois par an : elles ont
+// leur propre page (sous-onglet « Mes habilitations ») au lieu d'occuper 17 champs dans le
+// formulaire de chaque semaine. Les données restent dans MM.donnees.hab, reportées de S-1.
+function mmHabTables(d, ro){
+  const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
+  const cellDate = (k,champ) => ro ? esc(mmG(d,'hab.'+k+'.'+champ)||'—')
+    : '<input type="text" data-mm="hab.'+k+'.'+champ+'" value="'+esc(mmG(d,'hab.'+k+'.'+champ)||'')+'" placeholder="JJ/MM/AAAA">';
+  const ligne = (k,lib,orias) => '<tr><td>'+esc(lib)+'</td><td data-l="Statut">'
+    + (ro ? esc(etat(mmG(d,'hab.'+k+'.s')))
+          : '<select data-mm="hab.'+k+'.s">'+MM_ETATS.map(([v,l])=>'<option value="'+v+'"'
+            +((mmG(d,'hab.'+k+'.s')||'')===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>')
+    + '</td><td data-l="'+(orias?'Date d\u2019examen':'Validée le')+'">'+cellDate(k,'d')+'</td>'
+    + (orias ? '<td data-l="Date ORIAS">'+cellDate(k,'o')+'</td>' : '') + '</tr>';
+  return '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Habilitation</th><th>Statut</th>'
+    + '<th>Date d’examen</th><th>Date ORIAS</th></tr></thead><tbody>'
+    + MM_HAB.map(([k,lib])=>ligne(k,lib,true)).join('') + '</tbody></table></div>'
+    + '<label class="mm-lab">Formations continues de l’année</label>'
+    + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Formation continue</th><th>Statut</th><th>Validée le</th></tr></thead><tbody>'
+    + MM_FC.map(([k,lib])=>ligne(k,lib,false)).join('') + '</tbody></table></div>'
+    + (mmRappelFC(d) ? '<p class="mm-note">⚠︎ '+esc(mmRappelFC(d))+'</p>' : '');
+}
+const mmHabValidees = d => MM_HAB.concat(MM_FC).filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
+function mmHabPage(){
+  if(!MM) return '';
+  const d = mmMigre(MM.donnees||{});
+  const cour = MM_SEM===mmSemCour(), ro = !cour;
+  const tot = MM_HAB.length + MM_FC.length, ok = mmHabValidees(d);
+  return '<div class="panel"><div class="mm-head"><h2>Mes habilitations</h2>'
+    + '<span class="mm-sem"><b>'+ok+' / '+tot+'</b> validées</span></div>'
+    + '<p class="mm-sub">Habilitations et formations continues. Elles ne se saisissent plus chaque semaine : '
+    + 'ce que tu poses ici est repris d’une semaine à l’autre et apparaît dans ton mail manager publié.</p>'
+    + (ro ? '<p class="mm-note">Tu regardes la semaine '+esc(mmLibC(MM_SEM))+' — reviens à la semaine en cours pour modifier.</p>'+mmNav() : '')
+    + mmHabTables(d, ro)
+    + '</div>';
+}
 function mmCorps(d, prive, ro, sem){
   d = mmMigre(d); const a = d.auto||{};
   const prec = (!ro && MM_PREC) ? MM_PREC.donnees : null;
@@ -4500,39 +4606,43 @@ function mmCorps(d, prive, ro, sem){
     + (MM_TOUT?'Tout replier':'Tout déplier')+'</button></div>';
   h += mmSynthese(d, a, ro, obj, ech);
 
-  // 1 — Semaine écoulée
+  // 1 — Mes rendez-vous : les deux semaines dans le même tableau
+  const resRdv = [mmResumeCpt(d,'p',MM_CPT) ? 'Écoulée : '+mmResumeCpt(d,'p',MM_CPT) : '',
+                  mmResumeCpt(d,'c',MM_CPT) ? 'En cours : '+mmResumeCpt(d,'c',MM_CPT) : ''].filter(Boolean).join(' — ');
+  h += mmSec(1,'Mes rendez-vous (S'+mmNo(vAddDays(sem,-7))+' et S'+mmNo(sem)+')','',
+      mmCompteursDuo(d, ro, prec, sem), !resRdv, resRdv);
+
+  // 2 — Semaine écoulée : ce qui lui est propre
   const sousL = Array.isArray(d.sous)?d.sous:[];
   const sousTot = sousL.reduce((n,x)=>n+mmN(x.vi),0);
-  const resP = [mmResumeCpt(d,'p',MM_CPT), sousTot?'<b>'+mmEur(sousTot)+'</b> signé':''].filter(Boolean).join(' · ');
-  h += mmSec(1,'Semaine écoulée (S'+mmNo(vAddDays(sem,-7))+')','',
-      mmCompteurs(d,'p',MM_CPT,ro,prec)
+  const resP = [sousTot?'<b>'+mmEur(sousTot)+'</b> signé':'', d.pf?'faits marquants notés':''].filter(Boolean).join(' · ');
+  h += mmSec(2,'Semaine écoulée (S'+mmNo(vAddDays(sem,-7))+')','',
+      '<label class="mm-lab">Signatures / souscriptions</label>'
+    + mmSous(d, ro)
     + '<label class="mm-lab">Invités en séance <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
     + mmInvBloc(a.invP, a.invPN, 'Aucun invité en séance la semaine dernière.')
-    + '<label class="mm-lab">Signatures / souscriptions</label>'
-    + mmSous(d, ro)
     + '<label class="mm-lab">Formations, ateliers et événements suivis <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
     + mmListeAuto(a.sp,'Aucune session la semaine dernière.')
     + mmHistorique(a.sh)
     + '<label class="mm-lab">Faits marquants</label>'
     + (ro ? mmPara(d.pf||'—')
-          : '<textarea class="mm-txt" data-mm="pf" rows="3" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>'), !resP, resP);
+          : '<textarea class="mm-txt" data-mm="pf" rows="3" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>'), false, resP);
 
-  // 2 — Semaine en cours
-  const resC = mmResumeCpt(d,'c',MM_CPT);
-  h += mmSec(2,'Semaine en cours (S'+mmNo(sem)+')','',
-      mmCompteurs(d,'c',MM_CPT,ro,null)
+  // 3 — Semaine en cours : ce qui lui est propre
+  const resC = d.cf ? 'focus noté' : '';
+  h += mmSec(3,'Semaine en cours (S'+mmNo(sem)+')','',
+      '<label class="mm-lab">Mon focus de la semaine</label>'
+    + (ro ? mmPara(d.cf||'—')
+          : '<textarea class="mm-txt" data-mm="cf" rows="3" placeholder="Ce sur quoi je mets l’énergie.">'+esc(d.cf||'')+'</textarea>')
     + '<label class="mm-lab">Invités en séance <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
     + mmInvBloc(a.invC, a.invCN, 'Aucun invité en séance cette semaine.')
     + '<label class="mm-lab">Sessions de la semaine <small style="font-weight:400;color:var(--ink-3)">— relevé automatiquement</small></label>'
-    + mmListeAuto(a.sc,'Aucune session cette semaine.')
-    + '<label class="mm-lab">Mon focus de la semaine</label>'
-    + (ro ? mmPara(d.cf||'—')
-          : '<textarea class="mm-txt" data-mm="cf" rows="3" placeholder="Ce sur quoi je mets l’énergie.">'+esc(d.cf||'')+'</textarea>'), !resC, resC);
+    + mmListeAuto(a.sc,'Aucune session cette semaine.'), false, resC);
 
-  // 3 — RDV d'avance
+  // 4 — RDV d'avance
   const tot = MM_AV.reduce((n,[k])=>n+mmN(mmG(d,'av.'+k)),0);
   const totP = prec ? MM_AV.reduce((n,[k])=>n+mmN(mmG(prec,'av.'+k)),0) : null;
-  h += mmSec(3,'RDV d’avance (à date)','',
+  h += mmSec(4,'RDV d’avance (à date)','',
       mmCompteurs(d,'av',MM_AV,ro,prec)
     + '<p class="mm-note"><b>Total : '+tot+'</b>'+(totP!==null?' · '+(tot-totP>=0?'+':'')+(tot-totP)+' vs la semaine dernière':'')+'</p>',
       false, tot?'Total <b>'+tot+'</b>':'');
@@ -4554,32 +4664,14 @@ function mmCorps(d, prive, ro, sem){
   const resProd = [['va','VA VC','€'],['vaec','VA EC','€'],['eva','Équipe VC','€'],['evaec','Équipe EC','€'],['clients','Clients','']]
     .filter(([k])=>mmN(mmG(d,'prod.'+k)))
     .map(([k,lib,u])=>esc(lib)+' <b>'+(u==='€'?mmEur(mmG(d,'prod.'+k)):mmN(mmG(d,'prod.'+k)))+'</b>').join(' · ');
-  h += mmSec(4,'Production',(ro?'':'reporté de S-1'), prod, false, resProd);
+  h += mmSec(5,'Production',(ro?'':'reporté de S-1'), prod, false, resProd);
 
-  // 6 — Habilitations & formations continues
-  const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
-  const cellDate = (k,champ) => ro ? esc(mmG(d,'hab.'+k+'.'+champ)||'—')
-    : '<input type="text" data-mm="hab.'+k+'.'+champ+'" value="'+esc(mmG(d,'hab.'+k+'.'+champ)||'')+'" placeholder="JJ/MM/AAAA">';
-  const ligne = (k,lib,orias) => '<tr><td>'+esc(lib)+'</td><td data-l="Statut">'
-    + (ro ? esc(etat(mmG(d,'hab.'+k+'.s')))
-          : '<select data-mm="hab.'+k+'.s">'+MM_ETATS.map(([v,l])=>'<option value="'+v+'"'
-            +((mmG(d,'hab.'+k+'.s')||'')===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>')
-    + '</td><td data-l="'+(orias?'Date d\u2019examen':'Validée le')+'">'+cellDate(k,'d')+'</td>'
-    + (orias ? '<td data-l="Date ORIAS">'+cellDate(k,'o')+'</td>' : '') + '</tr>';
-  if(!ro) MM_REMPLI = { n:[resP,resC,tot,resProd].filter(Boolean).length, tot:5 };
-  const habTot = MM_HAB.length + MM_FC.length;
-  const habOk = MM_HAB.concat(MM_FC).filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
-  const resHab = habOk ? habOk+' / '+habTot+' validées' : '';
-  if(!ro && resHab) MM_REMPLI.n++;
-  h += mmSec(5,'Habilitations & formations continues',(ro?'':'reporté de S-1'),
-      '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Habilitation</th><th>Statut</th>'
-    + '<th>Date d’examen</th><th>Date ORIAS</th></tr></thead><tbody>'
-    + MM_HAB.map(([k,lib])=>ligne(k,lib,true)).join('') + '</tbody></table></div>'
-    + '<label class="mm-lab">Formations continues de l’année</label>'
-    + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Formation continue</th><th>Statut</th><th>Validée le</th></tr></thead><tbody>'
-    + MM_FC.map(([k,lib])=>ligne(k,lib,false)).join('') + '</tbody></table></div>'
-    + (mmRappelFC(d) ? '<p class="mm-note">⚠︎ '+esc(mmRappelFC(d))+'</p>' : ''),
-      false, [resHab, mmRappelFC(d)?'<b class="alr">⚠︎ FC à valider</b>':''].filter(Boolean).join(' · '));
+  if(!ro) MM_REMPLI = { n:[resRdv,resP,resC,tot,resProd].filter(Boolean).length, tot:5 };
+  // Les habilitations ont leur page : ici, un simple renvoi avec l'essentiel
+  const habTot = MM_HAB.length + MM_FC.length, habOk = mmHabValidees(d), rappel = mmRappelFC(d);
+  if(!ro) h += '<div class="mm-habl'+(rappel?' alr':'')+'"><span><b>Habilitations</b> — '+habOk+' / '+habTot+' validées'
+    + (rappel?' · ⚠︎ '+esc(rappel):'')+'</span>'
+    + '<button type="button" data-mms="hab">Mes habilitations ›</button></div>';
 
   // Un mot pour ma lignée
   h += '<div class="mm-prive"><b>Un mot pour ma lignée</b>'
@@ -4800,6 +4892,16 @@ function buildMM(){
 
   /* Mes objectifs */
   if(eo) eo.innerHTML = mmObjectifs();
+
+  /* Mes habilitations */
+  const eh=document.getElementById('mmHab');
+  if(eh) eh.innerHTML = (MOI_ID && MM) ? mmHabPage() : '';
+  const hb=document.getElementById('mmHabN');
+  if(hb){
+    const rap = MM ? mmRappelFC(mmMigre(MM.donnees||{})) : '';
+    hb.hidden = !rap; hb.textContent = rap ? '!' : '';
+    hb.title = rap || '';
+  }
   mmMajEtat(); mmBadge();
 }
 
@@ -5420,16 +5522,24 @@ function ligApplyState(p){
 }
 
 /* --- sous-onglets, semaine, lecture --- */
-const MM_SUBS=['moi','mur','obj'];
-const MM_SLUG={moi:'ma-semaine', mur:'le-mur', obj:'mes-objectifs'};
+const MM_SUBS=['moi','mur','obj','hab'];
+const MM_SLUG={moi:'ma-semaine', mur:'le-mur', obj:'mes-objectifs', hab:'mes-habilitations'};
 // anciens raccourcis toujours acceptés dans l'URL
-const SLUG_MM=Object.assign(Object.fromEntries(Object.entries(MM_SLUG).map(([k,v])=>[v,k])),{mur:'mur',objectifs:'obj',semaine:'moi'});
+const SLUG_MM=Object.assign(Object.fromEntries(Object.entries(MM_SLUG).map(([k,v])=>[v,k])),
+  {mur:'mur',objectifs:'obj',semaine:'moi',habilitations:'hab'});
 function showMMSub(s){
   if(!MM_SUBS.includes(s)) s='moi';
   MM_SUB=s;
   document.querySelectorAll('#mmSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('#v-mm .subview').forEach(v=>v.classList.toggle('on', v.id==='sm-'+s));
 }
+// Un lien du formulaire vers un sous-onglet (ex. « Mes habilitations »)
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-mms]');
+  if(!b) return;
+  e.preventDefault();
+  showMMSub(b.dataset.mms); buildMM(); syncHash(true); window.scrollTo({top:0});
+});
 document.querySelectorAll('#mmSub button').forEach(b=>b.addEventListener('click',()=>{
   if(b.dataset.s!=='mur') MM_LU=null;
   showMMSub(b.dataset.s); buildMM(); syncHash(true); window.scrollTo({top:0});
@@ -5469,6 +5579,7 @@ function mmSaisie(t){
     mmS(MM.donnees, t.dataset.mm, t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value));
     if(t.dataset.mm.indexOf('sous.')===0) mmSousTotaux();
     if(t.dataset.mm.indexOf('prod.')===0) mmProdMaj();
+    if(t.dataset.mm.indexOf('p.')===0 || t.dataset.mm.indexOf('c.')===0) mmRdvTotaux();
     mmPlanSave(); return true;
   }
   return false;
@@ -5483,7 +5594,7 @@ document.addEventListener('click', async e=>{
     const p=pm.dataset.p, inp=document.querySelector('#v-mm input[data-mm="'+p+'"]');
     const v=Math.max(0, mmN(inp?inp.value:0) + (+pm.dataset.mmpm));
     if(inp) inp.value=v;
-    if(MM){ MM.donnees=MM.donnees||{}; mmS(MM.donnees,p,v); mmPlanSave(); }
+    if(MM){ MM.donnees=MM.donnees||{}; mmS(MM.donnees,p,v); mmRdvTotaux(); mmPlanSave(); }
     return;
   }
   const w=c.closest('[data-mmw]');
@@ -5543,6 +5654,20 @@ document.addEventListener('keydown', e=>{
   if(!el || el.tagName!=='INPUT' || el.type!=='number' || !el.closest || !el.closest('#v-mm')) return;
   e.preventDefault();
   const champs=[...document.querySelectorAll('#v-mm input[type=number]')].filter(x=>x.offsetParent!==null);
+  // Dans le tableau des deux semaines, on saisit colonne par colonne — toute la semaine écoulée,
+  // puis toute la semaine en cours : c'est l'ordre dans lequel on relit son agenda.
+  const tbl=document.querySelector('#v-mm .mm-rdv');
+  if(tbl){
+    const dans=champs.filter(x=>tbl.contains(x));
+    if(dans.length>1){
+      const debut=champs.indexOf(dans[0]);
+      dans.sort((x,y)=>{ const cx=x.closest('td').cellIndex, cy=y.closest('td').cellIndex;
+                         return cx-cy || x.closest('tr').rowIndex-y.closest('tr').rowIndex; });
+      const reste=champs.filter(x=>!tbl.contains(x));
+      reste.splice(debut, 0, ...dans);
+      champs.length=0; champs.push(...reste);
+    }
+  }
   const i=champs.indexOf(el);
   if(i>=0 && i<champs.length-1){ const n=champs[i+1]; n.focus(); if(n.select) n.select(); }
   else el.blur();
