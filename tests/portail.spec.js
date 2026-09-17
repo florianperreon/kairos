@@ -1656,3 +1656,274 @@ test.describe('Menu Admin', () => {
     expect(await avecRole(page, true)).toBe(true);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Semaines ISO, jours fériés, vacances scolaires', () => {
+  // Les helpers sont purs : on les vérifie sur des dates connues (jamais sur « aujourd'hui »),
+  // puis on rend les vraies listes avec des séances posées sur une semaine de vacances / un férié.
+  const preparer = page => page.evaluate(() => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    MOI_ID = 20028; PARCOURS = { statut: 'ROLE_XMAN', etapes: {} };
+  });
+
+  test('le numéro de semaine ISO : S53 fin 2026, S1 le 4 janvier 2027, S1 le 1er janvier 2024', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => ({
+      s31dec26: noSemaine('2026-12-31'), s1jan27: noSemaine('2027-01-01'), s4jan27: noSemaine('2027-01-04'),
+      s1jan24: noSemaine('2024-01-01'), s17sep26: noSemaine('2026-09-17'), s28dec26: noSemaine('2026-12-28'),
+      lundi: lundiDe('2026-09-20'), dimancheLundi: lundiDe('2026-09-21'), mm: mmNo('2026-09-17'),
+      bornes: semaineBornes('2026-09-21'), bornesMois: semaineBornes('2026-09-28'), bornesAn: semaineBornes('2026-12-28'),
+    }));
+    expect(r.s31dec26).toBe(53);           // 2026 compte 53 semaines (le 1er janvier 2026 est un jeudi)
+    expect(r.s1jan27).toBe(53);            // le 1er janvier 2027 (vendredi) appartient encore à S53 de 2026
+    expect(r.s4jan27).toBe(1);
+    expect(r.s1jan24).toBe(1);
+    expect(r.s17sep26).toBe(38);
+    expect(r.s28dec26).toBe(53);
+    expect(r.lundi).toBe('2026-09-14');    // dimanche 20 → lundi 14
+    expect(r.dimancheLundi).toBe('2026-09-21');
+    expect(r.mm, 'le Mail Manager utilise le même helper').toBe(38);
+    expect(r.bornes).toBe('21 → 27 sept.');
+    expect(r.bornesMois).toBe('28 sept. → 4 oct.');
+    expect(r.bornesAn).toBe('28 déc. → 3 janv. 2027');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('les fériés se calculent, Pâques compris, et le 15 août ne heurte pas l’audit', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => ({
+      paques27: estFerie('2027-03-29'), asc27: estFerie('2027-05-06'), pent27: estFerie('2027-05-17'),
+      paques26: estFerie('2026-04-06'), asc26: estFerie('2026-05-14'), pent26: estFerie('2026-05-25'),
+      paques28: estFerie('2028-04-17'),
+      fixes: ['2026-01-01', '2026-05-01', '2026-05-08', '2026-07-14', '2026-08-15', '2026-11-01', '2026-11-11', '2026-12-25'].map(estFerie),
+      ordinaire: estFerie('2026-09-17'), vide: estFerie(''), nul: estFerie(null),
+      nb2026: Object.keys(feriesAnnee(2026)).length,
+      multi: ferieDans({ start: '2026-10-30', end: '2026-11-02' }),
+      hors: ferieDans({ start: '2026-11-02', end: '2026-11-04' }),
+    }));
+    expect(r.paques27).toBe('Lundi de Pâques');     // Pâques 2027 = 28 mars
+    expect(r.asc27).toBe('Ascension');
+    expect(r.pent27).toBe('Lundi de Pentecôte');
+    expect(r.paques26).toBe('Lundi de Pâques');     // Pâques 2026 = 5 avril
+    expect(r.asc26).toBe('Ascension');
+    expect(r.pent26).toBe('Lundi de Pentecôte');
+    expect(r.paques28).toBe('Lundi de Pâques');     // Pâques 2028 = 16 avril
+    expect(r.fixes.every(Boolean)).toBe(true);
+    expect(r.fixes[4].toLowerCase()).not.toContain('asso');   // l'audit refuse cette sous-chaîne
+    expect(r.ordinaire).toBeNull(); expect(r.vide).toBeNull(); expect(r.nul).toBeNull();
+    expect(r.nb2026).toBe(11);
+    expect(r.multi).toEqual({ iso: '2026-11-01', nom: 'Toussaint' });   // séance à cheval sur le 1er novembre
+    expect(r.hors).toBeNull();
+  });
+
+  test('les vacances viennent du payload quand il en a, sinon de la table de repli, selon la zone', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const out = {};
+      CAL_CFG = null; ZONE_CHOISIE = null;
+      out.defaut = zoneScolaire();
+      out.repliB = vacancesDe('2026-10-20');                       // Toussaint, toutes zones
+      out.hiverB = vacancesDe('2027-02-22');                       // hiver zone B : 20 févr. → 7 mars
+      out.hiverA = vacancesDe('2027-02-22', 'A');                  // zone A : 13 → 28 févr.
+      out.hiverC = vacancesDe('2027-02-22', 'C');                  // zone C : 6 → 21 févr. → rien le 22
+      out.entre = vacancesEntre('2026-10-12', '2026-10-18').map(v => v.nom);   // la semaine qui contient le 17
+      out.aucune = vacancesEntre('2026-09-14', '2026-09-20');
+      // le payload prend le pas sur la table de repli, y compris avec des dates inventées
+      CAL_CFG = { zones: { A: [], B: [{ nom: 'Vacances de test', du: '2026-09-14', au: '2026-09-20' }], C: [] } };
+      out.payload = vacancesDe('2026-09-16');
+      out.payloadA = vacancesDe('2026-09-16', 'A');                // zone A vide dans le payload → repli
+      // zone choisie
+      ZONE_CHOISIE = 'C'; out.choisie = zoneScolaire(); out.choisieVac = vacancesDe('2026-09-16');
+      CAL_CFG = null; ZONE_CHOISIE = null;
+      return out;
+    });
+    expect(r.defaut).toBe('B');
+    expect(r.repliB).toMatchObject({ nom: 'Vacances de la Toussaint', du: '2026-10-17', au: '2026-11-01', zone: 'B' });
+    expect(r.hiverB).toMatchObject({ nom: "Vacances d'Hiver", du: '2027-02-20', au: '2027-03-07' });
+    expect(r.hiverA).toMatchObject({ du: '2027-02-13', au: '2027-02-28', zone: 'A' });
+    expect(r.hiverC).toBeNull();
+    expect(r.entre).toEqual(['Vacances de la Toussaint']);
+    expect(r.aucune).toEqual([]);
+    expect(r.payload).toMatchObject({ nom: 'Vacances de test', zone: 'B' });
+    expect(r.payloadA).toBeNull();
+    expect(r.choisie).toBe('C');
+    expect(r.choisieVac).toBeNull();
+  });
+
+  test('les listes annoncent la semaine, les vacances et le férié ; le Parcours aussi', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      ZONE_CHOISIE = null; CAL_CFG = null;
+      const s = (id, start, end) => ({ id, title: 'Séance ' + id, start, end: end || start, lieu: 'Visio', pilotes: '', hor: '09:00',
+                                       guests: [], wait: [], pub: '', max: 20, total: 1, k: 'r', url: '#', th: '' });
+      // réunions : une en semaine ordinaire (S38), deux pendant la Toussaint (S43), une un férié (11 novembre, S46)
+      const liste = [s(1, '2026-09-16'), s(2, '2026-10-20'), s(3, '2026-10-22'), s(4, '2026-11-11')];
+      document.getElementById('reuPast').checked = true;
+      buildSimple('reu', liste, id => '#' + id, 'réunion');
+      const heads = [...document.querySelectorAll('#reuList .wk-h')];
+      const out = {
+        nbCartes: document.querySelectorAll('#reuList .ev').length,
+        nbSemaines: heads.length,
+        semaines: heads.map(h => h.querySelector('.wk-n').textContent),
+        vac: heads.map(h => h.classList.contains('vac')),
+        tagsVac: heads.map(h => [...h.querySelectorAll('.wk-tag.vac')].map(t => t.textContent.trim())),
+        tagsFer: heads.map(h => [...h.querySelectorAll('.wk-tag.fer')].map(t => t.textContent.trim())),
+        badgesFerie: [...document.querySelectorAll('#reuList .ev .xtra.ferie')].map(b => b.textContent),
+        ordre: [...document.querySelectorAll('#reuList .month-h, #reuList .wk-h, #reuList .ev')].map(e => e.className.split(' ')[0]),
+      };
+      // Parcours Découverte : mêmes dates, groupé par jour
+      A.length = 0;
+      [s(11, '2026-10-20'), s(12, '2026-10-22'), s(13, '2026-11-11')].forEach(x => A.push(Object.assign(x, { th: 'PARCOURS DECOUVERTE', thRaw: 'PARCOURS DECOUVERTE', k: 'a' })));
+      document.getElementById('pdPast').checked = true;
+      buildPd();
+      out.pdSemaines = [...document.querySelectorAll('#pdList .wk-h.wk-sep .wk-n')].map(e => e.textContent);
+      out.pdJours = document.querySelectorAll('#pdList .day').length;
+      out.pdFerie = [...document.querySelectorAll('#pdList .day-h.ferie .wk-tag.fer')].map(e => e.textContent);
+      out.pdVac = document.querySelectorAll('#pdList .wk-h.vac').length;
+      return out;
+    });
+    expect(r.nbCartes).toBe(4);
+    expect(r.nbSemaines).toBe(3);
+    expect(r.semaines).toEqual(['S38', 'S43', 'S46']);
+    expect(r.vac).toEqual([false, true, false]);
+    expect(r.tagsVac[1]).toEqual(['Vacances de la Toussaint zone B']);
+    expect(r.tagsFer[2]).toEqual(['mer. 11 · Armistice 1918']);
+    expect(r.badgesFerie).toEqual(['Férié · Armistice 1918']);
+    // mois → semaine → cartes, la semaine n'est écrite qu'une fois pour ses deux séances
+    expect(r.ordre).toEqual(['month-h', 'wk-h', 'ev', 'month-h', 'wk-h', 'ev', 'ev', 'month-h', 'wk-h', 'ev']);
+    expect(r.pdSemaines).toEqual(['S43', 'S46']);
+    expect(r.pdJours).toBe(3);
+    expect(r.pdFerie).toEqual(['Férié · Armistice 1918']);
+    expect(r.pdVac).toBe(1);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('le calendrier mensuel a sa gouttière de semaines et marque fériés et vacances', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      ZONE_CHOISIE = null; CAL_CFG = null;
+      window.__reuRows = [];
+      document.querySelectorAll('section.view').forEach(v => v.classList.remove('on'));
+      document.getElementById('v-reu').classList.add('on');
+      const wrap = document.getElementById('reuCalWrap');
+      document.getElementById('reuList').hidden = true; wrap.hidden = false;
+      CALST.reu = { mode: 'cal', month: '2026-11' };
+      drawCal('reu');
+      const gout = [...wrap.querySelectorAll('.cal-wk')].map(e => e.textContent);
+      const cols = getComputedStyle(wrap.querySelector('.cal-grid')).gridTemplateColumns.split(' ').length;
+      const ferie = [...wrap.querySelectorAll('.cal-day.ferie')].map(e => e.querySelector('.cal-date').textContent + e.querySelector('.cal-fer').textContent);
+      const vac = [...wrap.querySelectorAll('.cal-day.vac')].map(e => +e.querySelector('.cal-date').textContent);
+      const leg = wrap.querySelector('.cal-leg').textContent;
+      CALST.reu.month = '2027-05'; drawCal('reu');
+      const mai = [...wrap.querySelectorAll('.cal-day.ferie .cal-fer')].map(e => e.textContent);
+      CALST.reu = { mode: 'list', month: null };
+      document.getElementById('reuList').hidden = false; wrap.hidden = true;
+      return { gout, cols, ferie, vac, leg, mai };
+    });
+    // novembre 2026 commence un dimanche : six lignes, de la S44 (lundi 26 octobre) à la S49 (lundi 30)
+    expect(r.gout).toEqual(['S44', 'S45', 'S46', 'S47', 'S48', 'S49']);
+    expect(r.cols).toBe(8);
+    expect(r.ferie).toEqual(['1Toussaint', '11Armistice 1918']);
+    expect(r.vac).toEqual([1]);                          // seul le 1er novembre est encore en vacances (zone B)
+    expect(r.leg).toContain('Vacances scolaires');
+    expect(r.leg).toContain('zone B');
+    expect(r.leg).toContain('Jour férié');
+    expect(r.mai).toEqual(['Fête du Travail', 'Ascension', 'Victoire 1945', 'Lundi de Pentecôte']);   // 2027 : Ascension le 6 mai, avant le 8
+    expect(erreurs).toEqual([]);
+  });
+
+  test('changer de zone dans Mon compte redessine les listes et part dans la synchronisation', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      ZONE_CHOISIE = null; CAL_CFG = null;
+      const s = (id, start) => ({ id, title: 'Séance ' + id, start, end: start, lieu: 'Visio', pilotes: '', hor: '',
+                                  guests: [], wait: [], pub: '', max: 0, total: 0, k: 'r', url: '#' });
+      document.getElementById('reuPast').checked = true;
+      buildSimple('reu', [s(1, '2027-02-24')], id => '#' + id, 'réunion');   // hiver : B en vacances, C non
+      const avant = document.querySelectorAll('#reuList .wk-h.vac').length;
+      accOuvrir();
+      const boutons = [...document.querySelectorAll('#accZone [data-z]')].map(b => b.dataset.z + (b.classList.contains('on') ? '*' : ''));
+      document.querySelector('#accZone [data-z="C"]').click();
+      const apres = document.querySelectorAll('#reuList .wk-h.vac').length;
+      const memo = localStorage.getItem('kairos_zone');
+      const etat = etatLocal().zone;
+      const surBouton = [...document.querySelectorAll('#accZone [data-z]')].filter(b => b.classList.contains('on')).map(b => b.dataset.z);
+      accFermer();
+      // la zone d'un autre appareil n'écrase pas un choix local ; elle est reprise quand il n'y en a pas
+      ZONE_CHOISIE = null; localStorage.removeItem('kairos_zone');
+      return { avant, boutons, apres, memo, etat, surBouton };
+    });
+    expect(r.avant).toBe(1);
+    expect(r.boutons).toEqual(['A', 'B*', 'C']);
+    expect(r.apres).toBe(0);
+    expect(r.memo).toBe('C');
+    expect(r.etat).toBe('C');
+    expect(r.surBouton).toEqual(['C']);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('l’accueil : la semaine dans la date, un férié et le début des vacances dans les 7 jours', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      ZONE_CHOISIE = null;
+      // payload de test : des vacances qui commencent demain, dans la zone par défaut
+      const demain = ajouterJours(todayIso, 1);
+      CAL_CFG = { zones: { A: [], B: [{ nom: 'Vacances de test', du: demain, au: ajouterJours(demain, 15) }], C: [] } };
+      buildWeek();
+      const el = document.getElementById('homeWeek');
+      const out = {
+        s: document.getElementById('homeWeekS').textContent,
+        vac: [...el.querySelectorAll('.wit.vac .wt')].map(e => e.textContent.replace(/\s+/g, ' ').trim()),
+        fer: el.querySelectorAll('.wit.fer').length,
+        feriesAttendus: (() => { let n = 0; for (let i = 0; i <= 7; i++) if (estFerie(ajouterJours(todayIso, i))) n++; return n; })(),
+      };
+      CAL_CFG = null;
+      return out;
+    });
+    expect(r.s).toMatch(/^S\d{1,2}( → S\d{1,2})?$/);
+    expect(r.vac).toEqual(['Début des vacances scolaires Vacances de test · zone B']);
+    expect(r.fer).toBe(r.feriesAttendus);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('téléphone (390 px) : l’en-tête de semaine et la gouttière tiennent dans l’écran', async ({ browser }) => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 800 } });
+    const page = await ctx.newPage();
+    await ouvrir(page);
+    await preparer(page);
+    const m = await page.evaluate(() => {
+      ZONE_CHOISIE = null; CAL_CFG = null;
+      document.querySelectorAll('section.view').forEach(v => v.classList.remove('on'));
+      document.getElementById('v-reu').classList.add('on');
+      const s = (id, start) => ({ id, title: 'Séance ' + id, start, end: start, lieu: 'Visio', pilotes: '', hor: '09:00',
+                                  guests: [], wait: [], pub: '', max: 0, total: 0, k: 'r', url: '#' });
+      document.getElementById('reuPast').checked = true;
+      buildSimple('reu', [s(1, '2026-10-20'), s(2, '2026-11-11')], id => '#' + id, 'réunion');
+      const L = document.documentElement.clientWidth, r = el => el.getBoundingClientRect();
+      const deborde = sel => [...document.querySelectorAll(sel)].some(e => r(e).right > L + 1 || r(e).left < -1);
+      const listeOk = !deborde('#reuList .wk-h, #reuList .wk-h *');
+      CALST.reu = { mode: 'cal', month: '2026-11' };
+      document.getElementById('reuList').hidden = true; document.getElementById('reuCalWrap').hidden = false;
+      drawCal('reu');
+      const g = document.querySelector('#reuCalWrap .cal-wk');
+      const out = { ecran: L, listeOk, calOk: !deborde('#reuCalWrap .cal-grid *'), gout: Math.round(r(g).width),
+                    ferMasque: getComputedStyle(document.querySelector('#reuCalWrap .cal-fer')).display,
+                    page: document.documentElement.scrollWidth <= L };
+      CALST.reu = { mode: 'list', month: null };
+      return out;
+    });
+    expect(m.ecran).toBe(390);
+    expect(m.listeOk).toBe(true);
+    expect(m.calOk).toBe(true);
+    expect(m.gout).toBeLessThanOrEqual(24);
+    expect(m.ferMasque).toBe('none');
+    expect(m.page).toBe(true);
+    await ctx.close();
+  });
+});

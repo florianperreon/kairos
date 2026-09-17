@@ -35,10 +35,11 @@ jobs:
           LIGNEE_FILLEULS_DE: ${{ secrets.LIGNEE_FILLEULS_DE }}
         run: python tests/garde.py
 
-      - name: Détection des nouveautés (update.py)
+      - name: Détection des nouveautés et calendrier scolaire (update.py)
         run: |
           pip install --quiet requests cryptography
           python tests/nouveautes.py
+          python tests/calendrier.py
 
       - uses: actions/setup-node@v4
         with:

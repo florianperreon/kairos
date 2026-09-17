@@ -638,6 +638,56 @@ def parcours_membre(api, uid, membres, adh_ids):
             "statut": (u.get("roles") or [None])[0],
             "maj": datetime.datetime.now(PARIS).strftime("%Y-%m-%dT%H:%M")}
 
+# ---------------- calendrier scolaire (data.education.gouv.fr) ----------------
+# Vacances des zones A / B / C, posées dans cfg["calendrier"] pour que le portail les affiche
+# (en-têtes de semaine, calendrier mensuel, Parcours Découverte). Les jours fériés ne viennent
+# pas d'ici : le portail les calcule (dates fixes + Pâques). Bornes : du = premier jour sans
+# classe (samedi), au = dernier jour sans classe (dimanche, veille de la reprise), comme sur
+# education.gouv.fr. Le fetch est NON bloquant : en cas de panne, cfg garde la dernière valeur
+# lue en base et, à défaut, le portail a sa propre table de repli.
+CALENDRIER_URL = "https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-calendrier-scolaire/records"
+
+def _jour_paris(iso):
+    d = datetime.datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone(PARIS)
+    return d.date()
+
+def calendrier_scolaire(aujourdhui=None):
+    """{'zones': {'A': [{'nom','du','au'}], 'B': …, 'C': …}, 'annees': [...], 'maj': 'AAAA-MM-JJ'}"""
+    aujourdhui = aujourdhui or datetime.datetime.now(PARIS).date()
+    # année scolaire en cours (bascule au 1er août) : la précédente (sessions passées) et les deux suivantes
+    y0 = aujourdhui.year if aujourdhui.month >= 8 else aujourdhui.year - 1
+    annees = [f"{y}-{y+1}" for y in range(y0 - 1, y0 + 3)]
+    where = ("annee_scolaire in (%s) and zones in ('Zone A','Zone B','Zone C') and population='-'"
+             % ",".join("'%s'" % a for a in annees))
+    r = requests.get(CALENDRIER_URL, params={
+        "where": where, "select": "description,start_date,end_date,zones,annee_scolaire",
+        "group_by": "description,start_date,end_date,zones,annee_scolaire",
+        "order_by": "start_date", "limit": 100}, timeout=60)
+    r.raise_for_status()
+    zones = {"A": [], "B": [], "C": []}
+    trouvees = set()
+    for x in r.json().get("results") or []:
+        z = (x.get("zones") or "").replace("Zone ", "").strip()
+        if z not in zones or not x.get("start_date"):
+            continue
+        du = _jour_paris(x["start_date"])
+        fin = _jour_paris(x.get("end_date") or x["start_date"])
+        nom = (x.get("description") or "").strip()
+        if nom.lower().startswith("début des vacances d'été") or nom.lower().startswith("debut des vacances d'ete"):
+            nom, au = "Vacances d'été", datetime.date(du.year, 8, 31)
+        else:
+            au = max(du, fin - datetime.timedelta(days=1))   # la date de fin de l'API = jour de reprise
+        if nom.lower().startswith("pont"):
+            au = max(au, du + datetime.timedelta(days=6 - du.weekday()))   # le pont court jusqu'au dimanche
+        zones[z].append({"nom": nom, "du": du.isoformat(), "au": au.isoformat()})
+        trouvees.add(x.get("annee_scolaire"))
+    for z in zones:
+        zones[z].sort(key=lambda v: v["du"])
+    if not any(zones.values()):
+        raise RuntimeError("calendrier scolaire vide")
+    return {"zones": zones, "annees": sorted(a for a in trouvees if a),
+            "maj": aujourdhui.isoformat()}
+
 def sync_parcours(api, membres, adh_ids):
     if not KAIROS_TOKEN:
         print("KAIROS_TOKEN absent : progression individuelle ignorée")
@@ -871,6 +921,12 @@ def run():
         cfg["lignee"] = split(os.environ.get("LIGNEE"))
     if split(os.environ.get("LIGNEE_FILLEULS_DE")):
         cfg["ligneeRoots"] = split(os.environ.get("LIGNEE_FILLEULS_DE"))
+    # Vacances scolaires (zones A/B/C) : non bloquant — en panne, cfg garde la valeur précédente
+    try:
+        cfg["calendrier"] = calendrier_scolaire()
+        print("calendrier scolaire : années %s" % ", ".join(cfg["calendrier"]["annees"]))
+    except Exception as e:
+        print(f"calendrier scolaire indisponible ({type(e).__name__}) — valeur précédente conservée")
 
     # Historique : on conserve TOUT (depuis 2022) — onglet « passés », statistiques, fiches membres
     since_iso = "2000-01-01"
