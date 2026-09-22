@@ -6742,7 +6742,7 @@ const RS_SIMS = [
       {k:'init', l:'Capital initial', t:'eur', v:10000},
       {k:'mens', l:'Épargne mensuelle', t:'eur', v:150},
       {k:'duree', l:'Durée', t:'num', u:'ans', v:15, min:1, max:60},
-      {k:'rdt', l:'Rendement annuel', t:'pct', v:5, h:'Net de frais de gestion — ou brut si tu ajoutes les frais ci-dessous. Fonds euros ≈ 2,5 à 3,5 % ; allocation diversifiée ≈ 4 à 6 %'},
+      {k:'rdt', l:'Rendement annuel', t:'pct', v:4.5, h:'Net de frais de gestion — ou brut si tu ajoutes les frais ci-dessous. Fonds euros ≈ 2,5 à 3,5 % ; allocation diversifiée ≈ 4 à 6 %'},
     ]},
     {t:'Options', f:[
       {k:'frais', l:'Ajouter les frais', t:'chk', v:0},
@@ -6852,12 +6852,13 @@ const RS_SIMS = [
       {k:'an0', l:'Année de souscription', t:'num', u:'', v:RS_AN(), min:2000, max:2100, fmt:'an'},
     ]},
     {t:'Hypothèses', f:[
-      {k:'rdt', l:'Taux de distribution annuel', t:'pct', v:5.5},
+      {k:'rdt', l:'Taux de distribution annuel', t:'pct', v:5},
       {k:'dj', l:'Délai de jouissance', t:'num', u:'mois', v:6, min:0, max:12, h:'Incluant le mois du versement'},
       {k:'fs', l:'Frais de souscription', t:'pct', v:10, h:'Sert à estimer la valeur de retrait (prix de part supposé constant)'},
     ]},
     {t:'Dividendes', f:[
       {k:'reinv', l:'Réinvestir les dividendes', t:'chk', v:1},
+      {k:'pr', l:'Part des dividendes réinvestie', t:'pct', v:100, step:'5', min:0, max:100, show:v=>v.reinv, h:'Le reste est perçu chaque année'},
       {k:'dr', l:'Pendant', t:'num', u:'ans', v:10, min:1, max:40, show:v=>v.reinv},
     ]},
     {t:'Fiscalité des revenus', f:[
@@ -6869,19 +6870,21 @@ const RS_SIMS = [
     const r=v.rdt/100, dj=Math.min(12,Math.max(0,Math.round(v.dj))), apport=v.prix*v.parts, m=v.mens;
     const lis = m*((12-dj)*(13-dj)/24);          // versements de l'année déjà en jouissance, en moyenne
     const tx = (+v.tmi + v.ps)/100, fs=v.fs/100;
+    // part des dividendes réinvestie (22/09/2026) : 100 % par défaut, le reste est perçu
+    const pr = v.reinv ? Math.min(1, Math.max(0, (v.pr==null?100:v.pr)/100)) : 0;
     const rows=[]; let B=0, Gp=0, J=0, cash=0, imp=0, reinvCum=0;
     for(let y=1;y<=v.duree;y++){
       let E, F, reinv=0;
       if(y===1){ E = apport*(12-dj)/12 + lis; F = apport + m*(12-dj); J = apport + 12*m; }
       else {
-        if(v.reinv && (y-1) < v.dr) reinv = Gp;
+        if(v.reinv && (y-1) < v.dr) reinv = Gp*pr;
         E = B + lis; F = B + 12*m + reinv; J += 12*m + reinv;
       }
       const G = r*E, I = G*tx;
       reinvCum += reinv; imp += I;
       // un dividende non réinvesti l'année suivante (ou celui de la dernière année) est perçu
       const reinvSuiv = v.reinv && y < v.duree && y < v.dr;
-      if(!reinvSuiv) cash += G;
+      cash += reinvSuiv ? G*(1-pr) : G;
       const verse = apport + 12*m*y;
       const retrait = J*(1-fs);
       const net = cash - imp;
@@ -6896,7 +6899,7 @@ const RS_SIMS = [
         {k:'Revenus la dernière année', v:RS_E(L.G/12)+' / mois', s:'net d’impôt : '+RS_E(L.G*(1-tx)/12)+' / mois', cls:'hl'},
         {k:'Capital souscrit', v:RS_E(L.J), s:RS_N(L.J/(v.prix||1),1)+' parts environ'},
         {k:'Versé de ta poche', v:RS_E(L.verse), s:'apport '+RS_E(apport)+' + '+RS_E(m)+' / mois'},
-        {k:'Dividendes réinvestis', v:RS_E(reinvCum), s:v.reinv?'pendant '+Math.min(v.dr,v.duree-1)+' an(s)':'aucun'},
+        {k:'Dividendes réinvestis', v:RS_E(reinvCum), s:v.reinv&&pr>0?(pr<1?RS_N(pr*100)+'\u00a0% des dividendes, ':'')+'pendant '+Math.min(v.dr,v.duree-1)+' an(s)':'aucun'},
         {k:'Valeur de retrait', v:RS_E(L.retrait), s:'après '+RS_P(fs,1)+' de frais de souscription'},
         {k:'Rendement global si revente', v:RS_P(L.rdt,1), s:'dividendes nets perçus : '+RS_E(L.net), cls:L.rdt>=0?'good':'bad'},
       ],
@@ -6904,7 +6907,7 @@ const RS_SIMS = [
         {n:'Versé de ta poche', c:RS_COL[0], d:rows.map(r=>r.verse)},
         {n:'Dividendes réinvestis', c:RS_COL[1], d:rows.map(r=>r.J-r.verse)}]},
       table:{h:['Année','Capital en jouissance','Dividendes','dont réinvestis l’an suivant','Impôts','Versé cumulé','Valeur de retrait','Rendement si revente'],
-        rows:rows.map(r=>[r.an, RS_E(r.F), RS_E(r.G), r.reinvSuiv?RS_E(r.G):'—', RS_E(r.I), RS_E(r.verse), RS_E(r.retrait), RS_P(r.rdt,1)])},
+        rows:rows.map(r=>[r.an, RS_E(r.F), RS_E(r.G), r.reinvSuiv&&pr>0?RS_E(r.G*pr):'—', RS_E(r.I), RS_E(r.verse), RS_E(r.retrait), RS_P(r.rdt,1)])},
       notes:[
         'Délai de jouissance : les parts ne produisent rien pendant '+dj+' mois après chaque versement.',
         'Les impôts sur les dividendes sont payés chaque année, même lorsque les dividendes sont réinvestis : c’est un effort d’épargne supplémentaire.',

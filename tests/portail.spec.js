@@ -1443,6 +1443,39 @@ test.describe('Ressources — simulateurs et courriers', () => {
     expect(r).toEqual({ f1: 1, fv1: 2, f2: 0 });
   });
 
+  test('valeurs par défaut : assurance vie 4,5 % net, SCPI 5 % distribués et 100 % des dividendes réinvestis', async ({ page }) => {
+    await ouvrir(page);
+    await entrer(page);
+    const r = await page.evaluate(() => {
+      const av = rsVals(RS_SIMS.find(t => t.id === 'av')), sc = rsVals(RS_SIMS.find(t => t.id === 'scpi'));
+      return { av: av.rdt, scpi: sc.rdt, reinv: sc.reinv, pr: sc.pr };
+    });
+    expect(r).toEqual({ av: 4.5, scpi: 5, reinv: 1, pr: 100 });
+  });
+
+  test('SCPI : une part seulement des dividendes réinvestie, le reste perçu', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page, '#ressources?outil=scpi');
+    const r = await page.evaluate(() => {
+      const d = RS_SIMS.find(t => t.id === 'scpi');
+      const base = Object.assign({}, rsVals(d), { prix: 250, parts: 20, mens: 200, rdt: 5.5, dj: 6, duree: 5, dr: 35, reinv: 1 });
+      const cent = d.calc(Object.assign({}, base, { pr: 100 })), moitie = d.calc(Object.assign({}, base, { pr: 50 }));
+      const zero = d.calc(Object.assign({}, base, { pr: 0 })), sans = d.calc(Object.assign({}, base, { reinv: 0 }));
+      const kpi = (o, k) => o.kpis.find(x => x.k === k).v;
+      const cocher = document.querySelector('#rsForm [data-f="pr"]');
+      return { cap2: [cent.table.rows[1][1], moitie.table.rows[1][1]], reinv1: moitie.table.rows[0][3],
+               netM: kpi(moitie, 'Rendement global si revente'), zero: JSON.stringify(zero.table.rows) === JSON.stringify(sans.table.rows),
+               champ: !!cocher && !cocher.hidden };
+    });
+    const sp = s => String(s).replace(/\s/g, ' ');
+    expect(sp(r.cap2[0])).toBe('8 757 €');     // 100 % : 6 200 + 2 400 + 156,75
+    expect(sp(r.cap2[1])).toBe('8 678 €');     // 50 % : 6 200 + 2 400 + 78,38
+    expect(sp(r.reinv1)).toBe('78 €');
+    expect(r.zero).toBe(true);                 // 0 % réinvesti = pas de réinvestissement
+    expect(r.champ).toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
   test('SCPI : dividendes et réinvestissement conformes au classeur « SCPI »', async ({ page }) => {
     await ouvrir(page);
     await entrer(page);
