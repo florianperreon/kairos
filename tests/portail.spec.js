@@ -1336,7 +1336,7 @@ test.describe('Ressources — simulateurs et courriers', () => {
     await entrer(page);
     const r = await page.evaluate(() => {
       const d = RS_SIMS.find(t => t.id === 'av');
-      const v = Object.assign({}, rsVals(d), { age: 0, init: 700, mens: 150, rdt: 5.5, fv: 4.8, fg: 1, cmp: 0 });
+      const v = Object.assign({}, rsVals(d), { age: 0, init: 700, mens: 150, rdt: 5.5, frais: 1, fv: 4.8, fg: 1, cmp: 0 });
       const an = n => { const o = d.calc(Object.assign({}, v, { duree: n })); return o.table.rows[n - 1]; };
       return { un: an(1), huit: an(8) };
     });
@@ -1344,6 +1344,103 @@ test.describe('Ressources — simulateurs et courriers', () => {
     expect(sp(r.un[r.un.length - 1])).toBe('2 443 €');       // Excel : 2 443,03
     expect(sp(r.huit[r.huit.length - 1])).toBe('17 298 €');  // Excel : 17 298,49
     expect(erreurs).toEqual([]);
+  });
+
+  test('assurance vie simple (par défaut) : les chiffres du « Simulateur Ass. Vie V1 »', async ({ page }) => {
+    // Classeur de Florian : 41 ans, 3 000 € de capital, 100 €/mois, 4,5 % net, sans frais.
+    const erreurs = await ouvrir(page);
+    await entrer(page);
+    const r = await page.evaluate(() => {
+      const d = RS_SIMS.find(t => t.id === 'av');
+      const v0 = rsVals(d);
+      const defauts = { frais: v0.frais, rachat: v0.rachat, cmp: v0.cmp };
+      const v = Object.assign({}, v0, { age: 41, init: 3000, mens: 100, rdt: 4.5, duree: 48 });
+      const o = d.calc(v);
+      const ligne = n => o.table.rows[n - 1];
+      return { defauts, h: o.table.h, l1: ligne(1), l10: ligne(10), l20: ligne(20), l48: ligne(48),
+               kpis: o.kpis.map(k => k.k), tables: (o.tables || []).length };
+    });
+    const sp = a => a.map(x => String(x).replace(/\s/g, ' '));
+    expect(r.defauts).toEqual({ frais: 0, rachat: 0, cmp: 0 });
+    expect(r.h).toEqual(['Année', 'Âge', 'Capital début d’année', 'Versements de l’année', 'Versements cumulés', 'Intérêts de l’année', 'Intérêts cumulés', 'Capital constitué']);
+    // Excel : 1 | 41 | 3 000 | 4 200 | 4 200 | 164,25 | 164,25 | 4 364,25
+    expect(sp(r.l1)).toEqual(['1', '41', '3 000 €', '4 200 €', '4 200 €', '164 €', '164 €', '4 364 €']);
+    expect(sp(r.l10).slice(-1)).toEqual(['19 764 €']);    // Excel : 19 764,19
+    expect(sp(r.l20).slice(-3)).toEqual(['1 948 €', '18 798 €', '45 798 €']);   // Excel : 1 948,50 · 18 798,46 · 45 798,46
+    expect(sp(r.l48).slice(-1)).toEqual(['223 446 €']);   // Excel : 223 446,29
+    expect(r.kpis).toEqual(['Capital constitué', 'Versements cumulés', 'Intérêts cumulés']);
+    expect(r.tables).toBe(0);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('assurance vie : les options frais, rachat au terme et comparaison s’activent à la demande', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page, '#ressources');
+    const r = await page.evaluate(() => {
+      const vis = k => { const e = document.querySelector('#rsForm [data-f="' + k + '"]'); return !!e && !e.hidden; };
+      const cocher = k => { const e = document.querySelector('#rsForm [data-k="' + k + '"]'); e.checked = true; e.dispatchEvent(new Event('change', { bubbles: true })); e.dispatchEvent(new Event('input', { bubbles: true })); };
+      const avant = { fv: vis('fv'), couple: vis('couple'), rdt2: vis('rdt2'), rachat: !!document.querySelector('#rsOut .rs-rachat') };
+      cocher('frais'); cocher('rachat');
+      const apres = { fv: vis('fv'), fg: vis('fg'), couple: vis('couple'), fv2: vis('fv2'),
+        rachat: [...document.querySelectorAll('#rsOut .rs-rachat td:first-child')].map(td => td.textContent),
+        kpis: [...document.querySelectorAll('#rsOut .rs-kpi .k')].map(x => x.textContent),
+        th: [...document.querySelectorAll('#rsOut details .rs-tbl th')].map(x => x.textContent) };
+      cocher('cmp');
+      const cmp = { rdt2: vis('rdt2'), fv2: vis('fv2'), kpis: [...document.querySelectorAll('#rsOut .rs-kpi .k')].map(x => x.textContent) };
+      return { avant, apres, cmp, hash: hashFor('res') };
+    });
+    expect(r.avant).toEqual({ fv: false, couple: false, rdt2: false, rachat: false });
+    expect(r.apres.fv && r.apres.fg && r.apres.couple).toBe(true);
+    expect(r.apres.fv2).toBe(false);
+    expect(r.apres.th).toContain('Frais cumulés');
+    expect(r.apres.kpis).toEqual(['Capital constitué', 'Versements cumulés', 'Gains nets de frais', 'Frais payés', 'Net perçu au rachat', 'Rendement net annualisé']);
+    // durée par défaut 15 ans : plus de 8 ans, donc abattement puis 7,5 %
+    expect(r.apres.rachat).toEqual(['Capital racheté', 'dont versements (non imposés)', 'dont gains', 'Abattement annuel (personne seule)', 'Gains imposables', 'Impôt sur le revenu (7,5 %)', 'Prélèvements sociaux (17,2 % des gains)', 'Net perçu']);
+    expect(r.cmp.rdt2 && r.cmp.fv2).toBe(true);
+    expect(r.cmp.kpis[1]).toBe('Contrat 2 au terme');
+    expect(r.hash).toContain('frais=1');
+    expect(r.hash).toContain('rachat=1');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('assurance vie : fiscalité du rachat au terme, avant et après 8 ans', async ({ page }) => {
+    await ouvrir(page);
+    await entrer(page);
+    const r = await page.evaluate(() => {
+      const d = RS_SIMS.find(t => t.id === 'av');
+      const base = Object.assign({}, rsVals(d), { age: 0, init: 10000, mens: 0, rdt: 5, rachat: 1 });
+      const net = o => o.tables[0].tot[1];
+      const lig = o => Object.fromEntries(o.tables[0].rows);
+      const cinq = d.calc(Object.assign({}, base, { duree: 5 }));
+      const dix = d.calc(Object.assign({}, base, { duree: 10 }));
+      const dixC = d.calc(Object.assign({}, base, { duree: 10, couple: '2' }));
+      return { cinq: lig(cinq), netCinq: net(cinq), dix: lig(dix), netDix: net(dix), netDixC: net(dixC) };
+    });
+    const sp = s => String(s).replace(/\s/g, ' ');
+    // 10 000 € à 5 % sans versement : 12 762,82 € à 5 ans → gains 2 762,82 ; 12,8 % = 353,64 ; 17,2 % = 475,21
+    expect(sp(r.cinq['dont gains'])).toBe('2 763 €');
+    expect(sp(r.cinq['Impôt sur le revenu (prélèvement forfaitaire 12,8 %)'])).toBe('− 354 €');
+    expect(sp(r.netCinq)).toBe('11 934 €');
+    // 10 ans : 16 288,95 € → gains 6 288,95 ; abattement 4 600 → 1 688,95 × 7,5 % = 126,67 ; PS 1 081,70
+    expect(sp(r.dix['Abattement annuel (personne seule)'])).toBe('− 4 600 €');
+    expect(sp(r.dix['Impôt sur le revenu (7,5 %)'])).toBe('− 127 €');
+    expect(sp(r.netDix)).toBe('15 081 €');
+    expect(sp(r.netDixC)).toBe('15 207 €');   // couple : gains entièrement couverts par 9 200 €
+  });
+
+  test('assurance vie : un ancien lien avec des frais dans l’adresse réactive l’option', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      location.hash = '#ressources?fv=2&rdt=4'; routeHash();
+      const v1 = Object.assign({}, rsVals(RS_SIMS.find(t => t.id === 'av')));
+      location.hash = '#ressources?rdt=4'; routeHash();
+      const v2 = Object.assign({}, rsVals(RS_SIMS.find(t => t.id === 'av')));
+      return { f1: v1.frais, fv1: v1.fv, f2: v2.frais };
+    });
+    expect(r).toEqual({ f1: 1, fv1: 2, f2: 0 });
   });
 
   test('SCPI : dividendes et réinvestissement conformes au classeur « SCPI »', async ({ page }) => {

@@ -1396,6 +1396,8 @@ a.mml-r:hover{border-color:var(--accent)}
 .rs-tbl th{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-3);text-align:right;padding:6px 8px;border-bottom:1px solid var(--line-2);white-space:nowrap}
 .rs-tbl td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 .rs-tbl th:first-child,.rs-tbl td:first-child{text-align:left}
+.rs-tbl.rs-rachat td:first-child{white-space:normal}
+.rs-tbl.rs-rachat tr.tot td{font-weight:700}
 .rs-tbl tr.tot td{font-weight:700;border-top:1px solid var(--line-2)}
 .rs-det>summary{cursor:pointer;font-family:"Sora";font-weight:700;font-size:14px;padding:6px 0;list-style:none}
 .rs-det>summary::before{content:'▸ ';color:var(--ink-3)}
@@ -6731,95 +6733,110 @@ function rsTri(flux){
 const RS_TMI = [['0','0 %'],['11','11 %'],['30','30 %'],['41','41 %'],['45','45 %']];
 const RS_SIMS = [
 {
-  id:'av', slug:'assurance-vie', ic:'🛡️', t:'Assurance vie', d:'Épargne acquise, frais, fiscalité du rachat et comparaison de deux contrats',
+  id:'av', slug:'assurance-vie', ic:'🛡️', t:'Assurance vie', d:'Épargne acquise année par année ; frais, rachat au terme et comparaison de deux contrats en option',
+  // Par défaut : le classeur « Simulateur Ass. Vie » de Florian, sans frais, rendement net.
+  // Trois options à cocher (22/09/2026) : les frais, le détail du rachat total au terme, un second contrat.
   g:[
     {t:'Épargne', f:[
       {k:'age', l:'Âge du souscripteur', t:'num', u:'ans', v:40, min:0, max:100, h:'Facultatif — laisse 0 pour ne pas afficher les âges'},
-      {k:'init', l:'Versement initial', t:'eur', v:10000},
-      {k:'mens', l:'Versement mensuel', t:'eur', v:150},
+      {k:'init', l:'Capital initial', t:'eur', v:10000},
+      {k:'mens', l:'Épargne mensuelle', t:'eur', v:150},
       {k:'duree', l:'Durée', t:'num', u:'ans', v:15, min:1, max:60},
+      {k:'rdt', l:'Rendement annuel', t:'pct', v:5, h:'Net de frais de gestion — ou brut si tu ajoutes les frais ci-dessous. Fonds euros ≈ 2,5 à 3,5 % ; allocation diversifiée ≈ 4 à 6 %'},
     ]},
-    {t:'Contrat', f:[
-      {k:'rdt', l:'Rendement annuel brut de frais de gestion', t:'pct', v:5, h:'Fonds euros ≈ 2,5 à 3,5 % ; allocation diversifiée ≈ 4 à 6 %'},
-      {k:'fv', l:'Frais sur versements', t:'pct', v:4.8},
-      {k:'fg', l:'Frais de gestion annuels', t:'pct', v:1},
-    ]},
-    {t:'Fiscalité au rachat total', f:[
-      {k:'couple', l:'Situation fiscale', t:'sel', v:'1', o:[['1','Personne seule — abattement de 4 600 €'],['2','Couple (imposition commune) — 9 200 €']], w:1},
-    ]},
-    {t:'Comparer', f:[
+    {t:'Options', f:[
+      {k:'frais', l:'Ajouter les frais', t:'chk', v:0},
+      {k:'fv', l:'Frais sur versements', t:'pct', v:4.8, show:v=>v.frais},
+      {k:'fg', l:'Frais de gestion annuels', t:'pct', v:1, show:v=>v.frais},
+      {k:'rachat', l:'Voir le rachat total au terme', t:'chk', v:0},
+      {k:'couple', l:'Situation fiscale', t:'sel', v:'1', o:[['1','Personne seule — abattement de 4 600 €'],['2','Couple (imposition commune) — 9 200 €']], w:1, show:v=>v.rachat},
       {k:'cmp', l:'Comparer avec un second contrat', t:'chk', v:0},
-      {k:'rdt2', l:'Rendement brut du contrat 2', t:'pct', v:3, show:v=>v.cmp},
-      {k:'fv2', l:'Frais sur versements du contrat 2', t:'pct', v:0, show:v=>v.cmp},
-      {k:'fg2', l:'Frais de gestion du contrat 2', t:'pct', v:0.6, show:v=>v.cmp},
+      {k:'rdt2', l:'Rendement du contrat 2', t:'pct', v:3, show:v=>v.cmp},
+      {k:'fv2', l:'Frais sur versements du contrat 2', t:'pct', v:0, show:v=>v.cmp&&v.frais},
+      {k:'fg2', l:'Frais de gestion du contrat 2', t:'pct', v:0.6, show:v=>v.cmp&&v.frais},
     ]},
   ],
   calc(v){
+    const avecFrais = !!v.frais;
     const run = (rdt,fv,fg) => {
-      const r=rdt/100, pv=fv/100, pg=fg/100, rows=[];
-      let M=0, vb=0, frais=0;
+      const r=rdt/100, pv=avecFrais?fv/100:0, pg=avecFrais?fg/100:0, rows=[];
+      let M=0, vb=0, frais=0, ic=0;
       for(let y=1;y<=v.duree;y++){
-        const D = y===1 ? v.init*(1-pv) : M;
-        const brut = (y===1?v.init:0) + 12*v.mens;
+        const D = y===1 ? v.init*(1-pv) : M;                       // capital en début d'année
+        const brut = (y===1?v.init:0) + 12*v.mens;                  // versé dans l'année
         const E = 12*v.mens*(1-pv);
         // les versements mensuels portent intérêt en moyenne 6,5 mois sur 12 (même règle que le classeur)
         const G = r*(D + v.mens*(1-pv)*6.5);
         const H = pg*(D+E+G);
-        M = D+E+G-H; vb += brut; frais += brut*pv + H;
-        rows.push({y, age:v.age?v.age+y-1:null, vb, frais, gain:M-vb, int:G, M});
+        M = D+E+G-H; vb += brut; frais += brut*pv + H; ic += G;
+        rows.push({y, age:v.age?v.age+y-1:null, D, brut, vb, G, ic, frais, gain:M-vb, M});
       }
       return rows;
     };
     const fisc = (M, vb) => {
-      const gain = Math.max(0, M-vb);
-      let ir;
-      if(v.duree>=8){
-        const base = Math.max(0, gain - (v.couple==='2'?9200:4600));
-        const part = vb<=150000 ? 1 : 150000/vb;
-        ir = base*(part*0.075 + (1-part)*0.128);
-      } else ir = gain*0.128;
+      const gain = Math.max(0, M-vb), huit = v.duree>=8;
+      const abat = huit ? Math.min(gain, v.couple==='2'?9200:4600) : 0;
+      const base = gain - abat;
+      const part = (!huit || vb<=150000) ? 1 : 150000/vb;           // primes au-delà de 150 000 € : 12,8 %
+      const ir = huit ? base*(part*0.075 + (1-part)*0.128) : gain*0.128;
       const ps = gain*0.172;
-      return {gain, ir, ps, net:M-ir-ps};
+      return {gain, abat, base, part, ir, ps, net:M-ir-ps};
     };
     const A = run(v.rdt, v.fv, v.fg), last = A[A.length-1];
     const f = fisc(last.M, last.vb);
-    const flux = [{t:0,v:-v.init}];
-    for(let y=1;y<=v.duree;y++) flux.push({t:y-0.5, v:-12*v.mens});
-    flux.push({t:v.duree, v:f.net});
-    const tri = rsTri(flux);
+    const X = A.map(r=>v.age?r.age+1+' ans':'An '+r.y);
+    const ans = v.duree+' an'+(v.duree>1?'s':'');
     const out = {
       kpis:[
-        {k:'Capital au terme', v:RS_E(last.M), s:'après '+v.duree+' an'+(v.duree>1?'s':'')+(v.age?' · à '+(v.age+v.duree)+' ans':''), cls:'hl'},
-        {k:'Versements cumulés', v:RS_E(last.vb), s:RS_E(v.mens)+' / mois'},
-        {k:'Gains nets de frais', v:RS_E(last.gain), s:'soit '+RS_P(last.vb?last.gain/last.vb:0,1)+' des versements', cls:last.gain>=0?'good':'bad'},
-        {k:'Frais payés', v:RS_E(last.frais), s:'entrée + gestion'},
-        {k:'Net après rachat total', v:RS_E(f.net), s:'impôt '+RS_E(f.ir)+' · prélèvements sociaux '+RS_E(f.ps)},
-        {k:'Rendement net annualisé', v:RS_P(tri), s:'après frais et fiscalité'},
+        {k:'Capital constitué', v:RS_E(last.M), s:'après '+ans+(v.age?' · à '+(v.age+v.duree)+' ans':''), cls:'hl'},
+        {k:'Versements cumulés', v:RS_E(last.vb), s:RS_E(v.init)+' + '+RS_E(v.mens)+' / mois'},
+        {k:avecFrais?'Gains nets de frais':'Intérêts cumulés', v:RS_E(last.gain), s:'soit '+RS_P(last.vb?last.gain/last.vb:0,1)+' des versements', cls:last.gain>=0?'good':'bad'},
       ],
-      notes:[
-        v.duree>=8 ? 'Contrat de plus de 8 ans : abattement annuel sur les gains, puis 7,5 % (12,8 % sur la fraction des primes au-delà de 150 000 €) et 17,2 % de prélèvements sociaux.'
-                   : 'Contrat de moins de 8 ans : prélèvement forfaitaire de 12,8 % sur les gains et 17,2 % de prélèvements sociaux (option possible pour le barème).',
-        'Prélèvements sociaux de l’assurance vie maintenus à 17,2 % en 2026 (non concernée par la hausse de la CSG).',
-        'Les prélèvements sociaux du fonds euros sont en réalité prélevés chaque année ; ils sont ici calculés en une fois au rachat.',
-      ],
+      notes:[],
+      tables:[],
     };
+    if(avecFrais) out.kpis.push({k:'Frais payés', v:RS_E(last.frais), s:'entrée + gestion'});
+    if(v.rachat){
+      const flux = [{t:0,v:-v.init}];
+      for(let y=1;y<=v.duree;y++) flux.push({t:y-0.5, v:-12*v.mens});
+      flux.push({t:v.duree, v:f.net});
+      const tri = rsTri(flux);
+      out.kpis.push({k:'Net perçu au rachat', v:RS_E(f.net), s:'impôt '+RS_E(f.ir)+' · prélèvements sociaux '+RS_E(f.ps), cls:'good'});
+      out.kpis.push({k:'Rendement net annualisé', v:RS_P(tri), s:'après '+(avecFrais?'frais et ':'')+'fiscalité'});
+      const lignes = [
+        ['Capital racheté', RS_E(last.M)],
+        ['dont versements (non imposés)', RS_E(Math.min(last.M,last.vb))],
+        ['dont gains', RS_E(f.gain)],
+      ];
+      if(v.duree>=8){
+        lignes.push(['Abattement annuel ('+(v.couple==='2'?'couple':'personne seule')+')', '− '+RS_E(f.abat)]);
+        lignes.push(['Gains imposables', RS_E(f.base)]);
+        lignes.push(['Impôt sur le revenu ('+(f.part<1?'7,5 % / 12,8 % au-delà de 150 000 € de primes':'7,5 %')+')', '− '+RS_E(f.ir)]);
+      } else lignes.push(['Impôt sur le revenu (prélèvement forfaitaire 12,8 %)', '− '+RS_E(f.ir)]);
+      lignes.push(['Prélèvements sociaux (17,2 % des gains)', '− '+RS_E(f.ps)]);
+      out.tables.push({t:'Rachat total au terme ('+ans+(v.age?', à '+(v.age+v.duree)+' ans':'')+')', h:['Rachat total','Montant'], rows:lignes, cls:'rs-rachat', tot:['Net perçu', RS_E(f.net)]});
+      out.notes.push(v.duree>=8 ? 'Contrat de plus de 8 ans : abattement annuel sur les gains (4 600 € ou 9 200 €), puis 7,5 % (12,8 % sur la fraction des primes au-delà de 150 000 €) et 17,2 % de prélèvements sociaux.'
+                                : 'Contrat de moins de 8 ans : prélèvement forfaitaire de 12,8 % sur les gains (option possible pour le barème) et 17,2 % de prélèvements sociaux. L’abattement ne s’applique qu’après 8 ans.');
+      out.notes.push('Prélèvements sociaux de l’assurance vie maintenus à 17,2 % en 2026 (non concernée par la hausse de la CSG). Sur le fonds euros, ils sont en réalité prélevés chaque année ; ils sont ici calculés en une fois au rachat.');
+    }
     if(v.cmp){
-      const B = run(v.rdt2, v.fv2, v.fg2), lb = B[B.length-1], fb = fisc(lb.M, lb.vb);
+      const B = run(v.rdt2, v.fv2, v.fg2), lb = B[B.length-1];
       const ec = last.M - lb.M;
-      out.kpis.splice(4,0,{k:'Contrat 2 au terme', v:RS_E(lb.M), s:'écart : '+(ec>=0?'+':'')+RS_E(ec)+' pour le contrat 1', cls:ec>=0?'':'bad'});
-      out.chart = {type:'line', x:A.map(r=>v.age?r.age+1+' ans':'An '+r.y), series:[
+      out.kpis.splice(1,0,{k:'Contrat 2 au terme', v:RS_E(lb.M), s:'écart : '+(ec>=0?'+':'')+RS_E(ec)+' pour le contrat 1', cls:ec>=0?'':'bad'});
+      out.chart = {type:'line', x:X, series:[
         {n:'Contrat 1', c:RS_COL[0], d:A.map(r=>r.M)},
         {n:'Contrat 2', c:RS_COL[2], d:B.map(r=>r.M)},
         {n:'Versements', c:RS_COL[4], d:A.map(r=>r.vb), dash:true}]};
       out.table = {h:['Année'].concat(v.age?['Âge']:[],['Versé','Contrat 1','Contrat 2','Écart']),
-        rows:A.map((r,i)=>[r.y].concat(v.age?[r.age+1]:[],[RS_E(r.vb),RS_E(r.M),RS_E(B[i].M),RS_E(r.M-B[i].M)]))};
-      out.notes.push('Contrat 2 net après rachat total : '+RS_E(fb.net)+'.');
+        rows:A.map((r,i)=>[r.y].concat(v.age?[r.age]:[],[RS_E(r.vb),RS_E(r.M),RS_E(B[i].M),RS_E(r.M-B[i].M)]))};
+      if(v.rachat) out.notes.push('Contrat 2 net après rachat total : '+RS_E(fisc(lb.M, lb.vb).net)+'.');
     } else {
-      out.chart = {type:'bar', x:A.map(r=>v.age?r.age+1+' ans':'An '+r.y), series:[
+      out.chart = {type:'bar', x:X, series:[
         {n:'Versements cumulés', c:RS_COL[0], d:A.map(r=>r.vb)},
-        {n:'Gains nets de frais', c:RS_COL[1], d:A.map(r=>Math.max(0,r.gain))}]};
-      out.table = {h:['Année'].concat(v.age?['Âge']:[],['Versé cumulé','Intérêts de l’année','Frais cumulés','Gains','Capital']),
-        rows:A.map(r=>[r.y].concat(v.age?[r.age+1]:[],[RS_E(r.vb),RS_E(r.int),RS_E(r.frais),RS_E(r.gain),RS_E(r.M)]))};
+        {n:avecFrais?'Gains nets de frais':'Intérêts cumulés', c:RS_COL[1], d:A.map(r=>Math.max(0,r.gain))}]};
+      // mêmes colonnes que le classeur ; les frais cumulés s'ajoutent quand l'option est cochée
+      out.table = {h:['Année'].concat(v.age?['Âge']:[],['Capital début d’année','Versements de l’année','Versements cumulés','Intérêts de l’année','Intérêts cumulés'],avecFrais?['Frais cumulés']:[],['Capital constitué']),
+        rows:A.map(r=>[r.y].concat(v.age?[r.age]:[],[RS_E(r.D),RS_E(r.brut),RS_E(r.vb),RS_E(r.G),RS_E(r.ic)],avecFrais?[RS_E(r.frais)]:[],[RS_E(r.M)]))};
     }
     return out;
   }
@@ -7540,7 +7557,7 @@ function rsBarsHtml(b){
     +'<span style="background:var(--surface-2);border-radius:5px;height:14px;overflow:hidden"><span style="display:block;height:100%;width:'+(Math.abs(i[1])/max*100).toFixed(1)+'%;background:'+i[2]+'"></span></span>'
     +'<b class="num" style="text-align:right">'+(i[1]<0?'−':'')+RS_E(Math.abs(i[1]))+'</b></div>').join('');
 }
-const rsTableHtml = (t) => '<div class="rs-tblw"><table class="rs-tbl"><thead><tr>'+t.h.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'
+const rsTableHtml = (t) => '<div class="rs-tblw"><table class="rs-tbl'+(t.cls?' '+t.cls:'')+'"><thead><tr>'+t.h.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'
   +t.rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')
   +(t.tot?'<tr class="tot">'+t.tot.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>':'')+'</tbody></table></div>';
 
@@ -7792,6 +7809,8 @@ function rsApplyState(p){
       if(f.t==='sel') v[f.k] = f.o.some(x=>x[0]===brut) ? brut : def;
       else { const n=parseFloat(brut); v[f.k]=isFinite(n)?n:def; }
     });
+    // lien d'avant le 22/09/2026 : les frais étaient toujours actifs ; des frais dans l'adresse les réactivent
+    if(o.id==='av' && p.get('frais')===null && ['fv','fg','fv2','fg2'].some(k=>p.get(k)!==null)) v.frais=1;
     RS_SIM=o.id; rsRenderSim();
   }
   const d=RS_DOCS.find(t=>t.slug===(p.get('modele')||''));
