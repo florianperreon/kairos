@@ -2481,3 +2481,123 @@ test.describe('Mail Manager — alléger la saisie', () => {
     expect(erreurs).toEqual([]);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Ajouter à Google Agenda', () => {
+  // Chaque séance à venir (atelier, Parcours Découverte, réunion, formation, événement) porte un
+  // lien qui ouvre le formulaire de Google Agenda déjà rempli. Sur plusieurs jours : un événement
+  // par jour (décision du 22/09/2026), jamais une plage continue du premier au dernier jour.
+  const lire = liens => liens.map(h => {
+    const u = new URL(h); const p = u.searchParams;
+    return { hote: u.host + u.pathname, action: p.get('action'), text: p.get('text'), dates: p.get('dates'),
+             ctz: p.get('ctz'), location: p.get('location'), details: p.get('details') };
+  });
+  const poserSeances = page => page.evaluate(() => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    A.length = 0; R.length = 0; F.length = 0; E.length = 0;
+    SITES = { 7: ['Salle Kairos', 'Nantes', '3 rue de la Paix', '44000', ''] };
+    const j = n => ajouterJours(todayIso, n);
+    const base = { pilotes: 'Diane P.', guests: [], wait: [], pub: '', max: 0, total: 0, th: '', thRaw: '', pw: '', link: '', siteId: null };
+    const s = (liste, k, o) => { const a = Object.assign({}, base, { k, url: 'https://exemple.invalid/' + k + '/' + o.id }, o); liste.push(a); return a; };
+    window.__g = {
+      un:     s(A, 'a', { id: 1, title: 'Atelier un jour', start: j(5), end: j(5), lieu: 'Nantes', hor: '09:30 - 12:00', siteId: 7 }),
+      trois:  s(F, 'f', { id: 2, title: '3 Jours', start: j(8), end: j(10), lieu: 'Nantes', hor: '09:00 - 18:00' }),
+      encours:s(E, 'e', { id: 3, title: 'Séminaire', start: j(-1), end: j(1), lieu: 'Visio', hor: '' }),
+      visio:  s(R, 'r', { id: 4, title: 'Réunion', start: j(3), end: j(3), lieu: 'Visio', hor: '20:00 - 21:30', link: 'https://zoom.invalid/j/1', pw: 'abc' }),
+      passe:  s(A, 'a', { id: 5, title: 'Passé', start: j(-4), end: j(-4), lieu: 'Nantes', hor: '09:00 - 12:00' }),
+      j: { 5: j(5), 8: j(8), 9: j(9), 10: j(10), m1: j(-1), 0: j(0), 1: j(1), 2: j(2), 3: j(3) },
+    };
+  });
+  const liensDe = (page, cle) => page.evaluate(cle => {
+    const d = document.createElement('div'); d.innerHTML = evExtras(window.__g[cle]);
+    return [...d.querySelectorAll('a.gcal, a.gcal-j')].map(a => a.href);
+  }, cle);
+  const c = iso => iso.replace(/-/g, '');
+
+  test('une séance d’un jour : un seul lien, horaires en heure de Paris, lieu et fiche', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserSeances(page);
+    const j = await page.evaluate(() => window.__g.j);
+    const [e] = lire(await liensDe(page, 'un'));
+    expect(e.hote).toBe('calendar.google.com/calendar/render');
+    expect(e.action).toBe('TEMPLATE');
+    expect(e.text).toBe('Atelier un jour');
+    expect(e.dates).toBe(c(j[5]) + 'T093000/' + c(j[5]) + 'T120000');
+    expect(e.ctz).toBe('Europe/Paris');
+    expect(e.location).toBe('Salle Kairos, 3 rue de la Paix, 44000 Nantes');
+    expect(e.details).toContain('Animé par : Diane P.');
+    expect(e.details).toContain('https://exemple.invalid/a/1');
+    expect((await liensDe(page, 'un')).length).toBe(1);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('sur plusieurs jours : un événement par jour, mêmes horaires chaque jour', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserSeances(page);
+    const j = await page.evaluate(() => window.__g.j);
+    const ev = lire(await liensDe(page, 'trois'));
+    expect(ev.map(e => e.dates)).toEqual([
+      c(j[8]) + 'T090000/' + c(j[8]) + 'T180000',
+      c(j[9]) + 'T090000/' + c(j[9]) + 'T180000',
+      c(j[10]) + 'T090000/' + c(j[10]) + 'T180000',
+    ]);
+    expect(ev.map(e => e.text)).toEqual(['Formation · 3 Jours (jour 1/3)', 'Formation · 3 Jours (jour 2/3)', 'Formation · 3 Jours (jour 3/3)']);
+    expect(ev[1].details).toContain('Jour 2 sur 3');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('une séance en cours : seuls les jours restants, en journée entière sans horaire', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserSeances(page);
+    const j = await page.evaluate(() => window.__g.j);
+    const ev = lire(await liensDe(page, 'encours'));
+    expect(ev.map(e => e.dates)).toEqual([c(j[0]) + '/' + c(j[1]), c(j[1]) + '/' + c(j[2])]);
+    expect(ev.map(e => e.text)).toEqual(['Événement · Séminaire (jour 2/3)', 'Événement · Séminaire (jour 3/3)']);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('une visio : le lien et le mot de passe dans l’événement ; une séance passée : rien', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserSeances(page);
+    const [e] = lire(await liensDe(page, 'visio'));
+    expect(e.text).toBe('Réunion d’équipe · Réunion');
+    expect(e.location).toBe('https://zoom.invalid/j/1');
+    expect(e.details).toContain('Visio : https://zoom.invalid/j/1 (mot de passe : abc)');
+    expect(await liensDe(page, 'passe')).toEqual([]);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('le bouton apparaît dans les listes (ateliers, réunions, formations, événements)', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserSeances(page);
+    const n = await page.evaluate(() => {
+      rafraichirListes();
+      const compte = id => document.querySelectorAll('#' + id + ' a.gcal, #' + id + ' a.gcal-j').length;
+      return { cat: compte('catList'), reu: compte('reuList'), for: compte('forList'), evt: compte('evtList') };
+    });
+    expect(n.cat).toBeGreaterThanOrEqual(1);
+    expect(n.reu).toBe(1);
+    expect(n.for).toBe(3);
+    expect(n.evt).toBe(2);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('sur téléphone, les liens par jour tiennent dans la largeur', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    const erreurs = await ouvrir(page);
+    await poserSeances(page);
+    const r = await page.evaluate(() => {
+      rafraichirListes(); showTab && showTab('for');
+      const el = document.querySelector('#forList .gcal-multi');
+      if (!el) return null;
+      const b = el.getBoundingClientRect();
+      return { droite: b.right, largeur: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth };
+    });
+    expect(r).not.toBeNull();
+    expect(r.droite).toBeLessThanOrEqual(r.largeur);
+    expect(r.scroll).toBeLessThanOrEqual(r.largeur);
+    expect(erreurs).toEqual([]);
+  });
+});
