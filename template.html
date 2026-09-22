@@ -7146,6 +7146,46 @@ const RS_SIMS = [
   }
 },
 {
+  // Girardin industriel (22/09/2026) : réduction d'impôt = apport × (1 + rentabilité). Les deux montants
+  // sont liés — saisir l'un recalcule l'autre (lier), la rentabilité recalcule celui qu'on n'a pas saisi.
+  id:'girardin', slug:'girardin', ic:'🌴', t:'Girardin', d:'Réduction d’impôt visée ↔ apport nécessaire, selon la rentabilité de l’opération',
+  g:[
+    {t:'Opération', f:[
+      {k:'red', l:'Réduction d’impôt souhaitée', t:'eur', v:3025, min:0, h:'Remplis ce champ : l’apport se calcule'},
+      {k:'app', l:'Montant de l’apport nécessaire', t:'eur', v:2750, min:0, h:'… ou celui-ci : la réduction se calcule'},
+      {k:'rdt', l:'Rentabilité', t:'pct', v:10, min:0, h:'Gain de la réduction sur l’apport, selon l’opération proposée'},
+    ]},
+  ],
+  // k = champ que l'on vient de saisir ; renvoie les champs recalculés
+  lier(v, k){
+    const c = x => Math.round(x*100)/100, t = 1 + (v.rdt||0)/100;
+    if(k==='red') v.src='red';
+    else if(k==='app') v.src='app';
+    if((v.src||'app')==='red') return { app: c(v.red/t) };
+    return { red: c(v.app*t) };
+  },
+  calc(v){
+    const t = 1 + v.rdt/100, app = v.app, red = v.red, gain = red - app;
+    const PLAF = 18000, RETENU = 0.44, MAXRED = PLAF/RETENU;
+    const out = {
+      kpis:[
+        {k:'Réduction d’impôt', v:RS_E(red,red%1?2:0), s:'imputée sur l’impôt de l’année de l’investissement', cls:'hl'},
+        {k:'Apport nécessaire', v:RS_E(app,app%1?2:0), s:'versé une fois, non récupéré'},
+        {k:'Gain net', v:RS_E(gain,gain%1?2:0), s:'soit '+RS_P(v.rdt/100,1)+' de l’apport', cls:gain>=0?'good':'bad'},
+        {k:'Part retenue dans le plafond des niches', v:RS_E(red*RETENU), s:'44 % de la réduction (opération de plein droit), sur un plafond de '+RS_E(PLAF)},
+      ],
+      notes:[
+        'Réduction d’impôt = apport × (1 + rentabilité) : '+RS_E(app,app%1?2:0)+' × '+RS_N(t,t*100%1?3:2)+' = '+RS_E(red,red%1?2:0)+'.',
+        'Girardin industriel : l’apport est définitivement acquis au montage ; le gain vient uniquement de la réduction d’impôt.',
+        'Si la réduction dépasse l’impôt dû, l’excédent se reporte sur l’impôt des 5 années suivantes (jusqu’à la 5e incluse), à déclarer chaque année sur la 2042-IOM ; ce qui n’est pas imputé au bout de 5 ans est perdu, sans remboursement (art. 199 undecies B du CGI). Mieux vaut donc caler la réduction sur l’impôt de l’année.',
+        'La réduction entre dans le plafonnement global des niches fiscales (art. 200-0 A du CGI : 10 000 €, porté à 18 000 € pour l’outre-mer), mais seulement pour une fraction : 44 % pour une opération de plein droit, soit jusqu’à environ '+RS_E(MAXRED)+' de réduction, et 34 % pour une opération sous agrément, soit environ '+RS_E(PLAF/0.34)+'. Les autres niches du foyer (emploi à domicile, Pinel…) consomment le même plafond.',
+      ],
+    };
+    if(red*RETENU > PLAF) out.warn = 'Au-delà d’environ '+RS_E(MAXRED)+' de réduction, la part retenue dépasse le plafond de 18 000 € des niches fiscales.';
+    return out;
+  }
+},
+{
   id:'activite', slug:'objectif-activite', ic:'🎯', t:'Objectif d’activité', d:'Combien de R1 par semaine pour atteindre ton objectif de volume d’affaires',
   g:[
     {t:'Objectif', f:[
@@ -7860,6 +7900,11 @@ const rsSurSaisie = e=>{
   if(el.dataset.k===undefined) return;
   const def = sub.id==='sr-sim' ? rsDef(RS_SIM) : rsDef(RS_DOC);
   rsLire(def, el); rsVisibilite(def, sub);
+  if(def.lier){
+    // champs liés (Girardin) : on recalcule l'autre montant, sans toucher au champ en cours de saisie
+    const v=rsVals(def), maj=def.lier(v, el.dataset.k)||{};
+    Object.keys(maj).forEach(k=>{ v[k]=maj[k]; const e=sub.querySelector('[data-k="'+k+'"]'); if(e && e!==el) e.value=String(maj[k]); });
+  }
   sub.id==='sr-sim' ? rsCalculer() : rsApercu();
 };
 document.getElementById('v-res').addEventListener('input', rsSurSaisie);

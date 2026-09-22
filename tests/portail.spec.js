@@ -1476,6 +1476,39 @@ test.describe('Ressources — simulateurs et courriers', () => {
     expect(erreurs).toEqual([]);
   });
 
+  test('Girardin : la réduction et l’apport se calculent l’un l’autre (2 750 € à 10 % → 3 025 €)', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page, '#ressources?outil=girardin');
+    const val = k => page.inputValue('#rsForm [data-k="' + k + '"]');
+    const kpi = () => page.$$eval('#rsOut .rs-kpi .v', l => l.map(x => x.textContent.replace(/\s/g, ' ')));
+    // valeurs par défaut : l'exemple de Florian
+    expect(await val('rdt')).toBe('10');
+    expect(await val('app')).toBe('2750');
+    expect(await val('red')).toBe('3025');
+    // saisir l'apport → réduction
+    await page.fill('#rsForm [data-k="app"]', '5000');
+    expect(await val('red')).toBe('5500');
+    expect((await kpi()).slice(0, 3)).toEqual(['5 500 €', '5 000 €', '500 €']);
+    // saisir la réduction → apport
+    await page.fill('#rsForm [data-k="red"]', '3025');
+    expect(await val('app')).toBe('2750');
+    // changer la rentabilité recalcule l'apport (la réduction reste celle saisie)
+    await page.fill('#rsForm [data-k="rdt"]', '12');
+    expect(await val('red')).toBe('3025');
+    expect(await val('app')).toBe('2700.89');
+    // puis revenir à l'apport : c'est la réduction qui suit
+    await page.fill('#rsForm [data-k="app"]', '2750');
+    await page.fill('#rsForm [data-k="rdt"]', '10');
+    expect(await val('red')).toBe('3025');
+    // les notes disent le report de l'excédent sur 5 ans et la fraction retenue dans le plafond des niches
+    const notes = await page.$eval('#rsOut .rs-notes', n => n.textContent.replace(/\s/g, ' '));
+    expect(notes).toContain('5 années suivantes');
+    expect(notes).toContain('44 %');
+    expect(notes).toContain('34 %');
+    expect(notes).toContain('52 941 €');
+    expect(erreurs).toEqual([]);
+  });
+
   test('SCPI : dividendes et réinvestissement conformes au classeur « SCPI »', async ({ page }) => {
     await ouvrir(page);
     await entrer(page);
