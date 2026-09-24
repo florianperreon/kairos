@@ -52,6 +52,14 @@ test.describe('Le fichier publié', () => {
     // date ainsi calculée reculait d'un jour. Le portail passe par isoJour(), sur l'heure locale.
     expect(lire('template.html')).not.toContain('toISOString().slice(0,10)');
   });
+
+  test('aucune lecture filtrée sur SBUSER.id : une fiche peut avoir plusieurs adresses (24/09/2026)', () => {
+    // Deux adresses = deux comptes Supabase pour une même personne. Les données par compte
+    // (etat, membres_vues, surveillances, victoires_bravos) sont rangées sous le compte de
+    // référence mon_uid() : la RLS les filtre, un .eq('user_id', SBUSER.id) les rendrait vides
+    // à la deuxième adresse.
+    expect(lire('template.html')).not.toMatch(/\.eq\(\s*'user_id'\s*,\s*SBUSER\.id\s*\)/);
+  });
 });
 
 /* ------------------------------------------------------------------ */

@@ -2136,7 +2136,7 @@ function majNeuf(){
 async function chargerVues(){
   if(!SB || !SBUSER) return;
   try{
-    const { data } = await SB.from('membres_vues').select('nouveautes_vu_le').eq('user_id', SBUSER.id).maybeSingle();
+    const { data } = await SB.from('membres_vues').select('nouveautes_vu_le').maybeSingle();   // RLS : user_id = mon_uid() (compte de référence, commun à toutes mes adresses)
     VU_LE = (data && data.nouveautes_vu_le) || '';
   }catch(e){ return; }
   majNeuf();
@@ -5521,7 +5521,7 @@ async function ligBravo(cle){
   buildLig();
   try{
     const r = deja
-      ? await SB.from('victoires_bravos').delete().eq('cle', cle).eq('user_id', SBUSER.id)
+      ? await SB.from('victoires_bravos').delete().eq('cle', cle).eq('membre_id', MOI_ID)
       : await SB.from('victoires_bravos').insert({ cle, membre_id: MOI_ID });
     if(r.error) throw r.error;
   }catch(e){
@@ -5999,7 +5999,7 @@ async function syncPull(){
   if(!SB||!SBUSER) return;
   let data=null;
   try{
-    const r = await SB.from('etat').select('donnees').eq('user_id', SBUSER.id).maybeSingle();
+    const r = await SB.from('etat').select('donnees').maybeSingle();   // RLS : user_id = mon_uid(), partagé entre mes adresses
     if(r.error) throw r.error;
     data = r.data;
   }catch(e){ accEtat('Synchronisation indisponible.'); return; }
@@ -6337,6 +6337,12 @@ async function traiterDemande(tr, valider){
   tr.querySelectorAll('button').forEach(b=>b.disabled=true);
   try{
     if(valider){
+      // Une fiche peut porter plusieurs adresses (ex. perso + pro) : on prévient avant d'en ajouter une.
+      const x = await SB.from('adherents_autorises').select('email').eq('membre_id', fid).neq('email', mail);
+      const autres = (x.data||[]).map(o=>o.email);
+      if(autres.length && !confirm(nomF+' se connecte déjà avec '+autres.join(', ')+'.\n\nAjouter '+mail+' comme adresse supplémentaire pour le même compte ? Les deux adresses ouvriront le même espace (Mail Manager, progression, favoris, sessions).')){
+        tr.querySelectorAll('button').forEach(b=>b.disabled=false); return;
+      }
       const a = await SB.from('adherents_autorises').upsert({ email:mail, nom:nomF, membre_id:fid }, { onConflict:'email' });
       if(a.error) throw a.error;
     } else {
@@ -6352,7 +6358,7 @@ async function traiterDemande(tr, valider){
   }catch(e){
     const m=String((e&&(e.message||e.details))||e);
     if(err) err.textContent = /duplicate key|unique/i.test(m)
-      ? 'Cette fiche est déjà rattachée à un autre compte : une fiche ne peut être liée qu’à une seule adresse.'
+      ? 'Cette fiche est déjà rattachée à une autre adresse et la base n’accepte pas encore plusieurs adresses par fiche.'
       : 'Action impossible : '+m;
     tr.querySelectorAll('button').forEach(b=>b.disabled=false);
   }
