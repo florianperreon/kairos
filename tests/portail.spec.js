@@ -1606,6 +1606,79 @@ test.describe('Ressources — simulateurs et courriers', () => {
     expect(py.stdout).toContain('Livret A');
     expect(py.stdout).toContain('w:highlight');          // le numéro manquant reste surligné
   });
+
+  // Crédit immobilier revu le 24/09/2026 : chiffres relevés sur le simulateur du confrère (captures).
+  const credit = (page, o) => page.evaluate((o) => {
+    const d = RS_SIMS.find(t => t.id === 'credit');
+    const r = d.calc(Object.assign({}, rsVals(d), { rev: 0, chg: 0, apport: 0, fdos: 0, fgar: 0, fcou: 0, hor: 5 }, o));
+    const k = {}; r.kpis.forEach(x => k[x.k] = x.v.replace(/\s/g, ' '));
+    return { k, an1: r.table.rows[0].map(x => String(x).replace(/\s/g, ' ')), cmp: r.tables[0].rows, mois: r.tableM.rows.length, series: r.chart.series.map(x => x.n) };
+  }, o);
+
+  test('crédit : je saisis la mensualité (assurance incluse) → capital empruntable, intérêts, CRD à 5 ans', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page);
+    const a = await credit(page, { mode: 'mens', mensu: 1000, minc: 'inc', duree: 25, taux: 3.5, ass: 0.34, assmode: 'ini' });
+    expect(a.k['Capital empruntable']).toBe('189 051 €');
+    expect(a.k['Mensualité hors assurance']).toBe('946,43 €');
+    expect(a.k['Coût des intérêts']).toBe('94 879 €');
+    expect(a.k['Coût de l’assurance']).toBe('16 069 €');
+    expect(a.k['Coût total du crédit']).toBe('110 948 €');
+    expect(a.k['Capital restant dû à 5 ans']).toBe('163 190 €');
+    expect(a.k['Capital amorti à 5 ans']).toBe('25 861 €');
+    const b = await credit(page, { mode: 'mens', mensu: 1000, minc: 'inc', duree: 25, taux: 3.7, ass: 0.30, assmode: 'ini' });
+    expect([b.k['Capital empruntable'], b.k['Mensualité hors assurance'], b.k['Coût des intérêts'], b.k['Coût de l’assurance'],
+            b.k['Capital restant dû à 5 ans'], b.k['Capital amorti à 5 ans']])
+      .toEqual(['186 423 €', '953,39 €', '99 595 €', '13 982 €', '161 513 €', '24 910 €']);
+    // capital amorti / intérêts / assurance séparés, année par année et mois par mois
+    expect(a.series).toEqual(['Capital amorti', 'Intérêts', 'Assurance']);
+    expect(a.mois).toBe(300);
+    expect(a.an1[1]).toBe('1 000,00 €');                // échéance constante, assurance comprise
+    expect(a.cmp.map(r => r[0])).toEqual(['10 ans', '15 ans', '20 ans', '25 ans (votre durée)']);
+    expect(a.cmp.map(r => r[1])).toEqual(['3,20 %', '3,30 %', '3,40 %', '3,50 %']);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('crédit : je saisis le capital, hors assurance, assurance dégressive, ancien lien', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page);
+    const c = await credit(page, { mode: 'cap', montant: 200000, duree: 20, taux: 3, ass: 0, assmode: 'ini' });
+    expect(c.k['Mensualité']).toBe('1 109,20 €');       // 200 000 € à 3 % sur 20 ans
+    const h = await credit(page, { mode: 'mens', mensu: 1109.2, minc: 'hors', duree: 20, taux: 3, ass: 0.3 });
+    expect(h.k['Capital empruntable']).toBe('200 000 €'); // hors assurance : 1 109,20 € ne couvre que la part crédit → on retrouve les 200 000 €
+    const i = await credit(page, { mode: 'cap', montant: 200000, duree: 20, taux: 3, ass: 0.3, assmode: 'ini' });
+    const d = await credit(page, { mode: 'cap', montant: 200000, duree: 20, taux: 3, ass: 0.3, assmode: 'crd' });
+    const n = s => +s.replace(/[^\d,]/g, '').replace(',', '.');
+    expect(n(i.k['Coût de l’assurance'])).toBe(12000);    // 200 000 × 0,3 % × 20 ans
+    expect(n(d.k['Coût de l’assurance'])).toBeLessThan(7000); // dégressive : sur le capital restant dû
+    // lien d'avant la refonte : un montant sans mode = « je saisis le capital »
+    await page.evaluate(() => { location.hash = '#ressources?outil=credit-immobilier&montant=250000'; routeHash(); });
+    expect(await page.evaluate(() => rsVals(rsDef('credit')).mode)).toBe('cap');
+    expect(await page.locator('#rs_credit_montant').isVisible()).toBe(true);
+    expect(await page.locator('#rs_credit_mensu').isVisible()).toBe(false);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('crédit : comparateur de prêts — ajouter, retirer, rien dans l’adresse ni le stockage', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page, '#ressources?outil=credit-immobilier&mode=cap&montant=200000&duree=20&taux=3&ass=0');
+    await page.click('#rsCmpAdd');
+    await page.fill('#rs_credit_duree', '25');
+    await page.click('#rsCmpAdd');
+    const lignes = page.locator('.rs-cmpt tbody tr');
+    await expect(lignes).toHaveCount(2);
+    await expect(lignes.nth(0)).toContainText('1 109,20');
+    await expect(lignes.nth(0).locator('td.rs-best')).toHaveCount(1);    // coût total le plus bas : 20 ans
+    await expect(lignes.nth(1).locator('td.rs-best')).toHaveCount(1);    // mensualité la plus basse : 25 ans
+    await page.click('[data-cmpdel="0"]');
+    await expect(lignes).toHaveCount(1);
+    expect(await page.evaluate(() => hashFor('res'))).not.toContain('cmp');
+    expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain('200');
+    // les autres simulateurs n'ont pas de comparateur
+    await entrer(page, '#ressources?outil=girardin');
+    await expect(page.locator('#rsCmpAdd')).toHaveCount(0);
+    expect(erreurs).toEqual([]);
+  });
 });
 
 test.describe('Ma lignée — tableau de bord, progression, victoires, arbre', () => {

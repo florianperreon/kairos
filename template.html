@@ -1359,6 +1359,10 @@ a.mml-r:hover{border-color:var(--accent)}
 .rs-acts{display:flex;flex-wrap:wrap;gap:6px}
 .rs-btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:9px;padding:7px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .rs-btn:hover{border-color:var(--accent);color:var(--accent)}
+.rs-cmpbox{margin:0 0 16px;padding:12px 14px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface-2)}
+.rs-cmpt td.rs-best{color:var(--ok);font-weight:700}
+.rs-lnk{border:0;background:none;color:var(--ink-2);font:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:2px 6px}
+.rs-lnk:hover{color:var(--bad)}
 .rs-btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .rs-btn.pri:hover{filter:brightness(1.08);color:var(--accent-ink)}
 .rs-fs{min-width:0;border:0;border-top:1px solid var(--line);margin:0;padding:10px 0 4px}
@@ -7104,50 +7108,132 @@ const RS_SIMS = [
   ]
 },
 {
-  id:'credit', slug:'credit-immobilier', ic:'🏦', t:'Crédit immobilier', d:'Capacité d’emprunt, mensualité, taux d’endettement et coût du crédit',
+  // Crédit immobilier, revu le 24/09/2026 d'après le simulateur d'un confrère : trois façons d'entrer
+  // (capacité selon les revenus / je saisis le capital / je saisis la mensualité), assurance sur le
+  // capital initial ou sur le capital restant dû, frais annexes, CRD et capital amorti à un horizon,
+  // part capital / intérêts / assurance de chaque année, comparatif selon la durée.
+  id:'credit', cmp:1, slug:'credit-immobilier', ic:'🏦', t:'Crédit immobilier', d:'Capital ou mensualité, capacité d’emprunt, amortissement, coût du crédit et comparatif des durées',
   g:[
+    {t:'Prêt', f:[
+      {k:'mode', l:'Je pars…', t:'sel', v:'capa', w:1, o:[['capa','de mes revenus (capacité d’emprunt)'],['cap','du capital à emprunter'],['mens','de la mensualité que je veux payer']]},
+      {k:'montant', l:'Capital à emprunter', t:'eur', v:200000, min:0, show:v=>v.mode==='cap'},
+      {k:'mensu', l:'Mensualité souhaitée', t:'eur', v:1000, min:0, show:v=>v.mode==='mens', h:'Le capital empruntable se calcule, arrondi à l’euro inférieur'},
+      {k:'minc', l:'La mensualité saisie…', t:'sel', v:'inc', w:1, show:v=>v.mode==='mens', o:[['inc','inclut l’assurance emprunteur'],['hors','hors assurance emprunteur']]},
+      {k:'taux', l:'Taux nominal', t:'pct', v:3.3, min:0, step:'0.05'},
+      {k:'duree', l:'Durée', t:'num', u:'ans', v:25, min:1, max:35, h:'25 ans maximum en norme HCSF (27 ans dans le neuf avec différé)'},
+    ]},
+    {t:'Assurance emprunteur', f:[
+      {k:'assmode', l:'Calculée sur', t:'sel', v:'ini', w:1, o:[['ini','le capital initial (cotisation constante)'],['crd','le capital restant dû (cotisation dégressive)']]},
+      {k:'ass', l:'Taux d’assurance annuel', t:'pct', v:0.3, min:0, step:'0.01', h:'En % par an, du capital initial ou du capital restant dû'},
+    ]},
     {t:'Foyer', f:[
-      {k:'rev', l:'Revenus nets mensuels du foyer', t:'eur', v:4500, h:'Avant impôt sur le revenu, loyers perçus retenus à 70 %'},
+      {k:'rev', l:'Revenus nets mensuels du foyer', t:'eur', v:4500, h:'Avant impôt sur le revenu, loyers perçus retenus à 70 % — 0 pour ne pas calculer l’endettement'},
       {k:'chg', l:'Crédits en cours (mensualités)', t:'eur', v:0},
       {k:'endet', l:'Taux d’endettement maximal', t:'pct', v:35, h:'Norme HCSF : 35 % assurance comprise'},
       {k:'apport', l:'Apport', t:'eur', v:30000},
     ]},
-    {t:'Crédit', f:[
-      {k:'taux', l:'Taux nominal', t:'pct', v:3.3},
-      {k:'duree', l:'Durée', t:'num', u:'ans', v:25, min:5, max:30, h:'25 ans maximum (27 ans dans le neuf avec différé)'},
-      {k:'ass', l:'Assurance emprunteur', t:'pct', v:0.3, h:'En % du capital par an'},
-      {k:'montant', l:'Montant à emprunter', t:'eur', v:0, h:'0 = calculer la capacité maximale'},
+    {t:'Frais annexes', f:[
+      {k:'fdos', l:'Frais de dossier', t:'eur', v:0, min:0},
+      {k:'fgar', l:'Frais de garantie (caution ou hypothèque)', t:'eur', v:0, min:0},
+      {k:'fcou', l:'Frais de courtage', t:'eur', v:0, min:0},
+    ]},
+    {t:'Analyse', f:[
+      {k:'hor', l:'Capital restant dû dans', t:'num', u:'ans', v:5, min:1, max:34, h:'Utile pour une revente ou un remboursement anticipé'},
+      {k:'ecart', l:'Comparatif : écart de taux par palier de 5 ans', t:'pct', v:0.1, min:0, step:'0.05', h:'Taux en hausse pour une durée plus longue, en baisse pour une plus courte'},
     ]},
   ],
   calc(v){
-    const n=v.duree*12, parEuro = rsPmt(v.taux/100, n, 1) + v.ass/100/12;
-    const mensMax = Math.max(0, v.rev*v.endet/100 - v.chg);
-    const capa = parEuro>0 ? mensMax/parEuro : 0;
-    const K = v.montant>0 ? v.montant : capa;
-    const mensHA = rsPmt(v.taux/100, n, K), assM=K*v.ass/100/12, mens=mensHA+assM;
-    const endet = v.rev>0 ? (mens+v.chg)/v.rev : 0;
-    const coutInt = mensHA*n - K, coutAss = assM*n;
-    const rows=[]; let crd=K;
-    for(let a=1;a<=v.duree;a++){
-      let it=0, am=0;
-      for(let mth=0;mth<12;mth++){ const i=crd*v.taux/100/12; it+=i; am+=mensHA-i; crd-=mensHA-i; }
-      rows.push([a, RS_E(mensHA*12), RS_E(am), RS_E(it), RS_E(assM*12), RS_E(Math.max(0,crd))]);
+    const n=Math.round(v.duree*12), aM=v.ass/100/12, dyn=v.assmode==='crd';
+    const frais=(v.fdos||0)+(v.fgar||0)+(v.fcou||0);
+    const mensMax = v.rev>0 ? Math.max(0, v.rev*v.endet/100 - v.chg) : 0;
+    // capital emprunté selon le point de départ ; la mensualité « assurance incluse » se lit au 1er mois
+    const capital = (taux, mois) => {
+      const p1 = rsPmt(taux/100, mois, 1);
+      if(v.mode==='cap') return Math.max(0, v.montant);
+      if(v.mode==='mens') return Math.floor(v.mensu / (p1 + (v.minc==='hors' ? 0 : aM)) || 0);
+      return Math.floor(mensMax / (p1 + aM) || 0);
+    };
+    // échéancier mois par mois
+    const echeancier = (K, taux, mois) => {
+      const i=taux/1200, m=rsPmt(taux/100, mois, K), L=[]; let crd=K;
+      for(let k=1;k<=mois;k++){
+        const it=crd*i, am=Math.min(crd, m-it), as=(dyn?crd:K)*aM;
+        crd=Math.max(0, crd-am); L.push({k, it, am, as, ech:m+as, crd});
+      }
+      return {m, L, int:L.reduce((s,x)=>s+x.it,0), ass:L.reduce((s,x)=>s+x.as,0)};
+    };
+    const K=capital(v.taux, n), E=echeancier(K, v.taux, n);
+    const mensHA=E.m, ass1=E.L.length?E.L[0].as:0, mens=mensHA+ass1;
+    const coutTot=E.int+E.ass+frais;
+    const h=Math.min(Math.max(1,Math.round(v.hor||5)), v.duree), crdH = h*12<=E.L.length ? E.L[h*12-1].crd : 0, amH=K-crdH;
+    const endet = v.rev>0 ? (mens+v.chg)/v.rev : NaN;
+    // TAEG : taux actuariel annuel des flux (capital net des frais reçu, échéances assurance comprise)
+    const taeg = K>0 ? rsTri([{t:0, v:-(K-frais)}].concat(E.L.map(x=>({t:x.k/12, v:x.ech})))) : NaN;
+
+    const rows=[];
+    for(let a=1;a<=Math.ceil(n/12);a++){
+      const L=E.L.slice((a-1)*12, a*12); if(!L.length) break;
+      const s=f=>L.reduce((t,x)=>t+x[f],0);
+      rows.push([a, RS_E(s('ech')/L.length,2), RS_E(s('am')), RS_E(s('it')), RS_E(s('as')), RS_E(L[L.length-1].crd)]);
     }
-    const warn = v.montant>0 && endet > v.endet/100 + 1e-9 ? 'Ce montant porte l’endettement à '+RS_P(endet,1)+', au-delà de la limite de '+RS_P(v.endet/100,0)+'.' : '';
+    const an = x => Math.ceil(n/12) >= x;
+    const serie = f => rows.map((r,a)=>E.L.slice(a*12,(a+1)*12).reduce((t,x)=>t+x[f],0));
+
+    // comparatif des durées : même capital (mode capital) ou même mensualité (autres modes)
+    const durees=[...new Set([10,15,20,25,v.duree])].filter(d=>d>=1&&d<=35).sort((x,y)=>x-y);
+    const cmp = durees.map(d=>{
+      const t=Math.max(0, v.taux + (v.ecart||0)*(d-v.duree)/5), Kd=capital(t, d*12), Ed=echeancier(Kd, t, d*12);
+      const lib = d+' ans'+(d===v.duree?' (votre durée)':'');
+      const m1 = Ed.m + (Ed.L.length?Ed.L[0].as:0);
+      return v.mode==='cap'
+        ? [lib, RS_N(t,2)+' %', RS_E(m1,2), RS_E(Ed.m,2), RS_E(Ed.int), RS_E(Ed.int+Ed.ass+frais)]
+        : [lib, RS_N(t,2)+' %', RS_E(Kd), RS_E(Ed.m,2), RS_E(Ed.int), RS_E(Ed.int+Ed.ass+frais)];
+    });
+
+    let warn='';
+    if(v.mode==='capa' && !(v.rev>0)) warn='Renseigne les revenus du foyer pour calculer la capacité d’emprunt — ou choisis « du capital » ou « de la mensualité ».';
+    else if(v.mode==='capa' && mensMax<=0) warn='Les crédits en cours atteignent déjà la limite d’endettement : aucune capacité d’emprunt.';
+    else if(v.mode!=='capa' && isFinite(endet) && endet > v.endet/100 + 1e-9) warn='Cette mensualité porte l’endettement à '+RS_P(endet,1)+', au-delà de la limite de '+RS_P(v.endet/100,0)+'.';
+
+    const lib1 = v.mode==='cap' ? {k:'Mensualité', v:RS_E(mens,2), s:dyn?'1ʳᵉ année, assurance comprise — dégressive ensuite':'assurance comprise · constante sur toute la durée', cls:'hl'}
+               : {k:v.mode==='mens'?'Capital empruntable':'Capacité d’emprunt', v:RS_E(K),
+                  s:v.mode==='mens' ? 'pour '+RS_E(v.mensu,2)+' / mois '+(v.minc==='hors'?'hors assurance':'assurance comprise') : 'mensualité max '+RS_E(mensMax)+' assurance comprise', cls:'hl'};
+    const kpis=[lib1];
+    if(v.mode!=='cap') kpis.push({k:'Mensualité', v:RS_E(mens,2), s:dyn?'1ʳᵉ année, assurance comprise — dégressive ensuite':'assurance comprise'});
+    kpis.push(
+      {k:'Mensualité hors assurance', v:RS_E(mensHA,2), s:'part crédit : capital + intérêts'},
+      {k:'Coût total du crédit', v:RS_E(coutTot), s:'intérêts + assurance'+(frais?' + frais':'')},
+      {k:'Coût des intérêts', v:RS_E(E.int), s:'cumulé sur '+v.duree+' ans'},
+      {k:'Coût de l’assurance', v:RS_E(E.ass), s:'cumulé sur '+v.duree+' ans'},
+      {k:'Capital restant dû à '+h+' an'+(h>1?'s':''), v:RS_E(crdH), s:'à rembourser en cas de revente'},
+      {k:'Capital amorti à '+h+' an'+(h>1?'s':''), v:RS_E(amH), s:(K>0?RS_P(amH/K,0):'—')+' du capital déjà remboursé', cls:'good'},
+    );
+    if(v.rev>0) kpis.push({k:'Taux d’endettement', v:RS_P(endet,1), s:'limite '+RS_P(v.endet/100,0), cls:endet>v.endet/100+1e-9?'bad':'good'});
+    kpis.push({k:'Budget total', v:RS_E(K+(v.apport||0)), s:'emprunt + apport'});
+    if(isFinite(taeg)) kpis.push({k:'TAEG estimé', v:RS_P(taeg,2), s:'intérêts, assurance'+(frais?' et frais':'')+' compris'});
+
+    const snap = { lib: (v.mode==='cap' ? 'Prêt ' : v.mode==='mens' ? RS_E(v.mensu)+' / mois · ' : 'Capacité · ')+v.duree+' ans à '+RS_N(v.taux,2)+' %',
+      K, duree:v.duree, taux:v.taux, ass:v.ass, dyn, mens, cout:coutTot, pint: coutTot>0 ? E.int/coutTot : 0, crdH, h };
     return {
-      warn,
-      kpis:[
-        {k:'Capacité d’emprunt', v:RS_E(capa), s:'mensualité max '+RS_E(mensMax), cls:v.montant>0?'':'hl'},
-        {k:'Budget total', v:RS_E(K+v.apport), s:'emprunt + apport'},
-        {k:'Mensualité', v:RS_E(mens), s:'dont assurance '+RS_E(assM), cls:v.montant>0?'hl':''},
-        {k:'Taux d’endettement', v:RS_P(endet,1), s:'limite '+RS_P(v.endet/100,0), cls:endet>v.endet/100+1e-9?'bad':'good'},
-        {k:'Coût des intérêts', v:RS_E(coutInt), s:'sur '+v.duree+' ans'},
-        {k:'Coût de l’assurance', v:RS_E(coutAss), s:'coût total '+RS_E(coutInt+coutAss)},
-      ],
+      warn, kpis, snap,
       chart:{type:'bar', x:rows.map(r=>'An '+r[0]), series:[
-        {n:'Capital restant dû', c:RS_COL[0], d:(()=>{ let c=K; const o=[]; for(let a=0;a<v.duree;a++){ for(let m=0;m<12;m++){ c-=mensHA-c*v.taux/100/12; } o.push(Math.max(0,c)); } return o; })()}]},
-      table:{h:['Année','Échéances (hors ass.)','Capital remboursé','Intérêts','Assurance','Capital restant dû'], rows},
-      notes:['Simulation indicative : chaque banque apprécie aussi le reste à vivre, la stabilité des revenus et le saut de charge.']
+        {n:'Capital amorti', c:RS_COL[0], d:serie('am')},
+        {n:'Intérêts', c:RS_COL[1], d:serie('it')},
+        {n:'Assurance', c:RS_COL[2], d:serie('as')},
+      ], mark: an(h) && h<v.duree ? 'An '+h : ''},
+      tables:[{t:'Comparatif selon la durée', h: v.mode==='cap'
+          ? ['Durée','Taux','Mensualité (ass. comprise)','Hors assurance','Intérêts','Coût total du crédit']
+          : ['Durée','Taux','Capital empruntable','Mensualité hors ass.','Intérêts','Coût total du crédit'], rows:cmp, cls:'rs-cmp'}],
+      table:{h:['Année','Échéance moyenne','Capital amorti','Intérêts','Assurance','Capital restant dû'], rows},
+      tableM:{h:['Mois','Échéance','Capital amorti','Intérêts','Assurance','Capital restant dû'],
+        rows:E.L.map(x=>[x.k, RS_E(x.ech,2), RS_E(x.am,2), RS_E(x.it,2), RS_E(x.as,2), RS_E(x.crd,2)])},
+      notes:[
+        'Chaque échéance rembourse d’abord les intérêts du mois (capital restant dû × taux ÷ 12) ; le reste amortit le capital. La part d’intérêts est forte au début et diminue ensuite.',
+        v.mode==='cap' ? 'Comparatif : même capital emprunté, taux ajusté de '+RS_N(v.ecart||0,2)+' point par palier de 5 ans d’écart avec la durée choisie (barème indicatif).'
+                       : 'Comparatif : même mensualité, taux ajusté de '+RS_N(v.ecart||0,2)+' point par palier de 5 ans d’écart avec la durée choisie (barème indicatif).',
+        dyn ? 'Assurance sur le capital restant dû : la cotisation baisse avec le capital ; la mensualité saisie « assurance comprise » est celle du premier mois.' : 'Assurance sur le capital initial : cotisation constante sur toute la durée.',
+        'Simulation indicative : chaque banque apprécie aussi le reste à vivre, la stabilité des revenus et le saut de charge.'
+      ]
     };
   }
 },
@@ -7618,6 +7704,7 @@ function rsResultHtml(r){
   if(r.bars) h+=rsBarsHtml(r.bars);
   (r.tables||[]).forEach(t=>{ h+='<div class="rs-grp-t" style="margin-top:14px">'+esc(t.t)+'</div>'+rsTableHtml(t); });
   if(r.table) h+='<details class="rs-det"><summary>Détail année par année</summary>'+rsTableHtml(r.table)+'</details>';
+  if(r.tableM) h+='<details class="rs-det"><summary>Détail mois par mois</summary>'+rsTableHtml(r.tableM)+'</details>';
   if(r.notes&&r.notes.length) h+='<ul class="rs-notes">'+r.notes.map(n=>'<li>'+esc(n)+'</li>').join('')+'<li>Simulation indicative et non contractuelle, établie sur des hypothèses constantes ; elle ne constitue pas un conseil personnalisé.</li></ul>';
   return h;
 }
@@ -7689,6 +7776,7 @@ function rsRenderSim(){
     +'<div class="panel"><div class="rs-head"><h2>'+def.ic+' '+esc(def.t)+'</h2><div class="rs-acts">'
     +'<button type="button" class="rs-btn" id="rsReset">↺ Réinitialiser</button>'
     +(def.custom?'':'<button type="button" class="rs-btn" id="rsLien">🔗 Copier le lien</button>')
+    +(def.cmp?'<button type="button" class="rs-btn" id="rsCmpAdd">＋ Ajouter au comparateur</button>':'')
     +'<button type="button" class="rs-btn pri" id="rsPrint">🖨️ Imprimer / PDF</button></div></div>'
     +'<div id="rsOut"></div></div></div>';
   rsCalculer();
@@ -7700,7 +7788,22 @@ function rsResultat(def){
 }
 function rsCalculer(){
   const def=rsDef(RS_SIM), out=document.getElementById('rsOut');
-  if(def && out) out.innerHTML = rsResultHtml(rsResultat(def));
+  if(def && out) out.innerHTML = rsCmpHtml(def, true) + rsResultHtml(rsResultat(def));
+}
+// Comparateur de prêts (24/09/2026, repris du simulateur d'un confrère) : chaque « Ajouter » fige
+// la simulation affichée. Gardé en mémoire le temps de la visite, jamais enregistré ni mis dans l'adresse.
+const RS_CMP = {};
+function rsCmpHtml(def, actions){
+  const L = RS_CMP[def.id]; if(!def.cmp || !L || !L.length) return '';
+  const best = f => Math.min(...L.map(x=>x[f]));
+  const td = (x, f, txt) => '<td'+(L.length>1 && x[f]===best(f)?' class="rs-best"':'')+'>'+esc(txt)+'</td>';
+  return '<div class="rs-cmpbox"><div class="rs-grp-t">Prêts comparés ('+L.length+')'
+    +(actions?' <button type="button" class="rs-lnk" id="rsCmpVider">tout retirer</button>':'')+'</div>'
+    +'<div class="rs-tblw"><table class="rs-tbl rs-cmpt"><thead><tr><th>Simulation</th><th>Capital</th><th>Durée</th><th>Taux</th><th>Assurance</th><th>Mensualité</th><th>Coût total</th><th>Part des intérêts</th><th>CRD à l’horizon</th>'+(actions?'<th></th>':'')+'</tr></thead><tbody>'
+    + L.map((x,i)=>'<tr><td>'+esc(x.lib)+'</td><td>'+esc(RS_E(x.K))+'</td><td>'+x.duree+' ans</td><td>'+esc(RS_N(x.taux,2))+' %</td><td>'+esc(RS_N(x.ass,2))+' %'+(x.dyn?' (CRD)':'')+'</td>'
+      + td(x,'mens',RS_E(x.mens,2)) + td(x,'cout',RS_E(x.cout)) + '<td>'+esc(RS_P(x.pint,0))+'</td><td>'+esc(RS_E(x.crdH))+' à '+x.h+' an'+(x.h>1?'s':'')+'</td>'
+      + (actions?'<td><button type="button" class="rs-lnk" data-cmpdel="'+i+'" title="Retirer" aria-label="Retirer">✕</button></td>':'')+'</tr>').join('')
+    + '</tbody></table></div><div class="h" style="font-size:12px;color:var(--ink-2);margin-top:4px">En vert : la mensualité et le coût total les plus bas.'+(actions?' Ce comparatif n’est gardé que le temps de ta visite.':'')+'</div></div>';
 }
 function rsRenderDoc(){
   const def=rsDef(RS_DOC); if(!def) return;
@@ -7755,9 +7858,10 @@ function rsImprimerSim(){
   if(def.custom) RS_PARC.forEach(b=>hyp.push([b.nom, 'acheté '+RS_E(b.achat)+' en '+b.an+', estimé '+RS_E(b.valeur)+', loyer '+RS_E(b.loyer)+' / mois']));
   const r=rsResultat(def);
   if(r.table) r.tables=(r.tables||[]).concat([Object.assign({t:'Détail année par année'}, r.table)]), delete r.table;
+  delete r.tableM;   // 300 lignes : pas à l'impression
   const corps='<h1>'+esc(def.t)+'</h1><p class="sub">Simulation du '+fmtDLong(isoJour(new Date()))+'</p>'
     +'<div class="rs-grp-t">Hypothèses</div>'+rsTableHtml({h:['Paramètre','Valeur'], rows:hyp})
-    +'<div class="rs-grp-t" style="margin-top:14px">Résultats</div>'+rsResultHtml(r);
+    +'<div class="rs-grp-t" style="margin-top:14px">Résultats</div>'+rsResultHtml(r)+rsCmpHtml(def, false);
   rsImprimer(def.t, corps);
 }
 const rsNomFichier = def => { const v=rsVals(def); return (def.t+(v.nom?' - '+v.nom:'')).replace(/’/g,"'").replace(/[\\/:*?"<>|]/g,' ').replace(/\s+/g,' ').trim(); };
@@ -7859,6 +7963,8 @@ function rsApplyState(p){
       else { const n=parseFloat(brut); v[f.k]=isFinite(n)?n:def; }
     });
     // lien d'avant le 22/09/2026 : les frais étaient toujours actifs ; des frais dans l'adresse les réactivent
+    // lien d'avant le 24/09/2026 : « montant » > 0 voulait dire « je saisis le capital »
+    if(o.id==='credit' && p.get('mode')===null && parseFloat(p.get('montant'))>0) v.mode='cap';
     if(o.id==='av' && p.get('frais')===null && ['fv','fg','fv2','fg2'].some(k=>p.get(k)!==null)) v.frais=1;
     RS_SIM=o.id; rsRenderSim();
   }
@@ -7882,6 +7988,13 @@ document.getElementById('v-res').addEventListener('click', e=>{
   const sub = t.closest('.subview'); if(!sub) return;
   const def = sub.id==='sr-sim' ? rsDef(RS_SIM) : rsDef(RS_DOC);
   if(t.id==='rsReset'){ delete RS_VAL[def.id]; if(def.custom) RS_PARC=null; rsRenderSim(); syncHash(false); }
+  else if(t.id==='rsCmpAdd'){
+    const r=rsResultat(def); if(!r.snap) return;
+    (RS_CMP[def.id]=RS_CMP[def.id]||[]).push(r.snap); rsCalculer();
+    const b=document.getElementById('rsCmpAdd'); if(b){ b.textContent='✓ Ajouté'; setTimeout(()=>{ b.textContent='＋ Ajouter au comparateur'; },1500); }
+  }
+  else if(t.dataset.cmpdel!==undefined){ (RS_CMP[def.id]||[]).splice(+t.dataset.cmpdel,1); rsCalculer(); }
+  else if(t.id==='rsCmpVider'){ RS_CMP[def.id]=[]; rsCalculer(); }
   else if(t.id==='rsVider'){ delete RS_VAL[def.id]; rsRenderDoc(); }
   else if(t.id==='rsLien'){
     const url=location.href.split('#')[0]+hashFor('res');
