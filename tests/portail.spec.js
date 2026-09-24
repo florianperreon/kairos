@@ -1471,14 +1471,14 @@ test.describe('Ressources — simulateurs et courriers', () => {
       const zero = d.calc(Object.assign({}, base, { pr: 0 })), sans = d.calc(Object.assign({}, base, { reinv: 0 }));
       const kpi = (o, k) => o.kpis.find(x => x.k === k).v;
       const cocher = document.querySelector('#rsForm [data-f="pr"]');
-      return { cap2: [cent.table.rows[1][1], moitie.table.rows[1][1]], reinv1: moitie.table.rows[0][3],
+      return { cap2: [cent.table.rows[1][5], moitie.table.rows[1][5]], reinv1: moitie.table.rows[1][3],
                netM: kpi(moitie, 'Rendement global si revente'), zero: JSON.stringify(zero.table.rows) === JSON.stringify(sans.table.rows),
                champ: !!cocher && !cocher.hidden };
     });
     const sp = s => String(s).replace(/\s/g, ' ');
     expect(sp(r.cap2[0])).toBe('8 757 €');     // 100 % : 6 200 + 2 400 + 156,75
     expect(sp(r.cap2[1])).toBe('8 678 €');     // 50 % : 6 200 + 2 400 + 78,38
-    expect(sp(r.reinv1)).toBe('78 €');
+    expect(sp(r.reinv1)).toBe('2 478 €');      // versement de l'an 2 : 2 400 + 78,38 réinvestis
     expect(r.zero).toBe(true);                 // 0 % réinvesti = pas de réinvestissement
     expect(r.champ).toBe(true);
     expect(erreurs).toEqual([]);
@@ -1525,7 +1525,7 @@ test.describe('Ressources — simulateurs et courriers', () => {
       const base = Object.assign({}, rsVals(d), { prix: 250, parts: 20, mens: 200, rdt: 5.5, dj: 6, duree: 5, dr: 35 });
       const sans = d.calc(Object.assign({}, base, { reinv: 0 })).table.rows;
       const avec = d.calc(Object.assign({}, base, { reinv: 1 })).table.rows;
-      return { div1: sans[0][2], cap2: avec[1][1], div2: sans[1][2] };
+      return { div1: sans[0][6], cap2: avec[1][5], div2: sans[1][6] };
     });
     const sp = s => s.replace(/\s/g, ' ');
     expect(sp(r.div1)).toBe('157 €');        // 156,75
@@ -1656,6 +1656,123 @@ test.describe('Ressources — simulateurs et courriers', () => {
     expect(await page.evaluate(() => rsVals(rsDef('credit')).mode)).toBe('cap');
     expect(await page.locator('#rs_credit_montant').isVisible()).toBe(true);
     expect(await page.locator('#rs_credit_mensu').isVisible()).toBe(false);
+    expect(erreurs).toEqual([]);
+  });
+
+  // Assurance vie — options ajoutées le 24/09/2026 (livret, rachat partiel, date de souscription, scénarios)
+  const av = (page, o) => page.evaluate((o) => {
+    const d = RS_SIMS.find(t => t.id === 'av');
+    const r = d.calc(Object.assign({}, rsVals(d), { age: 0, frais: 0, rachat: 0, cmp: 0, liv: 0, dsous: '' }, o));
+    const k = {}; r.kpis.forEach(x => k[x.k] = x.v.replace(/\s/g, ' '));
+    const sp = a => a.map(x => String(x).replace(/\s/g, ' '));
+    return { k, h: r.table.h, rows: r.table.rows.map(sp), hl: r.table.hl || null, x: r.chart.x, series: r.chart.series.map(x => x.n),
+             tables: (r.tables || []).map(t => ({ t: t.t, rows: t.rows.map(sp), tot: sp(t.tot || []) })), notes: r.notes.join(' | '), warn: r.warn || '' };
+  }, o);
+
+  test('assurance vie : comparaison avec un livret réglementé', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page);
+    const r = await av(page, { init: 10000, mens: 0, duree: 1, rdt: 4.5, liv: 1, livt: 'a' });
+    expect(r.k['Livret A au terme']).toBe('10 170 €');                  // 10 000 × 1,7 %
+    expect(r.k['Avantage de l’assurance vie']).toBe('+280 €');          // 10 450 − 10 170
+    expect(r.series).toEqual(['Assurance vie', 'Livret A', 'Versements']);
+    expect(r.h.slice(-2)).toEqual(['Livret A', 'Écart AV − livret']);
+    const lep = await av(page, { init: 20000, mens: 0, duree: 1, rdt: 4.5, liv: 1, livt: 'lep' });
+    expect(lep.k['LEP au terme']).toBe('20 500 €');
+    expect(lep.warn).toContain('plafond du LEP');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('assurance vie : rachat partiel — quote-part de gains, année au choix, le contrat continue', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page);
+    // 10 000 € à 10 %, rachat de 5 000 € en année 5 (< 8 ans) : gains 6 105,10 sur 16 105,10
+    const r = await av(page, { init: 10000, mens: 0, duree: 10, rdt: 10, rachat: 1, rtype: 'partiel', rmt: 5000, ran: 5 });
+    const t = r.tables[0];
+    expect(t.t).toBe('Rachat partiel en année 5 (5 ans)');
+    expect(t.rows[2]).toEqual(['dont gains (quote-part de 37,9 %)', '1 895 €']);
+    expect(t.tot).toEqual(['Net perçu', '4 431 €']);                     // − 12,8 % et − 17,2 % sur 1 895,39
+    expect(r.k['Capital restant après le rachat']).toBe('11 105 €');
+    expect(r.k['Capital constitué']).toBe('17 885 €');                  // 11 105,10 × 1,1⁵
+    expect(r.hl.indexOf(true)).toBe(4);
+    // au terme, après 8 ans : l'abattement de 4 600 € couvre les 3 072 € de gains → seuls les prélèvements sociaux
+    const q = await av(page, { init: 10000, mens: 0, duree: 10, rdt: 10, rachat: 1, rtype: 'partiel', rmt: 5000, ran: 0 });
+    expect(q.tables[0].tot).toEqual(['Net perçu', '4 472 €']);
+    // rachat total en année 3 : rendement net sur 3 ans
+    const tot = await av(page, { init: 10000, mens: 0, duree: 10, rdt: 10, rachat: 1, rtype: 'total', ran: 3 });
+    expect(tot.tables[0].rows[0]).toEqual(['Capital racheté', '13 310 €']);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('assurance vie : date de souscription → années civiles et date des 8 ans', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page);
+    const r = await av(page, { init: 10000, mens: 100, duree: 10, rdt: 4, dsous: '2026-03-15' });
+    expect(r.x.slice(0, 2)).toEqual(['2027', '2028']);
+    expect(r.h[1]).toBe('Au');
+    expect(r.rows[0][1]).toBe('15/03/2027');
+    expect(r.notes).toContain('à partir du 15/03/2034');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('assurance vie : scénarios comparés', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page, '#ressources?outil=assurance-vie&init=10000&mens=100&duree=10&rdt=3');
+    await page.click('#rsCmpAdd');
+    await page.fill('#rs_av_rdt', '5');
+    await page.click('#rsCmpAdd');
+    const lignes = page.locator('.rs-cmpt tbody tr');
+    await expect(lignes).toHaveCount(2);
+    await expect(page.locator('.rs-cmpt thead')).toContainText('Capital au terme');
+    await expect(lignes.nth(1).locator('td.rs-best')).toHaveCount(3);  // capital, gains, rendement : le scénario à 5 %
+    expect(erreurs).toEqual([]);
+  });
+
+  test('SCPI : mêmes chiffres que le classeur avec réinvestissement des dividendes (Comète)', async ({ page }) => {
+    // Classeur « SCPI » : 20 parts à 250 €, 100 €/mois, 5 %, jouissance 6 mois, dividendes réinvestis.
+    const erreurs = await ouvrir(page);
+    await entrer(page);
+    const r = await page.evaluate(() => {
+      const d = RS_SIMS.find(t => t.id === 'scpi');
+      const o = d.calc(Object.assign({}, rsVals(d), { prix: 250, parts: 20, mens: 100, rdt: 5, dj: 6, reinv: 1, pr: 100, dr: 40, duree: 20, an0: 2026 }));
+      const sp = a => a.map(x => String(x).replace(/\s/g, ' '));
+      return { h: o.table.h, l: [0, 1, 4, 9, 19].map(i => sp(o.table.rows[i])), hl: o.table.hl.slice(0, 6) };
+    });
+    // Année | début | versement mensuel | annuel | capital moyen | fin | loyers année | loyers / mois
+    expect(r.l[0].slice(0, 8)).toEqual(['2026', '0 €', '100 €', '1 200 €', '2 675 €', '5 600 €', '134 €', '11 €']);
+    expect(r.l[1].slice(0, 8)).toEqual(['2027', '5 600 €', '111 €', '1 334 €', '5 795 €', '6 934 €', '290 €', '24 €']);
+    expect(r.l[2].slice(0, 8)).toEqual(['2030', '9 981 €', '136 €', '1 633 €', '10 219 €', '11 614 €', '511 €', '43 €']);
+    expect(r.l[3].slice(0, 8)).toEqual(['2035', '18 967 €', '172 €', '2 064 €', '19 268 €', '21 031 €', '963 €', '80 €']);
+    expect(r.l[4].slice(0, 8)).toEqual(['2045', '44 694 €', '275 €', '3 300 €', '45 175 €', '47 994 €', '2 259 €', '188 €']);
+    expect(r.hl).toEqual([false, false, false, false, true, false]);   // une année sur cinq en évidence
+    expect(erreurs).toEqual([]);
+  });
+
+  test('export Excel : un vrai .xlsx, montants et pourcentages en nombres, pour chaque simulateur', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await entrer(page, '#ressources?outil=credit-immobilier&mode=mens&mensu=1000&taux=3.5&ass=0.34');
+    // chaque simulateur produit un classeur sans erreur
+    const feuilles = await page.evaluate(() => RS_SIMS.map(d => { rsVals(d); if (d.custom && !RS_PARC) RS_PARC = [rsBienNeuf(1)]; return [d.id, rsExcelFeuilles(d).map(f => f.nom)]; }));
+    feuilles.forEach(([id, noms]) => expect(noms[0], id).toBe('Synthèse'));
+    expect(Object.fromEntries(feuilles).credit).toEqual(['Synthèse', 'Comparatif selon la durée', 'Détail année par année', 'Détail mois par mois']);
+    // conversion des valeurs affichées
+    expect(await page.evaluate(() => [rsXlsCell('189\u00a0051\u00a0€'), rsXlsCell('946,43 €'), rsXlsCell('3,50 %'), rsXlsCell('2026'), rsXlsCell('25 ans'), rsXlsCell('−1 200 €')]))
+      .toEqual([{ n: 189051, s: 2 }, { n: 946.43, s: 3 }, { n: 0.035, s: 6 }, { n: 2026, s: 0 }, { t: '25 ans' }, { n: -1200, s: 2 }]);
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#rsXlsx')]);
+    if (!page.url().startsWith('file:')) expect(dl.suggestedFilename()).toBe('Crédit immobilier.xlsx');
+    const f = path.join(require('os').tmpdir(), 'kairos-test.xlsx');
+    await dl.saveAs(f);
+    const py = require('child_process').spawnSync('python3', ['-c', [
+      'import sys, zipfile, xml.dom.minidom as m',
+      'z = zipfile.ZipFile(sys.argv[1]); assert z.testzip() is None',
+      'for n in z.namelist():',
+      '    if n.endswith(".xml") or n.endswith(".rels"): m.parseString(z.read(n))',
+      'print(z.read("xl/workbook.xml").decode()); print(z.read("xl/worksheets/sheet1.xml").decode())'].join('\n'), f], { encoding: 'utf8' });
+    test.skip(py.error && py.error.code === 'ENOENT', 'python3 absent');
+    expect(py.status, py.stderr).toBe(0);
+    expect(py.stdout).toContain('name="Détail mois par mois"');
+    expect(py.stdout).toContain('<v>189051</v>');                 // capital empruntable : un nombre, pas du texte
+    expect(py.stdout).toContain('<v>0.0034</v>');                 // taux d'assurance 0,34 %
     expect(erreurs).toEqual([]);
   });
 

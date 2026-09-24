@@ -1403,6 +1403,7 @@ a.mml-r:hover{border-color:var(--accent)}
 .rs-tbl.rs-rachat td:first-child{white-space:normal}
 .rs-tbl.rs-rachat tr.tot td{font-weight:700}
 .rs-tbl tr.tot td{font-weight:700;border-top:1px solid var(--line-2)}
+.rs-tbl tr.hl td{background:var(--accent-soft,rgba(79,70,229,.08));font-weight:700}
 .rs-det>summary{cursor:pointer;font-family:"Sora";font-weight:700;font-size:14px;padding:6px 0;list-style:none}
 .rs-det>summary::before{content:'▸ ';color:var(--ink-3)}
 .rs-det[open]>summary::before{content:'▾ '}
@@ -6743,12 +6744,16 @@ function rsTri(flux){
 const RS_TMI = [['0','0 %'],['11','11 %'],['30','30 %'],['41','41 %'],['45','45 %']];
 const RS_SIMS = [
 {
-  id:'av', slug:'assurance-vie', ic:'🛡️', t:'Assurance vie', d:'Épargne acquise année par année ; frais, rachat au terme et comparaison de deux contrats en option',
+  id:'av', slug:'assurance-vie', ic:'🛡️', t:'Assurance vie', d:'Épargne acquise année par année ; frais, rachat total ou partiel, comparaison avec un livret ou un second contrat',
   // Par défaut : le classeur « Simulateur Ass. Vie » de Florian, sans frais, rendement net.
-  // Trois options à cocher (22/09/2026) : les frais, le détail du rachat total au terme, un second contrat.
+  // Options à cocher (22/09/2026) : les frais, le rachat, un second contrat. Ajoutées le 24/09/2026 d'après
+  // le simulateur d'un confrère : comparaison avec un livret réglementé, rachat partiel et année du rachat,
+  // date de souscription (années civiles, date des 8 ans), scénarios comparés (bouton comparateur).
+  cmpT:'Scénarios comparés', cmpCols:[['Scénario','lib','t'],['Versé','vb','e'],['Capital au terme','M','e','max'],['Gains','gain','e','max'],['Rendement annualisé','tri','p2','max'],['Net après rachat','net','e','max']],
   g:[
     {t:'Épargne', f:[
       {k:'age', l:'Âge du souscripteur', t:'num', u:'ans', v:40, min:0, max:100, h:'Facultatif — laisse 0 pour ne pas afficher les âges'},
+      {k:'dsous', l:'Date de souscription', t:'date', v:'', h:'Facultatif — affiche les années civiles et la date des 8 ans'},
       {k:'init', l:'Capital initial', t:'eur', v:10000},
       {k:'mens', l:'Épargne mensuelle', t:'eur', v:150},
       {k:'duree', l:'Durée', t:'num', u:'ans', v:15, min:1, max:60},
@@ -6758,8 +6763,14 @@ const RS_SIMS = [
       {k:'frais', l:'Ajouter les frais', t:'chk', v:0},
       {k:'fv', l:'Frais sur versements', t:'pct', v:4.8, show:v=>v.frais},
       {k:'fg', l:'Frais de gestion annuels', t:'pct', v:1, show:v=>v.frais},
-      {k:'rachat', l:'Voir le rachat total au terme', t:'chk', v:0},
+      {k:'rachat', l:'Simuler un rachat', t:'chk', v:0},
+      {k:'rtype', l:'Type de rachat', t:'sel', v:'total', w:1, o:[['total','Rachat total'],['partiel','Rachat partiel (le contrat continue)']], show:v=>v.rachat},
+      {k:'rmt', l:'Montant du rachat partiel', t:'eur', v:5000, min:0, show:v=>v.rachat&&v.rtype==='partiel'},
+      {k:'ran', l:'Année du rachat', t:'num', v:0, min:0, max:60, show:v=>v.rachat, h:'N° de l’année de contrat — 0 = au terme de la durée'},
       {k:'couple', l:'Situation fiscale', t:'sel', v:'1', o:[['1','Personne seule — abattement de 4 600 €'],['2','Couple (imposition commune) — 9 200 €']], w:1, show:v=>v.rachat},
+      {k:'liv', l:'Comparer avec un livret réglementé', t:'chk', v:0},
+      {k:'livt', l:'Livret', t:'sel', v:'a', w:1, o:[['a','Livret A — 1,7 %'],['ldds','LDDS — 1,7 %'],['lep','LEP — 2,5 %'],['autre','Autre taux']], show:v=>v.liv, h:'Taux en vigueur depuis le 1er août 2026'},
+      {k:'tliv', l:'Taux du livret', t:'pct', v:1.7, min:0, show:v=>v.liv&&v.livt==='autre'},
       {k:'cmp', l:'Comparer avec un second contrat', t:'chk', v:0},
       {k:'rdt2', l:'Rendement du contrat 2', t:'pct', v:3, show:v=>v.cmp},
       {k:'fv2', l:'Frais sur versements du contrat 2', t:'pct', v:0, show:v=>v.cmp&&v.frais},
@@ -6768,9 +6779,25 @@ const RS_SIMS = [
   ],
   calc(v){
     const avecFrais = !!v.frais;
-    const run = (rdt,fv,fg) => {
-      const r=rdt/100, pv=avecFrais?fv/100:0, pg=avecFrais?fg/100:0, rows=[];
-      let M=0, vb=0, frais=0, ic=0;
+    const Y = v.rachat ? Math.min(v.duree, Math.max(1, Math.round(v.ran||0) || v.duree)) : 0;     // année du rachat
+    const partiel = !!v.rachat && v.rtype==='partiel';
+    // date de souscription : fin de la y-ième année de contrat
+    const d0 = v.dsous ? new Date(v.dsous+'T00:00:00') : null, dOk = d0 && !isNaN(d0);
+    const dateAn = y => { if(!dOk) return ''; const d=new Date(d0); d.setFullYear(d.getFullYear()+y); return isoJour(d); };
+    // fiscalité d'un rachat de « montant » sur un contrat valant M, dont P de primes restantes
+    const fisc = (montant, M, P, huit) => {
+      const gTot = Math.max(0, M-P), gain = M>0 ? montant*gTot/M : 0;
+      const abat = huit ? Math.min(gain, v.couple==='2'?9200:4600) : 0;
+      const base = gain - abat;
+      const part = (!huit || P<=150000) ? 1 : 150000/P;             // primes au-delà de 150 000 € : 12,8 %
+      const ir = huit ? base*(part*0.075 + (1-part)*0.128) : gain*0.128;
+      const ps = gain*0.172;
+      return {montant, gain, cap:montant-gain, abat, base, part, ir, ps, net:montant-ir-ps};
+    };
+    // projection ; sansFrais pour le livret ; rachat partiel appliqué en fin d'année Y
+    const run = (rdt,fv,fg,sansFrais) => {
+      const fr = avecFrais && !sansFrais, r=rdt/100, pv=fr?fv/100:0, pg=fr?fg/100:0, rows=[];
+      let M=0, vb=0, frais=0, ic=0, P=0, rc=0, R=null;
       for(let y=1;y<=v.duree;y++){
         const D = y===1 ? v.init*(1-pv) : M;                       // capital en début d'année
         const brut = (y===1?v.init:0) + 12*v.mens;                  // versé dans l'année
@@ -6778,76 +6805,112 @@ const RS_SIMS = [
         // les versements mensuels portent intérêt en moyenne 6,5 mois sur 12 (même règle que le classeur)
         const G = r*(D + v.mens*(1-pv)*6.5);
         const H = pg*(D+E+G);
-        M = D+E+G-H; vb += brut; frais += brut*pv + H; ic += G;
-        rows.push({y, age:v.age?v.age+y-1:null, D, brut, vb, G, ic, frais, gain:M-vb, M});
+        M = D+E+G-H; vb += brut; P += brut; frais += brut*pv + H; ic += G;
+        const Mav = M;
+        if(partiel && y===Y){
+          const mt = Math.min(Math.max(0, v.rmt||0), M);
+          R = fisc(mt, M, P, y>=8); M -= mt; P = Math.max(0, P - R.cap); rc += mt;
+        }
+        rows.push({y, age:v.age?v.age+y-1:null, D, brut, vb, G, ic, frais, gain:M+rc-vb, M, Mav, P});
       }
-      return rows;
+      return {rows, R};
     };
-    const fisc = (M, vb) => {
-      const gain = Math.max(0, M-vb), huit = v.duree>=8;
-      const abat = huit ? Math.min(gain, v.couple==='2'?9200:4600) : 0;
-      const base = gain - abat;
-      const part = (!huit || vb<=150000) ? 1 : 150000/vb;           // primes au-delà de 150 000 € : 12,8 %
-      const ir = huit ? base*(part*0.075 + (1-part)*0.128) : gain*0.128;
-      const ps = gain*0.172;
-      return {gain, abat, base, part, ir, ps, net:M-ir-ps};
-    };
-    const A = run(v.rdt, v.fv, v.fg), last = A[A.length-1];
-    const f = fisc(last.M, last.vb);
-    const X = A.map(r=>v.age?r.age+1+' ans':'An '+r.y);
+    const RA = run(v.rdt, v.fv, v.fg), A = RA.rows, last = A[A.length-1];
+    const X = A.map(r=>dOk ? dateAn(r.y).slice(0,4) : v.age?r.age+1+' ans':'An '+r.y);
     const ans = v.duree+' an'+(v.duree>1?'s':'');
+    const flux = (jusqua, fin) => { const f=[{t:0,v:-v.init}]; for(let y=1;y<=jusqua;y++) f.push({t:y-0.5, v:-12*v.mens}); f.push({t:jusqua, v:fin}); return f; };
+    const fB = flux(v.duree, last.M); if(RA.R) fB.push({t:Y, v:RA.R.montant});
+    const triBrut = rsTri(fB);                                       // rendement avant fiscalité du rachat
     const out = {
       kpis:[
-        {k:'Capital constitué', v:RS_E(last.M), s:'après '+ans+(v.age?' · à '+(v.age+v.duree)+' ans':''), cls:'hl'},
+        {k:'Capital constitué', v:RS_E(last.M), s:'après '+ans+(dOk?' · au '+fmtD(dateAn(v.duree)):'')+(v.age?' · à '+(v.age+v.duree)+' ans':''), cls:'hl'},
         {k:'Versements cumulés', v:RS_E(last.vb), s:RS_E(v.init)+' + '+RS_E(v.mens)+' / mois'},
         {k:avecFrais?'Gains nets de frais':'Intérêts cumulés', v:RS_E(last.gain), s:'soit '+RS_P(last.vb?last.gain/last.vb:0,1)+' des versements', cls:last.gain>=0?'good':'bad'},
       ],
       notes:[],
       tables:[],
     };
+    const snap = {lib:RS_E(v.init)+' + '+RS_E(v.mens)+'/mois · '+ans+' · '+RS_N(v.rdt,2)+' %'+(avecFrais?' (frais '+RS_N(v.fv,1)+' / '+RS_N(v.fg,1)+' %)':''),
+                  vb:last.vb, M:last.M, gain:last.gain, tri:triBrut, net:null};
     if(avecFrais) out.kpis.push({k:'Frais payés', v:RS_E(last.frais), s:'entrée + gestion'});
+    if(dOk) out.notes.push('Souscription le '+fmtD(v.dsous)+' : la fiscalité des 8 ans s’applique aux rachats à partir du '+fmtD(dateAn(8))+'.');
+
     if(v.rachat){
-      const flux = [{t:0,v:-v.init}];
-      for(let y=1;y<=v.duree;y++) flux.push({t:y-0.5, v:-12*v.mens});
-      flux.push({t:v.duree, v:f.net});
-      const tri = rsTri(flux);
-      out.kpis.push({k:'Net perçu au rachat', v:RS_E(f.net), s:'impôt '+RS_E(f.ir)+' · prélèvements sociaux '+RS_E(f.ps), cls:'good'});
-      out.kpis.push({k:'Rendement net annualisé', v:RS_P(tri), s:'après '+(avecFrais?'frais et ':'')+'fiscalité'});
+      const rY = A[Y-1], huit = Y>=8;
+      const f = partiel ? RA.R : fisc(rY.M, rY.M, rY.P, huit);
+      const quand = (Y===v.duree?'au terme (':'en année '+Y+' (')+(dOk?'le '+fmtD(dateAn(Y)):Y+' an'+(Y>1?'s':''))+(v.age?', à '+(v.age+Y)+' ans':'')+')';
+      out.kpis.push({k:partiel?'Net perçu du rachat partiel':'Net perçu au rachat', v:RS_E(f.net), s:'impôt '+RS_E(f.ir)+' · prélèvements sociaux '+RS_E(f.ps), cls:'good'});
+      if(partiel){
+        out.kpis.push({k:'Capital restant après le rachat', v:RS_E(rY.M), s:'il continue de fructifier jusqu’au terme'});
+        snap.net = f.net;
+      } else {
+        const tri = rsTri(flux(Y, f.net));
+        out.kpis.push({k:'Rendement net annualisé', v:RS_P(tri), s:'après '+(avecFrais?'frais et ':'')+'fiscalité'});
+        snap.net = f.net; snap.tri = tri;
+      }
+      const pctG = f.montant>0 ? f.gain/f.montant : 0;
       const lignes = [
-        ['Capital racheté', RS_E(last.M)],
-        ['dont versements (non imposés)', RS_E(Math.min(last.M,last.vb))],
-        ['dont gains', RS_E(f.gain)],
+        [partiel?'Montant racheté':'Capital racheté', RS_E(f.montant)],
+        ['dont versements (non imposés)', RS_E(f.cap)],
+        ['dont gains'+(partiel?' (quote-part de '+RS_P(pctG,1)+')':''), RS_E(f.gain)],
       ];
-      if(v.duree>=8){
+      if(huit){
         lignes.push(['Abattement annuel ('+(v.couple==='2'?'couple':'personne seule')+')', '− '+RS_E(f.abat)]);
         lignes.push(['Gains imposables', RS_E(f.base)]);
         lignes.push(['Impôt sur le revenu ('+(f.part<1?'7,5 % / 12,8 % au-delà de 150 000 € de primes':'7,5 %')+')', '− '+RS_E(f.ir)]);
       } else lignes.push(['Impôt sur le revenu (prélèvement forfaitaire 12,8 %)', '− '+RS_E(f.ir)]);
       lignes.push(['Prélèvements sociaux (17,2 % des gains)', '− '+RS_E(f.ps)]);
-      out.tables.push({t:'Rachat total au terme ('+ans+(v.age?', à '+(v.age+v.duree)+' ans':'')+')', h:['Rachat total','Montant'], rows:lignes, cls:'rs-rachat', tot:['Net perçu', RS_E(f.net)]});
-      out.notes.push(v.duree>=8 ? 'Contrat de plus de 8 ans : abattement annuel sur les gains (4 600 € ou 9 200 €), puis 7,5 % (12,8 % sur la fraction des primes au-delà de 150 000 €) et 17,2 % de prélèvements sociaux.'
-                                : 'Contrat de moins de 8 ans : prélèvement forfaitaire de 12,8 % sur les gains (option possible pour le barème) et 17,2 % de prélèvements sociaux. L’abattement ne s’applique qu’après 8 ans.');
+      out.tables.push({t:(partiel?'Rachat partiel ':'Rachat total ')+quand, h:[partiel?'Rachat partiel':'Rachat total','Montant'], rows:lignes, cls:'rs-rachat', tot:['Net perçu', RS_E(f.net)]});
+      if(partiel) out.notes.push('Rachat partiel : seule la quote-part de gains du montant racheté est imposée (gains du contrat ÷ valeur du contrat × montant racheté). Le reste est un remboursement de versements, non imposé.');
+      else if(Y<v.duree) out.notes.push('Rachat total en année '+Y+' : le contrat s’arrête alors ; la projection au-delà est donnée pour comparaison.');
+      out.notes.push(huit ? 'Contrat de plus de 8 ans : abattement annuel sur les gains (4 600 € ou 9 200 €), puis 7,5 % (12,8 % sur la fraction des primes au-delà de 150 000 €) et 17,2 % de prélèvements sociaux.'
+                          : 'Contrat de moins de 8 ans : prélèvement forfaitaire de 12,8 % sur les gains (option possible pour le barème) et 17,2 % de prélèvements sociaux. L’abattement ne s’applique qu’après 8 ans.');
       out.notes.push('Prélèvements sociaux de l’assurance vie maintenus à 17,2 % en 2026 (non concernée par la hausse de la CSG). Sur le fonds euros, ils sont en réalité prélevés chaque année ; ils sont ici calculés en une fois au rachat.');
     }
-    if(v.cmp){
-      const B = run(v.rdt2, v.fv2, v.fg2), lb = B[B.length-1];
-      const ec = last.M - lb.M;
-      out.kpis.splice(1,0,{k:'Contrat 2 au terme', v:RS_E(lb.M), s:'écart : '+(ec>=0?'+':'')+RS_E(ec)+' pour le contrat 1', cls:ec>=0?'':'bad'});
-      out.chart = {type:'line', x:X, series:[
-        {n:'Contrat 1', c:RS_COL[0], d:A.map(r=>r.M)},
-        {n:'Contrat 2', c:RS_COL[2], d:B.map(r=>r.M)},
-        {n:'Versements', c:RS_COL[4], d:A.map(r=>r.vb), dash:true}]};
-      out.table = {h:['Année'].concat(v.age?['Âge']:[],['Versé','Contrat 1','Contrat 2','Écart']),
-        rows:A.map((r,i)=>[r.y].concat(v.age?[r.age]:[],[RS_E(r.vb),RS_E(r.M),RS_E(B[i].M),RS_E(r.M-B[i].M)]))};
-      if(v.rachat) out.notes.push('Contrat 2 net après rachat total : '+RS_E(fisc(lb.M, lb.vb).net)+'.');
+
+    // livret réglementé : mêmes versements (et même rachat partiel), intérêts nets d'impôt
+    let Lv=null, livNom='';
+    if(v.liv){
+      const LIV={a:['Livret A',1.7,22950], ldds:['LDDS',1.7,12000], lep:['LEP',2.5,10000], autre:['Livret',v.tliv,0]}[v.livt]||['Livret A',1.7,22950];
+      livNom=LIV[0]; const tl = v.livt==='autre' ? (v.tliv||0) : LIV[1];
+      Lv = run(tl, 0, 0, true).rows;
+      const lL = Lv[Lv.length-1], ec = last.M - lL.M;
+      out.kpis.push({k:livNom+' au terme', v:RS_E(lL.M), s:'à '+RS_N(tl,2)+' % net, sans impôt'});
+      out.kpis.push({k:'Avantage de l’assurance vie', v:(ec>=0?'+':'−')+RS_E(Math.abs(ec)), s:'rendement '+RS_P(triBrut)+' contre '+RS_P(tl/100)+' — écart '+(triBrut*100-tl>=0?'+':'')+RS_N(triBrut*100-tl,2)+' pt', cls:ec>=0?'good':'bad'});
+      if(v.rachat && !partiel && Y===v.duree){
+        const ecN = out.kpis.find(k=>k.k==='Net perçu au rachat') ? snap.net - lL.M : null;
+        if(ecN!==null) out.notes.push('Après fiscalité du rachat total, l’assurance vie rapporte '+(ecN>=0?RS_E(ecN)+' de plus':RS_E(-ecN)+' de moins')+' que le '+livNom+' (intérêts du livret exonérés).');
+      }
+      if(LIV[2] && lL.vb > LIV[2]) out.warn = 'Les versements ('+RS_E(lL.vb)+') dépassent le plafond du '+livNom+' ('+RS_E(LIV[2])+') : la comparaison reste théorique.';
+      out.notes.push('Livret : intérêts calculés comme pour l’assurance vie (versements du mois porteurs d’intérêts 6,5 mois en moyenne), taux supposé constant. Le taux réel est révisé deux fois par an.');
+    }
+
+    if(v.cmp || v.liv){
+      const B = v.cmp ? run(v.rdt2, v.fv2, v.fg2).rows : null;
+      if(B){
+        const lb = B[B.length-1], ec = last.M - lb.M;
+        out.kpis.splice(1,0,{k:'Contrat 2 au terme', v:RS_E(lb.M), s:'écart : '+(ec>=0?'+':'')+RS_E(ec)+' pour le contrat 1', cls:ec>=0?'':'bad'});
+        if(v.rachat && !partiel) out.notes.push('Contrat 2 net après rachat total : '+RS_E(fisc(B[Y-1].M, B[Y-1].M, B[Y-1].P, Y>=8).net)+'.');
+      }
+      out.chart = {type:'line', x:X, series:[{n:B?'Contrat 1':'Assurance vie', c:RS_COL[0], d:A.map(r=>r.M)}]
+        .concat(B?[{n:'Contrat 2', c:RS_COL[2], d:B.map(r=>r.M)}]:[], Lv?[{n:livNom, c:RS_COL[1], d:Lv.map(r=>r.M)}]:[],
+                [{n:'Versements', c:RS_COL[4], d:A.map(r=>r.vb), dash:true}])};
     } else {
       out.chart = {type:'bar', x:X, series:[
         {n:'Versements cumulés', c:RS_COL[0], d:A.map(r=>r.vb)},
         {n:avecFrais?'Gains nets de frais':'Intérêts cumulés', c:RS_COL[1], d:A.map(r=>Math.max(0,r.gain))}]};
-      // mêmes colonnes que le classeur ; les frais cumulés s'ajoutent quand l'option est cochée
-      out.table = {h:['Année'].concat(v.age?['Âge']:[],['Capital début d’année','Versements de l’année','Versements cumulés','Intérêts de l’année','Intérêts cumulés'],avecFrais?['Frais cumulés']:[],['Capital constitué']),
-        rows:A.map(r=>[r.y].concat(v.age?[r.age]:[],[RS_E(r.D),RS_E(r.brut),RS_E(r.vb),RS_E(r.G),RS_E(r.ic)],avecFrais?[RS_E(r.frais)]:[],[RS_E(r.M)]))};
     }
+    if(v.cmp){
+      const B = run(v.rdt2, v.fv2, v.fg2).rows;
+      out.table = {h:['Année'].concat(dOk?['Au']:[], v.age?['Âge']:[],['Versé','Contrat 1','Contrat 2','Écart'], Lv?[livNom]:[]),
+        rows:A.map((r,i)=>[r.y].concat(dOk?[fmtD(dateAn(r.y))]:[], v.age?[r.age]:[],[RS_E(r.vb),RS_E(r.M),RS_E(B[i].M),RS_E(r.M-B[i].M)], Lv?[RS_E(Lv[i].M)]:[]))};
+    } else {
+      // mêmes colonnes que le classeur ; frais cumulés et livret s'ajoutent quand l'option est cochée
+      out.table = {h:['Année'].concat(dOk?['Au']:[], v.age?['Âge']:[],['Capital début d’année','Versements de l’année','Versements cumulés','Intérêts de l’année','Intérêts cumulés'],avecFrais?['Frais cumulés']:[],['Capital constitué'], Lv?[livNom,'Écart AV − livret']:[]),
+        rows:A.map((r,i)=>[r.y].concat(dOk?[fmtD(dateAn(r.y))]:[], v.age?[r.age]:[],[RS_E(r.D),RS_E(r.brut),RS_E(r.vb),RS_E(r.G),RS_E(r.ic)],avecFrais?[RS_E(r.frais)]:[],[RS_E(r.M)], Lv?[RS_E(Lv[i].M), RS_E(r.M-Lv[i].M)]:[]))};
+    }
+    if(RA.R) out.table.hl = A.map(r=>r.y===Y);
+    out.snap = snap;
     return out;
   }
 },
@@ -6855,6 +6918,7 @@ const RS_SIMS = [
   id:'scpi', slug:'scpi', ic:'🏢', t:'SCPI', d:'Revenus, réinvestissement des dividendes, délai de jouissance et valeur de retrait',
   g:[
     {t:'Souscription', f:[
+      {k:'nom', l:'Nom de la SCPI', t:'txt', v:'', w:1, h:'Facultatif : repris à l’impression et dans le fichier Excel'},
       {k:'prix', l:'Prix de la part', t:'eur', v:200},
       {k:'parts', l:'Parts souscrites au départ', t:'num', u:'parts', v:25, min:0},
       {k:'mens', l:'Versement programmé mensuel', t:'eur', v:200},
@@ -6885,10 +6949,13 @@ const RS_SIMS = [
     const rows=[]; let B=0, Gp=0, J=0, cash=0, imp=0, reinvCum=0;
     for(let y=1;y<=v.duree;y++){
       let E, F, reinv=0;
+      // Les dividendes réinvestis s'ajoutent aux versements mensuels de l'année suivante et entrent
+      // en jouissance au même rythme qu'eux (24/09/2026, classeur SCPI : versement mensuel = programmé
+      // + dividendes de l'an passé ÷ 12). Avant, ils ne produisaient rien l'année de leur réinvestissement.
       if(y===1){ E = apport*(12-dj)/12 + lis; F = apport + m*(12-dj); J = apport + 12*m; }
       else {
         if(v.reinv && (y-1) < v.dr) reinv = Gp*pr;
-        E = B + lis; F = B + 12*m + reinv; J += 12*m + reinv;
+        E = B + lis + (reinv/12)*((12-dj)*(13-dj)/24); F = B + 12*m + reinv; J += 12*m + reinv;
       }
       const G = r*E, I = G*tx;
       reinvCum += reinv; imp += I;
@@ -6898,7 +6965,7 @@ const RS_SIMS = [
       const verse = apport + 12*m*y;
       const retrait = J*(1-fs);
       const net = cash - imp;
-      rows.push({y, an:v.an0+y-1, F, G, I, reinv, verse, J, retrait, net, rdt:(retrait+net)/verse-1, reinvSuiv});
+      rows.push({y, an:v.an0+y-1, B:y===1?0:B, mv:m+reinv/12, va:12*m+reinv, E, F, G, I, reinv, verse, J, retrait, net, rdt:(retrait+net)/verse-1, reinvSuiv});
       B = F; Gp = G;
     }
     const L = rows[rows.length-1];
@@ -6916,10 +6983,13 @@ const RS_SIMS = [
       chart:{type:'bar', x:rows.map(r=>String(r.an)), series:[
         {n:'Versé de ta poche', c:RS_COL[0], d:rows.map(r=>r.verse)},
         {n:'Dividendes réinvestis', c:RS_COL[1], d:rows.map(r=>r.J-r.verse)}]},
-      table:{h:['Année','Capital en jouissance','Dividendes','dont réinvestis l’an suivant','Impôts','Versé cumulé','Valeur de retrait','Rendement si revente'],
-        rows:rows.map(r=>[r.an, RS_E(r.F), RS_E(r.G), r.reinvSuiv&&pr>0?RS_E(r.G*pr):'—', RS_E(r.I), RS_E(r.verse), RS_E(r.retrait), RS_P(r.rdt,1)])},
+      // colonnes du classeur SCPI, une ligne sur cinq mise en évidence
+      table:{h:['Année','Capital en jouissance début d’année','Versement mensuel','Versement annuel','Capital moyen en jouissance','Capital en jouissance fin d’année','Loyers de l’année','Loyers par mois','Impôts','Versé de ta poche (cumul)','Valeur de retrait','Rendement si revente'],
+        rows:rows.map(r=>[r.an, RS_E(r.B), RS_E(r.mv), RS_E(r.va), RS_E(r.E), RS_E(r.F), RS_E(r.G), RS_E(r.G/12), RS_E(r.I), RS_E(r.verse), RS_E(r.retrait), RS_P(r.rdt,1)]),
+        hl:rows.map((r,i)=>(i+1)%5===0)},
       notes:[
         'Délai de jouissance : les parts ne produisent rien pendant '+dj+' mois après chaque versement.',
+        'Versement mensuel = versement programmé + dividendes réinvestis de l’année précédente ÷ 12. Loyers de l’année = capital moyen en jouissance × taux de distribution.',
         'Les impôts sur les dividendes sont payés chaque année, même lorsque les dividendes sont réinvestis : c’est un effort d’épargne supplémentaire.',
         'Le taux de distribution passé ne préjuge pas des performances futures ; le capital n’est pas garanti et la revente dépend de la liquidité de la SCPI.',
       ]
@@ -7112,7 +7182,9 @@ const RS_SIMS = [
   // (capacité selon les revenus / je saisis le capital / je saisis la mensualité), assurance sur le
   // capital initial ou sur le capital restant dû, frais annexes, CRD et capital amorti à un horizon,
   // part capital / intérêts / assurance de chaque année, comparatif selon la durée.
-  id:'credit', cmp:1, slug:'credit-immobilier', ic:'🏦', t:'Crédit immobilier', d:'Capital ou mensualité, capacité d’emprunt, amortissement, coût du crédit et comparatif des durées',
+  id:'credit', slug:'credit-immobilier',
+  cmpT:'Prêts comparés', cmpCols:[['Simulation','lib','t'],['Capital','K','e'],['Durée','duree','ans'],['Taux','taux','pct'],['Assurance','assl','t'],
+    ['Mensualité','mens','e2','min'],['Coût total','cout','e','min'],['Part des intérêts','pint','p0'],['CRD à l’horizon','crdl','t']], ic:'🏦', t:'Crédit immobilier', d:'Capital ou mensualité, capacité d’emprunt, amortissement, coût du crédit et comparatif des durées',
   g:[
     {t:'Prêt', f:[
       {k:'mode', l:'Je pars…', t:'sel', v:'capa', w:1, o:[['capa','de mes revenus (capacité d’emprunt)'],['cap','du capital à emprunter'],['mens','de la mensualité que je veux payer']]},
@@ -7213,7 +7285,7 @@ const RS_SIMS = [
     if(isFinite(taeg)) kpis.push({k:'TAEG estimé', v:RS_P(taeg,2), s:'intérêts, assurance'+(frais?' et frais':'')+' compris'});
 
     const snap = { lib: (v.mode==='cap' ? 'Prêt ' : v.mode==='mens' ? RS_E(v.mensu)+' / mois · ' : 'Capacité · ')+v.duree+' ans à '+RS_N(v.taux,2)+' %',
-      K, duree:v.duree, taux:v.taux, ass:v.ass, dyn, mens, cout:coutTot, pint: coutTot>0 ? E.int/coutTot : 0, crdH, h };
+      K, duree:v.duree, taux:v.taux, assl:RS_N(v.ass,2)+' %'+(dyn?' (CRD)':''), mens, cout:coutTot, pint: coutTot>0 ? E.int/coutTot : 0, crdl:RS_E(crdH)+' à '+h+' an'+(h>1?'s':'') };
     return {
       warn, kpis, snap,
       chart:{type:'bar', x:rows.map(r=>'An '+r[0]), series:[
@@ -7693,7 +7765,7 @@ function rsBarsHtml(b){
     +'<b class="num" style="text-align:right">'+(i[1]<0?'−':'')+RS_E(Math.abs(i[1]))+'</b></div>').join('');
 }
 const rsTableHtml = (t) => '<div class="rs-tblw"><table class="rs-tbl'+(t.cls?' '+t.cls:'')+'"><thead><tr>'+t.h.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'
-  +t.rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')
+  +t.rows.map((r,i)=>'<tr'+(t.hl&&t.hl[i]?' class="hl"':'')+'>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')
   +(t.tot?'<tr class="tot">'+t.tot.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>':'')+'</tbody></table></div>';
 
 function rsResultHtml(r){
@@ -7776,7 +7848,8 @@ function rsRenderSim(){
     +'<div class="panel"><div class="rs-head"><h2>'+def.ic+' '+esc(def.t)+'</h2><div class="rs-acts">'
     +'<button type="button" class="rs-btn" id="rsReset">↺ Réinitialiser</button>'
     +(def.custom?'':'<button type="button" class="rs-btn" id="rsLien">🔗 Copier le lien</button>')
-    +(def.cmp?'<button type="button" class="rs-btn" id="rsCmpAdd">＋ Ajouter au comparateur</button>':'')
+    +(def.cmpCols?'<button type="button" class="rs-btn" id="rsCmpAdd">＋ Ajouter au comparateur</button>':'')
+    +'<button type="button" class="rs-btn" id="rsXlsx">⬇ Excel</button>'
     +'<button type="button" class="rs-btn pri" id="rsPrint">🖨️ Imprimer / PDF</button></div></div>'
     +'<div id="rsOut"></div></div></div>';
   rsCalculer();
@@ -7793,17 +7866,18 @@ function rsCalculer(){
 // Comparateur de prêts (24/09/2026, repris du simulateur d'un confrère) : chaque « Ajouter » fige
 // la simulation affichée. Gardé en mémoire le temps de la visite, jamais enregistré ni mis dans l'adresse.
 const RS_CMP = {};
+const rsCmpFmt = (f, x) => f==='e'?RS_E(x) : f==='e2'?RS_E(x,2) : f==='p0'?RS_P(x,0) : f==='p1'?RS_P(x,1) : f==='p2'?RS_P(x,2) : f==='pct'?RS_N(x,2)+' %' : f==='ans'?x+' ans' : (x==null?'—':String(x));
 function rsCmpHtml(def, actions){
-  const L = RS_CMP[def.id]; if(!def.cmp || !L || !L.length) return '';
-  const best = f => Math.min(...L.map(x=>x[f]));
-  const td = (x, f, txt) => '<td'+(L.length>1 && x[f]===best(f)?' class="rs-best"':'')+'>'+esc(txt)+'</td>';
-  return '<div class="rs-cmpbox"><div class="rs-grp-t">Prêts comparés ('+L.length+')'
+  const L = RS_CMP[def.id]; if(!def.cmpCols || !L || !L.length) return '';
+  const C = def.cmpCols;
+  const best = c => { const xs=L.map(x=>x[c[1]]).filter(x=>typeof x==='number'&&isFinite(x)); return xs.length ? (c[3]==='min'?Math.min(...xs):Math.max(...xs)) : null; };
+  const B = C.map(c=>c[3]?best(c):null);
+  return '<div class="rs-cmpbox"><div class="rs-grp-t">'+esc(def.cmpT||'Simulations comparées')+' ('+L.length+')'
     +(actions?' <button type="button" class="rs-lnk" id="rsCmpVider">tout retirer</button>':'')+'</div>'
-    +'<div class="rs-tblw"><table class="rs-tbl rs-cmpt"><thead><tr><th>Simulation</th><th>Capital</th><th>Durée</th><th>Taux</th><th>Assurance</th><th>Mensualité</th><th>Coût total</th><th>Part des intérêts</th><th>CRD à l’horizon</th>'+(actions?'<th></th>':'')+'</tr></thead><tbody>'
-    + L.map((x,i)=>'<tr><td>'+esc(x.lib)+'</td><td>'+esc(RS_E(x.K))+'</td><td>'+x.duree+' ans</td><td>'+esc(RS_N(x.taux,2))+' %</td><td>'+esc(RS_N(x.ass,2))+' %'+(x.dyn?' (CRD)':'')+'</td>'
-      + td(x,'mens',RS_E(x.mens,2)) + td(x,'cout',RS_E(x.cout)) + '<td>'+esc(RS_P(x.pint,0))+'</td><td>'+esc(RS_E(x.crdH))+' à '+x.h+' an'+(x.h>1?'s':'')+'</td>'
+    +'<div class="rs-tblw"><table class="rs-tbl rs-cmpt"><thead><tr>'+C.map(c=>'<th>'+esc(c[0])+'</th>').join('')+(actions?'<th></th>':'')+'</tr></thead><tbody>'
+    + L.map((x,i)=>'<tr>'+C.map((c,j)=>'<td'+(L.length>1 && c[3] && B[j]!==null && x[c[1]]===B[j]?' class="rs-best"':'')+'>'+esc(rsCmpFmt(c[2], x[c[1]]))+'</td>').join('')
       + (actions?'<td><button type="button" class="rs-lnk" data-cmpdel="'+i+'" title="Retirer" aria-label="Retirer">✕</button></td>':'')+'</tr>').join('')
-    + '</tbody></table></div><div class="h" style="font-size:12px;color:var(--ink-2);margin-top:4px">En vert : la mensualité et le coût total les plus bas.'+(actions?' Ce comparatif n’est gardé que le temps de ta visite.':'')+'</div></div>';
+    + '</tbody></table></div><div class="h" style="font-size:12px;color:var(--ink-2);margin-top:4px">En vert : la meilleure valeur de chaque colonne comparée.'+(actions?' Ce comparatif n’est gardé que le temps de ta visite.':'')+'</div></div>';
 }
 function rsRenderDoc(){
   const def=rsDef(RS_DOC); if(!def) return;
@@ -7849,17 +7923,21 @@ function rsImprimer(titre, corps){
   d.open(); d.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>'+esc(titre)+'</title><style>'+css+'</style></head><body>'+corps+'</body></html>'); d.close();
   setTimeout(()=>{ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){} }, 150);
 }
-function rsImprimerSim(){
-  const def=rsDef(RS_SIM), v=rsVals(def);
-  const hyp = def.g.map(g=>g.f.filter(f=>!f.show||f.show(v)).map(f=>{
-    const x=v[f.k]; const val = f.t==='chk'?(x?'oui':'non') : f.t==='sel'?(f.o.find(o=>o[0]===String(x))||[])[1] : f.t==='eur'?RS_E(x) : f.t==='pct'?RS_N(x,2)+' %' : f.fmt==='an'?String(x) : RS_N(x, x%1?1:0)+(f.u?' '+f.u:'');
+function rsHypotheses(def){
+  const v=rsVals(def);
+  const hyp = def.g.map(g=>g.f.filter(f=>(!f.show||f.show(v)) && !((f.t==='txt'||f.t==='date') && !v[f.k])).map(f=>{
+    const x=v[f.k]; const val = f.t==='txt'||f.t==='area'?String(x) : f.t==='date'?fmtD(x) : f.t==='chk'?(x?'oui':'non') : f.t==='sel'?(f.o.find(o=>o[0]===String(x))||[])[1] : f.t==='eur'?RS_E(x) : f.t==='pct'?RS_N(x,2)+' %' : f.fmt==='an'?String(x) : RS_N(x, x%1?1:0)+(f.u?' '+f.u:'');
     return [f.l, val];
   })).flat();
   if(def.custom) RS_PARC.forEach(b=>hyp.push([b.nom, 'acheté '+RS_E(b.achat)+' en '+b.an+', estimé '+RS_E(b.valeur)+', loyer '+RS_E(b.loyer)+' / mois']));
+  return hyp;
+}
+function rsImprimerSim(){
+  const def=rsDef(RS_SIM), hyp=rsHypotheses(def);
   const r=rsResultat(def);
   if(r.table) r.tables=(r.tables||[]).concat([Object.assign({t:'Détail année par année'}, r.table)]), delete r.table;
   delete r.tableM;   // 300 lignes : pas à l'impression
-  const corps='<h1>'+esc(def.t)+'</h1><p class="sub">Simulation du '+fmtDLong(isoJour(new Date()))+'</p>'
+  const corps='<h1>'+esc(def.t)+(rsVals(def).nom?' — '+esc(rsVals(def).nom):'')+'</h1><p class="sub">Simulation du '+fmtDLong(isoJour(new Date()))+'</p>'
     +'<div class="rs-grp-t">Hypothèses</div>'+rsTableHtml({h:['Paramètre','Valeur'], rows:hyp})
     +'<div class="rs-grp-t" style="margin-top:14px">Résultats</div>'+rsResultHtml(r)+rsCmpHtml(def, false);
   rsImprimer(def.t, corps);
@@ -7869,7 +7947,7 @@ const rsNomFichier = def => { const v=rsVals(def); return (def.t+(v.nom?' - '+v.
 // Fichier .docx minimal (Office Open XML), écrit sans bibliothèque : archive ZIP non compressée
 const RS_CRC = (()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
 const rsCrc32 = b => { let c=0xFFFFFFFF; for(let i=0;i<b.length;i++) c=RS_CRC[(c^b[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; };
-function rsZip(fichiers){
+function rsZip(fichiers, mime){
   const enc=new TextEncoder(), parts=[], centr=[]; let off=0;
   const u16=n=>[n&255,(n>>>8)&255], u32=n=>[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255];
   fichiers.forEach(([nom, txt])=>{
@@ -7881,7 +7959,7 @@ function rsZip(fichiers){
   });
   const tailleC = centr.reduce((s,p)=>s+p.length,0);
   const fin = new Uint8Array([0x50,0x4B,5,6, ...u16(0), ...u16(0), ...u16(fichiers.length), ...u16(fichiers.length), ...u32(tailleC), ...u32(off), ...u16(0)]);
-  return new Blob(parts.concat(centr,[fin]), {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  return new Blob(parts.concat(centr,[fin]), {type: mime || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
 }
 const rsXml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function rsDocxXml(P){
@@ -7910,6 +7988,111 @@ function rsDocx(def){
   ]);
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=rsNomFichier(def)+'.docx';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  return blob;
+}
+
+
+// Export Excel (24/09/2026) : vrai .xlsx écrit sans bibliothèque, comme le .docx des courriers.
+// Feuille « Synthèse » (hypothèses + résultats) puis une feuille par tableau. Les montants, pourcentages
+// et nombres affichés redeviennent des nombres Excel (format € ou %), le reste reste du texte.
+function rsXlsCell(x){
+  if(typeof x==='number') return isFinite(x) ? {n:x, s:Number.isInteger(x)?0:9} : {t:'—'};
+  const brut=String(x==null?'':x), c=brut.replace(/[\s  ]/g,'').replace(/−/g,'-');
+  let m=c.replace(/^\+/,'').match(/^(-?)(\d+)(?:,(\d+))?(€|%)?$/);
+  if(!m || (!m[4] && m[1]==='' && m[2].length>1 && m[2][0]==='0')) return {t:brut};
+  const n=+(m[1]+m[2]+(m[3]?'.'+m[3]:'')), dec=(m[3]||'').length;
+  if(m[4]==='€') return {n, s:dec?3:2};
+  if(m[4]==='%') return {n:Math.round(n*1e8)/1e10, s:dec===0?4:dec===1?5:6};
+  return {n, s:dec?9:(/^\d{4}$/.test(m[2])&&!m[1]?0:8)};
+}
+function rsXlsCol(i){ let s=''; i++; while(i>0){ const r=(i-1)%26; s=String.fromCharCode(65+r)+s; i=Math.floor((i-1)/26); } return s; }
+function rsXlsSheet(lignes, opt){
+  opt=opt||{};
+  const larg=[];
+  const rows=lignes.map((l,ri)=>{
+    if(!l) return '';
+    const st = opt.titre===ri ? 7 : (opt.entetes||[]).includes(ri) ? 1 : null;
+    return '<row r="'+(ri+1)+'">'+l.map((x,ci)=>{
+      const ref=rsXlsCol(ci)+(ri+1), c = st!==null ? {t:String(x==null?'':x)} : rsXlsCell(x);
+      larg[ci]=Math.max(larg[ci]||8, Math.min(60, String(x==null?'':x).length+2));
+      if(c.t!==undefined) return c.t==='' ? '' : '<c r="'+ref+'" t="inlineStr"'+(st!==null?' s="'+st+'"':(opt.hl&&opt.hl[ri]?' s="10"':''))+'><is><t xml:space="preserve">'+rsXml(c.t)+'</t></is></c>';
+      return '<c r="'+ref+'" s="'+(opt.hl&&opt.hl[ri]?[11,11,12,13,14,15,16,0,17,18][c.s]||11:c.s)+'"><v>'+c.n+'</v></c>';
+    }).join('')+'</row>';
+  }).join('');
+  const fige = opt.figer ? '<sheetViews><sheetView workbookViewId="0"><pane ySplit="'+opt.figer+'" topLeftCell="A'+(opt.figer+1)+'" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' : '';
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+fige
+    +'<cols>'+larg.map((w,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>').join('')+'</cols><sheetData>'+rows+'</sheetData></worksheet>';
+}
+function rsXlsx(feuilles){
+  const noms=[]; feuilles.forEach(f=>{ let n=String(f.nom).replace(/[\[\]:*?\/\\]/g,' ').slice(0,31).trim()||'Feuille', b=n, k=2; while(noms.includes(n)) n=b.slice(0,28)+' '+(k++); noms.push(n); });
+  const X='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const styles=X+'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    +'<numFmts count="3"><numFmt numFmtId="164" formatCode="#,##0\\ &quot;€&quot;"/><numFmt numFmtId="165" formatCode="#,##0.00\\ &quot;€&quot;"/><numFmt numFmtId="166" formatCode="0.0%"/></numFmts>'
+    +'<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="14"/><name val="Calibri"/></font></fonts>'
+    +'<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8EAF6"/><bgColor indexed="64"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDCE6F7"/><bgColor indexed="64"/></patternFill></fill></fills>'
+    +'<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+    +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="19">'
+    +'<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'                                   // 0 texte / entier
+    +'<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>'       // 1 entête
+    +'<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'           // 2 €
+    +'<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'           // 3 €,00
+    +'<xf numFmtId="9" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'             // 4 %
+    +'<xf numFmtId="166" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'           // 5 %,0
+    +'<xf numFmtId="10" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'            // 6 %,00
+    +'<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>'                    // 7 titre
+    +'<xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'             // 8 1 234
+    +'<xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'             // 9 1 234,56
+    +'<xf numFmtId="0" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>'       // 10 ligne en évidence (texte)
+    +'<xf numFmtId="0" fontId="1" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>'       // 11
+    +'<xf numFmtId="164" fontId="1" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/>' // 12
+    +'<xf numFmtId="165" fontId="1" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/>' // 13
+    +'<xf numFmtId="9" fontId="1" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/>'   // 14
+    +'<xf numFmtId="166" fontId="1" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/>' // 15
+    +'<xf numFmtId="10" fontId="1" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/>'  // 16
+    +'<xf numFmtId="3" fontId="1" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/>'   // 17
+    +'<xf numFmtId="4" fontId="1" fillId="3" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/>'   // 18
+    +'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  const fichiers=[
+    ['[Content_Types].xml', X+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+      +feuilles.map((f,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')+'</Types>'],
+    ['_rels/.rels', X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml', X+'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
+      +noms.map((n,i)=>'<sheet name="'+rsXml(n)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join('')+'</sheets></workbook>'],
+    ['xl/_rels/workbook.xml.rels', X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+      +feuilles.map((f,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join('')
+      +'<Relationship Id="rId'+(feuilles.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml', styles],
+  ].concat(feuilles.map((f,i)=>['xl/worksheets/sheet'+(i+1)+'.xml', f.xml]));
+  return rsZip(fichiers, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+// Classeur d'un simulateur : ce qui est affiché à l'écran, tableaux compris
+function rsExcelFeuilles(def){
+  const r=rsResultat(def), hyp=rsHypotheses(def), v=rsVals(def);
+  const titre=def.t+(v.nom?' — '+v.nom:'');
+  const L=[[titre],['Simulation du '+fmtDLong(isoJour(new Date()))], null, ['Hypothèses','Valeur']];
+  const ent=[3];
+  hyp.forEach(h=>L.push(h));
+  L.push(null); ent.push(L.length); L.push(['Résultats','Valeur','Détail']);
+  (r.kpis||[]).forEach(k=>L.push([k.k, k.v, k.s||'']));
+  if(r.warn){ L.push(null); L.push(['Attention', r.warn]); }
+  if(r.bars){ L.push(null); ent.push(L.length); L.push([r.bars.t, 'Montant']); r.bars.items.forEach(i=>L.push([i[0], RS_E(i[1])])); }
+  L.push(null); (r.notes||[]).concat(['Simulation indicative et non contractuelle, établie sur des hypothèses constantes ; elle ne constitue pas un conseil personnalisé.']).forEach(n=>L.push([n]));
+  const F=[{nom:'Synthèse', xml:rsXlsSheet(L, {titre:0, entetes:ent})}];
+  const tab=(nom,t)=>F.push({nom, xml:rsXlsSheet([t.h].concat(t.rows, t.tot?[t.tot]:[]), {entetes:[0], figer:1, hl:t.hl?[false].concat(t.hl):null})});
+  (r.tables||[]).forEach(t=>tab(String(t.t).split(' (')[0], t));
+  if(r.table) tab('Détail année par année', r.table);
+  if(r.tableM) tab('Détail mois par mois', r.tableM);
+  const C=(typeof RS_CMP!=='undefined' && RS_CMP[def.id])||[];
+  if(C.length && def.cmpCols) tab(def.cmpT||'Simulations comparées', {h:def.cmpCols.map(c=>c[0]), rows:C.map(x=>def.cmpCols.map(c=>c[2]==='ans'?x[c[1]]:rsCmpFmt(c[2], x[c[1]])))});
+  if(def.custom && RS_PARC) tab('Biens', {h:['Bien','Année d’achat','Prix d’achat','Valeur estimée','Loyer mensuel'], rows:RS_PARC.map(b=>[b.nom, b.an, RS_E(b.achat), RS_E(b.valeur), RS_E(b.loyer)])});
+  return F;
+}
+function rsExcel(def){
+  const blob=rsXlsx(rsExcelFeuilles(def));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=rsNomFichier(def)+'.xlsx';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
   return blob;
@@ -8002,6 +8185,7 @@ document.getElementById('v-res').addEventListener('click', e=>{
     try{ navigator.clipboard.writeText(url).then(ok, ok); }catch(_){ ok(); }
   }
   else if(t.id==='rsPrint') rsImprimerSim();
+  else if(t.id==='rsXlsx') rsExcel(def);
   else if(t.id==='rsPrintD'){
     rsImprimer(rsNomFichier(def), '<div class="rs-paper">'+rsLettreHtml(def.build(rsVals(def)))+'</div>');
   }
