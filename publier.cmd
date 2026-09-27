@@ -45,7 +45,7 @@ if exist "%PREP%" rmdir /s /q "%PREP%"
 mkdir "%PREP%\workflows"
 mkdir "%PREP%\tests"
 echo === 1/4 Copie des fichiers prepares ===
-for %%f in (index.html template.html update.py sw.js manifest.webmanifest publier.cmd confidentialite.html CNAME icon-192.png icon-512.png icon-512-maskable.png favicon.svg .gitignore) do (
+for %%f in (index.html template.html update.py sw.js manifest.webmanifest publier.cmd confidentialite.html robots.txt CNAME icon-192.png icon-512.png icon-512-maskable.png favicon.svg .gitignore) do (
   if exist "%%f" copy /y "%%f" "%PREP%\" >nul
 )
 copy /y ".github\workflows\*.yml" "%PREP%\workflows\" >nul

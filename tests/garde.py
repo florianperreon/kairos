@@ -99,6 +99,13 @@ if "toISOString().slice(0,10)" in src:
     soucis.append("toISOString().slice(0,10) : une date calendaire est calculée en UTC, "
                   "elle recule d'un jour dans les fuseaux en avance (utiliser isoJour)")
 
+# 6. Le portail est privé : jamais indexé (moteurs de recherche comme robots d'IA)
+if not re.search(r'<meta name="robots" content="[^"]*noindex', src):
+    soucis.append("la balise <meta name=\"robots\" content=\"noindex…\"> a disparu : le portail redeviendrait indexable")
+rob = RACINE / "robots.txt"
+if not rob.exists() or not re.search(r"User-agent: \*\s*\nDisallow: /\s*$", rob.read_text(encoding="utf-8"), re.M):
+    soucis.append("robots.txt absent ou ne se termine plus par « User-agent: * / Disallow: / »")
+
 if soucis:
     print("Garde-fou : %d problème(s) — la page n'est PAS publiable\n" % len(soucis))
     for s in soucis:

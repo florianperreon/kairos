@@ -1,0 +1,54 @@
+# Kairos — portail privé, réservé aux membres invités. Aucune indexation.
+#
+# Google et Bing gardent le droit de LIRE la page, et seulement pour y trouver la
+# consigne <meta name="robots" content="noindex"> : c'est elle qui retire le site
+# de leurs résultats. Un robot à qui on interdit la page ne voit jamais le noindex
+# et peut continuer d'afficher l'adresse seule.
+User-agent: Googlebot
+User-agent: Bingbot
+Allow: /
+
+# Robots d'IA (entraînement, recherche, assistants) : tout est interdit.
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: OAI-SearchBot
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: Claude-Web
+User-agent: anthropic-ai
+User-agent: Google-Extended
+User-agent: GoogleOther
+User-agent: Google-CloudVertexBot
+User-agent: Applebot
+User-agent: Applebot-Extended
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: CCBot
+User-agent: Bytespider
+User-agent: Meta-ExternalAgent
+User-agent: Meta-ExternalFetcher
+User-agent: FacebookBot
+User-agent: Amazonbot
+User-agent: cohere-ai
+User-agent: cohere-training-data-crawler
+User-agent: MistralAI-User
+User-agent: DuckAssistBot
+User-agent: YouBot
+User-agent: Diffbot
+User-agent: Timpibot
+User-agent: ImagesiftBot
+User-agent: Omgilibot
+User-agent: Omgili
+User-agent: PetalBot
+User-agent: AI2Bot
+User-agent: Ai2Bot-Dolma
+User-agent: Kangaroo Bot
+User-agent: PanguBot
+User-agent: Webzio-Extended
+User-agent: iaskspider/2.0
+Disallow: /
+
+# Tous les autres robots (moteurs, archives, outils SEO) : tout est interdit.
+User-agent: *
+Disallow: /
