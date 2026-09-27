@@ -3479,6 +3479,35 @@ test.describe('Parcours en missions', () => {
     expect(r).toEqual({ mail: true, drive: true, bac: true });
   });
 
+  // 28/09/2026 : cocher une case ne déplace rien. Jeu d'essai pessimiste : la case termine la mission 1.5,
+  // qui sort alors de « Mes prochaines missions » (bloc PLUS HAUT dans la page, qui rétrécit) ; une autre
+  // mission (1.2) est dépliée et doit le rester ; aucune autre ne doit s'ouvrir.
+  test('cocher une case : rien ne bouge à l’écran, les blocs dépliés restent dépliés', async ({ page }) => {
+    await page.setViewportSize({ width: 1100, height: 700 });
+    await ouvrir(page);
+    await poser(page, { mis: { '1.5/mail': '2026-09-20T10:00:00.000Z', '1.5/drive': '2026-09-20T10:00:00.000Z' }, etapes: { dm: ok } });
+    await page.evaluate(() => { document.getElementById('homeParcoursPanel').style.minHeight = '3000px'; });
+    await page.click('[data-mi="1.5"] summary');
+    await page.click('[data-mi="1.2"] summary');
+    await page.evaluate(() => document.querySelector('input[data-mia="1.5/mega"]').scrollIntoView({ block: 'center' }));
+    const avant = await page.evaluate(() => ({
+      y: document.querySelector('input[data-mia="1.5/mega"]').closest('.mi-a').getBoundingClientRect().top,
+      ouverts: [...document.querySelectorAll('details.mi[open]')].map(d => d.dataset.mi),
+      prochaines: document.querySelectorAll('#homeMissions .mi-pc').length }));
+    await page.check('input[data-mia="1.5/mega"]');
+    const apres = await page.evaluate(() => ({
+      y: document.querySelector('input[data-mia="1.5/mega"]').closest('.mi-a').getBoundingClientRect().top,
+      ouverts: [...document.querySelectorAll('details.mi[open]')].map(d => d.dataset.mi),
+      prochaines: document.querySelectorAll('#homeMissions .mi-pc').length,
+      coche: document.querySelector('input[data-mia="1.5/mega"]').checked,
+      etat: document.querySelector('[data-mi="1.5"] .mi-e').textContent }));
+    expect(apres.coche).toBe(true);
+    expect(apres.etat).toContain('Faite');
+    expect(apres.prochaines).toBeLessThan(avant.prochaines);        // le bloc du haut a bien rétréci…
+    expect(Math.abs(apres.y - avant.y)).toBeLessThan(1);            // …et la case n'a pas bougé
+    expect(apres.ouverts.sort()).toEqual(avant.ouverts.sort());      // mêmes blocs dépliés, pas un de plus
+  });
+
   test('porte 1 : prête sans 1.3 ni 1.4, la demande part au parrain avec le résumé, puis s’ouvre', async ({ page }) => {
     const erreurs = await ouvrir(page);
     const quand = '2026-09-01T10:00:00.000Z';

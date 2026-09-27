@@ -3862,6 +3862,8 @@ const misTs = v => String(v||'').replace(/^[!~]/,'');
 const misFaitV = v => !!v && typeof v==='string' && v[0] !== '!';
 let PORTES = {}, PORTE_VALIDEUR = '', PORTES_OK = false, A_VALIDER = [];
 let MI_PHASE = null, MI_CHOISIE = false, MI_OUVERTE = null;
+// Pendant un rafraîchissement déclenché par une case : ce qui était déplié le reste, rien d'autre ne s'ouvre
+let MI_GARDE = null;   // { mis:Set(ids de missions ouvertes), x:[bool…] (réflexes, fiches) }
 // Correspondance ancien parcours (clés « phase-étape-case ») → nouvelles actions
 const MIS_MIGR = {
   '0-0-3':'1.1/esp','0-0-4':'1.2/bac','0-0-5':'1.2/bcbg','0-0-6':'1.2/bravo',
@@ -4125,7 +4127,8 @@ function buildMissions(){
   }).join('');
   // mission ouverte par défaut : celle demandée, sinon la première en cours / à faire de la phase
   let ouvrir = MI_OUVERTE;
-  if(!ouvrir || !(ph.missions||[]).some(m=>m.id===ouvrir)){
+  if(MI_GARDE) ouvrir = null;
+  else if(!ouvrir || !(ph.missions||[]).some(m=>m.id===ouvrir)){
     const m = (ph.missions||[]).find(m=>{ const e=miEtat(ph,m); return e==='encours'||e==='dispo'; });
     ouvrir = m ? m.id : null;
   }
@@ -4138,7 +4141,7 @@ function buildMissions(){
     + '<div class="mi-body">'
     + (ph.intro?'<div class="phase-intro">'+esc(ph.intro)+'</div>':'')
     + (bloquee?'<p class="mi-bl">🔒 '+esc(miBlocage(ph, (ph.missions||[])[0]||{}))+' Tu peux déjà tout lire pour t’y préparer.</p>':'')
-    + (ph.missions||[]).map(m=>miMissionHtml(ph, m, m.id===ouvrir)).join('')
+    + (ph.missions||[]).map(m=>miMissionHtml(ph, m, MI_GARDE ? MI_GARDE.mis.has(m.id) : m.id===ouvrir)).join('')
     + miPorteHtml(ph)
     + '</div>'
     + (refl.length ? '<details class="mi-x"><summary>Les '+refl.length+' réflexes de la lignée</summary><div class="mi-rf">'
@@ -4247,8 +4250,32 @@ document.addEventListener('change', e=>{
   MIS[cb.dataset.mia] = (cb.checked ? '' : '!') + new Date().toISOString();
   saveMis();
   MI_CHOISIE = true; MI_PHASE = t.ph.id; MI_OUVERTE = t.m.id;
-  majParcours();
+  miRafraichirSurPlace(cb);
 });
+// Cocher une case ne doit rien déplacer (28/09/2026) : on redessine (états, compteurs, prérequis débloqués,
+// prochaines missions) en gardant dépliés exactement les mêmes blocs, puis on recale la page pour que la
+// case cliquée reste au même endroit de l'écran — même si un bloc plus haut a changé de hauteur.
+function miRafraichirSurPlace(cb){
+  const cle = cb.dataset.mia;
+  const ligne = cb.closest('.mi-a') || cb;
+  const y0 = ligne.getBoundingClientRect().top;
+  const panel = document.getElementById('homeParcoursPanel');
+  MI_GARDE = {
+    mis: new Set([...panel.querySelectorAll('details.mi[open]')].map(d=>d.dataset.mi)),
+    x: [...panel.querySelectorAll('details.mi-x')].map(d=>d.open)
+  };
+  try{ majParcours(); } finally { MI_GARDE_X(panel); MI_GARDE = null; }
+  const nv = panel.querySelector('input[data-mia="'+(window.CSS && CSS.escape ? CSS.escape(cle) : cle)+'"]');
+  if(nv){
+    const y1 = (nv.closest('.mi-a') || nv).getBoundingClientRect().top;
+    if(Math.abs(y1 - y0) > 0.5) window.scrollBy(0, y1 - y0);
+    try{ nv.focus({ preventScroll:true }); }catch(e){}
+  }
+}
+function MI_GARDE_X(panel){
+  if(!MI_GARDE) return;
+  [...panel.querySelectorAll('details.mi-x')].forEach((d,i)=>{ if(MI_GARDE.x[i]) d.open = true; });
+}
 document.addEventListener('click', e=>{
   if(!e.target.closest) return;
   const ch = e.target.closest('[data-miph]');
