@@ -3610,3 +3610,127 @@ test.describe('Parcours en missions', () => {
     expect(r).toBe(true);
   });
 });
+
+test.describe('Ma lignée — parcours des filleuls', () => {
+  // 27/09/2026 : le parrain voit, en lecture seule, ce que chaque filleul a coché (manuel ou auto)
+  // et ce qu'il lui reste à faire. Données du filleul : RPC lignee_parcours (mis, anciennes cases, portes).
+  const MISSIONS = JSON.parse(lire('tests/missions.json'));
+  const poser = (page) => page.evaluate((missions) => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    CONTENU = { pages: {}, nav: [], missions, reflexes: [] };
+    MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Moi Test', parrain: 'Aucun' });
+    byId.set(103, { id: 103, name: 'Chloe Martin', parrain: 'Aline' });
+    PARCOURS = { statut: 'ROLE_BEMAN', etapes: {} };
+    MIS = { _mig: 1, '1.5/mail': '2026-09-01T08:00:00.000Z' };
+    PORTES = {};
+    DATA = { adhDates: {} };
+    ADH.clear(); [101, 102, 103].forEach(i => ADH.add(i));
+    A.length = 0; R.length = 0; F.length = 0; E.length = 0;
+    // Chloe a co-animé un atelier passé : validation Kairos constatée sur les données du réseau
+    A.push({ k: 'a', id: 9, th: 'X', title: 'Atelier X', start: vAddDays(todayIso, -20), end: vAddDays(todayIso, -20), pilotes: 'Chloe Martin', guests: [] });
+    LIG = {
+      liste: [
+        { membre_id: 103, nom: 'Chloe Martin', niveau: 2, parrain_id: 101, connecte: true, participe: true, parcours: { statut: 'ROLE_NEOMAN', etapes: {} } },
+        { membre_id: 101, nom: 'Aline Durand', niveau: 1, parrain_id: 20028, connecte: true, participe: true,
+          parcours: { statut: 'ROLE_NEOMAN', etapes: { dm: { d: '2026-06-02' }, ad: { d: '2026-06-20' }, trois_jours: { d: '2026-07-10' } } } },
+        { membre_id: 102, nom: 'Bea Hors', niveau: 1, parrain_id: 20028, connecte: false, participe: true, parcours: null },
+        { membre_id: 104, nom: 'Zed Invite', niveau: 1, parrain_id: 20028, connecte: false, participe: true, parcours: null },
+      ],
+      mm: {}, moi: [], vict: [], bravos: {}, parcOk: true,
+      parc: {
+        101: { membre_id: 101, mis: { _mig: 1, '1.1/esp': '2026-09-10T10:00:00.000Z', '1.2/bac': '2026-09-12T10:00:00.000Z', '1.2/bcbg': '!2026-09-13T10:00:00.000Z' },
+               anciennes: {}, mis_maj: '2026-09-13T10:00:00Z',
+               portes: { porte1: { statut: 'demandee', demande_le: '2026-09-20T09:00:00Z' } } },
+        103: { membre_id: 103, mis: {}, anciennes: { '0-1-2': true }, mis_maj: '2026-08-01T10:00:00Z', portes: {} },
+      },
+    };
+    LIG_SUB = 'parc'; LIG_PORTEE = ''; LIG_PARC_OUV = new Set();
+    document.querySelectorAll('[data-v="lig"]').forEach(x => x.hidden = false);
+    showTab('lig'); buildLig();
+    return true;
+  }, MISSIONS);
+  const action = (page, id, cle) => page.evaluate(({ id, cle }) => {
+    const [m, a] = cle.split('/');
+    const li = [...document.querySelectorAll('details.lp[data-lp="' + id + '"] details.lp-m')]
+      .find(d => d.querySelector('.mi-n').textContent === m);
+    const l = [...li.querySelectorAll('.lp-a')];
+    const t = CONTENU.missions.phases.flatMap(p => p.missions).find(x => x.id === m).actions.findIndex(x => x.id === a);
+    const el = l[t];
+    return { ok: el.classList.contains('ok'), info: el.querySelector('.mi-ai').textContent, src: el.querySelector('.mi-v').textContent };
+  }, { id, cle });
+
+  test('ce que le filleul a coché, ce qui est automatique et ce qui reste, sans toucher à mon parcours', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page);
+    const r = await page.evaluate(() => ({
+      onglet: document.querySelector('#ligSub button.on').dataset.s,
+      slug: SLUG_LIG['parcours'],
+      ordre: [...document.querySelectorAll('details.lp')].map(d => +d.dataset.lp),
+      tagAline: document.querySelector('details.lp[data-lp="101"] .lg-sig').textContent,
+      sans: document.querySelector('#ligCorps').textContent.includes('Pas encore sur Kairos (1)'),
+      invite: document.querySelector('#ligCorps').textContent.includes('Zed Invite'),
+      ou: document.querySelector('details.lp[data-lp="101"] .lp-c').textContent,
+      avenir: document.querySelector('details.lp[data-lp="101"] .lp-ph.fut').textContent,
+      porte1: document.querySelector('details.lp[data-lp="101"] .lp-po').textContent,
+      moi: MOI_ID, mesCases: Object.keys(MIS).sort(), statut: monStatut(),
+    }));
+    expect(r.onglet).toBe('parc');
+    expect(r.slug).toBe('parc');
+    expect(r.ordre).toEqual([101, 103]);                 // point d'étape en attente d'abord
+    expect(r.tagAline).toContain('Point d’étape 1 en attente de validation');
+    expect(r.sans).toBe(true);
+    expect(r.invite).toBe(false);                        // non adhérent : absent
+    expect(r.ou).toContain('Phase 1');
+    expect(r.avenir).toContain('à venir');
+    expect(r.porte1).toContain('en attente de validation');
+    // mon contexte est intact après le rendu
+    expect(r.moi).toBe(20028);
+    expect(r.mesCases).toEqual(['1.5/mail', '_mig']);
+    expect(r.statut).toBe('BEMAN');
+
+    const esp = await action(page, 101, '1.1/esp');
+    expect(esp).toEqual({ ok: true, info: expect.stringContaining('coché le'), src: 'Coché par Aline' });
+    const dm = await action(page, 101, '1.1/dm');
+    expect(dm.ok).toBe(true); expect(dm.src).toBe('Auto · réseau'); expect(dm.info).toContain('relevé le');
+    const bcbg = await action(page, 101, '1.2/bcbg');         // décochée : reste à faire
+    expect(bcbg).toEqual({ ok: false, info: 'à faire', src: 'Coché par Aline' });
+    const mail = await action(page, 101, '1.5/mail');         // coché chez moi, pas chez elle
+    expect(mail.ok).toBe(false);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('filleul pas encore reconnecté : anciennes cases reprises, validations Kairos constatées', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page);
+    const mail = await action(page, 103, '1.5/mail');
+    expect(mail).toEqual({ ok: true, info: 'coché (ancien parcours)', src: 'Coché par Chloe' });
+    const co = await action(page, 103, '3.7/coanim');
+    expect(co.ok).toBe(true); expect(co.src).toBe('Auto · Kairos');
+    const note = await page.evaluate(() => document.querySelector('details.lp[data-lp="103"] .lp-d > .mi-ai').textContent);
+    expect(note).toContain('pas encore reconnecté');
+    // Aline, elle, n'a pas co-animé
+    expect((await action(page, 101, '3.7/coanim')).ok).toBe(false);
+  });
+
+  test('filleuls directs seulement, et une fiche ouverte le reste quand on change de filtre', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page);
+    await page.click('details.lp[data-lp="101"] > summary');
+    await page.click('#ligCorps [data-ligp="directs"]');
+    const r = await page.evaluate(() => ({
+      ids: [...document.querySelectorAll('details.lp')].map(d => +d.dataset.lp),
+      ouverte: document.querySelector('details.lp[data-lp="101"]').open,
+    }));
+    expect(r.ids).toEqual([101]);
+    expect(r.ouverte).toBe(true);
+  });
+
+  test('mon propre parcours dit que ma lignée le voit', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page);
+    const t = await page.evaluate(() => { majParcours(); return document.querySelector('#homeParcoursPanel .mi-vis').textContent; });
+    expect(t).toContain('Ma lignée → Parcours');
+  });
+});

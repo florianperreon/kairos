@@ -1182,6 +1182,29 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 :root[data-theme="dark"] .lg-sig.s-kairos{background:var(--surface-2);color:var(--ink-2)}
 .lg-st{display:inline-block;padding:1px 7px;border-radius:5px;font-size:11px;font-weight:800;letter-spacing:.03em;background:var(--accent-soft);color:var(--accent);margin-left:6px}
 td>.lg-st:first-child{margin-left:0}
+.lp>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(160px,1.1fr) 1.4fr 1.4fr;gap:10px 18px;align-items:start}
+.lp>summary::-webkit-details-marker{display:none}
+.lp>summary>.lp-c:nth-child(4){grid-column:1/-1}
+.lp[open]>summary{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:12px}
+.lp-lab{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);margin-bottom:2px}
+.lp-ph{margin:0 0 14px}
+.lp-ph.fut{display:flex;gap:10px;align-items:baseline;color:var(--ink-3)}
+.lp-pht{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.lp-pht b{margin-right:auto}
+.lp-m{border:1px solid var(--line);border-radius:9px;margin:0 0 6px;padding:0 10px}
+.lp-m>summary{display:flex;gap:8px;align-items:center;padding:7px 0;cursor:pointer}
+.lp-m>summary .mi-t{flex:1}
+.lp-al{list-style:none;margin:0;padding:0 0 8px}
+.lp-a{display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-top:1px dashed var(--line)}
+.lp-a .lp-i{width:16px;color:var(--ink-3);font-weight:800}
+.lp-a.ok .lp-i{color:var(--gold-ink)}
+.lp-a .lp-at{flex:1}
+.lp-a .lp-at small.mi-ai{display:block}
+.lp-a.opt{opacity:.8}
+.lp-po{font-size:13px;padding:7px 10px;border-radius:9px;background:var(--surface-2)}
+.lp-po.ok{background:var(--gold-soft);color:var(--gold-ink)}
+.mi-vis{font-size:12.5px;color:var(--ink-3);margin:6px 0 10px}
+@media (max-width:760px){ .lp>summary{grid-template-columns:1fr} }
 .lg-jauge{display:inline-block;width:48px;height:6px;border-radius:99px;background:var(--surface-2);vertical-align:middle;overflow:hidden}
 .lg-jauge i{display:block;height:100%;background:var(--gold);border-radius:99px}
 .lg-ctl{display:flex;flex-wrap:wrap;gap:8px}
@@ -1765,6 +1788,7 @@ a.mml-r:hover{border-color:var(--accent)}
     <section class="view" id="v-lig">
       <nav class="subtabs" id="ligSub">
         <button data-s="tab" class="on">Tableau de bord</button>
+        <button data-s="parc">Parcours</button>
         <button data-s="prog">Progression</button>
         <button data-s="vic">Victoires</button>
         <button data-s="arb">Arbre</button>
@@ -4138,6 +4162,7 @@ function buildMissions(){
       + (g.pages||[]).filter(s=>C.pages&&C.pages[s]).map(s=>'<a href="#p/'+s+'">'+(C.pages[s].i?C.pages[s].i+' ':'')+esc(C.pages[s].t)+'</a>').join('')+'</div>').join('')+'</div>').join('');
   el.innerHTML = '<h2>Mon parcours <span class="badge-lig">4 phases · 2 points d’étape</span></h2>'
     + '<div class="mi-chips">'+puces+'</div>'
+    + '<p class="mi-vis">👀 Ton parrain et ta lignée montante voient ton avancement (Ma lignée → Parcours).</p>'
     + '<div class="mi-body">'
     + (ph.intro?'<div class="phase-intro">'+esc(ph.intro)+'</div>':'')
     + (bloquee?'<p class="mi-bl">🔒 '+esc(miBlocage(ph, (ph.missions||[])[0]||{}))+' Tu peux déjà tout lire pour t’y préparer.</p>':'')
@@ -6520,8 +6545,8 @@ let LIG_QUI = 'moi';       // progression : 'moi' | 'lignee'
 let LIG_N = 12;            // progression : nombre de semaines
 let LIG_VF = '';           // victoires : '' = tout le monde, 'lignee' = moi + ma descendance
 let LIG_INV = false;       // arbre : afficher les invités (non adhérents)
-const LIG_SUBS = ['tab','prog','vic','arb'];
-const LIG_SLUG = { tab:'tableau-de-bord', prog:'progression', vic:'victoires', arb:'arbre' };
+const LIG_SUBS = ['tab','parc','prog','vic','arb'];
+const LIG_SLUG = { tab:'tableau-de-bord', parc:'parcours', prog:'progression', vic:'victoires', arb:'arbre' };
 const SLUG_LIG = Object.fromEntries(Object.entries(LIG_SLUG).map(([k,v])=>[v,k]));
 const LIG_HAB = { mia:'MIA / Assurance niveau II', miobsp:'MIOBSP', alpsi:'ALPSI / CIF', orias:'ORIAS', immo:'Immobilier' };
 
@@ -6533,21 +6558,24 @@ async function chargerLig(){
     if(t.error) throw t.error;
     const liste = t.data || [];
     const ids = liste.filter(p=>p.connecte).map(p=>p.membre_id);
-    const [m, o, v, b] = await Promise.all([
+    const [m, o, v, b, pc] = await Promise.all([
       ids.length ? SB.from('mail_manager').select('membre_id,semaine,donnees')
                     .eq('statut','publie').gte('semaine', depuis).in('membre_id', ids)
                  : Promise.resolve({data:[]}),
       SB.from('mail_manager').select('semaine,donnees,statut').eq('membre_id', MOI_ID).gte('semaine', depuis),
       SB.rpc('victoires', { p_depuis: vAddDays(todayIso, -90) }),
-      SB.from('victoires_bravos').select('cle,membre_id').gte('cree_le', vAddDays(todayIso, -120)).limit(5000)
+      SB.from('victoires_bravos').select('cle,membre_id').gte('cree_le', vAddDays(todayIso, -120)).limit(5000),
+      ids.length ? SB.rpc('lignee_parcours') : Promise.resolve({data:[]})
     ]);
+    const parc = {};
+    ((pc && !pc.error && pc.data) || []).forEach(r=>{ parc[r.membre_id] = r; });
     const mm = {};
     (m.data||[]).forEach(r=>{ (mm[r.membre_id] = mm[r.membre_id] || []).push(r); });
     Object.values(mm).forEach(l=>l.sort((x,y)=>x.semaine.localeCompare(y.semaine)));
     const bravos = {};
     (b.data||[]).forEach(r=>{ (bravos[r.cle] = bravos[r.cle] || []).push(r.membre_id); });
     LIG = { liste, mm, moi:(o.data||[]).sort((x,y)=>x.semaine.localeCompare(y.semaine)),
-            vict: v.error ? [] : (v.data||[]), bravos };
+            vict: v.error ? [] : (v.data||[]), bravos, parc, parcOk: !!(pc && !pc.error) };
   }catch(e){ return false; }
   document.querySelectorAll('[data-v="lig"]').forEach(x=>x.hidden=false);
   if(window.__booted){ try{ buildLig(); }catch(e){} }
@@ -6633,7 +6661,8 @@ function buildLig(){
   if(!el) return;
   document.querySelectorAll('#ligSub button').forEach(b=>b.classList.toggle('on', b.dataset.s===LIG_SUB));
   if(!LIG){ el.innerHTML = '<div class="panel"><p class="mm-vide">Ta lignée s’affiche une fois ton compte rattaché à ta fiche du réseau.</p></div>'; return; }
-  el.innerHTML = LIG_SUB==='prog' ? ligProgression()
+  el.innerHTML = LIG_SUB==='parc' ? ligParcours()
+               : LIG_SUB==='prog' ? ligProgression()
                : LIG_SUB==='vic'  ? ligVictoires()
                : LIG_SUB==='arb'  ? ligArbre()
                : ligTableau();
@@ -6685,6 +6714,141 @@ function ligTableau(){
   if(invites) h += '<p class="mm-note">'+invites+' membre'+(invites>1?'s':'')+' invité'+(invites>1?'s':'')+' (non adhérent'+(invites>1?'s':'')+') dans ta descendance — visibles dans l’arbre.</p>';
   return h;
 }
+
+/* --- parcours des filleuls ---
+   Lecture seule. Les cases du filleul (etat.donnees.mis) et ses points d'étape viennent de la RPC
+   lignee_parcours (bornée à ma descendance connectée). Le rendu réutilise les fonctions du parcours
+   en substituant, le temps d'un calcul synchrone, MIS / PARCOURS / PORTES / MOI_ID par ceux du filleul. */
+const LIG_KAIROS_VIF = ['mm4','coanim','dm4','form3'];   // recalculables pour un autre membre (données réseau)
+let LIG_PARC_OUV = new Set();
+function ligMisDe(d){
+  const mis = Object.assign({}, (d && d.mis) || {});
+  // pas encore reconnecté depuis le parcours en missions : on relit ses anciennes cases
+  if(!mis._mig){
+    const anc = (d && d.anciennes) || {};
+    Object.keys(anc).forEach(k=>{ const c = MIS_MIGR[k]; if(c && anc[k] && !mis[c]) mis[c] = '~'; });
+  }
+  return mis;
+}
+function ligCtx(p, fn){
+  const sv = { MIS, PARCOURS, PORTES, MOI_ID };
+  const d = (LIG && LIG.parc && LIG.parc[p.membre_id]) || {};
+  MIS = ligMisDe(d); PARCOURS = p.parcours || null; PORTES = d.portes || {}; MOI_ID = p.membre_id;
+  try{
+    // validations Kairos pas encore mémorisées chez lui : constatées sur les données du réseau
+    misPhases().forEach(ph=>(ph.missions||[]).forEach(m=>(m.actions||[]).forEach(a=>{
+      const cle = m.id+'/'+a.id;
+      if(a.v==='auto' && LIG_KAIROS_VIF.includes(a.k) && !misFaitV(MIS[cle]) && miKairos(a.k)) MIS[cle] = '~';
+    })));
+    return fn(d);
+  } finally { MIS = sv.MIS; PARCOURS = sv.PARCOURS; PORTES = sv.PORTES; MOI_ID = sv.MOI_ID; }
+}
+function ligParcInfo(p){
+  return ligCtx(p, d=>{
+    const phs = misPhases().filter(x=>!x.avenir);
+    let ok=0, tot=0; phs.forEach(x=>{ const r=miPhaseProg(x); ok+=r.ok; tot+=r.tot; });
+    const cour = misPhases().find(x=>x.id===miPhaseDefaut()) || phs[0];
+    const portes = phs.filter(x=>x.porte && x.porte.v==='parrain').map(x=>miPorte(x.porte.id));
+    const attente = portes.find(s=>s.attente) || null;
+    const prete = portes.find(s=>!s.ouverte && s.prete) || null;
+    const revoir = portes.find(s=>s.revoir && !s.prete) || null;
+    const pro = miProchaines(1)[0] || null;
+    const der = Object.entries(MIS).filter(([k,v])=>k[0]!=='_' && misFaitV(v) && v[0]!=='~')
+                  .map(([,v])=>misTs(v).slice(0,10)).sort().pop() || '';
+    return { ok, tot, cour, courProg: cour ? miPhaseProg(cour) : null, attente, prete, revoir, pro, der,
+             ancien: !((d.mis||{})._mig), vu: d.mis_maj || '' };
+  });
+}
+function ligParcActionHtml(ph, m, a, prenom){
+  const e = miAction(m, a);
+  let src, info;
+  if(a.v==='auto' && a.auto){
+    src = '<span class="mi-v auto" title="Relevé dans les données du réseau">Auto · réseau</span>';
+    info = e.ok ? (e.d ? 'relevé le '+fmtD(e.d) : 'relevé par le réseau')
+                : (e.f && e.f.f ? 'inscrit pour le '+fmtD(e.f.f) : 'pas encore relevé');
+  } else if(a.v==='auto'){
+    src = '<span class="mi-v auto" title="Calculé par Kairos">Auto · Kairos</span>';
+    info = e.ok ? 'validé par Kairos'+(e.d ? ' le '+fmtD(e.d) : '') : (a.k==='obj' ? 'se valide quand '+prenom+' saisit ses objectifs' : 'pas encore constaté');
+  } else {
+    src = '<span class="mi-v moi" title="Case cochée par '+esc(prenom)+'">Coché par '+esc(prenom)+'</span>';
+    info = e.ok ? (e.d ? 'coché le '+fmtD(e.d) : 'coché (ancien parcours)') : 'à faire';
+  }
+  return '<li class="lp-a'+(e.ok?' ok':'')+(a.opt?' opt':'')+'"><span class="lp-i">'+(e.ok?'✓':'○')+'</span>'
+    + '<span class="lp-at">'+esc(a.t)+(a.opt?' <small>(si concerné)</small>':'')+'<small class="mi-ai">'+esc(info)+'</small></span>'+src+'</li>';
+}
+function ligParcDetail(p, prenom){
+  return ligCtx(p, ()=>misPhases().map(ph=>{
+    if(ph.avenir) return '<div class="lp-ph fut"><b>Phase '+ph.n+' — '+esc(ph.t)+'</b><span class="mi-ai">à venir</span></div>';
+    const pr = miPhaseProg(ph), ouv = miPhaseOuverte(ph);
+    let porte = '';
+    if(ph.porte){
+      const s = miPorte(ph.porte.id), nom = miPorteNom(ph.porte.id);
+      const etat = s.ouverte ? (s.office ? '✓ validé d’office (statut '+esc(monStatut())+')' : s.auto ? '✓ atteint'
+                     : '✓ validé'+(s.r && s.r.traite_nom ? ' par '+esc(s.r.traite_nom) : '')+(s.r && s.r.traite_le ? ' le '+fmtD(isoJour(new Date(s.r.traite_le))) : ''))
+                 : s.auto ? 'pas encore'
+                 : s.attente ? '⏳ en attente de validation depuis le '+fmtD(isoJour(new Date(s.r.demande_le)))
+                 : s.prete ? 'prêt — '+esc(prenom)+' n’a pas encore demandé la validation'
+                 : (s.revoir ? '« pas encore »'+(s.r.mot ? ' : '+esc(s.r.mot) : '')+' — ' : '')+(s.manque||[]).length+' mission'+((s.manque||[]).length>1?'s':'')+' avant';
+      porte = '<div class="lp-po'+(s.ouverte?' ok':'')+'"><span class="mi-pn">'+nom+'</span> '+esc(ph.porte.t)+' · <b>'+etat+'</b></div>';
+    }
+    return '<div class="lp-ph"><div class="lp-pht"><b>Phase '+ph.n+' — '+esc(ph.t)+'</b>'
+      + (ouv ? '' : ' <span class="mi-e bloquee">🔒 pas encore ouverte</span>')
+      + '<span class="lg-jauge"><i style="width:'+(pr.tot?Math.round(pr.ok*100/pr.tot):0)+'%"></i></span> <span class="num">'+pr.ok+'/'+pr.tot+'</span></div>'
+      + (ph.missions||[]).map(m=>{
+          const e = miEtat(ph, m), mp = miProg(m);
+          return '<details class="lp-m mi-'+e+'"'+(e==='encours'?' open':'')+'><summary><span class="mi-n">'+esc(m.id)+'</span><span class="mi-t">'+esc(m.t)+'</span>'
+            + '<span class="mi-e '+e+'">'+(e==='faite'?'✓ ':'')+MI_ETAT_LIB[e]+'</span><span class="mi-p num">'+mp.ok+'/'+mp.tot+'</span></summary>'
+            + '<ul class="lp-al">'+(m.actions||[]).map(a=>ligParcActionHtml(ph, m, a, prenom)).join('')+'</ul></details>';
+        }).join('')
+      + porte + '</div>';
+  }).join(''));
+}
+function ligParcours(){
+  let h = '<div class="panel"><div class="mm-head"><h2>Parcours de mes filleuls</h2></div>'
+    + '<p class="mm-sub">Ce que chacun a coché lui-même, ce que le réseau et Kairos ont validé automatiquement, et ce qu’il lui reste à faire. Lecture seule : c’est ton filleul qui avance son parcours.</p>'
+    + '<div class="mm-filtre"><button type="button" data-ligp=""'+(LIG_PORTEE?'':' class="on"')+'>Toute ma descendance</button>'
+    + '<button type="button" data-ligp="directs"'+(LIG_PORTEE==='directs'?' class="on"':'')+'>Filleuls directs</button></div>';
+  if(!misData()) return h + '<p class="mm-vide" style="margin-top:14px">Le parcours n’est pas encore chargé.</p></div>';
+  const base = LIG.liste.filter(p => ADH.has(p.membre_id) && (LIG_PORTEE!=='directs' || p.niveau===1));
+  const co = base.filter(p=>p.connecte), sans = base.filter(p=>!p.connecte);
+  if(!base.length) return h + '<p class="mm-vide" style="margin-top:14px">Pas encore d’adhérent dans ta descendance.</p></div>';
+  if(co.length && !LIG.parcOk) h += '<p class="mi-bl" style="margin-top:12px">Les cases cochées n’ont pas pu être chargées : seules les validations du réseau s’affichent.</p>';
+  const l = co.map(p=>({ p, i: ligParcInfo(p) })).sort((x,y)=>
+      (!!y.i.attente - !!x.i.attente) || (!!y.i.prete - !!x.i.prete) || (x.p.niveau - y.p.niveau) || x.p.nom.localeCompare(y.p.nom,'fr'));
+  const aVal = l.filter(x=>x.i.attente).length;
+  if(aVal) h += '<p class="mm-sub"><b>'+aVal+' point'+(aVal>1?'s':'')+' d’étape en attente de validation</b> — ils sont aussi en haut de la page d’accueil de la personne qui valide.</p>';
+  h += '</div>';
+  h += l.map(({p, i})=>{
+    const prenom = String(p.nom||'').split(/\s+/)[0] || p.nom;
+    const parrain = p.parrain_id===MOI_ID ? '' : ligNom(p.parrain_id);
+    const st = ligStatut(p);
+    const tags = [];
+    if(i.attente) tags.push('<span class="lg-sig">⏳ '+miPorteNom(i.attente.po.id)+' en attente de validation</span>');
+    else if(i.prete) tags.push('<span class="lg-sig s-kairos">'+miPorteNom(i.prete.po.id)+' prêt, pas encore demandé</span>');
+    if(i.revoir) tags.push('<span class="lg-sig s-kairos">'+miPorteNom(i.revoir.po.id)+' : « pas encore »</span>');
+    const ouv = LIG_PARC_OUV.has(p.membre_id);
+    return '<details class="panel lp" data-lp="'+p.membre_id+'"'+(ouv?' open':'')+'><summary>'
+      + '<div class="lp-q"><b>'+esc(p.nom)+'</b>'+(st?'<span class="lg-st">'+esc(st)+'</span>':'')
+      + '<span class="lg-nv">'+(p.niveau===1 ? 'filleul direct' : 'niveau '+p.niveau+(parrain?' · filleul de '+esc(parrain):''))+'</span></div>'
+      + '<div class="lp-c"><span class="lp-lab">Où il en est</span>'
+      + (i.cour ? '<b>Phase '+i.cour.n+' — '+esc(i.cour.t)+'</b> <span class="num">'+i.courProg.ok+'/'+i.courProg.tot+'</span>' : '—')
+      + '<span class="lg-nv"><span class="lg-jauge"><i style="width:'+(i.tot?Math.round(i.ok*100/i.tot):0)+'%"></i></span> '+i.ok+'/'+i.tot+' actions sur tout le parcours</span></div>'
+      + '<div class="lp-c"><span class="lp-lab">Prochaine mission</span>'
+      + (i.pro ? '<b>'+esc(i.pro.m.id)+'</b> '+esc(i.pro.m.t) : '<span class="lg-mu">rien à cocher pour l’instant</span>')
+      + '<span class="lg-nv">'+(i.der ? 'dernière case cochée le '+fmtD(i.der) : 'aucune case cochée dans le nouveau parcours')+'</span></div>'
+      + (tags.length ? '<div class="lp-c">'+tags.join('')+'</div>' : '')
+      + '</summary><div class="lp-d">'
+      + (i.ancien ? '<p class="mi-ai">'+esc(prenom)+' ne s’est pas encore reconnecté depuis le nouveau parcours : ses cases de l’ancien parcours sont reprises (sans date). Tout se met à jour à sa prochaine connexion.</p>' : '')
+      + ligParcDetail(p, prenom) + '</div></details>';
+  }).join('');
+  if(sans.length) h += '<div class="panel"><p class="mm-sub"><b>Pas encore sur Kairos ('+sans.length+')</b> — leur parcours n’est visible qu’une fois leur compte créé : '
+      + sans.sort((a,b)=>a.nom.localeCompare(b.nom,'fr')).map(p=>esc(p.nom)).join(', ')+'.</p></div>';
+  return h;
+}
+document.addEventListener('toggle', e=>{
+  const d = e.target; if(!d || !d.matches || !d.matches('details.lp')) return;
+  const id = +d.dataset.lp; if(d.open) LIG_PARC_OUV.add(id); else LIG_PARC_OUV.delete(id);
+}, true);
 
 /* --- progression --- */
 const LIG_METRIQUES = [
