@@ -3164,6 +3164,59 @@ test.describe('Mes alertes', () => {
     expect(r).toContain('n’est plus proposée par le réseau');
   });
 
+  // Multi-sélecteurs (27/09/2026) : les intitulés de séances (historique compris) et les pilotes.
+  // Pilotes = adhérents de l'annuaire + quiconque a déjà piloté ; la correspondance se fait sur le
+  // nom exact d'un des pilotes (« Jean Dupont » ne doit pas attraper « Jean Dupontel »).
+  test('séances et pilotes : autocomplétion, choix au clavier, correspondance exacte', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    await fauxSB(page, { alertes_regles: [], alertes: [] });
+    await page.evaluate(() => {
+      M.length = 0; byId.clear();
+      [[1, 'Jean Dupont'], [2, 'Jean Dupontel'], [3, 'Zoé Martin'], [4, 'Paul Ancien']].forEach(([id, name]) => { const m = { id, name }; M.push(m); byId.set(id, m); });
+      ADH.clear(); [1, 2, 3].forEach(i => ADH.add(i));              // Paul Ancien n'est plus adhérent
+      A[4].pilotes = 'Paul Ancien';                                   // …mais il a piloté (séance passée)
+      A[2].pilotes = 'Jean Dupontel';
+      ALR_REGLES = []; ALR = []; ALR_OK = true;
+      showTab('surv'); curTab = 'surv'; showSurvSub('alr'); ALR_EDIT = {}; buildSurv();
+    });
+    // intitulés : « capi » propose l'atelier FCPI (une seule entrée, bien qu'il y ait deux dates)
+    await page.fill('#alrTitQ', 'capi inv');
+    const sug = await page.$$eval('#alrTitSug li[data-alrsug]', l => l.map(x => x.querySelector('.alr-sl').textContent));
+    expect(sug).toEqual(['Capital investissement (FCPI/FIP/FPCI)']);
+    await page.press('#alrTitQ', 'Enter');
+    expect(await page.$$eval('#alrTitChips .alr-chip', l => l.map(x => x.firstChild.textContent))).toEqual(['Capital investissement (FCPI/FIP/FPCI)']);
+    expect(await page.inputValue('#alrTitQ')).toBe('');
+    // pilotes : les adhérents (même sans séance) et l'ancien pilote ; « dupont » : les deux Dupont
+    await page.fill('#alrPilQ', '');
+    await page.focus('#alrPilQ');
+    const tous = await page.$$eval('#alrPilSug li[data-alrsug] .alr-sl', l => l.map(x => x.textContent));
+    expect(tous.sort()).toEqual(['Jean Dupont', 'Jean Dupontel', 'Paul Ancien', 'Zoé Martin']);
+    await page.fill('#alrPilQ', 'zoe');
+    expect(await page.$$eval('#alrPilSug li[data-alrsug] .alr-sl', l => l.map(x => x.textContent))).toEqual(['Zoé Martin']);
+    await page.fill('#alrPilQ', 'dupont');
+    await page.press('#alrPilQ', 'ArrowDown');
+    const choisi = await page.$eval('#alrPilSug li.on .alr-sl', x => x.textContent);
+    await page.press('#alrPilQ', 'Enter');
+    const r = await page.evaluate(() => {
+      const c = alrLireForm();
+      const ids = cr => alrSeances().filter(a => alrCorrespond(cr, a)).map(a => a.k + a.id);
+      return { c, dupont: ids({ pilotes: [{ k: 'jean dupont', l: 'Jean Dupont' }] }),
+               dupontel: ids({ pilotes: [{ k: 'jean dupontel', l: 'Jean Dupontel' }] }),
+               fcpi: ids({ titres: [{ k: 'capital investissement fcpi fip fpci' }] }) };
+    });
+    expect(r.c.titres).toEqual([{ k: 'capital investissement fcpi fip fpci', l: 'Capital investissement (FCPI/FIP/FPCI)' }]);
+    expect(r.c.pilotes.map(p => p.l)).toEqual([choisi]);
+    expect(r.dupont).toEqual(['a1', 'a2', 'a4', 'r7']);              // a3 est pilotée par Jean Dupontel
+    expect(r.dupontel).toEqual(['a3']);
+    expect(r.fcpi).toEqual(['a1', 'a5']);
+    // Retour arrière dans un champ vide : retire la dernière puce
+    await page.fill('#alrTitQ', '');
+    await page.press('#alrTitQ', 'Backspace');
+    expect(await page.$$eval('#alrTitChips .alr-chip', l => l.length)).toBe(0);
+    expect(erreurs).toEqual([]);
+  });
+
   test('Mes sessions → Mes alertes : l’adresse, le formulaire et l’enregistrement', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await preparer(page);
@@ -3178,7 +3231,7 @@ test.describe('Mes alertes', () => {
     await page.click('#alrOk');
     await page.waitForTimeout(50);
     const ins = await page.evaluate(() => window.__req.filter(x => x.table === 'alertes_regles' && x.ops[0][0] === 'insert').map(x => x.ops[0][1][0]));
-    expect(ins).toEqual([{ nom: 'VIGNEUX DE BRETAGNE', criteres: { types: [], sites: ['133'], mots: '', pilote: '', accessible: false } }]);
+    expect(ins).toEqual([{ nom: 'VIGNEUX DE BRETAGNE', criteres: { types: [], sites: ['133'], titres: [], pilotes: [], mots: '', accessible: false } }]);
     // formulaire vide : refusé sans requête
     await page.click('#alrNew');
     const n = await page.evaluate(() => window.__req.length);

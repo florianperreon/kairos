@@ -414,6 +414,19 @@ nav.botbar .nv-pt{margin-left:4px}
 .alr-sites{max-height:210px;overflow:auto;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);padding:6px 10px;display:flex;flex-direction:column}
 .alr-sites label{display:flex;gap:8px;align-items:baseline;font-size:13.5px;padding:3px 0;cursor:pointer}
 .alr-sites label small{color:var(--ink-3)}
+.alr-ms{display:flex;flex-wrap:wrap;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);padding:5px 6px;cursor:text}
+.alr-ms:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.alr-ms .alr-chips{display:contents}
+.alr-ms input[type=text]{flex:1;min-width:180px;border:0;padding:4px 4px;background:transparent;box-shadow:none;outline:none}
+.alr-chip{display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft);color:var(--ink);border:1px solid var(--accent);border-radius:99px;padding:2px 4px 2px 10px;font-size:13px;font-weight:600;max-width:100%}
+.alr-chip button{border:0;background:none;color:var(--ink-2);font-size:16px;line-height:1;cursor:pointer;padding:0 5px;border-radius:99px}
+.alr-chip button:hover{background:var(--surface);color:var(--bad)}
+.alr-sug{list-style:none;margin:2px 0 0;padding:4px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);box-shadow:var(--shadow);max-height:280px;overflow:auto}
+.alr-sug li{padding:7px 9px;border-radius:6px;cursor:pointer;display:flex;flex-direction:column;gap:1px}
+.alr-sug li.on,.alr-sug li[data-alrsug]:hover{background:var(--accent-soft)}
+.alr-sug .alr-sl{font-size:14px;font-weight:600}
+.alr-sug .alr-sm{font-size:12px;color:var(--ink-3)}
+.alr-sug li.alr-sp{cursor:default;font-size:12.5px;color:var(--ink-3);font-style:italic}
 .alr-apercu{font-size:13px;color:var(--ink-2);background:var(--surface);border:1px dashed var(--line-2);border-radius:8px;padding:8px 10px;margin:0}
 .alr-err{color:var(--bad);font-size:13px;margin:0}
 .alr-fb{display:flex;gap:8px;flex-wrap:wrap}
@@ -2212,9 +2225,47 @@ const alrMots = s => String(s||'').split(/[,;]+/).map(m=>norm(m).replace(/\s+/g,
 const alrSiteLib = id => { const s=SITES[id]||SITES[String(id)]; if(!s) return ''; const v=(s[1]||'').trim();
   return s[0] + (v && norm(v)!==norm(s[0]) ? ' — '+v : ''); };
 const alrSeances = () => [...A, ...R, ...F, ...E];
+// Intitulé normalisé d'une séance (même clé que SAME / « prochaines dates disponibles »)
+const alrTKey = a => a.tkey || norm(a.title||'').replace(/[^a-z0-9]+/g,' ').trim();
+const alrTitres = c => ((c&&c.titres)||[]).filter(t=>t && t.k);
+const alrNomK = s => norm(s||'').replace(/[^a-z0-9]+/g,' ').trim();
+const alrPilotesDe = c => ((c&&c.pilotes)||[]).filter(t=>t && t.k);
+// Les pilotes possibles : un pilote est un adhérent du réseau (vérifié le 27/09/2026 sur tout
+// l'historique : 380 pilotes sur 382 sont dans l'annuaire, 181 des 183 pilotes à venir sont
+// adhérents aujourd'hui). La liste = les adhérents de l'annuaire + toute personne ayant déjà
+// piloté (d'anciens adhérents, et les rares intervenants hors annuaire) : personne ne manque.
+function alrPilotes(){
+  const m = new Map();
+  const ajout = (nom, adh) => { const k = alrNomK(nom); if(!k) return null;
+    let e = m.get(k); if(!e){ e = { k, l:String(nom).trim(), n:0, tot:0, adh:false }; m.set(k, e); }
+    if(adh) e.adh = true; return e; };
+  M.forEach(x=>{ if(ADH.has(x.id)) ajout(x.name, true); });
+  alrSeances().forEach(a=>String(a.pilotes||'').split(',').forEach(n=>{
+    const e = ajout(n, false); if(!e) return; e.tot++; if(!isPast(a)) e.n++; }));
+  // pilotes non adhérents : encore dans l'annuaire (ancien adhérent) ou pas du tout (intervenant)
+  const ann = new Set(M.map(x=>alrNomK(x.name)));
+  m.forEach(e=>{ if(!e.adh) e.hors = !ann.has(e.k); });
+  return [...m.values()].sort((x,y)=>(y.n>0)-(x.n>0) || (y.tot>0)-(x.tot>0) || x.l.localeCompare(y.l,'fr'));
+}
 function alrVide(c){
   c = c||{};
-  return !(c.types&&c.types.length) && !(c.sites&&c.sites.length) && !alrMots(c.mots).length && !alrMots(c.pilote).length;
+  return !(c.types&&c.types.length) && !(c.sites&&c.sites.length) && !alrTitres(c).length
+      && !alrPilotesDe(c).length && !alrMots(c.mots).length && !alrMots(c.pilote).length;
+}
+// Tous les intitulés de séances connus (historique compris : un atelier FCPI peut n'avoir aucune
+// date à venir), avec leur type, le nombre de dates à venir et la dernière date. Pour l'autocomplétion.
+function alrCatalogue(){
+  const m = new Map();
+  alrSeances().forEach(a=>{
+    if(!a.title) return;
+    const k = alrTKey(a); if(!k) return;
+    let e = m.get(k);
+    if(!e){ e = { k, l:a.title, types:new Set(), n:0, der:'' }; m.set(k, e); }
+    e.types.add(alrTypeDe(a));
+    if(!isPast(a)) e.n++;
+    if((a.start||'') >= e.der){ e.der = a.start||''; e.l = a.title; }   // libellé le plus récent
+  });
+  return [...m.values()].sort((x,y)=>(y.n>0)-(x.n>0) || x.l.localeCompare(y.l,'fr'));
 }
 // La séance satisfait-elle les critères ? Chaque critère renseigné doit être rempli (ET) ; à
 // l'intérieur d'un critère, une seule valeur suffit (OU : « FCPI, FIP »).
@@ -2223,9 +2274,13 @@ function alrCorrespond(c, a){
   if(!a || alrVide(c)) return false;
   if(c.types && c.types.length && !c.types.includes(alrTypeDe(a))) return false;
   if(c.sites && c.sites.length && !c.sites.map(String).includes(String(a.siteId))) return false;
+  const tit = alrTitres(c);
+  if(tit.length && !tit.some(t=>t.k===alrTKey(a))) return false;
   const mots = alrMots(c.mots);
   if(mots.length){ const t = norm((a.title||'')+' '+(a.thRaw||'')); if(!mots.some(m=>t.includes(m))) return false; }
-  const pil = alrMots(c.pilote);
+  const pils = alrPilotesDe(c);
+  if(pils.length){ const ps = String(a.pilotes||'').split(',').map(alrNomK); if(!pils.some(t=>ps.includes(t.k))) return false; }
+  const pil = alrMots(c.pilote);      // ancien champ texte (règles d'avant le 27/09/2026)
   if(pil.length){ const p = norm(a.pilotes||''); if(!pil.some(m=>p.includes(m))) return false; }
   if(c.accessible && !accessible(a)) return false;
   return true;
@@ -2364,7 +2419,9 @@ function alrResume(c){
   if(c.types && c.types.length) p.push(c.types.map(t=>(ALR_TYPES.find(x=>x[0]===t)||[,t])[1]).join(', '));
   else p.push('Tous types');
   if(c.sites && c.sites.length) p.push(c.sites.map(s=>alrSiteLib(s)||('site '+s)).join(', '));
+  if(alrTitres(c).length) p.push(alrTitres(c).map(t=>t.l||t.k).join(', '));
   if(alrMots(c.mots).length) p.push('titre ou thème : « '+String(c.mots).trim()+' »');
+  if(alrPilotesDe(c).length) p.push('pilote : '+alrPilotesDe(c).map(t=>t.l).join(', '));
   if(alrMots(c.pilote).length) p.push('pilote : '+String(c.pilote).trim());
   if(c.accessible) p.push('accessibles à mon statut');
   return p.join(' · ');
@@ -2372,6 +2429,7 @@ function alrResume(c){
 function alrAVenir(c){ return alrSeances().filter(a=>a.k && !isPast(a) && alrCorrespond(c, a)).sort((x,y)=>(x.start||'').localeCompare(y.start||'')); }
 function alrNomAuto(c){
   const p = [];
+  if(alrTitres(c).length===1) p.push(alrTitres(c)[0].l);
   if(alrMots(c.mots).length) p.push(String(c.mots).trim());
   if(c.sites && c.sites.length===1){ const s=SITES[c.sites[0]]||SITES[String(c.sites[0])]; p.push(s ? (s[1]||s[0]) : ''); }
   if(!p.length && c.types && c.types.length===1) p.push((ALR_TYPES.find(x=>x[0]===c.types[0])||[,''])[1]);
@@ -2379,6 +2437,8 @@ function alrNomAuto(c){
 }
 function alrFormHtml(r){
   const c = (r && r.criteres) || {};
+  ALR_MS.tit.sel = alrTitres(c).map(t=>({ k:t.k, l:t.l||t.k }));
+  ALR_MS.pil.sel = alrPilotesDe(c).map(t=>({ k:t.k, l:t.l||t.k }));
   const types = new Set(c.types||[]), sites = new Set((c.sites||[]).map(String));
   // les sites qui ont des séances à venir d'abord, puis les autres ; libellé = nom — ville
   const avenir = {};
@@ -2390,12 +2450,14 @@ function alrFormHtml(r){
     + '<label class="alr-f"><span>Nom <small>(facultatif)</small></span><input type="text" id="alrNom" maxlength="80" value="'+esc(r&&r.nom||'')+'" placeholder="ex. Vigneux, Atelier FCPI…"></label>'
     + '<div class="alr-f"><span>Types de séances <small>— aucun coché = tous</small></span><div class="alr-ch">'
     + ALR_TYPES.map(t=>'<label><input type="checkbox" name="alrT" value="'+t[0]+'"'+(types.has(t[0])?' checked':'')+'> '+esc(t[1])+'</label>').join('')+'</div></div>'
+    + '<div class="alr-f"><span>Séances précises <small>— tape quelques lettres, choisis dans la liste ; aucune = toutes</small></span>'
+    + alrMsHtml('tit', 'ex. Capital investissement, Découverte Métier…')+'</div>'
     + '<div class="alr-f"><span>Lieux <small>— aucun coché = tous</small></span>'
     + '<input type="text" id="alrSiteQ" placeholder="Filtrer les lieux (ex. Vigneux, Nantes, Zoom…)">'
     + '<div class="alr-sites" id="alrSites">'+liste.map(s=>'<label data-q="'+esc(norm(s.lib))+'"><input type="checkbox" name="alrS" value="'+esc(s.id)+'"'+(sites.has(String(s.id))?' checked':'')+'> <span>'+esc(s.lib)
         +(s.n?' <small>('+s.n+' à venir)</small>':'')+'</span></label>').join('')+'</div></div>'
     + '<label class="alr-f"><span>Mots dans le titre ou le thème <small>— séparés par des virgules, un seul suffit</small></span><input type="text" id="alrMots" maxlength="200" value="'+esc(c.mots||'')+'" placeholder="ex. FCPI"></label>'
-    + '<label class="alr-f"><span>Pilote <small>(facultatif)</small></span><input type="text" id="alrPil" maxlength="120" value="'+esc(c.pilote||'')+'" placeholder="Nom du pilote"></label>'
+    + '<div class="alr-f"><span>Pilotes <small>— adhérents du réseau ; aucun = tous</small></span>'+alrMsHtml('pil', 'Nom ou prénom du pilote…')+'</div>'
     + '<div class="alr-ch"><label><input type="checkbox" id="alrAcc"'+(c.accessible?' checked':'')+'> Seulement les séances accessibles à mon statut</label></div>'
     + '<p class="alr-apercu" id="alrApercu"></p>'
     + '<p class="alr-err" id="alrErr" hidden></p>'
@@ -2407,14 +2469,16 @@ function alrLireForm(){
   return {
     types: [...document.querySelectorAll('#alrForm input[name=alrT]:checked')].map(i=>i.value),
     sites: [...document.querySelectorAll('#alrForm input[name=alrS]:checked')].map(i=>i.value),
-    mots: v('alrMots').trim(), pilote: v('alrPil').trim(),
+    titres: ALR_MS.tit.sel.map(t=>({ k:t.k, l:t.l })),
+    pilotes: ALR_MS.pil.sel.map(t=>({ k:t.k, l:t.l })),
+    mots: v('alrMots').trim(),
     accessible: !!(document.getElementById('alrAcc')||{}).checked,
   };
 }
 function alrApercu(){
   const el = document.getElementById('alrApercu'); if(!el) return;
   const c = alrLireForm();
-  if(alrVide(c)){ el.textContent = 'Choisis au moins un type, un lieu, un mot ou un pilote.'; return; }
+  if(alrVide(c)){ el.textContent = 'Choisis au moins un type, une séance, un lieu, un pilote ou un mot.'; return; }
   const l = alrAVenir(c);
   el.innerHTML = (l.length
       ? 'Aujourd’hui, <b>'+l.length+'</b> séance'+(l.length>1?'s':'')+' à venir correspond'+(l.length>1?'ent':'')+' à ces critères (ex. : '
@@ -2422,6 +2486,101 @@ function alrApercu(){
       : 'Aucune séance à venir ne correspond aujourd’hui. ')
     + 'L’alerte ne se déclenchera que sur les séances publiées <b>après</b> l’enregistrement.';
 }
+// ----- Multi-sélecteurs avec autocomplétion : séances (intitulés) et pilotes -----
+// Un même composant pour les deux champs : f = 'tit' | 'pil'. Ids : alrTitQ / alrTitSug / alrTitChips…
+const ALR_MS = {
+  tit: { sel:[], cat:()=>alrCatalogue(), vide:'Aucune séance ne correspond',
+         sous: e=>[...e.types].map(t=>ALR_TYPE_LIB[t]).join(' / ')
+           + (e.n ? ' · '+e.n+' à venir' : (e.der ? ' · dernière le '+fmtD(e.der) : '')),
+         filtre: e=>{ const types=[...document.querySelectorAll('#alrForm input[name=alrT]:checked')].map(i=>i.value);
+                      return !types.length || types.some(t=>e.types.has(t)); } },
+  pil: { sel:[], cat:()=>alrPilotes(), vide:'Personne ne correspond',
+         sous: e=>(e.n ? e.n+' séance'+(e.n>1?'s':'')+' à venir' : '')
+           + (e.tot ? (e.n?' · ':'')+e.tot+' pilotée'+(e.tot>1?'s':'')+' en tout' : '')
+           + (!e.n && !e.tot ? 'adhérent, n’a pas encore piloté' : '')
+           + (e.tot && !e.adh ? (e.hors ? ' · hors annuaire' : ' · plus adhérent') : ''),
+         filtre: ()=>true },
+};
+const alrMsId = (f, x) => 'alr'+(f==='tit'?'Tit':'Pil')+x;
+let ALR_SUG = [], ALR_SUG_I = -1, ALR_SUG_F = '';
+function alrMsHtml(f, placeholder){
+  return '<div class="alr-ms" data-alrms="'+f+'"><span class="alr-chips" id="'+alrMsId(f,'Chips')+'"></span>'
+    + '<input type="text" id="'+alrMsId(f,'Q')+'" data-alrmsq="'+f+'" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="'+alrMsId(f,'Sug')+'" aria-autocomplete="list" placeholder="'+esc(placeholder)+'"></div>'
+    + '<ul class="alr-sug" id="'+alrMsId(f,'Sug')+'" role="listbox" hidden></ul>';
+}
+function alrMsChips(f){
+  const el = document.getElementById(alrMsId(f,'Chips')); if(!el) return;
+  el.innerHTML = ALR_MS[f].sel.map((t,i)=>'<span class="alr-chip">'+esc(t.l)
+    + '<button type="button" data-alrmsx="'+f+':'+i+'" aria-label="Retirer '+esc(t.l)+'" title="Retirer">×</button></span>').join('');
+}
+function alrMsListe(f, txt){
+  const mots = norm(txt).split(/[^a-z0-9]+/).filter(Boolean);
+  const pris = new Set(ALR_MS[f].sel.map(t=>t.k));
+  return ALR_MS[f].cat().filter(e=>!pris.has(e.k) && ALR_MS[f].filtre(e)
+      && mots.every(m=>e.k.split(' ').some(w=>w.startsWith(m)) || (m.length>2 && e.k.includes(m))));
+}
+function alrSugMaj(f){
+  f = f || ALR_SUG_F; if(!f) return;
+  const q = document.getElementById(alrMsId(f,'Q')), ul = document.getElementById(alrMsId(f,'Sug'));
+  if(!q || !ul) return;
+  if(ALR_SUG_F && ALR_SUG_F!==f) alrSugFermer();
+  ALR_SUG_F = f;
+  const tout = alrMsListe(f, q.value);
+  ALR_SUG = tout.slice(0, 40); ALR_SUG_I = ALR_SUG.length ? 0 : -1;
+  ul.innerHTML = ALR_SUG.length
+    ? ALR_SUG.map((e,i)=>'<li role="option" id="'+alrMsId(f,'Sug')+i+'" data-alrsug="'+i+'"'+(i===ALR_SUG_I?' class="on" aria-selected="true"':'')+'>'
+        + '<span class="alr-sl">'+esc(e.l)+'</span><span class="alr-sm">'+esc(ALR_MS[f].sous(e))+'</span></li>').join('')
+      + (tout.length > ALR_SUG.length ? '<li class="alr-sp">'+(tout.length-ALR_SUG.length)+' autres — précise ta recherche</li>' : '')
+    : '<li class="alr-sp">'+ALR_MS[f].vide+(q.value?' à « '+esc(q.value)+' »':'')+'.</li>';
+  ul.hidden = false; q.setAttribute('aria-expanded','true');
+  if(ALR_SUG_I>=0) q.setAttribute('aria-activedescendant', alrMsId(f,'Sug')+ALR_SUG_I);
+}
+function alrSugFermer(){
+  ['tit','pil'].forEach(f=>{
+    const ul = document.getElementById(alrMsId(f,'Sug')), q = document.getElementById(alrMsId(f,'Q'));
+    if(ul){ ul.hidden = true; ul.innerHTML = ''; }
+    if(q){ q.setAttribute('aria-expanded','false'); q.removeAttribute('aria-activedescendant'); }
+  });
+  ALR_SUG = []; ALR_SUG_I = -1; ALR_SUG_F = '';
+}
+function alrMsAjouter(f, e){
+  if(!e || ALR_MS[f].sel.some(t=>t.k===e.k)) return;
+  ALR_MS[f].sel.push({ k:e.k, l:e.l });
+  const q = document.getElementById(alrMsId(f,'Q')); if(q){ q.value=''; q.focus(); }
+  alrMsChips(f); alrSugMaj(f); alrApercu();
+}
+function alrSugClavier(ev){
+  const f = ev.target.dataset.alrmsq;
+  const ul = document.getElementById(alrMsId(f,'Sug'));
+  const ouvert = ul && !ul.hidden && ALR_SUG_F===f;
+  if(ev.key==='ArrowDown' || ev.key==='ArrowUp'){
+    ev.preventDefault();
+    if(!ouvert){ alrSugMaj(f); return; }
+    if(!ALR_SUG.length) return;
+    ALR_SUG_I = (ALR_SUG_I + (ev.key==='ArrowDown'?1:-1) + ALR_SUG.length) % ALR_SUG.length;
+    ul.querySelectorAll('li[data-alrsug]').forEach(li=>{ const on=+li.dataset.alrsug===ALR_SUG_I; li.classList.toggle('on', on);
+      if(on){ li.setAttribute('aria-selected','true'); li.scrollIntoView({block:'nearest'}); } else li.removeAttribute('aria-selected'); });
+    ev.target.setAttribute('aria-activedescendant', alrMsId(f,'Sug')+ALR_SUG_I);
+  } else if(ev.key==='Enter'){
+    ev.preventDefault();
+    if(ouvert && ALR_SUG_I>=0) alrMsAjouter(f, ALR_SUG[ALR_SUG_I]);
+  } else if(ev.key==='Escape'){
+    if(ouvert){ ev.preventDefault(); alrSugFermer(); }
+  } else if(ev.key==='Backspace' && !ev.target.value && ALR_MS[f].sel.length){
+    ALR_MS[f].sel.pop(); alrMsChips(f); alrApercu(); if(ouvert) alrSugMaj(f);
+  }
+}
+document.addEventListener('mousedown', e=>{
+  const li = e.target.closest && e.target.closest('[data-alrsug]');
+  if(li && ALR_SUG_F){ e.preventDefault(); alrMsAjouter(ALR_SUG_F, ALR_SUG[+li.dataset.alrsug]); }
+});
+document.addEventListener('click', e=>{
+  const x = e.target.closest && e.target.closest('[data-alrmsx]');
+  if(x){ const [f,i]=x.dataset.alrmsx.split(':'); ALR_MS[f].sel.splice(+i, 1); alrMsChips(f); alrApercu(); return; }
+  const ms = e.target.closest && e.target.closest('[data-alrms]');
+  if(ms && e.target===ms){ const q=document.getElementById(alrMsId(ms.dataset.alrms,'Q')); if(q) q.focus(); }
+});
+document.addEventListener('change', e=>{ if(e.target.name==='alrT' && ALR_SUG_F==='tit') alrSugMaj('tit'); });
 function alrPage(el){
   const nv = new Set(ALR.filter(x=>!x.vu_le).map(x=>x.regle_id+'|'+x.cle));
   const stat = r => {
@@ -2457,9 +2616,16 @@ function alrPage(el){
        + '</ul></details>' : '')
     + '</div>';
   if(ALR_EDIT){
+    alrMsChips('tit'); alrMsChips('pil');
     alrApercu();
     const f = document.getElementById('alrForm');
+    f.querySelectorAll('[data-alrmsq]').forEach(q=>{
+      q.addEventListener('focus', ()=>alrSugMaj(q.dataset.alrmsq));
+      q.addEventListener('keydown', alrSugClavier);
+      q.addEventListener('blur', ()=>setTimeout(()=>{ if(ALR_SUG_F===q.dataset.alrmsq && document.activeElement!==q) alrSugFermer(); }, 150));
+    });
     f.addEventListener('input', e=>{
+      if(e.target.dataset && e.target.dataset.alrmsq){ alrSugMaj(e.target.dataset.alrmsq); return; }
       if(e.target.id==='alrSiteQ'){
         const q = norm(e.target.value).trim();
         f.querySelectorAll('#alrSites label').forEach(l=>{ l.hidden = !!q && !l.dataset.q.includes(q) && !l.querySelector('input').checked; });
@@ -2486,7 +2652,7 @@ async function alrEnregistrer(){
   const err = document.getElementById('alrErr');
   const dire = t => { if(err){ err.hidden=!t; err.textContent=t||''; } };
   const c = alrLireForm();
-  if(alrVide(c)) return dire('Choisis au moins un type, un lieu, un mot ou un pilote.');
+  if(alrVide(c)) return dire('Choisis au moins un type, une séance, un lieu, un pilote ou un mot.');
   const nom = ((document.getElementById('alrNom')||{}).value||'').trim() || alrNomAuto(c);
   const b = document.getElementById('alrOk'); if(b) b.disabled = true;
   try{
