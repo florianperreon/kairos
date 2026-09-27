@@ -3241,3 +3241,96 @@ test.describe('Mes alertes', () => {
     expect(erreurs).toEqual([]);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Mail Manager — formations suivies et (co)animées', () => {
+  // 27/09/2026 : deux objectifs de plus, relevés dans le réseau sur l'exercice (1er août → aujourd'hui).
+  test('le relevé : inscrit / pilote / copilote, Parcours à part, une université = une formation', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      const ech = mmEcheances();
+      const j = n => { const d = new Date(); d.setDate(d.getDate() + n); return isoJour(d); };
+      // une date passée DANS l'exercice (au plus tôt le 1er août) et une AVANT l'exercice
+      const dansExo = j(-1) >= ech.debut ? (j(-3) >= ech.debut ? j(-3) : ech.debut) : ech.debut;
+      const avant = vAddDays(ech.debut, -10);
+      MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Florian PERREON' });
+      const s = (k, id, titre, start, guests, pilotes, th) => ({ k, id, th: th || '', title: titre, start, end: start,
+        pilotes: pilotes || '', guests: guests || [], url: '#' });
+      A.length = 0; F.length = 0;
+      A.push(s('a', 1, 'Clefs de la communication', dansExo, [20028]),                       // suivie
+             s('a', 2, 'Découverte Métier', dansExo, [20028], '', 'PARCOURS DECOUVERTE'),     // Parcours : pas une formation suivie
+             s('a', 3, 'Découverte Métier', dansExo, [], 'Florian Perréon, Zoé Martin', 'PARCOURS DECOUVERTE'), // pilote
+             s('a', 4, 'Capital investissement', dansExo, [], 'Zoé Martin, florian perreon'),  // copilote
+             s('a', 5, 'Atelier à venir', j(5), [20028], 'Florian PERREON'),                  // pas encore terminé
+             s('a', 6, 'Avant l’exercice', avant, [20028], 'Florian PERREON'),               // exercice précédent
+             s('a', 7, 'Homonyme partiel', dansExo, [], 'Florian PERREONNET'));               // pas moi
+      F.push(s('f', 10, 'UNIVERSITE DU PATRIMOINE', dansExo, ['20028']),
+             s('f', 11, 'Complément UDP', dansExo, [20028]),
+             s('f', 12, 'Frais de gestion UDP', dansExo, [20028]));
+      const fo = mmFormations(ech.debut, todayIso);
+      const a = mmAuto(mmSemCour());
+      return { fo, auto: [a.fsuiv, a.fanim], dansExo, deb: ech.debut };
+    });
+    // si l'exercice vient de commencer (1er août = aujourd'hui), rien n'est encore « terminé »
+    test.skip(r.dansExo >= await page.evaluate(() => todayIso), 'exercice commencé aujourd’hui');
+    expect(r.fo.suiv).toBe(2);                                   // a1 + l'université (3 lignes, une date)
+    expect(r.fo.suivN).toEqual(['Clefs de la communication', 'UNIVERSITE DU PATRIMOINE']);
+    expect(r.fo.anim).toBe(2);                                   // a3 (pilote) + a4 (copilote)
+    expect(r.auto).toEqual([2, 2]);
+    expect(erreurs).toEqual([]);
+  });
+
+  // « Invités en DM » = mes filleuls qui ont ASSISTÉ à une DM sur l'exercice (précision de Florian,
+  // 27/09/2026) : un filleul devenu adhérent depuis compte toujours ; une DM à venir ne compte pas.
+  test('Invités en DM : les filleuls venus en DM sur l’exercice, adhérents compris, une fois chacun', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const ech = mmEcheances();
+      const j = n => { const d = new Date(); d.setDate(d.getDate() + n); return isoJour(d); };
+      const dansExo = j(-3) >= ech.debut ? j(-3) : ech.debut;
+      MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Florian PERREON' });
+      const fil = [{ id: 30001, name: 'Invitée Nonadherente' }, { id: 30004, name: 'Filleul Adherent' }, { id: 30005, name: 'Filleul Absent' }];
+      fil.forEach(f => byId.set(f.id, f));
+      children.set(norm('Florian PERREON'), fil);
+      ADH.clear(); ADH.add(30004);
+      const s = (id, titre, start, guests) => ({ k: 'a', id, th: 'PARCOURS DECOUVERTE', title: titre, start, end: start, pilotes: '', guests, url: '#' });
+      A.length = 0; E.length = 0; F.length = 0;
+      A.push(s(1, 'Découverte Métier matinée', dansExo, [20028, 30001, 30004]),
+             s(2, 'Découverte métier visio', dansExo, ['30001']),                 // déjà comptée
+             s(3, 'Découverte Métier', j(6), [20028, 30005]),                     // pas encore passée
+             s(4, 'Atelier Démarrage', dansExo, [30005]),                          // pas une DM
+             s(5, 'Découverte Métier', vAddDays(ech.debut, -20), [30005]));        // exercice précédent
+      const d = mmDmAssistes(ech.debut, todayIso);
+      const fo = mmFormations(ech.debut, todayIso);
+      MM_OBJ = { dm_pmr: 10 };
+      const el = document.createElement('div'); el.innerHTML = mmObjectifs();
+      const ligne = [...el.querySelectorAll('tbody tr')].map(tr => tr.querySelector('td').textContent).find(t => t.startsWith('Invités en DM'));
+      return { d, suiv: fo.suiv, ligne, dansExo };
+    });
+    test.skip(r.dansExo >= await page.evaluate(() => todayIso), 'exercice commencé aujourd’hui');
+    expect(r.d.n).toBe(2);
+    expect(r.d.noms.sort()).toEqual(['Filleul Adherent', 'Invitée Nonadherente']);
+    expect(r.suiv, 'ma présence en DM n’est pas une formation suivie').toBe(0);
+    expect(r.ligne).toContain('déjà 2 depuis le 1er août');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('Mes objectifs : les deux lignes, avec le réalisé', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Florian PERREON' }); A.length = 0; F.length = 0;
+      MM_OBJ = { fsuiv_pmr: 12, fanim_dec: 3 };
+      const el = document.createElement('div'); el.innerHTML = mmObjectifs();
+      const lignes = [...el.querySelectorAll('tbody tr')].map(tr => tr.querySelector('td').textContent);
+      const champs = [...el.querySelectorAll('[data-mmo^="fsuiv"],[data-mmo^="fanim"]')].map(i => i.dataset.mmo + '=' + i.value);
+      return { lignes, champs };
+    });
+    expect(r.lignes.some(l => l.startsWith('Formations suivies') && l.includes('déjà 0 depuis le 1er août'))).toBe(true);
+    expect(r.lignes.some(l => l.startsWith('Formations (co)animées'))).toBe(true);
+    expect(r.champs).toEqual(['fsuiv_dec=', 'fsuiv_pmr=12', 'fanim_dec=3', 'fanim_pmr=']);
+    expect(erreurs).toEqual([]);
+  });
+});

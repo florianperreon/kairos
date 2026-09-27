@@ -830,6 +830,7 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .mbr-sub{font-size:14px;color:var(--ink-2);margin:-4px 0 14px}
 .mbr-mail{font-size:12px;color:var(--ink-3);margin-top:2px}
 .mbr-moi{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+.mm-reel{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px;cursor:help}
 .mbr-note{font-size:13px;color:var(--ink-3);margin:12px 0 0}
 .mbr-act{font-size:12px;color:var(--ink-3);margin-top:2px;white-space:nowrap}
 .mbr-act.froid{color:var(--bad)}
@@ -4576,7 +4577,9 @@ const MM_OBJS  = [
   ['eva','VA + VAA équipe','€','Volume d’affaires de l’équipe (4 niveaux) cumulé sur l’exercice (1er août → 31 juillet)'],
   ['clients','Nombre de clients','','Total de ton parc à cette date — pas seulement les clients de l’exercice'],
   ['filleuls','Filleuls directs','','Total de tes filleuls directs à cette date — pas seulement ceux de l’exercice'],
-  ['dm','Invités en DM','','Invités inscrits en Découverte Métier depuis le début de l’exercice'],
+  ['dm','Invités en DM','','Filleuls ayant assisté à une Découverte Métier depuis le début de l’exercice (présence du parrain obligatoire) — relevé automatiquement'],
+  ['fsuiv','Formations suivies','','Ateliers (hors Parcours Découverte) et formations terminés depuis le début de l’exercice, où tu étais inscrit — relevé automatiquement'],
+  ['fanim','Formations (co)animées','','Ateliers, Parcours Découverte et formations terminés depuis le début de l’exercice, dont tu étais pilote ou copilote — relevé automatiquement'],
   ['r0sem','R0 par semaine','','Rythme visé, en moyenne par semaine'],
   ['r1sem','R1 par semaine','','Rythme visé, en moyenne par semaine'],
   ['statut','Statut FORMAN visé','sel','Le statut que tu veux avoir atteint à cette date']];
@@ -4703,6 +4706,38 @@ function mmDescendants(){
   }
   return out;
 }
+// Formations suivies et (co)animées sur une période, relevées dans le réseau (27/09/2026).
+// Suivie : séance terminée, Ateliers hors Parcours Découverte ou Formations, où je suis parmi les
+// inscrits. (Co)animée : séance terminée, Ateliers / Parcours / Formations, où mon nom est parmi les
+// pilotes (le premier est le pilote, les suivants les copilotes). Une université apparaît en
+// plusieurs lignes à la même date (chambre, frais, complément) : une formation par date de début.
+// Objectif « Invités en DM » (27/09/2026) : le nombre de mes filleuls qui ont ASSISTÉ à une
+// Découverte Métier (séance terminée) sur la période — adhérents depuis compris, chacun compté une
+// fois. La DM impose la présence du parrain : ma propre participation à un Parcours Découverte se
+// compte donc ici, et jamais dans les formations suivies. On ne filtre pas sur ma présence : dans
+// les données du réseau, le parrain n'est inscrit que sur ~60 % des places de DM.
+function mmDmAssistes(deb, fin){
+  const ids = new Map(mmMesFilleuls().map(m=>[m.id, m.name]));
+  const vus = new Map();
+  [].concat(A||[], E||[]).forEach(a=>{
+    if(!a.start || a.start < deb || a.start > fin || !isPast(a) || mmTitreCat(a.title)!=='dm') return;
+    (a.guests||[]).forEach(g=>{ if(ids.has(+g)) vus.set(+g, ids.get(+g)); });
+  });
+  return { n:vus.size, noms:[...vus.values()] };
+}
+function mmFormations(deb, fin){
+  const moi = MOI_ID ? byId.get(MOI_ID) : null;
+  const nk = moi ? alrNomK(moi.name) : '';
+  const suiv = new Map(), anim = new Map();
+  const cle = a => a.k==='f' ? 'f@'+a.start : a.k+':'+a.id;
+  [...A, ...F].forEach(a=>{
+    if(!a.start || a.start < deb || a.start > fin || !isPast(a)) return;
+    const pd = a.k==='a' && a.th==='PARCOURS DECOUVERTE';
+    if(!pd && dejaInscrit(a) && !suiv.has(cle(a))) suiv.set(cle(a), a.title);
+    if(nk && String(a.pilotes||'').split(',').some(n=>alrNomK(n)===nk) && !anim.has(cle(a))) anim.set(cle(a), a.title);
+  });
+  return { suiv:suiv.size, anim:anim.size, suivN:[...suiv.values()], animN:[...anim.values()] };
+}
 function mmAuto(sem){
   const a={};
   const moi = MOI_ID ? byId.get(MOI_ID) : null;
@@ -4728,6 +4763,10 @@ function mmAuto(sem){
   a.inv = ex.n; a.invN = ex.noms;                        // sur l'exercice en cours
   const tt = mmInvites(MM_ORIGINE, MM_FIN, true);
   a.invT = tt.n; a.invTN = tt.noms;                      // depuis le début
+  const fo = mmFormations(deb, todayIso);                // sur l'exercice en cours, séances terminées
+  a.fsuiv = fo.suiv; a.fanim = fo.anim; a.fsuivN = fo.suivN; a.fanimN = fo.animN;
+  const dma = mmDmAssistes(deb, todayIso);
+  a.dmAss = dma.n; a.dmAssN = dma.noms;
   const pas = mmInvites(vAddDays(sem,-7), vAddDays(sem,-1));
   a.invP = pas.n; a.invPN = pas.noms;                    // semaine écoulée
   const cou = mmInvites(sem, vAddDays(sem,6));
@@ -5442,7 +5481,9 @@ function mmFiche(d, prive, sem, obj){
                   : k==='eva' ? mmN(mmG(d,'prod.eva'))+mmN(mmG(d,'prod.evaec'))
                   : k==='clients' ? mmN(mmG(d,'prod.clients'))
                   : k==='filleuls' ? (a.filadh||0)
-                  : k==='dm' ? ((a.inv||{}).dm||0) : null;
+                  : k==='dm' ? (a.dmAss!=null ? a.dmAss : ((a.inv||{}).dm||0))   // anciens instantanés : les inscrits
+                  : k==='fsuiv' ? (a.fsuiv==null ? null : a.fsuiv)
+                  : k==='fanim' ? (a.fanim==null ? null : a.fanim) : null;
   const objPuce = ([k,lib,u]) => [['dec','31/12'],['pmr','31/07']].map(([sfx,lab])=>{
     const c=obj[k+'_'+sfx]; if(!mmN(c)) return '';
     const f=fait(k), pct=(f!==null&&mmN(c))?Math.round(f/mmN(c)*100):null;
@@ -5455,6 +5496,7 @@ function mmFiche(d, prive, sem, obj){
           + objRang([['clients','Clients','']])
           + objRang([['filleuls','Filleuls','']])
           + objRang([['dm','Invités DM','']])
+          + objRang([['fsuiv','Formations suivies',''],['fanim','Formations (co)animées','']])
           + objRang([['r0sem','R0/semaine',''],['r1sem','R1/semaine','']]);
   const st = (obj.statut_dec?'<i class="att">Statut 31/12<b>'+esc(obj.statut_dec)+'</b></i>':'')
            + (obj.statut_pmr?'<i class="att">Statut 31/07<b>'+esc(obj.statut_pmr)+'</b></i>':'');
@@ -5656,6 +5698,7 @@ function mmObjChamp(k, sfx, u, o){
 }
 function mmObjectifs(){
   const ech=mmEcheances(), o=MM_OBJ||{};
+  let fo=null, dma=null; try{ if(MOI_ID){ fo = mmFormations(ech.debut, todayIso); dma = mmDmAssistes(ech.debut, todayIso); } }catch(e){ fo=null; }
   let h='<div class="panel"><div class="mm-head"><h2>Mes objectifs</h2></div>'
     + '<p class="mm-sub">Deux échéances pour chaque indicateur : le <b>31 décembre '+ech.dec.slice(0,4)+'</b> (cap de l’année civile) '
     + 'et le <b>31 juillet '+ech.pmr.slice(0,4)+'</b> (fin d’exercice, horizon PMR). '
@@ -5665,7 +5708,9 @@ function mmObjectifs(){
     + '<th class="num">Au 31/12 ('+mmSemaines(ech.dec)+' sem.)</th>'
     + '<th class="num">Au 31/07 — PMR ('+mmSemaines(ech.pmr)+' sem.)</th></tr></thead><tbody>'
     + MM_OBJS.map(([k,lib,u,aide])=>'<tr><td><span class="mm-aide"'+(aide?' title="'+esc(aide)+'"':'')+'>'
-      + esc(lib)+'</span>'+(u==='€'?' <small style="color:var(--ink-3)">(€)</small>':'')+'</td>'
+      + esc(lib)+'</span>'+(u==='€'?' <small style="color:var(--ink-3)">(€)</small>':'')
+      + (fo && (k==='fsuiv'||k==='fanim'||k==='dm') ? (()=>{ const [n,noms] = k==='fsuiv'?[fo.suiv,fo.suivN]:k==='fanim'?[fo.anim,fo.animN]:[dma.n,dma.noms];
+          return '<small class="mm-reel" title="'+esc(noms.join(' · ')||'personne pour l’instant')+'">déjà '+n+' depuis le 1er août</small>'; })() : '')+'</td>'
       + '<td>'+mmObjChamp(k,'dec',u,o)+'</td><td>'+mmObjChamp(k,'pmr',u,o)+'</td></tr>').join('')
     + '</tbody></table></div>'
     + '<div class="mm-bar"><button type="button" class="mm-b pri" id="mmObjSave">Enregistrer mes objectifs</button>'
@@ -5733,10 +5778,13 @@ function mmTexte(d, nom, sem){
   bloc('3 - Nombre de RDV d’avance','av',MM_AV);
   L.push(''); L.push('4 - Objectifs développement');
   const inv=a.inv||{};
-  L.push('- Invités inscrits en DM : '+(inv.dm||0)+(o.dm_pmr?' / '+o.dm_pmr:''));
+  L.push('- Invités inscrits en DM : '+(inv.dm||0));
+  if(a.dmAss!=null) L.push('- Filleuls venus en DM depuis le 1er août : '+a.dmAss+(o.dm_pmr?' / '+o.dm_pmr:''));
   L.push('- Invités inscrits à l’Atelier Démarrage : '+(inv.ad||0));
   L.push('- Invités inscrits aux 3 Jours de la Réussite : '+(inv.jr||0));
   L.push('- Filleuls : '+(a.filadh||0));
+  if(a.fsuiv!=null) L.push('- Formations suivies : '+a.fsuiv+(o.fsuiv_pmr?' / '+o.fsuiv_pmr:''));
+  if(a.fanim!=null) L.push('- Formations (co)animées : '+a.fanim+(o.fanim_pmr?' / '+o.fanim_pmr:''));
   if(mmInvEnAttente(a)) L.push('- Invités pas encore adhérents : '+mmInvEnAttente(a));
   const iT = invL(a.invT, {});
   if(iT.length){ L.push('Depuis le début :'); iT.forEach(x=>L.push(x)); }
