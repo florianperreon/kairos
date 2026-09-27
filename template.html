@@ -373,6 +373,60 @@ nav.botbar .nv-pt{margin-left:4px}
 .nv-it .nv-k.k-a{color:#4338CA}.nv-it .nv-k.k-r{color:#4338CA}.nv-it .nv-k.k-f{color:#149467}.nv-it .nv-k.k-e{color:#B7791F}
 .nv-it .xtra.neuf{justify-self:end}
 .nv-calme .nv-it .nv-k,.nv-calme .nv-it b{opacity:.85}
+/* ---------- Mes alertes (bandeau n°1 de l'accueil + sous-onglet de Mes sessions) ---------- */
+.alr-home{border-left:4px solid var(--accent);background:linear-gradient(0deg,var(--surface),var(--surface)) padding-box}
+.alr-home .alr-h{display:flex;align-items:center;gap:10px 12px;flex-wrap:wrap;margin-bottom:12px}
+.alr-home .alr-h h2{margin:0;flex:1;min-width:0;font-size:19px}
+.alr-home .alr-h a{font-size:13px;color:var(--ink-2)}
+.alr-b{border:1px solid var(--line-2);background:var(--surface);color:var(--accent);border-radius:8px;padding:6px 11px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.alr-b:hover{background:var(--accent-soft)}
+.alr-b.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.alr-b.pri:hover{filter:brightness(1.08)}
+.alr-b.dang{color:var(--bad)}
+.alr-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.alr-it{border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--surface-2);display:flex;flex-direction:column;gap:4px;min-width:0}
+.alr-it .alr-q{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--ink-3)}
+.alr-it .alr-k{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.alr-it .alr-t{font-weight:700;color:var(--ink);text-decoration:none;overflow-wrap:anywhere}
+.alr-it .alr-t:hover{text-decoration:underline}
+.alr-it .alr-d{font-size:13px;color:var(--ink-2)}
+.alr-it .alr-x{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:12.5px}
+.alr-it .alr-fin{font-size:12.5px;color:var(--ink-3);font-style:italic}
+.alr-it .alr-pied{display:flex;justify-content:flex-end;margin-top:4px}
+.alr-pt{display:inline-block;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:99px;background:var(--encours);color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center;vertical-align:1px}
+.alr-page .alr-intro{font-size:14px;color:var(--ink-2);margin:0 0 14px;line-height:1.55}
+.alr-regles{display:flex;flex-direction:column;gap:10px;margin:0 0 18px}
+.alr-r{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:start}
+.alr-r.pause{opacity:.62}
+.alr-r b{font-family:"Sora",system-ui,sans-serif;font-size:15px}
+.alr-r .alr-crit{font-size:13px;color:var(--ink-2);grid-column:1}
+.alr-r .alr-stat{font-size:12px;color:var(--ink-3);grid-column:1}
+.alr-r .alr-acts{grid-column:2;grid-row:1 / span 3;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.alr-form{border:1px solid var(--accent);border-radius:12px;padding:16px;margin:0 0 18px;background:var(--surface-2);display:flex;flex-direction:column;gap:14px}
+.alr-form h3{font-size:16px}
+.alr-f{display:flex;flex-direction:column;gap:6px}
+.alr-f>span{font-size:13px;font-weight:700}
+.alr-f small{font-size:12px;color:var(--ink-3);font-weight:500}
+.alr-f input[type=text]{font:inherit;font-size:15px;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);width:100%}
+.alr-ch{display:flex;flex-wrap:wrap;gap:6px}
+.alr-ch label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:99px;padding:4px 11px;font-size:13px;cursor:pointer;background:var(--surface)}
+.alr-ch label:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.alr-sites{max-height:210px;overflow:auto;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);padding:6px 10px;display:flex;flex-direction:column}
+.alr-sites label{display:flex;gap:8px;align-items:baseline;font-size:13.5px;padding:3px 0;cursor:pointer}
+.alr-sites label small{color:var(--ink-3)}
+.alr-apercu{font-size:13px;color:var(--ink-2);background:var(--surface);border:1px dashed var(--line-2);border-radius:8px;padding:8px 10px;margin:0}
+.alr-err{color:var(--bad);font-size:13px;margin:0}
+.alr-fb{display:flex;gap:8px;flex-wrap:wrap}
+.alr-hist{font-size:13px;color:var(--ink-2)}
+.alr-hist summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.alr-hist ul{margin:8px 0 0;padding-left:18px}
+.alr-hist li{margin:3px 0}
+@media(max-width:640px){
+  .alr-l{grid-template-columns:1fr}
+  .alr-r{grid-template-columns:1fr}
+  .alr-r .alr-acts{grid-column:1;grid-row:auto;justify-content:flex-start}
+  .alr-f input[type=text]{font-size:16px}
+}
 @media(max-width:640px){
   .nv-it{grid-template-columns:minmax(0,1fr) auto;gap:2px 10px}
   .nv-it b{grid-column:1/-1}
@@ -1500,6 +1554,7 @@ a.mml-r:hover{border-color:var(--accent)}
   <div class="inner">
   <main>
     <section class="view on" id="v-home">
+      <div class="panel alr-home" id="homeAlertes" hidden></div>
       <div class="panel welcome" id="welcome"></div>
       <div class="panel" id="homeActionsPanel" hidden>
         <h2>Mes actions de la semaine</h2>
@@ -1550,6 +1605,7 @@ a.mml-r:hover{border-color:var(--accent)}
         <nav class="subtabs" id="survSub">
           <button data-s="ins" class="on">Mes inscriptions <span class="sub-badge cnt" id="survNIns" hidden></span></button>
           <button data-s="gardes">Mes enregistrements <span class="sub-badge cnt" id="survNGar" hidden></span></button>
+          <button data-s="alr">Mes alertes <span class="sub-badge" id="survNAlr" hidden></span></button>
         </nav>
         <p class="mbr-sub" id="survNote"></p>
         <label class="chk" id="survPastLbl" hidden><input type="checkbox" id="survPast"> Sessions passées <span id="survPastN"></span></label>
@@ -2139,6 +2195,342 @@ function majNeuf(){
   buildNouv(); nvPoints();
 }
 
+/* ---------- Mes alertes ----------
+   Chaque membre pose ses règles (types × sites × mots du titre ou du thème × pilote × « accessibles à
+   mon statut ») dans Mes sessions → Mes alertes. Une règle ne se déclenche QUE sur une séance
+   publiée après son enregistrement (décision du 27/09/2026) : la date de publication vient de
+   `nouv` (update.py, 4 passages par jour). Une alerte déclenchée est écrite en base (table alertes,
+   avec une photo de la séance) : elle reste tout en haut de l'accueil, sur tous les appareils,
+   jusqu'au clic sur « Vu » — même si la séance sort du réseau ou de la fenêtre des 60 jours de
+   `nouv`. Tables alertes_regles / alertes, RLS user_id = mon_uid() (compte de référence). */
+const ALR_TYPES = [['at','Ateliers'],['pd','Parcours Découverte'],['r','Réunions d’équipe'],['f','Formations'],['e','Événements']];
+const ALR_TYPE_LIB = {at:'Atelier', pd:'Parcours Découverte', r:'Réunion d’équipe', f:'Formation', e:'Événement'};
+const ALR_MAX = 30;
+let ALR_REGLES = [], ALR = [], ALR_OK = false, ALR_EDIT = null, ALR_MSG = '';
+const alrTypeDe = a => a.k==='a' ? (a.th==='PARCOURS DECOUVERTE' ? 'pd' : 'at') : a.k;
+const alrMots = s => String(s||'').split(/[,;]+/).map(m=>norm(m).replace(/\s+/g,' ').trim()).filter(Boolean);
+const alrSiteLib = id => { const s=SITES[id]||SITES[String(id)]; if(!s) return ''; const v=(s[1]||'').trim();
+  return s[0] + (v && norm(v)!==norm(s[0]) ? ' — '+v : ''); };
+const alrSeances = () => [...A, ...R, ...F, ...E];
+function alrVide(c){
+  c = c||{};
+  return !(c.types&&c.types.length) && !(c.sites&&c.sites.length) && !alrMots(c.mots).length && !alrMots(c.pilote).length;
+}
+// La séance satisfait-elle les critères ? Chaque critère renseigné doit être rempli (ET) ; à
+// l'intérieur d'un critère, une seule valeur suffit (OU : « FCPI, FIP »).
+function alrCorrespond(c, a){
+  c = c||{};
+  if(!a || alrVide(c)) return false;
+  if(c.types && c.types.length && !c.types.includes(alrTypeDe(a))) return false;
+  if(c.sites && c.sites.length && !c.sites.map(String).includes(String(a.siteId))) return false;
+  const mots = alrMots(c.mots);
+  if(mots.length){ const t = norm((a.title||'')+' '+(a.thRaw||'')); if(!mots.some(m=>t.includes(m))) return false; }
+  const pil = alrMots(c.pilote);
+  if(pil.length){ const p = norm(a.pilotes||''); if(!pil.some(m=>p.includes(m))) return false; }
+  if(c.accessible && !accessible(a)) return false;
+  return true;
+}
+const alrPhoto = a => ({ type:alrTypeDe(a), titre:a.title||'', start:a.start||'', end:a.end||'', hor:a.hor||'',
+                         lieu:a.lieu||'', site:alrSiteLib(a.siteId), url:a.url||'' });
+// Ce qui doit se déclencher maintenant : séance à venir, publiée après la règle, pas encore alertée.
+function alrADeclencher(){
+  const deja = new Set(ALR.map(x=>x.regle_id+'|'+x.cle));
+  const out = [];
+  ALR_REGLES.filter(r=>r.active).forEach(r=>{
+    const c = r.criteres||{};
+    if(c.accessible && !monStatut()) return;          // statut pas encore connu : on attendra
+    const depuis = Date.parse(r.cree_le);
+    alrSeances().forEach(a=>{
+      if(!a.k || isPast(a)) return;
+      const cle = a.k+':'+a.id, nd = NOUV[cle];
+      if(!nd || !(Date.parse(nd) > depuis)) return;
+      if(deja.has(r.id+'|'+cle) || !alrCorrespond(c, a)) return;
+      deja.add(r.id+'|'+cle);
+      out.push({ regle_id:r.id, cle, apparue_le:nd, seance:alrPhoto(a) });
+    });
+  });
+  return out;
+}
+async function alrDetecter(){
+  if(!SB || !SBUSER || !ALR_OK || !window.__booted) return 0;
+  const n = alrADeclencher();
+  if(!n.length) return 0;
+  try{
+    const r = await SB.from('alertes').upsert(n, { onConflict:'user_id,regle_id,cle', ignoreDuplicates:true });
+    if(r && r.error) throw r.error;
+  }catch(e){ return 0; }
+  const now = new Date().toISOString();
+  n.forEach(x=>ALR.push(Object.assign({ detectee_le:now, vu_le:null }, x)));
+  return n.length;
+}
+async function chargerAlertes(){
+  if(!SB || !SBUSER){ ALR_REGLES=[]; ALR=[]; ALR_OK=false; buildAlertes(); return false; }
+  try{
+    const [r1, r2] = await Promise.all([
+      SB.from('alertes_regles').select('id,nom,criteres,active,cree_le').order('cree_le'),
+      SB.from('alertes').select('regle_id,cle,apparue_le,detectee_le,vu_le,seance') ]);
+    if(r1.error) throw r1.error;
+    if(r2.error) throw r2.error;
+    ALR_REGLES = r1.data||[]; ALR = r2.data||[]; ALR_OK = true;
+  }catch(e){ ALR_OK=false; buildAlertes(); return false; }
+  await alrDetecter();
+  buildAlertes();
+  return true;
+}
+// Les alertes non vues, une carte par séance (une séance peut satisfaire plusieurs règles).
+function alrNonVues(){
+  const par = new Map();
+  ALR.filter(x=>!x.vu_le).forEach(x=>{
+    if(!par.has(x.cle)) par.set(x.cle, { cle:x.cle, x, regles:[] });
+    par.get(x.cle).regles.push(x.regle_id);
+  });
+  const quand = p => String(p.x.apparue_le||p.x.detectee_le||'');
+  return [...par.values()].sort((p,q)=>quand(q).localeCompare(quand(p)));
+}
+function alrSeance(cle){
+  const [k, id] = String(cle).split(':');
+  return alrSeances().find(a=>a.k===k && String(a.id)===id) || null;
+}
+const alrNomRegle = id => { const r=ALR_REGLES.find(x=>x.id===id); return r ? r.nom : ''; };
+function alrCarte(p){
+  const a = alrSeance(p.cle), s = p.x.seance||{};
+  const type = a ? alrTypeDe(a) : s.type;
+  const titre = a ? a.title : s.titre, url = a ? a.url : s.url;
+  const start = a ? a.start : s.start, hor = a ? a.hor : s.hor, lieu = a ? a.lieu : s.lieu;
+  const site = a ? alrSiteLib(a.siteId) : s.site;
+  const noms = p.regles.map(alrNomRegle).filter(Boolean);
+  const pub = p.x.apparue_le ? 'publiée le '+fmtD(String(p.x.apparue_le).slice(0,10)) : '';
+  let fin = '';
+  if(!a) fin = '<div class="alr-fin">Cette séance n’est plus proposée par le réseau.</div>';
+  else if(isPast(a)) fin = '<div class="alr-fin">Séance passée.</div>';
+  return '<div class="alr-it" data-alrcle="'+esc(p.cle)+'">'
+    + '<div class="alr-q"><span class="alr-k">'+esc(ALR_TYPE_LIB[type]||'Séance')+'</span>'
+    + (noms.length ? '<span title="Règle'+(noms.length>1?'s':'')+' qui a déclenché l’alerte">🔔 '+esc(noms.join(' · '))+'</span>' : '')
+    + (pub ? '<span>'+esc(pub)+'</span>' : '')+'</div>'
+    + (url ? '<a class="alr-t" href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(titre||'')+'</a>' : '<b class="alr-t">'+esc(titre||'')+'</b>')
+    + '<div class="alr-d">'+esc(start?fmtDJour(start):'')+(hor?' · '+esc(hor):'')+(lieu?' · '+esc(lieu):'')
+    + (site && norm(site)!==norm(lieu||'') ? ' · '+esc(site) : '')+'</div>'
+    + (a && !isPast(a) ? '<div class="alr-x">'+evExtras(a)+'</div>' : fin)
+    + '<div class="alr-pied"><button type="button" class="alr-b" data-alrvu="'+esc(p.cle)+'" title="Retirer cette alerte de l’accueil">Vu</button></div>'
+    + '</div>';
+}
+function buildAlertes(){
+  const nv = alrNonVues(), n = nv.length;
+  const el = document.getElementById('homeAlertes');
+  if(el){
+    if(!n){ el.hidden = true; el.innerHTML = ''; }
+    else {
+      el.innerHTML = '<div class="alr-h"><h2>🔔 '+n+' alerte'+(n>1?'s':'')+'</h2>'
+        + '<a href="#'+(TAB_SLUG.surv||'surv')+'?s='+SURV_SLUG.alr+'">Gérer mes alertes</a>'
+        + (n>1 ? '<button type="button" class="alr-b" data-alrvu="*">Tout marquer comme vu</button>' : '')+'</div>'
+        + '<div class="alr-l">'+nv.map(alrCarte).join('')+'</div>';
+      el.hidden = false;
+    }
+  }
+  // pastille : barre du bas (« Accueil ») et logo de la barre latérale
+  document.querySelectorAll('nav.botbar button[data-v="home"] .l, #side .go-home .brand').forEach(l=>{
+    let b = l.querySelector('.alr-pt');
+    if(!n){ if(b) b.remove(); return; }
+    if(!b){ b = document.createElement('span'); b.className = 'alr-pt'; l.appendChild(b); }
+    b.textContent = n; b.title = n+' alerte'+(n>1?'s':'')+' non vue'+(n>1?'s':'');
+  });
+  const sb = document.getElementById('survNAlr');
+  if(sb){ sb.hidden = !n; sb.textContent = n||''; }
+  if(typeof SURV_SUB!=='undefined' && SURV_SUB==='alr' && !ALR_EDIT){ try{ buildSurv(); }catch(e){} }
+}
+async function alrMarquerVu(cles){
+  if(!SB || !SBUSER) return;
+  const tout = cles==='*';
+  const set = new Set(tout ? alrNonVues().map(p=>p.cle) : [].concat(cles));
+  const now = new Date().toISOString();
+  const touches = ALR.filter(x=>!x.vu_le && set.has(x.cle));
+  if(!touches.length) return;
+  touches.forEach(x=>x.vu_le = now);
+  buildAlertes();
+  try{
+    const r = await SB.from('alertes').update({ vu_le:now }).is('vu_le', null).in('cle', [...set]);
+    if(r && r.error) throw r.error;
+  }catch(e){ touches.forEach(x=>x.vu_le = null); buildAlertes(); }
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-alrvu]');
+  if(b){ e.preventDefault(); alrMarquerVu(b.dataset.alrvu); }
+});
+
+// ----- Le sous-onglet « Mes alertes » : les règles, le formulaire, l'historique -----
+function alrResume(c){
+  c = c||{};
+  const p = [];
+  if(c.types && c.types.length) p.push(c.types.map(t=>(ALR_TYPES.find(x=>x[0]===t)||[,t])[1]).join(', '));
+  else p.push('Tous types');
+  if(c.sites && c.sites.length) p.push(c.sites.map(s=>alrSiteLib(s)||('site '+s)).join(', '));
+  if(alrMots(c.mots).length) p.push('titre ou thème : « '+String(c.mots).trim()+' »');
+  if(alrMots(c.pilote).length) p.push('pilote : '+String(c.pilote).trim());
+  if(c.accessible) p.push('accessibles à mon statut');
+  return p.join(' · ');
+}
+function alrAVenir(c){ return alrSeances().filter(a=>a.k && !isPast(a) && alrCorrespond(c, a)).sort((x,y)=>(x.start||'').localeCompare(y.start||'')); }
+function alrNomAuto(c){
+  const p = [];
+  if(alrMots(c.mots).length) p.push(String(c.mots).trim());
+  if(c.sites && c.sites.length===1){ const s=SITES[c.sites[0]]||SITES[String(c.sites[0])]; p.push(s ? (s[1]||s[0]) : ''); }
+  if(!p.length && c.types && c.types.length===1) p.push((ALR_TYPES.find(x=>x[0]===c.types[0])||[,''])[1]);
+  return (p.filter(Boolean).join(' · ') || 'Mon alerte').slice(0, 80);
+}
+function alrFormHtml(r){
+  const c = (r && r.criteres) || {};
+  const types = new Set(c.types||[]), sites = new Set((c.sites||[]).map(String));
+  // les sites qui ont des séances à venir d'abord, puis les autres ; libellé = nom — ville
+  const avenir = {};
+  alrSeances().forEach(a=>{ if(a.siteId!=null && !isPast(a)) avenir[a.siteId]=(avenir[a.siteId]||0)+1; });
+  const liste = Object.keys(SITES).map(id=>({ id, lib:alrSiteLib(id), n:avenir[id]||0 }))
+    .filter(s=>s.lib).sort((x,y)=>(y.n>0)-(x.n>0) || x.lib.localeCompare(y.lib,'fr'));
+  return '<div class="alr-form" id="alrForm">'
+    + '<h3>'+(r && r.id ? 'Modifier l’alerte' : 'Nouvelle alerte')+'</h3>'
+    + '<label class="alr-f"><span>Nom <small>(facultatif)</small></span><input type="text" id="alrNom" maxlength="80" value="'+esc(r&&r.nom||'')+'" placeholder="ex. Vigneux, Atelier FCPI…"></label>'
+    + '<div class="alr-f"><span>Types de séances <small>— aucun coché = tous</small></span><div class="alr-ch">'
+    + ALR_TYPES.map(t=>'<label><input type="checkbox" name="alrT" value="'+t[0]+'"'+(types.has(t[0])?' checked':'')+'> '+esc(t[1])+'</label>').join('')+'</div></div>'
+    + '<div class="alr-f"><span>Lieux <small>— aucun coché = tous</small></span>'
+    + '<input type="text" id="alrSiteQ" placeholder="Filtrer les lieux (ex. Vigneux, Nantes, Zoom…)">'
+    + '<div class="alr-sites" id="alrSites">'+liste.map(s=>'<label data-q="'+esc(norm(s.lib))+'"><input type="checkbox" name="alrS" value="'+esc(s.id)+'"'+(sites.has(String(s.id))?' checked':'')+'> <span>'+esc(s.lib)
+        +(s.n?' <small>('+s.n+' à venir)</small>':'')+'</span></label>').join('')+'</div></div>'
+    + '<label class="alr-f"><span>Mots dans le titre ou le thème <small>— séparés par des virgules, un seul suffit</small></span><input type="text" id="alrMots" maxlength="200" value="'+esc(c.mots||'')+'" placeholder="ex. FCPI"></label>'
+    + '<label class="alr-f"><span>Pilote <small>(facultatif)</small></span><input type="text" id="alrPil" maxlength="120" value="'+esc(c.pilote||'')+'" placeholder="Nom du pilote"></label>'
+    + '<div class="alr-ch"><label><input type="checkbox" id="alrAcc"'+(c.accessible?' checked':'')+'> Seulement les séances accessibles à mon statut</label></div>'
+    + '<p class="alr-apercu" id="alrApercu"></p>'
+    + '<p class="alr-err" id="alrErr" hidden></p>'
+    + '<div class="alr-fb"><button type="button" class="alr-b pri" id="alrOk">Enregistrer</button><button type="button" class="alr-b" id="alrAnnul">Annuler</button></div>'
+    + '</div>';
+}
+function alrLireForm(){
+  const v = id => (document.getElementById(id)||{}).value || '';
+  return {
+    types: [...document.querySelectorAll('#alrForm input[name=alrT]:checked')].map(i=>i.value),
+    sites: [...document.querySelectorAll('#alrForm input[name=alrS]:checked')].map(i=>i.value),
+    mots: v('alrMots').trim(), pilote: v('alrPil').trim(),
+    accessible: !!(document.getElementById('alrAcc')||{}).checked,
+  };
+}
+function alrApercu(){
+  const el = document.getElementById('alrApercu'); if(!el) return;
+  const c = alrLireForm();
+  if(alrVide(c)){ el.textContent = 'Choisis au moins un type, un lieu, un mot ou un pilote.'; return; }
+  const l = alrAVenir(c);
+  el.innerHTML = (l.length
+      ? 'Aujourd’hui, <b>'+l.length+'</b> séance'+(l.length>1?'s':'')+' à venir correspond'+(l.length>1?'ent':'')+' à ces critères (ex. : '
+        + l.slice(0,3).map(a=>esc(a.title)+' le '+esc(fmtD(a.start))).join(' ; ')+'). '
+      : 'Aucune séance à venir ne correspond aujourd’hui. ')
+    + 'L’alerte ne se déclenchera que sur les séances publiées <b>après</b> l’enregistrement.';
+}
+function alrPage(el){
+  const nv = new Set(ALR.filter(x=>!x.vu_le).map(x=>x.regle_id+'|'+x.cle));
+  const stat = r => {
+    const l = ALR.filter(x=>x.regle_id===r.id);
+    const n = l.filter(x=>!x.vu_le).length;
+    return (l.length ? l.length+' alerte'+(l.length>1?'s':'')+' déclenchée'+(l.length>1?'s':'') : 'Aucune alerte déclenchée pour l’instant')
+      + (n ? ' · '+n+' non vue'+(n>1?'s':'') : '')
+      + ' · depuis le '+fmtD(String(r.cree_le||'').slice(0,10));
+  };
+  const regles = ALR_REGLES.map(r=>'<div class="alr-r'+(r.active?'':' pause')+'">'
+      + '<b>'+esc(r.nom)+(r.active?'':' <small>(en pause)</small>')+'</b>'
+      + '<div class="alr-crit">'+esc(alrResume(r.criteres))+'</div>'
+      + '<div class="alr-stat">'+esc(stat(r))+'</div>'
+      + '<div class="alr-acts">'
+      + '<button type="button" class="alr-b" data-alred="'+esc(r.id)+'">Modifier</button>'
+      + '<button type="button" class="alr-b" data-alrpause="'+esc(r.id)+'">'+(r.active?'Mettre en pause':'Reprendre')+'</button>'
+      + '<button type="button" class="alr-b dang" data-alrdel="'+esc(r.id)+'">Supprimer</button></div></div>').join('');
+  const seuil = Date.now() - 30*86400000;
+  const vues = ALR.filter(x=>x.vu_le && Date.parse(x.vu_le) >= seuil)
+    .sort((x,y)=>String(y.vu_le).localeCompare(String(x.vu_le)));
+  const vuesU = []; const vuC = new Set();
+  vues.forEach(x=>{ if(!vuC.has(x.cle)){ vuC.add(x.cle); vuesU.push(x); } });
+  el.innerHTML = '<div class="alr-page">'
+    + '<p class="alr-intro">Une alerte te prévient, <b>tout en haut de l’accueil</b>, dès qu’une séance qui correspond à tes critères est publiée par le réseau (vérifié quatre fois par jour). Elle y reste jusqu’à ce que tu cliques sur « Vu ». Seules les séances publiées après l’enregistrement de l’alerte comptent.</p>'
+    + (ALR_MSG ? '<p class="alr-err">'+esc(ALR_MSG)+'</p>' : '')
+    + (ALR_EDIT ? alrFormHtml(ALR_EDIT.id ? ALR_EDIT : null)
+       : (ALR_REGLES.length < ALR_MAX ? '<p><button type="button" class="alr-b pri" id="alrNew">+ Nouvelle alerte</button></p>' : '<p class="alr-intro">'+ALR_MAX+' alertes au maximum.</p>'))
+    + (ALR_REGLES.length ? '<div class="alr-regles">'+regles+'</div>'
+       : (ALR_EDIT ? '' : '<p class="surv-vide">Aucune alerte pour l’instant.<br>Exemples : les séances à Vigneux-de-Bretagne, ou le prochain atelier FCPI.</p>'))
+    + (vuesU.length ? '<details class="alr-hist"><summary>Alertes vues ces 30 derniers jours ('+vuesU.length+')</summary><ul>'
+       + vuesU.map(x=>{ const s=x.seance||{}; return '<li>'+(s.url?'<a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.titre||x.cle)+'</a>':esc(s.titre||x.cle))
+           + (s.start?' — '+esc(fmtD(s.start)):'')+' <small>(vue le '+esc(fmtD(String(x.vu_le).slice(0,10)))+')</small></li>'; }).join('')
+       + '</ul></details>' : '')
+    + '</div>';
+  if(ALR_EDIT){
+    alrApercu();
+    const f = document.getElementById('alrForm');
+    f.addEventListener('input', e=>{
+      if(e.target.id==='alrSiteQ'){
+        const q = norm(e.target.value).trim();
+        f.querySelectorAll('#alrSites label').forEach(l=>{ l.hidden = !!q && !l.dataset.q.includes(q) && !l.querySelector('input').checked; });
+        return;
+      }
+      alrApercu();
+    });
+    f.addEventListener('change', alrApercu);
+    document.getElementById('alrOk').addEventListener('click', alrEnregistrer);
+    document.getElementById('alrAnnul').addEventListener('click', ()=>{ ALR_EDIT=null; ALR_MSG=''; buildSurv(); });
+  }
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest) return;
+  if(e.target.closest('#alrNew')){ ALR_EDIT={}; ALR_MSG=''; buildSurv(); const n=document.getElementById('alrNom'); if(n) n.focus(); return; }
+  const ed = e.target.closest('[data-alred]');
+  if(ed){ const r=ALR_REGLES.find(x=>x.id===ed.dataset.alred); if(r){ ALR_EDIT=r; ALR_MSG=''; buildSurv(); document.getElementById('alrForm').scrollIntoView({block:'start'}); } return; }
+  const pa = e.target.closest('[data-alrpause]');
+  if(pa){ alrPause(pa.dataset.alrpause); return; }
+  const de = e.target.closest('[data-alrdel]');
+  if(de){ alrSupprimer(de.dataset.alrdel); }
+});
+async function alrEnregistrer(){
+  const err = document.getElementById('alrErr');
+  const dire = t => { if(err){ err.hidden=!t; err.textContent=t||''; } };
+  const c = alrLireForm();
+  if(alrVide(c)) return dire('Choisis au moins un type, un lieu, un mot ou un pilote.');
+  const nom = ((document.getElementById('alrNom')||{}).value||'').trim() || alrNomAuto(c);
+  const b = document.getElementById('alrOk'); if(b) b.disabled = true;
+  try{
+    const ancien = ALR_EDIT && ALR_EDIT.id ? ALR_EDIT : null;
+    if(ancien){
+      const maj = { nom, criteres:c, maj:new Date().toISOString() };
+      // critères changés : l'alerte repart d'aujourd'hui, comme une alerte neuve
+      if(JSON.stringify(ancien.criteres||{}) !== JSON.stringify(c)) maj.cree_le = maj.maj;
+      const r = await SB.from('alertes_regles').update(maj).eq('id', ancien.id);
+      if(r.error) throw r.error;
+    } else {
+      const r = await SB.from('alertes_regles').insert({ nom, criteres:c });
+      if(r.error) throw r.error;
+    }
+    ALR_EDIT = null; ALR_MSG = '';
+    await chargerAlertes();
+    buildSurv();
+  }catch(e){
+    if(b) b.disabled = false;
+    dire('Enregistrement impossible : '+((e&&e.message)||'réessaie dans un instant.'));
+  }
+}
+async function alrPause(id){
+  const r = ALR_REGLES.find(x=>x.id===id); if(!r || !SB) return;
+  try{
+    const q = await SB.from('alertes_regles').update({ active:!r.active, maj:new Date().toISOString() }).eq('id', id);
+    if(q.error) throw q.error;
+    r.active = !r.active; ALR_MSG = '';
+    await alrDetecter();
+  }catch(e){ ALR_MSG = 'Changement impossible, réessaie dans un instant.'; }
+  buildAlertes(); buildSurv();
+}
+async function alrSupprimer(id){
+  const r = ALR_REGLES.find(x=>x.id===id); if(!r || !SB) return;
+  if(!confirm('Supprimer l’alerte « '+r.nom+' » ? Ses alertes non vues disparaissent aussi de l’accueil.')) return;
+  try{
+    const q = await SB.from('alertes_regles').delete().eq('id', id);
+    if(q.error) throw q.error;
+    ALR_REGLES = ALR_REGLES.filter(x=>x.id!==id); ALR = ALR.filter(x=>x.regle_id!==id); ALR_MSG = '';
+    if(ALR_EDIT && ALR_EDIT.id===id) ALR_EDIT = null;
+  }catch(e){ ALR_MSG = 'Suppression impossible, réessaie dans un instant.'; }
+  buildAlertes(); buildSurv();
+}
+
 // Repère personnel « depuis ta dernière visite » (table membres_vues, une ligne par compte).
 async function chargerVues(){
   if(!SB || !SBUSER) return;
@@ -2375,11 +2767,11 @@ function survMois(liste, passe){
 // enregistrée ne compte que comme inscription — elle n'apparaît que dans le premier sous-onglet.
 // La case « Sessions passées » porte sur le sous-onglet affiché : elle ouvre aussi, côté
 // inscriptions, mon historique de participation (le payload du réseau remonte à 2022).
-const SURV_SUBS=['ins','gardes'];
-const SURV_SLUG={ins:'mes-inscriptions', gardes:'mes-enregistrements'};
+const SURV_SUBS=['ins','gardes','alr'];
+const SURV_SLUG={ins:'mes-inscriptions', gardes:'mes-enregistrements', alr:'mes-alertes'};
 // raccourcis également acceptés dans l'URL
 const SLUG_SURV=Object.assign(Object.fromEntries(Object.entries(SURV_SLUG).map(([k,v])=>[v,k])),
-  {inscriptions:'ins', inscrit:'ins', enregistres:'gardes', enregistrements:'gardes', signets:'gardes'});
+  {inscriptions:'ins', inscrit:'ins', enregistres:'gardes', enregistrements:'gardes', signets:'gardes', alertes:'alr'});
 let SURV_SUB='ins';
 function showSurvSub(s){
   if(!SURV_SUBS.includes(s)) s='ins';
@@ -2392,6 +2784,10 @@ document.querySelectorAll('#survSub button').forEach(b=>b.addEventListener('clic
 function buildSurv(){
   const el = document.getElementById('survList');
   if(!el) return;
+  // « Mes alertes » : ni note de relevé, ni case « passées » — la page des règles à la place
+  const alr = SURV_SUB==='alr';
+  const nt = document.getElementById('survNote'), pl = document.getElementById('survPastLbl');
+  if(alr){ if(nt) nt.textContent=''; if(pl) pl.hidden=true; alrPage(el); return; }
   const ins = inscritObjets();
   const insCles = new Set(ins.map(o=>o.cle));
   const gardes = survObjets().filter(o=>!insCles.has(o.cle));
@@ -2761,6 +3157,7 @@ function boot(){
   chargerVeille();
   chargerParcours();
   chargerSurv();
+  chargerAlertes();
   chargerVues();
   buildMembres();
   chargerRetours();
@@ -3168,6 +3565,8 @@ async function chargerParcours(){
     if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
     // le statut (progression ou annuaire) décide de ce qui est réservable : toutes les listes suivent
     if(window.__booted){ Object.keys(RENDERS).forEach(k=>{ if(k!=='cat' || !PARCOURS){ try{ RENDERS[k](); }catch(e){} } }); }
+    // le statut est connu : les règles « accessibles à mon statut » peuvent maintenant se déclencher
+    if(window.__booted){ try{ alrDetecter().then(n=>{ if(n) buildAlertes(); }); }catch(e){} }
     try{ routerQuandPret(); }catch(e){}
     return !!PARCOURS;
   }catch(e){ PARCOURS = null; return false; }
@@ -6081,7 +6480,7 @@ async function initSync(){
     SBUSER = session ? session.user : null;
     accMaj();
     if(SBUSER) signalerActivite();
-    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); chargerParcours(); chargerSurv(); buildMembres(); chargerRetours(); }
+    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); chargerParcours(); chargerSurv(); chargerAlertes(); buildMembres(); chargerRetours(); }
     if(!SBUSER) SYNC_FAIT=false;
   });
   try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }

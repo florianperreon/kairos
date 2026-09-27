@@ -2487,12 +2487,12 @@ test.describe('Mes sessions — inscriptions et enregistrements', () => {
     });
     const ins = await rendu(page);
     expect(ins.sub, 'on arrive sur les inscriptions').toBe('ins');
-    expect(ins.onglets).toEqual(['ins*', 'gardes']);
+    expect(ins.onglets).toEqual(['ins*', 'gardes', 'alr']);   // « Mes alertes » depuis le 27/09/2026
     expect(ins.pastilles, 'chaque sous-onglet annonce ce qui lui reste à venir').toEqual(['1', '2']);
     expect(ins.cartes).toEqual(['Séance 1']);
     expect(ins.note).toContain('Inscriptions relevées');
     const gardes = await rendu(page, 'gardes');
-    expect(gardes.onglets).toEqual(['ins', 'gardes*']);
+    expect(gardes.onglets).toEqual(['ins', 'gardes*', 'alr']);
     expect(gardes.cartes).toEqual(['Séance 2', 'Séance 3']);
     expect(gardes.note).toContain('Places relevées');
     expect(erreurs).toEqual([]);
@@ -3018,6 +3018,173 @@ test.describe('Ajouter à Google Agenda', () => {
     expect(r).not.toBeNull();
     expect(r.droite).toBeLessThanOrEqual(r.largeur);
     expect(r.scroll).toBeLessThanOrEqual(r.largeur);
+    expect(erreurs).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Mes alertes', () => {
+  // Réseau minimal : un site à Vigneux (133), un autre (134), des séances de chaque type.
+  // `nouv` date la publication : avant ou après la création de la règle (T0 = il y a 2 jours).
+  const preparer = page => page.evaluate(() => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    const j = n => { const d = new Date(); d.setDate(d.getDate() + n); return isoJour(d); };
+    const il = h => new Date(Date.now() - h * 3600000).toISOString();
+    SITES = { 133: ['FORMAN NANTES PAYS DE LA LOIRE', 'VIGNEUX DE BRETAGNE', 'Golf de Nantes RD 81', '44360', ''],
+              134: ['FORMAN VAR SAINT MANDRIER', 'SAINT MANDRIER', 'Bureau du Port', '83430', ''] };
+    const s = (k, id, titre, start, siteId, extra) => Object.assign({ k, id, th: '', thRaw: '', title: titre, start, end: start,
+      lieu: siteId === 133 ? 'Vigneux' : 'Var', pilotes: 'Jean Dupont', hor: '09:00 - 12:00', siteId, max: 20, total: 5,
+      guests: [], wait: [], link: '', pw: '', pub: '', hab: '', url: 'https://exemple.invalid/' + k + id }, extra || {});
+    A.length = 0; R.length = 0; F.length = 0; E.length = 0;
+    A.push(s('a', 1, 'Capital investissement (FCPI/FIP/FPCI)', j(20), 134, { th: 'PLACEMENTS', thRaw: 'PLACEMENTS' }),
+           s('a', 2, 'Découverte Métier', j(10), 133, { th: 'PARCOURS DECOUVERTE', thRaw: 'PARCOURS DECOUVERTE' }),
+           s('a', 3, 'Clefs de la communication', j(12), 134, { th: 'COMMUNICATION' }),
+           s('a', 4, 'Fiscalité des fcpi', j(30), 133, { th: 'PLACEMENTS' }),                      // publiée AVANT la règle
+           s('a', 5, 'Capital investissement (FCPI/FIP/FPCI)', j(-3), 134, { th: 'PLACEMENTS' }));   // passée
+    R.push(s('r', 7, 'Réunion d’équipe Nantes', j(5), 133));
+    NOUV = { 'a:1': il(5), 'a:2': il(6), 'a:3': il(7), 'a:4': il(72), 'a:5': il(8), 'r:7': il(9) };
+    const t0 = il(48);
+    window.__REGLES = () => [
+      { id: 'rv', nom: 'Vigneux', active: true, cree_le: t0, criteres: { sites: ['133'] } },
+      { id: 'rf', nom: 'Atelier FCPI', active: true, cree_le: t0, criteres: { types: ['at'], mots: 'fcpi' } },
+    ];
+  });
+  // Faux Supabase : chaque requête est notée (table + chaîne d'appels), les lectures servent `tables`.
+  const fauxSB = (page, tables) => page.evaluate((tables) => {
+    window.__req = [];
+    const q = (table) => {
+      const r = { table, ops: [] };
+      const b = new Proxy({}, { get(_, m) {
+        if (m === 'then') return (ok, ko) => { window.__req.push(r);
+          const lu = r.ops[0] && r.ops[0][0] === 'select';
+          return Promise.resolve({ data: lu ? (tables[table] || []) : null, error: null }).then(ok, ko); };
+        return (...a) => { r.ops.push([m, a]); return b; };
+      } });
+      return b;
+    };
+    SB = { from: q, rpc: async () => ({ data: null, error: null }) };
+    SBUSER = { id: 'u1', email: 'moi@test.invalid' };
+  }, tables);
+
+  test('les critères : lieu, type, mots (sans accents ni casse), le Parcours Découverte à part', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      const ids = c => alrSeances().filter(a => alrCorrespond(c, a)).map(a => a.k + a.id);
+      return { vigneux: ids({ sites: ['133'] }), fcpi: ids({ types: ['at'], mots: 'FCPI' }),
+               pd: ids({ types: ['pd'] }), ou: ids({ mots: 'communication, fiscalite' }),
+               pil: ids({ types: ['r'], pilote: 'dupont' }), vide: ids({}) };
+    });
+    expect(r.vigneux).toEqual(['a2', 'a4', 'r7']);
+    expect(r.fcpi).toEqual(['a1', 'a4', 'a5']);
+    expect(r.pd).toEqual(['a2']);
+    expect(r.ou).toEqual(['a3', 'a4']);
+    expect(r.pil).toEqual(['r7']);
+    expect(r.vide).toEqual([]);                 // une règle sans critère ne déclenche rien
+    expect(erreurs).toEqual([]);
+  });
+
+  test('seules les séances publiées APRÈS la règle déclenchent, jamais deux fois, jamais une passée', async ({ page }) => {
+    await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      ALR_REGLES = window.__REGLES(); ALR = [];
+      const d1 = alrADeclencher();
+      const liste = d1.map(x => x.regle_id + '>' + x.cle).sort();
+      ALR = d1.map(x => Object.assign({ vu_le: null }, x));
+      const d2 = alrADeclencher().length;
+      ALR = []; ALR_REGLES.forEach(x => x.active = false);
+      const pause = alrADeclencher().length;
+      // une règle « accessibles à mon statut » attend que le statut soit connu
+      ALR_REGLES = [{ id: 'rs', nom: 'S', active: true, cree_le: window.__REGLES()[0].cree_le, criteres: { sites: ['133'], accessible: true } }];
+      PARCOURS = null; if (DATA) DATA.statuts = {};
+      const sansStatut = alrADeclencher().length;
+      return { liste, d2, pause, sansStatut, photo: d1.find(x => x.cle === 'a:1').seance };
+    });
+    // a:4 (Vigneux et FCPI) a été publiée avant la règle ; a:5 est passée
+    expect(r.liste).toEqual(['rf>a:1', 'rv>a:2', 'rv>r:7']);
+    expect(r.d2).toBe(0);
+    expect(r.pause).toBe(0);
+    expect(r.sansStatut).toBe(0);
+    expect(r.photo).toMatchObject({ type: 'at', titre: 'Capital investissement (FCPI/FIP/FPCI)', site: 'FORMAN VAR SAINT MANDRIER — SAINT MANDRIER' });
+  });
+
+  test('accueil : les alertes non vues en n°1, elles restent jusqu’au clic sur « Vu »', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    await fauxSB(page, {});
+    const r = await page.evaluate(async () => {
+      ALR_REGLES = window.__REGLES(); ALR = []; ALR_OK = true;
+      await alrDetecter();
+      const ecrit = window.__req.find(x => x.table === 'alertes');
+      buildHome(); buildAlertes(); buildAlertes();          // un nouveau rendu ne fait rien disparaître
+      const home = document.getElementById('v-home');
+      const premier = [...home.children].find(c => !c.hidden);
+      const cartes = () => [...document.querySelectorAll('#homeAlertes .alr-it')].map(c => c.dataset.alrcle);
+      const avant = cartes();
+      const pastille = (document.querySelector('nav.botbar button[data-v="home"] .alr-pt') || {}).textContent;
+      window.__req = [];
+      document.querySelector('#homeAlertes [data-alrvu="a:2"]').click();
+      await new Promise(r => setTimeout(r, 30));
+      const maj = window.__req.find(x => x.table === 'alertes');
+      const apres = cartes();
+      document.querySelector('#homeAlertes [data-alrvu="*"]').click();
+      await new Promise(r => setTimeout(r, 30));
+      return { premier: premier && premier.id, avant, apres, pastille,
+               ecrit: ecrit && ecrit.ops.map(o => o[0]), nEcrits: ecrit && ecrit.ops[0][1][0].length,
+               maj: maj && maj.ops.map(o => o[0]),
+               fin: document.getElementById('homeAlertes').hidden,
+               pastilleFin: !!document.querySelector('nav.botbar button[data-v="home"] .alr-pt') };
+    });
+    expect(r.ecrit).toEqual(['upsert']);
+    expect(r.nEcrits).toBe(3);
+    expect(r.premier).toBe('homeAlertes');
+    expect(r.avant.sort()).toEqual(['a:1', 'a:2', 'r:7']);
+    expect(r.pastille).toBe('3');
+    expect(r.maj).toEqual(['update', 'is', 'in']);
+    expect(r.apres.sort()).toEqual(['a:1', 'r:7']);
+    expect(r.fin).toBe(true);
+    expect(r.pastilleFin).toBe(false);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('une alerte dont la séance a quitté le réseau reste affichée grâce à sa photo', async ({ page }) => {
+    await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      ALR_REGLES = window.__REGLES();
+      ALR = [{ regle_id: 'rv', cle: 'a:999', apparue_le: new Date().toISOString(), vu_le: null,
+               seance: { type: 'at', titre: 'Séance retirée', start: '2030-01-10', lieu: 'Vigneux' } }];
+      buildAlertes();
+      return document.getElementById('homeAlertes').textContent;
+    });
+    expect(r).toContain('Séance retirée');
+    expect(r).toContain('n’est plus proposée par le réseau');
+  });
+
+  test('Mes sessions → Mes alertes : l’adresse, le formulaire et l’enregistrement', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    await fauxSB(page, { alertes_regles: [], alertes: [] });
+    await page.evaluate(() => { ALR_REGLES = []; ALR = []; ALR_OK = true; showTab('surv'); curTab = 'surv'; showSurvSub('alr'); buildSurv(); syncHash(false); });
+    expect(await page.evaluate(() => location.hash)).toBe('#mes-sessions?s=mes-alertes');
+    await page.click('#alrNew');
+    await page.check('#alrForm input[name=alrS][value="133"]');
+    const apercu = await page.textContent('#alrApercu');
+    expect(apercu).toContain('3 séances à venir');
+    expect(apercu).toContain('après');
+    await page.click('#alrOk');
+    await page.waitForTimeout(50);
+    const ins = await page.evaluate(() => window.__req.filter(x => x.table === 'alertes_regles' && x.ops[0][0] === 'insert').map(x => x.ops[0][1][0]));
+    expect(ins).toEqual([{ nom: 'VIGNEUX DE BRETAGNE', criteres: { types: [], sites: ['133'], mots: '', pilote: '', accessible: false } }]);
+    // formulaire vide : refusé sans requête
+    await page.click('#alrNew');
+    const n = await page.evaluate(() => window.__req.length);
+    await page.click('#alrOk');
+    expect(await page.isVisible('#alrErr')).toBe(true);
+    expect(await page.evaluate(() => window.__req.length)).toBe(n);
     expect(erreurs).toEqual([]);
   });
 });
