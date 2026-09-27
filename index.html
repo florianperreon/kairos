@@ -187,10 +187,24 @@ section.view.on{display:block}
 .bdstrip .bd:hover{text-decoration:underline}
 .bdstrip .bd .w{font-weight:700;color:var(--gold-ink);margin-left:4px}
 .welcome .wmark{font-size:38px;line-height:1}
+.welcome{position:relative}
+.welcome .wtog{align-self:flex-start;background:none;border:1px solid var(--line);border-radius:99px;padding:3px 11px;font-size:12px;font-weight:600;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.welcome .wtog:hover{color:var(--ink);border-color:var(--ink-3)}
+.welcome.reduit{padding-top:10px;padding-bottom:10px;gap:10px;align-items:center}
+.welcome.reduit .wmark{font-size:22px}
+.welcome.reduit .wtxt{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.welcome.reduit h2{font-size:16px;margin:0}
+.welcome.reduit .wdate{margin:0}
+.welcome.reduit .wtog{align-self:center}
+.welcome:not(.reduit) .wtog{position:absolute;top:12px;right:12px}
+.welcome:not(.reduit) .wtxt{padding-right:96px}
 @media(max-width:640px){
   /* Téléphone : la main passe au-dessus du texte, qui reprend toute la largeur */
   .welcome{align-items:flex-start;gap:6px}
   .welcome .wmark{font-size:30px;flex:1 1 100%}
+  .welcome:not(.reduit) .wtxt{padding-right:0}
+  .welcome.reduit .wmark{font-size:20px;flex:0 0 auto}
+  .welcome.reduit .wtxt{flex:1}
   .welcome .wtxt{min-width:0}
   .welcome h2{font-size:20px}
 }
@@ -3705,11 +3719,27 @@ document.getElementById('lockBtn').addEventListener('click',async ()=>{
 });
 
 /* ---------- Accueil ---------- */
-function buildHome(){
-  const h=new Date().getHours(), salut = h<5?'Bonne nuit':h<18?'Bonjour':'Bonsoir';
-  ACC_NOM_AFF = prenomUser();
+// Encart de bienvenue : réductible une fois lu. Le choix suit d'un appareil à l'autre (VU.acc, le plus récent l'emporte).
+const welcomeReduit = () => !!(VU.acc && VU.acc.r);
+function buildWelcome(){
   const wEl=document.getElementById('welcome');
-  if(wEl) wEl.innerHTML='<div class="wmark">👋</div><div class="wtxt"><h2>'+salut+(ACC_NOM_AFF?' '+esc(ACC_NOM_AFF):'')+', bienvenue sur Kairos !</h2><div class="wdate">'+fmtDLong(todayIso)+' <span class="wk-inline num">S'+noSemaine(todayIso)+'</span>'+(estFerie(todayIso)?' <span class="wk-tag fer">Férié · '+esc(estFerie(todayIso))+'</span>':'')+(vacancesDe(todayIso)?' <span class="wk-tag vac">'+esc(vacancesDe(todayIso).nom)+' '+zoneHtml(zoneScolaire())+'</span>':'')+'</div><p>Kairos, c\u2019est l\u2019art de reconnaître le bon moment — et d\u2019agir au moment juste. Bonne journée !</p>'+(CONTENU&&CONTENU.accueil&&CONTENU.accueil.intro?'<p class="wintro">'+esc(CONTENU.accueil.intro)+'</p>':'')+'</div>';
+  if(!wEl) return;
+  const h=new Date().getHours(), salut = h<5?'Bonne nuit':h<18?'Bonjour':'Bonsoir';
+  const red = welcomeReduit();
+  const date = '<div class="wdate">'+fmtDLong(todayIso)+' <span class="wk-inline num">S'+noSemaine(todayIso)+'</span>'+(estFerie(todayIso)?' <span class="wk-tag fer">Férié · '+esc(estFerie(todayIso))+'</span>':'')+(vacancesDe(todayIso)?' <span class="wk-tag vac">'+esc(vacancesDe(todayIso).nom)+' '+zoneHtml(zoneScolaire())+'</span>':'')+'</div>';
+  wEl.classList.toggle('reduit', red);
+  wEl.innerHTML='<div class="wmark">👋</div><div class="wtxt"><h2>'+salut+(ACC_NOM_AFF?' '+esc(ACC_NOM_AFF):'')+(red?'':', bienvenue sur Kairos !')+'</h2>'+date
+    +(red?'':'<p>Kairos, c’est l’art de reconnaître le bon moment — et d’agir au moment juste. Bonne journée !</p>'+(CONTENU&&CONTENU.accueil&&CONTENU.accueil.intro?'<p class="wintro">'+esc(CONTENU.accueil.intro)+'</p>':''))+'</div>'
+    +'<button type="button" class="wtog" data-wtog aria-expanded="'+(red?'false':'true')+'" title="'+(red?'Afficher le message de bienvenue':'Réduire le message de bienvenue')+'">'+(red?'Déplier ▾':'Réduire ▴')+'</button>';
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-wtog]'); if(!b) return;
+  VU.acc = { r: !welcomeReduit(), t: new Date().toISOString() };
+  saveVu(); buildWelcome();
+});
+function buildHome(){
+  ACC_NOM_AFF = prenomUser();
+  buildWelcome();
   const in7 = new Date(TODAY); in7.setDate(in7.getDate()+7);
   const iso7 = isoJour(in7);
   const upcoming = A.filter(a=>a.start>=todayIso);
@@ -7490,6 +7520,7 @@ async function syncPull(){
     if(set.size !== (VU.etapes||[]).length){ VU.etapes = [...set]; chg=true; }
   }
   if(v.bk && v.bk > (VU.bk||'')){ VU.bk = v.bk; chg=true; }
+  if(v.acc && v.acc.t && v.acc.t > ((VU.acc||{}).t||'')){ VU.acc = v.acc; chg=true; try{ buildWelcome(); }catch(e){} }
   // Zone scolaire : le choix fait sur un autre appareil est repris tant qu'aucun choix n'a été fait ici
   if(/^[ABC]$/.test(d.zone||'') && !ZONE_CHOISIE){ ZONE_CHOISIE=d.zone; try{ localStorage.setItem('kairos_zone', d.zone); }catch(e){} try{ calRafraichir(); }catch(e){} }
   if(chg){
