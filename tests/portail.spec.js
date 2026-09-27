@@ -3486,7 +3486,7 @@ test.describe('Parcours en missions', () => {
     await poser(page, { mis, etapes: { dm: ok, ad: ok, trois_jours: ok, formation_reservee: ok } });
     const avant = await page.evaluate(() => ({ e: document.querySelector('.mi-porte .mi-e').textContent, btn: !!document.querySelector('[data-miporte="porte1"]'),
       carte: [...document.querySelectorAll('#homeMissions .mi-pc.porte')].length }));
-    expect(avant).toEqual({ e: 'Prête', btn: true, carte: 1 });
+    expect(avant).toEqual({ e: 'Prêt', btn: true, carte: 1 });
     await page.click('[data-miporte="porte1"]');
     await page.waitForTimeout(50);
     const dem = await page.evaluate(() => window.__rpc.find(x => x[0] === 'porte_demander'));
@@ -3542,7 +3542,8 @@ test.describe('Parcours en missions', () => {
     });
     expect(r.rang).toBe(0);                          // aucune alerte : c'est le premier bloc
     expect(r.texte).toContain('Filleule Test');
-    expect(r.texte).toContain('Point de démarrage');
+    expect(r.texte).toContain('Point d’étape 1');
+    expect(r.texte).not.toMatch(/porte/i);   // le mot « porte » n'apparaît plus à l'écran (28/09/2026)
     await page.click('[data-mirev="0"]');
     expect(await page.textContent('#homePortes .alr-err')).toContain('Dis en un mot');
     expect(await page.evaluate(() => window.__rpc.filter(x => x[0] === 'porte_traiter').length)).toBe(0);

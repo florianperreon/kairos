@@ -3976,6 +3976,8 @@ function miPorte(id){
   if(r && r.statut==='a_revoir') return { ouverte:false, revoir:true, r, manque, po, ph };
   return { ouverte:false, prete: !manque.length, manque, po, ph };
 }
+// Libellé affiché (les identifiants internes restent porte1 / porte2 / porte3)
+const miPorteNom = id => id==='porte1' ? 'Point d’étape 1' : id==='porte2' ? 'Point d’étape 2' : 'Passage ADMAN';
 const miPhaseOuverte = ph => (ph.ouvre||[]).every(id=>miPorte(id).ouverte);
 function miPhaseProg(ph){
   let ok=0, tot=0;
@@ -3992,7 +3994,8 @@ function miCochable(ph, m, a){
 function miBlocage(ph, m){
   if(!miPhaseOuverte(ph)){
     const p = (ph.ouvre||[]).map(miPorte).find(x=>!x.ouverte);
-    return p && p.po ? 'S’ouvre après la '+(p.po.id==='porte1'?'porte 1':p.po.id==='porte2'?'porte 2':'porte 3')+' : '+p.po.t+'.' : 'Phase pas encore ouverte.';
+    if(!p || !p.po) return 'Phase pas encore ouverte.';
+    return p.po.v==='auto' ? 'S’ouvre avec le passage ADMAN.' : 'S’ouvre après le '+miPorteNom(p.po.id).toLowerCase()+' : '+p.po.t+'.';
   }
   const man = miManque(m.pre);
   return man.length ? 'À faire d’abord : '+man.map(miPreLib).join(' ; ')+'.' : '';
@@ -4061,7 +4064,7 @@ function miMissionHtml(ph, m, ouverte){
     + (m.liens||[]).map(l=>'<a class="mi-f ext" href="'+esc(l.u)+'" target="_blank" rel="noopener">🔗 '+esc(l.t)+' ↗</a>').join('');
   return '<details class="mi mi-'+e+'" data-mi="'+esc(m.id)+'"'+(ouverte?' open':'')+'>'
     + '<summary><span class="mi-n">'+esc(m.id)+'</span><span class="mi-t">'+esc(m.t)
-    + (m.horsPorte?' <span class="mi-hp" title="Pas nécessaire pour passer la porte 1 : peut se faire dans un second temps">Peut attendre</span>':'')+'</span>'
+    + (m.horsPorte?' <span class="mi-hp" title="Pas nécessaire pour le point d’étape 1 : peut se faire dans un second temps">Peut attendre</span>':'')+'</span>'
     + '<span class="mi-e '+e+'">'+(e==='faite'?'✓ ':'')+MI_ETAT_LIB[e]+'</span>'
     + '<span class="mi-p num">'+p.ok+'/'+p.tot+'</span></summary>'
     + '<div class="mi-b">'+(m.pq?'<p class="mi-pq">'+esc(m.pq)+'</p>':'')
@@ -4074,16 +4077,16 @@ function miMissionHtml(ph, m, ouverte){
 function miPorteHtml(ph){
   const po = ph.porte; if(!po) return '';
   const s = miPorte(po.id);
-  const num = po.id==='porte1'?'Porte 1':po.id==='porte2'?'Porte 2':'Porte 3';
+  const num = miPorteNom(po.id);
   let etat, corps = '';
   if(s.ouverte){
-    etat = '<span class="mi-e faite">✓ Ouverte</span>';
-    corps = s.office ? '<p class="mi-ai">Ouverte d’office : ton statut ('+esc(monStatut())+') la dépasse déjà.</p>'
+    etat = '<span class="mi-e faite">✓ '+(s.auto?'Atteint':'Validé')+'</span>';
+    corps = s.office ? '<p class="mi-ai">Validé d’office : ton statut ('+esc(monStatut())+') le dépasse déjà.</p>'
           : s.auto ? '<p class="mi-ai">Passage ADMAN relevé par le réseau.</p>'
           : '<p class="mi-ai">Validée'+(s.r.traite_nom?' par '+esc(s.r.traite_nom):'')+(s.r.traite_le?' le '+fmtD(isoJour(new Date(s.r.traite_le))):'')+'.'
             +(s.r.mot?' « '+esc(s.r.mot)+' »':'')+'</p>';
   } else if(s.auto){
-    etat = '<span class="mi-e bloquee">🔒 Fermée</span>';
+    etat = '<span class="mi-e bloquee">Pas encore</span>';
     corps = '<p class="mi-ai">'+esc(po.d||'')+'</p>';
   } else if(s.attente){
     etat = '<span class="mi-e encours">En attente de validation</span>';
@@ -4091,7 +4094,7 @@ function miPorteHtml(ph){
   } else {
     const rev = s.revoir ? '<p class="mi-bl">Pas encore'+(s.r.traite_nom?', selon '+esc(s.r.traite_nom):'')+(s.r.mot?' : « '+esc(s.r.mot)+' »':'')+'</p>' : '';
     if(s.prete){
-      etat = '<span class="mi-e dispo">Prête</span>';
+      etat = '<span class="mi-e dispo">Prêt</span>';
       corps = rev + '<p class="mi-ai">Toutes les missions nécessaires sont faites. Demande à '+(PORTE_VALIDEUR?esc(PORTE_VALIDEUR):'ton parrain')+' de faire le point avec toi.</p>'
         + (SB && SBUSER && MOI_ID ? '<button type="button" class="alr-b pri" data-miporte="'+esc(po.id)+'">'+(s.revoir?'Redemander la validation':'Demander la validation à mon parrain')+'</button>' : '');
     } else {
@@ -4130,7 +4133,7 @@ function buildMissions(){
   const C = CONTENU, refl = C.reflexes || [];
   const biblio = navSecs().map(sec=>'<div class="mi-bs"><b>'+esc(sec.t)+'</b>'+(sec.groupes||[]).map(g=>'<div class="mi-bg"><span>'+esc(g.t)+'</span>'
       + (g.pages||[]).filter(s=>C.pages&&C.pages[s]).map(s=>'<a href="#p/'+s+'">'+(C.pages[s].i?C.pages[s].i+' ':'')+esc(C.pages[s].t)+'</a>').join('')+'</div>').join('')+'</div>').join('');
-  el.innerHTML = '<h2>Mon parcours <span class="badge-lig">4 phases · 3 portes</span></h2>'
+  el.innerHTML = '<h2>Mon parcours <span class="badge-lig">4 phases · 2 points d’étape</span></h2>'
     + '<div class="mi-chips">'+puces+'</div>'
     + '<div class="mi-body">'
     + (ph.intro?'<div class="phase-intro">'+esc(ph.intro)+'</div>':'')
@@ -4154,8 +4157,8 @@ function buildProchaines(){
   const r = refl.length ? refl[(noSemaine(todayIso) - 1 + refl.length) % refl.length] : null;
   if(!l.length && !portes.length && !r){ el.hidden = true; return; }
   el.innerHTML = '<h2>Mes prochaines missions</h2>'
-    + portes.map(s=>'<div class="mi-pc porte"><span class="mi-pcn">'+(s.po.id==='porte1'?'Porte 1':'Porte 2')+'</span><b>'+esc(s.po.t)+'</b>'
-        + '<span class="mi-pcs">'+(s.attente?'En attente de validation'+(PORTE_VALIDEUR?' par '+esc(PORTE_VALIDEUR):''):'Prête : demande la validation à ton parrain')+'</span>'
+    + portes.map(s=>'<div class="mi-pc porte"><span class="mi-pcn">'+miPorteNom(s.po.id)+'</span><b>'+esc(s.po.t)+'</b>'
+        + '<span class="mi-pcs">'+(s.attente?'En attente de validation'+(PORTE_VALIDEUR?' par '+esc(PORTE_VALIDEUR):''):'Prêt : demande la validation à ton parrain')+'</span>'
         + '<button type="button" class="alr-b" data-mialler="'+esc(s.ph.id)+'">Voir</button></div>').join('')
     + l.map(x=>{ const p = miProg(x.m), a = (x.m.actions||[]).find(a=>!a.opt && !miAction(x.m,a).ok);
         return '<div class="mi-pc"><span class="mi-pcn">'+esc(x.m.id)+'</span><b>'+esc(x.m.t)+'</b>'
@@ -4170,17 +4173,17 @@ function buildAValider(){
   const el = document.getElementById('homePortes');
   if(!el) return;
   if(!A_VALIDER.length){ el.hidden = true; el.innerHTML = ''; return; }
-  el.innerHTML = '<h2>À valider pour tes filleuls <span class="alr-pt">'+A_VALIDER.length+'</span></h2>'
+  el.innerHTML = '<h2>Points d’étape à valider pour tes filleuls <span class="alr-pt">'+A_VALIDER.length+'</span></h2>'
     + '<p class="mi-ai">Ces personnes ont terminé une phase et attendent ton point d’étape. C’est la seule validation qui te revient dans leur parcours.</p>'
     + A_VALIDER.map((d,i)=>{
         const po = misPhases().map(p=>p.porte).find(p=>p && p.id===d.porte) || { t:d.porte };
         const res = Array.isArray(d.resume) ? d.resume : [];
-        return '<div class="mi-val" data-i="'+i+'"><div class="mi-ph"><b>'+esc(d.nom)+'</b><span>'+(d.porte==='porte1'?'Porte 1':'Porte 2')+' — '+esc(po.t)+'</span>'
+        return '<div class="mi-val" data-i="'+i+'"><div class="mi-ph"><b>'+esc(d.nom)+'</b><span>'+miPorteNom(d.porte)+' — '+esc(po.t)+'</span>'
           + '<span class="mi-ai">demandé le '+fmtD(isoJour(new Date(d.demande_le)))+'</span></div>'
           + (res.length ? '<details><summary>Ce qui est fait ('+res.length+')</summary><ul class="mi-cr">'
               + res.map(x=>'<li>'+esc((x.id?x.id+' ':'')+(x.t||''))+(x.d?' <small>· '+esc(fmtD(x.d))+'</small>':'')+'</li>').join('')+'</ul></details>' : '')
           + '<textarea class="mi-mot" maxlength="1000" placeholder="Un mot pour '+esc(d.nom)+' (facultatif)"></textarea>'
-          + '<div class="alr-fb"><button type="button" class="alr-b pri" data-mival="'+i+'">Valider la porte</button>'
+          + '<div class="alr-fb"><button type="button" class="alr-b pri" data-mival="'+i+'">Valider le point d’étape</button>'
           + '<button type="button" class="alr-b" data-mirev="'+i+'">Pas encore</button></div><p class="alr-err" hidden></p></div>';
       }).join('');
   el.hidden = false;

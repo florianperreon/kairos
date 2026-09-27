@@ -228,7 +228,7 @@
    ],
    "porte": {
     "id": "porte1",
-    "t": "Point de démarrage avec mon parrain",
+    "t": "Bilan de démarrage",
     "v": "parrain",
     "pre": [
      "1.1",
@@ -571,7 +571,7 @@
    ],
    "porte": {
     "id": "porte2",
-    "t": "Point de lancement avec mon parrain",
+    "t": "Bilan de lancement",
     "v": "parrain",
     "pre": [
      "2.1",
@@ -581,7 +581,7 @@
      "2.7",
      "2.8"
     ],
-    "d": "Ton parrain fait le point avec toi sur ton lancement, puis valide. Avec le passage ADMAN, cette porte ouvre la phase 4.",
+    "d": "Ton parrain fait le point avec toi sur ton lancement, puis valide. Avec le passage ADMAN, ce point d'étape ouvre la phase 4.",
     "criteres": [
      "Premier client signé",
      "Au moins une habilitation finalisée",
@@ -814,10 +814,10 @@
    ],
    "porte": {
     "id": "porte3",
-    "t": "Passage ADMAN",
+    "t": "Ton nouveau statut, relevé par le réseau",
     "v": "auto",
     "k": "adman",
-    "d": "Relevé automatiquement : la porte s'ouvre dès que le réseau te passe ADMAN."
+    "d": "Se valide tout seul dès que le réseau te passe ADMAN."
    }
   },
   {
