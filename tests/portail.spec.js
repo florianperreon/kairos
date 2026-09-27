@@ -987,7 +987,10 @@ test.describe('Mail Manager — invités relevés et lecture du mur', () => {
   test('les invités en DM / AD / 3 Jours sont relevés par semaine et depuis le début', async ({ page }) => {
     await ouvrir(page);
     const sem = await page.evaluate(() => mmSemCour());
-    await poserReseau(page, { semPassee: j(-4), semCours: j(1), vieux: j(-200), futurLoin: j(120) });
+    // Dates prises par rapport au lundi de la semaine, pas à aujourd'hui : un dimanche, j(-4) tombait
+    // dans la semaine en cours et j(1) dans la suivante (échec constaté le dimanche 27/09/2026).
+    const semPassee = await page.evaluate((sem) => vAddDays(sem, -4), sem);
+    await poserReseau(page, { semPassee, semCours: j(0), vieux: j(-200), futurLoin: j(120) });
     const a = await page.evaluate((sem) => mmAuto(sem), sem);
     // Sur la semaine et sur l'exercice, un filleul déjà adhérent n'est plus une invitée.
     expect(a.invP, 'semaine écoulée').toMatchObject({ dm: 1, ad: 1, jr: 0 });
@@ -2079,6 +2082,62 @@ test.describe('Menu Admin', () => {
   test('un administrateur le voit', async ({ page }) => {
     await ouvrir(page);
     expect(await avecRole(page, true)).toBe(true);
+  });
+
+  // Dernier accès (27/09/2026) : la session reste ouverte des semaines, « Dernière connexion »
+  // (last_sign_in_at) ne disait donc pas qui revient. Jeu d'essai pessimiste : une personne
+  // connectée il y a 5 jours mais venue il y a 2 heures, une autre sans aucune visite relevée.
+  test('la liste des membres montre le dernier accès et les jours actifs', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      const il = h => new Date(Date.now() - h * 3600000).toISOString();
+      SBUSER = { id: 'u1', email: 'a@test.invalid' };
+      const rows = [
+        { email: 'a@test.invalid', nom: 'Alice', derniere: il(5 * 24), creation: il(20 * 24), est_admin: true,
+          dernier_acces: il(2), jours_actifs_30: 9, jours_actifs: 11 },
+        { email: 'b@test.invalid', nom: 'Bruno', derniere: il(20 * 24), creation: il(20 * 24), est_admin: false,
+          modifiable: true, dernier_acces: null, jours_actifs_30: 0, jours_actifs: 0 },
+      ];
+      SB = { rpc: async (nom) => nom === 'est_admin' ? { data: true, error: null }
+                                : nom === 'membres_connectes' ? { data: rows, error: null } : { data: null, error: null },
+             from: () => ({ select() { return this; }, order() { return this; }, eq() { return this; },
+                            in() { return this; }, gte() { return this; }, limit() { return this; },
+                            then(r) { return Promise.resolve({ data: [], error: null }).then(r); } }) };
+      await buildMembres();
+      const th = [...document.querySelectorAll('#mbrTbl thead th')].map(t => t.textContent);
+      const l = [...document.querySelectorAll('#mbrBody tr')].map(tr => [...tr.children].map(td => td.textContent));
+      return { th, l, froid: !!document.querySelector('#mbrBody tr:nth-child(2) .mbr-act.froid'),
+               note: document.getElementById('mbrNote').textContent };
+    });
+    expect(r.th).toEqual(['Personne', 'Rôle', 'Dernier accès', 'Dernière connexion', 'Premier accès']);
+    expect(r.l[0][2]).toMatch(/^aujourd'hui à|^hier à/);        // venue il y a 2 h, pas « il y a 5 jours »
+    expect(r.l[0][2]).toContain('9 jours actifs sur 30 j');
+    expect(r.l[0][3]).toContain('il y a 5 jours');
+    expect(r.l[1][2]).toContain('aucun jour actif sur 30 j');   // à défaut : la date d'identification
+    expect(r.froid).toBe(true);
+    expect(r.note).toContain('sur 7 jours : 1');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('le portail signale sa présence au plus une fois par 5 minutes', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      const appels = [];
+      SBUSER = { id: 'u1', email: 'a@test.invalid' };
+      SB = { rpc: async (nom) => { appels.push(nom); return { data: null, error: null }; } };
+      ACT_T = 0;
+      const a = signalerActivite(), b = signalerActivite();
+      ACT_T = Date.now() - ACT_PAS - 1;
+      const c = signalerActivite();
+      SBUSER = null; ACT_T = 0;
+      const d = signalerActivite();
+      return { a, b, c, d, appels };
+    });
+    expect([r.a, r.b, r.c, r.d]).toEqual([true, false, true, false]);
+    expect(r.appels).toEqual(['signaler_activite', 'signaler_activite']);
   });
 });
 

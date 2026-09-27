@@ -764,6 +764,8 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .mbr-mail{font-size:12px;color:var(--ink-3);margin-top:2px}
 .mbr-moi{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:1px 7px;margin-left:6px;vertical-align:middle}
 .mbr-note{font-size:13px;color:var(--ink-3);margin:12px 0 0}
+.mbr-act{font-size:12px;color:var(--ink-3);margin-top:2px;white-space:nowrap}
+.mbr-act.froid{color:var(--bad)}
 
 /* Étapes validées automatiquement */
 .chk label.auto{opacity:1}
@@ -1741,10 +1743,10 @@ a.mml-r:hover{border-color:var(--accent)}
       <div class="subview on" id="sv-mbr">
       <div class="panel">
         <h2>Qui utilise Kairos</h2>
-        <p class="mbr-sub">Les personnes qui se sont connectées au portail avec un compte, et leur dernière visite.</p>
+        <p class="mbr-sub">Les personnes qui se sont connectées au portail avec un compte. <b>Dernier accès</b> = la dernière fois que le portail était ouvert chez elles (relevé toutes les 5 minutes tant qu’il est affiché), même si leur session est restée ouverte depuis des jours ; <b>dernière connexion</b> = la dernière fois qu’elles ont dû s’identifier.</p>
         <div class="tbl-wrap">
           <table id="mbrTbl">
-            <thead><tr><th>Personne</th><th>Rôle</th><th>Dernière connexion</th><th>Premier accès</th></tr></thead>
+            <thead><tr><th>Personne</th><th>Rôle</th><th title="Dernière fois que le portail était ouvert (relevé toutes les 5 min)">Dernier accès</th><th title="Dernière identification (lien ou code reçu par e-mail, compte Google)">Dernière connexion</th><th>Premier accès</th></tr></thead>
             <tbody id="mbrBody"></tbody>
           </table>
         </div>
@@ -6050,6 +6052,24 @@ async function syncPush(){
 function planSync(){ if(!SB||!SBUSER) return; clearTimeout(SYNC_T); SYNC_T=setTimeout(syncPush, 1200); }
 window.addEventListener('pagehide',()=>{ if(SYNC_T) syncPush(); });
 
+// Dernier accès : la session reste ouverte des semaines, la date de connexion ne dit donc pas qui
+// revient. Le portail signale sa présence (RPC signaler_activite → table visites, une ligne par
+// personne et par jour) au démarrage, au retour sur l'onglet, puis toutes les 5 min s'il est visible.
+// Jamais plus d'un signal par 5 min ; rien en file:// (SB absent) ni onglet masqué.
+const ACT_PAS = 5*60*1000;
+let ACT_T = 0;
+function signalerActivite(){
+  if(!SB || !SBUSER || document.hidden) return false;
+  const t = Date.now();
+  if(t - ACT_T < ACT_PAS) return false;
+  ACT_T = t;
+  try{ Promise.resolve(SB.rpc('signaler_activite')).then(()=>{}, ()=>{ ACT_T = 0; }); }catch(e){ ACT_T = 0; }
+  return true;
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) signalerActivite(); });
+window.addEventListener('focus', ()=>signalerActivite());
+setInterval(()=>signalerActivite(), ACT_PAS);
+
 // Prépare le client Supabase (avant même le déverrouillage) et renvoie true si une session est ouverte.
 async function initSync(){
   if(SB) return !!SBUSER;
@@ -6060,11 +6080,13 @@ async function initSync(){
   SB.auth.onAuthStateChange((ev, session)=>{
     SBUSER = session ? session.user : null;
     accMaj();
+    if(SBUSER) signalerActivite();
     if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); chargerParcours(); chargerSurv(); buildMembres(); chargerRetours(); }
     if(!SBUSER) SYNC_FAIT=false;
   });
   try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }
   accMaj();
+  if(SBUSER) signalerActivite();
   if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); }
   return !!SBUSER;
 }
@@ -6108,18 +6130,33 @@ async function buildMembres(){
     const moi = SBUSER && m.email===SBUSER.email ? ' <span class="mbr-moi">toi</span>' : '';
     return '<tr><td><b>'+esc(nom)+'</b>'+moi+'<div class="mbr-mail">'+esc(m.email||'')+'</div></td>'
       + '<td>'+celluleRole(m)+'</td>'
+      + '<td class="num">'+celluleAcces(m)+'</td>'
       + '<td class="num">'+esc(fmtQuand(m.derniere))+'</td>'
       + '<td class="num">'+esc(m.creation?fmtD(m.creation.slice(0,10)):'—')+'</td></tr>';
-  }).join('') : '<tr><td colspan="4" style="color:var(--ink-2)">Personne ne s\u2019est encore connecté.</td></tr>';
+  }).join('') : '<tr><td colspan="5" style="color:var(--ink-2)">Personne ne s\u2019est encore connecté.</td></tr>';
   body.querySelectorAll('.rol-b').forEach(b=>b.addEventListener('click', ()=>
     basculerAdmin(b.dataset.mail, b.dataset.to === '1', b)));
   const n=document.getElementById('mbrNote');
   if(n){
     const na = rows.filter(m=>m.est_admin).length;
+    const depuis = j => rows.filter(m=>{ const d=m.dernier_acces||m.derniere; return d && (Date.now()-new Date(d))/86400000 < j; }).length;
     n.textContent = (rows.length===1 ? '1 personne connectée à ce jour' : rows.length+' personnes connectées à ce jour')
-      + ' · ' + (na===1 ? '1 administrateur' : na+' administrateurs') + '.';
+      + ' · ' + (na===1 ? '1 administrateur' : na+' administrateurs')
+      + ' · venus aujourd\u2019hui (24 h) : ' + depuis(1) + ' · sur 7 jours : ' + depuis(7) + ' · sur 30 jours : ' + depuis(30) + '.';
   }
   return true;
+}
+
+// « Dernier accès » : dernière fois que le portail était ouvert chez la personne (table visites,
+// alimentée par signalerActivite), à défaut sa dernière identification. Dessous : jours actifs sur 30 j.
+function celluleAcces(m){
+  const d = m.dernier_acces || m.derniere;
+  const j = +m.jours_actifs_30 || 0;
+  const froid = !d || (Date.now() - new Date(d)) / 86400000 >= 14;
+  return esc(fmtQuand(d))
+    + '<div class="mbr-act'+(froid?' froid':'')+'" title="Jours où le portail a été ouvert, sur les 30 derniers jours'
+    + (m.jours_actifs ? ' ('+(+m.jours_actifs)+' depuis le début)' : '')+'">'
+    + (j===0 ? 'aucun jour actif sur 30 j' : j===1 ? '1 jour actif sur 30 j' : j+' jours actifs sur 30 j') + '</div>';
 }
 
 // Rôle d'un membre : pastille, plus le bouton de changement quand le lecteur y a droit.
