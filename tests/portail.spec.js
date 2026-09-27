@@ -3334,3 +3334,67 @@ test.describe('Mail Manager — formations suivies et (co)animées', () => {
     expect(erreurs).toEqual([]);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Objectifs FORMAN détaillés', () => {
+  // 27/09/2026 : catalogue du réseau (cfg.objectifs) × mes déclarations (parcours.objectifs).
+  // Jeu d'essai calqué sur la vraie réponse de /api/goal_finisheds : VALIDÉ, EN ATTENTE, REFUSÉ,
+  // et un objectif déclaré deux fois (validé puis redéclaré en attente) qui doit rester validé.
+  const poser = page => page.evaluate(() => {
+    DATA = Object.assign(DATA || {}, { cfg: Object.assign((DATA && DATA.cfg) || {}, { objectifs: [
+      [10, 'neoman', 'P', 'Cursus initial'], [11, 'neoman', 'P', 'Primo-liste de 500 noms'],
+      [23, 'beman', 'P', 'VA équipe > 240 K€'], [24, 'beman', 'P', 'Autonome en R2'], [25, 'beman', 'P', '6 rendez-vous d’avance'],
+      [26, 'beman', 'P', 'QCM compétences'], [27, 'beman', 'P', 'Une vente immobilière'],
+      [36, 'adman', 'P', 'Qualification Manager'], [37, 'adman', 'P', 'Avoir co-animé 1 formation'],
+      [47, 'man', 'M', 'Maintien : VA perso'] ] }) });
+    PARCOURS = { statut: 'ROLE_BEMAN', etapes: { objectifs_beman: { n: 2, tot: 5 } }, objectifs: [
+      [10, 'ok', '2026-04-22'], [11, 'ok', '2026-06-02'],
+      [25, 'ok', '2026-08-30'], [27, 'ok', '2026-08-30'], [27, 'att', null],
+      [26, 'att', null], [24, 'ref', null] ] };
+    MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Florian PERREON' });
+  });
+
+  test('statut actuel par état, statut suivant et statuts passés', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page);
+    const r = await page.evaluate(() => {
+      const el = document.createElement('div'); el.innerHTML = formanObjectifs();
+      const cour = el.querySelector('.fo-cour');
+      const groupes = [...cour.querySelectorAll('h3.fo-g')].map(h => h.textContent);
+      const items = [...cour.querySelectorAll('.fo-it')].map(li => li.querySelector('.fo-e').textContent + ' | ' + li.querySelector('.fo-l').textContent);
+      const det = [...el.querySelectorAll('details.fo-d summary')].map(s => s.textContent);
+      const a = mmAuto(mmSemCour());
+      return { titre: cour.querySelector('.fo-t').textContent, groupes, items, det, auto: [a.fn, a.ftot, a.fatt, a.faf, a.fattN] };
+    });
+    expect(r.titre).toContain('Statut actuel : BEMAN');
+    expect(r.titre).toContain('passer ADMAN');
+    expect(r.titre).toContain('2 / 5 validés · 1 en cours de validation · 1 refusé · 1 à faire');
+    expect(r.groupes).toEqual(['À faire 1', 'En cours de validation 1', 'Refusés 1', 'Validés 2']);
+    expect(r.items[0]).toBe('À faire | VA équipe > 240 K€');
+    expect(r.items).toContain('Validé le 30/08/2026 | Une vente immobilière');   // validé puis redéclaré : reste validé
+    expect(r.det[0]).toContain('Statut suivant : ADMAN — 2 objectifs');
+    expect(r.det[1]).toContain('NEOMAN — 2 / 2 validés · terminé le 02/06/2026');
+    expect(r.auto).toEqual([2, 5, 1, 2, ['QCM compétences']]);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('sans détail synchronisé : la liste reste lisible et le dit', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page);
+    const r = await page.evaluate(() => {
+      delete PARCOURS.objectifs;
+      const el = document.createElement('div'); el.innerHTML = formanObjectifs();
+      return { txt: el.textContent, afaire: el.querySelectorAll('.fo-cour .fo-it.todo').length };
+    });
+    expect(r.txt).toContain('arrive à la prochaine mise à jour');
+    expect(r.afaire).toBe(5);
+  });
+
+  test('Mes objectifs affiche le panneau', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page);
+    const n = await page.evaluate(() => { MM_OBJ = {}; const el = document.createElement('div'); el.innerHTML = mmObjectifs(); return el.querySelectorAll('.panel.fo .fo-it').length; });
+    expect(n).toBeGreaterThan(0);
+    expect(erreurs).toEqual([]);
+  });
+});

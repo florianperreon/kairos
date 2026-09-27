@@ -531,12 +531,41 @@ def _premiere(dates):
     return d[0] if d else None
 
 _GOALS_PAR_NIVEAU = {}
+_GOALS = []
+
+def goals_catalogue(api):
+    """Catalogue des objectifs du réseau (mis en cache pour tout le passage)."""
+    if not _GOALS:
+        d = get(f"{api}/api/goals")
+        _GOALS.extend(d if isinstance(d, list) else (d or {}).get("hydra:member", []))
+    return _GOALS
+
+def catalogue_objectifs(api):
+    """Pour le portail (cfg.objectifs) : [id, statut, 'P'romotion|'M'aintien, intitulé]."""
+    out = []
+    for g in goals_catalogue(api):
+        if g.get("id") is None:
+            continue
+        t = str(g.get("type") or "").upper()
+        out.append([g["id"], _niveau(g.get("level")), "M" if t == "MAINTIEN" else "P",
+                    " ".join(str(g.get("description") or "").split())])
+    return out
+
+def _etat_objectif(status):
+    """VALIDÉ → ok, EN ATTENTE (déclaré, en cours de validation) → att, REFUSÉ → ref."""
+    n = _norm(status)
+    if n.startswith("valid"):
+        return "ok"
+    if n.startswith("refus"):
+        return "ref"
+    if "attente" in n or n.startswith("en cours"):
+        return "att"
+    return n or "att"
 
 def goals_par_niveau(api):
     """Nombre d'objectifs de PROMOTION par statut (mis en cache pour tout le passage)."""
     if not _GOALS_PAR_NIVEAU:
-        d = get(f"{api}/api/goals")
-        items = d if isinstance(d, list) else (d or {}).get("hydra:member", [])
+        items = goals_catalogue(api)
         for g in items:
             if str(g.get("type") or "").upper() == "PROMOTION":
                 niveau = _niveau(g.get("level"))
@@ -597,6 +626,13 @@ def parcours_membre(api, uid, membres, adh_ids):
         if not niveau or not _norm(o.get("status")).startswith("valid"):
             continue
         par_niveau.setdefault(niveau, []).append(_jour(o.get("validatedAt")))
+    # Détail de chaque objectif déclaré (validé, en attente, refusé) : [id de l'objectif, état, jour]
+    detail = []
+    for o in objectifs:
+        g = o.get("goal") or {}
+        if g.get("id") is None:
+            continue
+        detail.append([g["id"], _etat_objectif(o.get("status")), _jour(o.get("validatedAt"))])
     for niveau, dates in par_niveau.items():
         tot = total.get(niveau, 0)
         complet = bool(tot) and len(dates) >= tot
@@ -634,7 +670,7 @@ def parcours_membre(api, uid, membres, adh_ids):
 
     mois = sorted({str(f.get("startDate"))[:7] for f in formations
                    if f.get("startDate") and _jour(f.get("startDate")) <= aujourdhui})
-    return {"etapes": faits, "formations_mois": mois[-12:],
+    return {"etapes": faits, "formations_mois": mois[-12:], "objectifs": detail,
             "statut": (u.get("roles") or [None])[0],
             "maj": datetime.datetime.now(PARIS).strftime("%Y-%m-%dT%H:%M")}
 
@@ -921,6 +957,14 @@ def run():
         cfg["lignee"] = split(os.environ.get("LIGNEE"))
     if split(os.environ.get("LIGNEE_FILLEULS_DE")):
         cfg["ligneeRoots"] = split(os.environ.get("LIGNEE_FILLEULS_DE"))
+    # Catalogue des objectifs du réseau (liste nommée dans « Mes objectifs ») : non bloquant
+    try:
+        cat = catalogue_objectifs(api)
+        if cat:
+            cfg["objectifs"] = cat
+        print(f"objectifs du réseau : {len(cfg.get('objectifs') or [])}")
+    except Exception as e:
+        print(f"catalogue des objectifs indisponible ({type(e).__name__}) — valeur précédente conservée")
     # Vacances scolaires (zones A/B/C) : non bloquant — en panne, cfg garde la valeur précédente
     try:
         cfg["calendrier"] = calendrier_scolaire()

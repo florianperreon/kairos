@@ -830,6 +830,26 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .mbr-sub{font-size:14px;color:var(--ink-2);margin:-4px 0 14px}
 .mbr-mail{font-size:12px;color:var(--ink-3);margin-top:2px}
 .mbr-moi{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+.fo .fo-cour{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface-2)}
+.fo .fo-t{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin-bottom:8px}
+.fo .fo-t>span{color:var(--ink-2);font-size:14px}
+.fo .fo-t .fo-n{flex-basis:100%;font-size:13px;color:var(--ink-2)}
+.fo-bar{display:flex;height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:2px 0 6px}
+.fo-bar i{display:block;height:100%}
+.fo-bar i.ok{background:var(--ok)}.fo-bar i.att{background:var(--encours)}
+.fo .fo-g{font-size:13px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2);margin:14px 0 6px}
+.fo .fo-g span{display:inline-block;min-width:20px;padding:0 6px;border-radius:99px;background:var(--surface);border:1px solid var(--line);text-align:center;font-size:11.5px;margin-left:4px}
+.fo .fo-g.fo-ph{margin-top:18px}
+.fo ul.fo-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fo-it{display:grid;grid-template-columns:170px minmax(0,1fr);gap:4px 12px;align-items:baseline;padding:7px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--line);font-size:14px}
+.fo-it .fo-e{font-size:12px;font-weight:700;white-space:nowrap}
+.fo-it .fo-e small{font-weight:500;color:var(--ink-3)}
+.fo-it.ok .fo-e{color:var(--ok)}.fo-it.att .fo-e{color:var(--encours-ink)}.fo-it.ref .fo-e{color:var(--bad)}.fo-it.todo .fo-e{color:var(--ink-3)}
+.fo-it.att{border-color:var(--encours)}
+.fo-d{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.fo-d summary{cursor:pointer;font-weight:600;font-size:14px}
+.fo-d ul.fo-l{margin-top:10px}
+@media(max-width:640px){ .fo-it{grid-template-columns:1fr} }
 .mm-reel{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px;cursor:help}
 .mbr-note{font-size:13px;color:var(--ink-3);margin:12px 0 0}
 .mbr-act{font-size:12px;color:var(--ink-3);margin-top:2px;white-space:nowrap}
@@ -4747,6 +4767,16 @@ function mmAuto(sem){
   const et=(PARCOURS&&PARCOURS.etapes)||{};
   const ob=et['objectifs_'+st.toLowerCase()];
   if(ob){ a.fn=ob.n||0; a.ftot=ob.tot||0; }
+  // détail relevé : en cours de validation / à faire sur le statut actuel (27/09/2026)
+  try{
+    const fo = foDonnees();
+    if(fo.cat.length && fo.det && st){
+      const l = fo.niveau(st).filter(o=>o.type!=='M'), c = foCompte(l);
+      a.fn = c.ok; a.ftot = c.tot; a.fatt = c.att; a.faf = c.afaire + c.ref;
+      a.fattN = l.filter(o=>o.e==='att').map(o=>o.lib);
+      a.fafN  = l.filter(o=>o.e==='afaire'||o.e==='ref').map(o=>o.lib);
+    }
+  }catch(e){}
   a.sp = mmSessions(vAddDays(sem,-7), vAddDays(sem,-1));
   a.sc = mmSessions(sem, vAddDays(sem,6));
   a.ag = mmSessions(vAddDays(sem,7), MM_FIN);            // tout ce qui est inscrit, sans horizon
@@ -5518,7 +5548,9 @@ function mmFiche(d, prive, sem, obj){
   // FORMAN
   h += mmLigne('FORMAN', a.statut
     ? '<div class="kpi"><i>Niveau<b>'+esc(a.statut)+'</b></i>'
-      + (a.ftot?'<i>Objectifs<b>'+a.fn+' / '+a.ftot+'</b></i><i class="att">Restants<b>'+Math.max(0,a.ftot-a.fn)+'</b></i>':'')
+      + (a.ftot?'<i>Objectifs<b>'+a.fn+' / '+a.ftot+'</b></i>'
+          + (a.fatt?'<i class="att" title="'+esc((a.fattN||[]).join(' · '))+'">En validation<b>'+a.fatt+'</b></i>':'')
+          + '<i class="att"'+((a.fafN||[]).length?' title="'+esc(a.fafN.join(' · '))+'"':'')+'>'+(a.fatt!=null?'À faire':'Restants')+'<b>'+(a.faf!=null?a.faf:Math.max(0,a.ftot-a.fn))+'</b></i>':'')
       + '</div>' : '');
 
   // agenda
@@ -5687,6 +5719,95 @@ function mmLecture(){
     + '<div class="mm-bar"><button type="button" class="mm-b" data-mmcopy="lu">Copier en texte</button></div></div>';
 }
 
+/* --- Objectifs FORMAN, détaillés (27/09/2026) ---
+   Catalogue du réseau : DATA.cfg.objectifs = [[id, statut ('beman'…), 'P'romotion | 'M'aintien, intitulé]]
+   (update.py, /api/goals). Mes déclarations : PARCOURS.objectifs = [[id, 'ok'|'att'|'ref', jour]]
+   (update.py, /api/goal_finisheds : VALIDÉ, EN ATTENTE = en cours de validation, REFUSÉ).
+   Un objectif du catalogue sans déclaration est « à faire ». */
+const FO_ETATS = { ok:['Validé','ok'], att:['En cours de validation','att'], ref:['Refusé','ref'], afaire:['À faire','todo'] };
+const FO_RANG = { ok:3, att:2, ref:1 };
+function foDonnees(){
+  const cat = (DATA && DATA.cfg && DATA.cfg.objectifs) || [];
+  const det = (PARCOURS && Array.isArray(PARCOURS.objectifs)) ? PARCOURS.objectifs : null;
+  const etat = new Map();
+  (det||[]).forEach(([id, e, d])=>{
+    const av = etat.get(+id);
+    if(!av || (FO_RANG[e]||0) > (FO_RANG[av.e]||0)) etat.set(+id, { e, d:d||'' });
+  });
+  const niveau = n => cat.filter(c=>String(c[1]).toUpperCase()===n).map(c=>{
+    const x = etat.get(+c[0]);
+    return { id:+c[0], type:c[2], lib:c[3], e: x ? x.e : 'afaire', d: x ? x.d : '' };
+  });
+  return { cat, det, niveau };
+}
+// Compte d'un niveau : validés, en validation, refusés, à faire (promotion seulement)
+function foCompte(liste){
+  const p = liste.filter(o=>o.type!=='M');
+  const n = e => p.filter(o=>o.e===e).length;
+  return { tot:p.length, ok:n('ok'), att:n('att'), ref:n('ref'), afaire:n('afaire') };
+}
+function foItem(o){
+  const [lib, cl] = FO_ETATS[o.e] || [o.e, 'todo'];
+  return '<li class="fo-it '+cl+'"><span class="fo-e">'+esc(lib)+(o.e==='ok'&&o.d?' <small>le '+esc(fmtD(o.d))+'</small>':'')+'</span>'
+    + '<span class="fo-l">'+esc(o.lib)+'</span></li>';
+}
+function foBarre(c){
+  if(!c.tot) return '';
+  const w = n => (n/c.tot*100).toFixed(2)+'%';
+  return '<div class="fo-bar" role="img" aria-label="'+c.ok+' validés, '+c.att+' en cours de validation, '+(c.afaire+c.ref)+' à faire sur '+c.tot+'">'
+    + '<i class="ok" style="width:'+w(c.ok)+'"></i><i class="att" style="width:'+w(c.att)+'"></i></div>';
+}
+function foResume(c){
+  return c.ok+' / '+c.tot+' validés'+(c.att?' · '+c.att+' en cours de validation':'')
+    + (c.ref?' · '+c.ref+' refusé'+(c.ref>1?'s':''):'')+(c.afaire?' · '+c.afaire+' à faire':'');
+}
+function formanObjectifs(){
+  const { cat, det, niveau } = foDonnees();
+  const st = monStatut();
+  let h = '<div class="panel fo"><h2>Objectifs FORMAN</h2>';
+  if(!cat.length || !st){
+    return h + '<p class="mm-sub">Le détail des objectifs du réseau apparaît après la prochaine mise à jour (quatre fois par jour).</p></div>';
+  }
+  const i = MM_NIVEAUX.indexOf(st);
+  const cour = niveau(st), c = foCompte(cour);
+  const suivant = MM_NIVEAUX[i+1] || '';
+  const ordre = { afaire:0, att:1, ref:2, ok:3 };
+  const groupes = [['afaire','À faire'],['att','En cours de validation'],['ref','Refusés'],['ok','Validés']];
+  h += '<p class="mm-sub">Relevés dans le réseau quatre fois par jour. « En cours de validation » = déclaré, en attente de validation par ton manager.'
+     + (det ? '' : ' <b>Le détail de tes déclarations arrive à la prochaine mise à jour.</b>')+'</p>'
+     + '<div class="fo-cour"><div class="fo-t"><b>Statut actuel : '+esc(st)+'</b>'
+     + (suivant ? ' <span>— objectifs pour passer '+esc(suivant)+'</span>' : '')
+     + '<span class="fo-n">'+esc(foResume(c))+'</span></div>' + foBarre(c)
+     + groupes.map(([e, lib])=>{
+         const l = cour.filter(o=>o.type!=='M' && o.e===e);
+         return l.length ? '<h3 class="fo-g">'+lib+' <span>'+l.length+'</span></h3><ul class="fo-l">'+l.map(foItem).join('')+'</ul>' : '';
+       }).join('');
+  const maint = cour.filter(o=>o.type==='M');
+  if(maint.length) h += '<h3 class="fo-g">Objectifs de maintien <span>'+maint.length+'</span></h3><ul class="fo-l">'
+       + maint.slice().sort((a,b)=>ordre[a.e]-ordre[b.e]).map(foItem).join('')+'</ul>';
+  h += '</div>';
+  // statut suivant : à titre d'aperçu
+  if(suivant){
+    const nx = niveau(suivant), cn = foCompte(nx);
+    if(nx.length) h += '<details class="fo-d"><summary>Statut suivant : '+esc(suivant)+' — '+cn.tot+' objectif'+(cn.tot>1?'s':'')
+      + (cn.ok||cn.att ? ' ('+foResume(cn)+')' : '')+'</summary><ul class="fo-l">'
+      + nx.filter(o=>o.type!=='M').sort((a,b)=>ordre[a.e]-ordre[b.e]).map(foItem).join('')+'</ul></details>';
+  }
+  // statuts passés : repliés, du plus récent au plus ancien
+  const passes = MM_NIVEAUX.slice(0, Math.max(0, i)).reverse();
+  if(passes.length){
+    h += '<h3 class="fo-g fo-ph">Statuts passés</h3>';
+    passes.forEach(n=>{
+      const l = niveau(n), cp = foCompte(l);
+      if(!l.length) return;
+      const fin = l.filter(o=>o.e==='ok' && o.d).map(o=>o.d).sort().pop();
+      h += '<details class="fo-d"><summary>'+esc(n)+' — '+cp.ok+' / '+cp.tot+' validés'
+        + (fin && cp.ok>=cp.tot ? ' · terminé le '+esc(fmtD(fin)) : (cp.ok<cp.tot ? ' · passé par le réseau sans toutes les déclarations' : ''))
+        + '</summary><ul class="fo-l">'+l.filter(o=>o.type!=='M').sort((a,b)=>ordre[a.e]-ordre[b.e]).map(foItem).join('')+'</ul></details>';
+    });
+  }
+  return h + '</div>';
+}
 function mmObjChamp(k, sfx, u, o){
   const cle=k+'_'+sfx, v=o[cle]==null?'':o[cle];
   if(u==='sel'){
@@ -5715,6 +5836,7 @@ function mmObjectifs(){
     + '</tbody></table></div>'
     + '<div class="mm-bar"><button type="button" class="mm-b pri" id="mmObjSave">Enregistrer mes objectifs</button>'
     + '<span class="mm-sav"></span></div></div>';
+  try{ h += formanObjectifs(); }catch(e){}
   // passage Manager
   const d=(MM&&MM.donnees)||{}, a=d.auto||{};
   // Le volume d'affaires d'équipe englobe déjà le personnel : les additionner comptait deux fois
@@ -5819,6 +5941,8 @@ function mmTexte(d, nom, sem){
   L.push(''); L.push('7 - Objectifs FORMAN');
   L.push('- Niveau actuel : '+(a.statut||'—'));
   if(a.ftot) L.push('- Objectifs validés : '+a.fn+' / '+a.ftot+' (restants : '+Math.max(0,a.ftot-a.fn)+')');
+  if((a.fattN||[]).length){ L.push('En cours de validation :'); a.fattN.forEach(x=>L.push('- '+x)); }
+  if((a.fafN||[]).length){ L.push('À faire :'); a.fafN.forEach(x=>L.push('- '+x)); }
   if((a.ag||[]).length){
     L.push(''); L.push('8 - Formations et événements à venir');
     a.ag.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t));
