@@ -3398,3 +3398,165 @@ test.describe('Objectifs FORMAN détaillés', () => {
     expect(erreurs).toEqual([]);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Parcours en missions', () => {
+  // 28/09/2026 : contenu réel (copie de contenu_blocs.missions dans tests/missions.json).
+  const MISSIONS = JSON.parse(lire('tests/missions.json'));
+  const poser = (page, o = {}) => page.evaluate(({ missions, o }) => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    CONTENU = { pages: { 'esp': { t: 'ESP', h: '' }, 'primo-liste': { t: 'Primo-liste', h: '' } }, nav: [], missions, reflexes: [{ t: 'Une étape à la fois', d: 'Aller bien.' }, { t: 'Posture d’offreur', d: 'Un cadeau.' }] };
+    MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Test MOI' });
+    A.length = 0; F.length = 0; R.length = 0; E.length = 0;
+    PARCOURS = { statut: o.statut || 'ROLE_NEOMAN', etapes: o.etapes || {} };
+    CHECK = o.check || {}; MIS = o.mis || {}; PORTES = o.portes || {}; A_VALIDER = o.aValider || [];
+    MM_MUR = o.mur || []; MM_OBJ = o.obj || {};
+    MI_CHOISIE = false; MI_OUVERTE = null;
+    window.__rpc = [];
+    SBUSER = { id: 'u1', email: 'moi@test.invalid' };
+    SB = { rpc: async (nom, args) => { window.__rpc.push([nom, args]); return { data: nom === 'mes_portes' ? [] : [], error: null }; } };
+    majParcours();
+    return true;
+  }, { missions: MISSIONS, o });
+  const ok = { d: '2026-05-01' };
+
+  test('le contenu tient debout : chaque prérequis désigne une mission ou une action qui existe', async ({ page }) => {
+    const ids = new Set();
+    MISSIONS.phases.forEach(ph => ph.missions.forEach(m => { ids.add(m.id); m.actions.forEach(a => ids.add(m.id + '/' + a.id)); }));
+    const refs = [];
+    const voir = l => (l || []).forEach(x => Array.isArray(x) ? voir(x) : refs.push(x));
+    MISSIONS.phases.forEach(ph => { ph.missions.forEach(m => { voir(m.pre); m.actions.forEach(a => voir(a.pre)); }); if (ph.porte) voir(ph.porte.pre); });
+    expect(refs.filter(r => !ids.has(r))).toEqual([]);
+    expect(MISSIONS.phases.find(p => p.id === 'p2').missions.find(m => m.id === '2.5').t).toBe('Réussir mes capacités professionnelles');
+    // 1.3 et 1.4 peuvent attendre : elles ne comptent pas pour la porte 1
+    expect(MISSIONS.phases[0].porte.pre).not.toContain('1.3');
+    expect(MISSIONS.phases[0].porte.pre).not.toContain('1.4');
+  });
+
+  test('nouveau venu : phase 1 ouverte, phases 2 et 3 fermées, rien ne se coche avant ses prérequis', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page);
+    const r = await page.evaluate(() => ({
+      puces: [...document.querySelectorAll('.mi-chip')].map(b => b.classList.contains('ferme')),
+      bac: document.querySelector('input[data-mia="1.2/bac"]').disabled,
+      esp: document.querySelector('input[data-mia="1.1/esp"]').disabled,
+      mail: document.querySelector('input[data-mia="1.5/mail"]').disabled,
+      bl12: document.querySelector('[data-mi="1.2"] .mi-bl').textContent,
+      porte: document.querySelector('.mi-porte .mi-e').textContent,
+      prochaines: [...document.querySelectorAll('#homeMissions .mi-pc .mi-pcn')].map(x => x.textContent),
+    }));
+    expect(r.puces).toEqual([false, true, true, true]);
+    expect(r.bac).toBe(true);                       // attend la DM
+    expect(r.esp).toBe(true);                       // attend les 3 jours
+    expect(r.mail).toBe(false);                     // 1.5 n'a pas de prérequis
+    expect(r.bl12).toContain('Découverte Métier');
+    expect(r.porte).toContain('missions avant');
+    expect(r.prochaines).toEqual(['1.1', '1.5']);   // 1.1 : la DM est la prochaine action ; 1.5 n'attend rien
+    expect(erreurs).toEqual([]);
+  });
+
+  test('cocher : une date est gardée, décocher laisse une trace datée (fusion entre appareils)', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page);
+    await page.click('[data-mi="1.5"] summary');
+    await page.check('input[data-mia="1.5/mail"]');
+    const a = await page.evaluate(() => MIS['1.5/mail']);
+    expect(a).toMatch(/^\d{4}-\d\d-\d\dT/);
+    await page.uncheck('input[data-mia="1.5/mail"]');
+    const b = await page.evaluate(() => MIS['1.5/mail']);
+    expect(b.startsWith('!')).toBe(true);
+    // un autre appareil a coché plus tard : sa valeur l'emporte ; une valeur plus ancienne est ignorée
+    const r = await page.evaluate(async (b) => {
+      const plusTard = new Date(Date.now() + 60000).toISOString(), plusTot = '2020-01-01T00:00:00.000Z';
+      SB = { from: () => ({ select() { return this; }, maybeSingle: async () => ({ data: { donnees: { mis: { '1.5/mail': plusTard, '1.5/drive': plusTard, '1.2/bac': '!' + plusTot } } }, error: null }),
+                            upsert: async () => ({ error: null }) }), rpc: async () => ({ data: [], error: null }) };
+      MIS['1.2/bac'] = new Date().toISOString();
+      await syncPull();
+      return { mail: MIS['1.5/mail'] === plusTard, drive: !!MIS['1.5/drive'], bac: MIS['1.2/bac'][0] !== '!' };
+    }, b);
+    expect(r).toEqual({ mail: true, drive: true, bac: true });
+  });
+
+  test('porte 1 : prête sans 1.3 ni 1.4, la demande part au parrain avec le résumé, puis s’ouvre', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const quand = '2026-09-01T10:00:00.000Z';
+    const mis = {}; ['1.1/esp', '1.2/bac', '1.2/bcbg', '1.2/bravo', '1.5/mail', '1.5/drive', '1.5/mega', '1.6/primo', '1.7/commande'].forEach(k => mis[k] = quand);
+    await poser(page, { mis, etapes: { dm: ok, ad: ok, trois_jours: ok, formation_reservee: ok } });
+    const avant = await page.evaluate(() => ({ e: document.querySelector('.mi-porte .mi-e').textContent, btn: !!document.querySelector('[data-miporte="porte1"]'),
+      carte: [...document.querySelectorAll('#homeMissions .mi-pc.porte')].length }));
+    expect(avant).toEqual({ e: 'Prête', btn: true, carte: 1 });
+    await page.click('[data-miporte="porte1"]');
+    await page.waitForTimeout(50);
+    const dem = await page.evaluate(() => window.__rpc.find(x => x[0] === 'porte_demander'));
+    expect(dem[1].p_porte).toBe('porte1');
+    expect(dem[1].p_resume.map(x => x.id)).toEqual(['1.1', '1.2', '1.5', '1.6', '1.7']);
+    // validée par le parrain : les phases 2 et 3 s'ouvrent ensemble, la 4 reste fermée
+    const apres = await page.evaluate(() => { PORTES = { porte1: { statut: 'validee', traite_nom: 'Parrain Test', traite_le: '2026-09-02T08:00:00Z' } }; majParcours();
+      return { puces: [...document.querySelectorAll('.mi-chip')].map(b => b.classList.contains('ferme')), rythme: !!document.querySelector('[data-mia]') }; });
+    expect(apres.puces).toEqual([false, false, false, true]);
+    await page.click('.mi-chip[data-miph="p2"]');
+    expect(await page.isDisabled('input[data-mia="2.2/rythme"]')).toBe(false);
+    expect(await page.isDisabled('input[data-mia="2.3/r1"]')).toBe(true);       // après 2.2
+    expect(erreurs).toEqual([]);
+  });
+
+  test('membre déjà BEMAN : portes 1 et 2 ouvertes d’office, la 4 attend le passage ADMAN', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page, { statut: 'ROLE_BEMAN' });
+    const r = await page.evaluate(() => [...document.querySelectorAll('.mi-chip')].map(b => b.classList.contains('ferme')));
+    expect(r).toEqual([false, false, false, true]);
+    const r2 = await page.evaluate(() => { PARCOURS.statut = 'ROLE_ADMAN'; majParcours(); return [...document.querySelectorAll('.mi-chip')].map(b => b.classList.contains('ferme')); });
+    expect(r2).toEqual([false, false, false, false]);
+  });
+
+  test('reprise de l’ancien parcours : les cases cochées passent sur les nouvelles actions', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page, { check: { '0-0-3': true, '1-1-0': true, '1-0-4': true, '0-2-1': true } });
+    const r = await page.evaluate(() => ({ esp: MIS['1.1/esp'], primo: MIS['1.6/primo'], qcm: MIS['2.5/qcm_ass'], mig: MIS._mig,
+      n: Object.keys(MIS).filter(k => k !== '_mig').length }));
+    expect(r.esp.startsWith('~')).toBe(true);
+    expect(r.primo.startsWith('~')).toBe(true);
+    expect(r.qcm.startsWith('~')).toBe(true);
+    expect(r.n).toBe(3);                            // un réflexe coché ne devient rien
+    expect(r.mig).toBe(1);
+  });
+
+  test('validations Kairos : 4 semaines de mail manager, gardées même si la série casse', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page, { mur: [{ membre_id: 20028, serie: 4 }], portes: { porte1: { statut: 'validee' } } });
+    const a = await page.evaluate(() => { const t = misTrouve('2.1/mm4'); return { ok: miAction(t.m, t.a).ok, mis: !!MIS['2.1/mm4'] }; });
+    expect(a).toEqual({ ok: true, mis: true });
+    const b = await page.evaluate(() => { MM_MUR = [{ membre_id: 20028, serie: 0 }]; majParcours(); const t = misTrouve('2.1/mm4'); return miAction(t.m, t.a).ok; });
+    expect(b).toBe(true);
+  });
+
+  test('parrain : la demande s’affiche en haut de l’accueil, « Pas encore » exige un mot', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page, { statut: 'ROLE_BEMAN', aValider: [{ membre_id: 20521, nom: 'Filleule Test', porte: 'porte1', demande_le: '2026-09-27T10:00:00Z', resume: [{ id: '1.1', t: 'Cursus', d: '2026-09-01' }] }] });
+    const r = await page.evaluate(() => {
+      const home = document.getElementById('v-home');
+      const visibles = [...home.children].filter(c => !c.hidden).map(c => c.id);
+      return { rang: visibles.indexOf('homePortes'), texte: document.getElementById('homePortes').textContent };
+    });
+    expect(r.rang).toBe(0);                          // aucune alerte : c'est le premier bloc
+    expect(r.texte).toContain('Filleule Test');
+    expect(r.texte).toContain('Point de démarrage');
+    await page.click('[data-mirev="0"]');
+    expect(await page.textContent('#homePortes .alr-err')).toContain('Dis en un mot');
+    expect(await page.evaluate(() => window.__rpc.filter(x => x[0] === 'porte_traiter').length)).toBe(0);
+    await page.click('[data-mival="0"]');
+    await page.waitForTimeout(50);
+    const t = await page.evaluate(() => window.__rpc.find(x => x[0] === 'porte_traiter')[1]);
+    expect(t).toEqual({ p_membre: 20521, p_porte: 'porte1', p_ok: true, p_mot: '' });
+    expect(erreurs).toEqual([]);
+  });
+
+  test('sans contenu « missions », l’ancien parcours reste affiché', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => { CONTENU = { pages: {}, parcours: [{ n: 1, t: 'Fondations', etapes: [{ t: 'Étape A', check: ['a1'] }] }] };
+      return typeof misData === 'function' && misData() === null; });
+    expect(r).toBe(true);
+  });
+});

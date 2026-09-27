@@ -850,6 +850,86 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .fo-d summary{cursor:pointer;font-weight:600;font-size:14px}
 .fo-d ul.fo-l{margin-top:10px}
 @media(max-width:640px){ .fo-it{grid-template-columns:1fr} }
+/* ---------- Parcours en missions ---------- */
+.mi-chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:4px 0 14px}
+.mi-chip{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:9px 11px;cursor:pointer;font:inherit;color:var(--ink);min-width:0}
+.mi-chip b{font-size:13.5px;line-height:1.3}
+.mi-chip .mi-cn{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+.mi-chip .mi-cs{font-size:12px;color:var(--ink-2)}
+.mi-chip.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.mi-chip.ferme{opacity:.7}
+.mi-bar{display:block;width:100%;height:5px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:4px}
+.mi-bar i{display:block;height:100%;background:var(--ok)}
+.mi{border:1px solid var(--line);border-radius:10px;margin:0 0 8px;background:var(--surface)}
+.mi>summary{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:4px 10px;align-items:center;padding:10px 12px;cursor:pointer;list-style:none}
+.mi>summary::-webkit-details-marker{display:none}
+.mi-n{font-weight:800;font-size:12px;color:var(--ink-3);min-width:26px}
+.mi-t{font-weight:600;font-size:14.5px}
+.mi-hp{font-size:11px;font-weight:600;color:var(--ink-3);border:1px dashed var(--line-2);border-radius:99px;padding:0 7px;margin-left:4px;white-space:nowrap}
+.mi-e{font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2)}
+.mi-e.faite{background:var(--gold-soft);color:var(--gold-ink)}
+.mi-e.encours{background:var(--vac-soft);color:var(--encours-ink)}
+.mi-e.dispo{background:var(--accent-soft);color:var(--accent)}
+.mi-e.bloquee{background:var(--surface-2);color:var(--ink-3)}
+.mi-p{font-size:12px;color:var(--ink-3)}
+.mi-faite>summary .mi-t{color:var(--ink-2)}
+.mi-b{padding:0 14px 12px}
+.mi-pq{font-size:13.5px;color:var(--ink-2);margin:0 0 8px}
+.mi-bl{font-size:13px;color:var(--encours-ink);background:var(--vac-soft);border-radius:8px;padding:7px 10px;margin:0 0 8px}
+.mi-al{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:4px}
+.mi-a{display:flex;align-items:flex-start;gap:8px;justify-content:space-between;padding:6px 8px;border-radius:8px;background:var(--surface-2)}
+.mi-a label{display:flex;gap:9px;align-items:flex-start;flex:1;min-width:0;cursor:pointer}
+.mi-a input{margin-top:3px;flex:none}
+.mi-a input:disabled{cursor:not-allowed}
+.mi-a.ok .mi-at{color:var(--ink-2)}
+.mi-at{font-size:14px}
+.mi-ai{display:block;font-size:12px;color:var(--ink-3);margin:1px 0 0}
+p.mi-ai{margin:4px 0 8px}
+.mi-v{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-radius:99px;padding:1px 7px;white-space:nowrap;flex:none}
+.mi-v.auto{background:var(--gold-soft);color:var(--gold-ink)}
+.mi-v.moi{background:var(--accent-soft);color:var(--accent)}
+.mi-v.parrain{background:var(--vac-soft);color:var(--encours-ink)}
+.mi-v-note{font-size:12px;color:var(--ink-3);margin:6px 0 0}
+.mi-lab{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin-right:4px}
+.mi-fs,.mi-obj{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0 0}
+.mi-f{font-size:13px;border:1px solid var(--line-2);border-radius:99px;padding:3px 10px;text-decoration:none;color:var(--ink);background:var(--surface)}
+.mi-f:hover{border-color:var(--accent);color:var(--accent)}
+.mi-obj span:not(.mi-lab){font-size:12px;color:var(--ink-2);background:var(--surface-2);border-radius:6px;padding:2px 7px}
+.mi-porte{border:2px dashed var(--line-2);border-radius:12px;padding:12px 14px;margin:12px 0 4px;background:var(--surface-2)}
+.mi-porte.ok{border-style:solid;border-color:var(--gold)}
+.mi-ph{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:6px}
+.mi-pn{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.mi-cr{margin:4px 0 8px;padding-left:18px;font-size:13px;color:var(--ink-2)}
+.mi-x{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.mi-x>summary{cursor:pointer;font-weight:600;font-size:14px}
+.mi-rf{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:10px}
+.mi-r{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2)}
+.mi-r b{font-size:13.5px}.mi-r p{font-size:12.5px;color:var(--ink-2);margin:4px 0 0}
+.mi-bib{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.mi-bs>b{font-size:13px}
+.mi-bg{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin-top:4px;font-size:13px}
+.mi-bg span{font-weight:600;color:var(--ink-2)}
+.mi-pc{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:0 0 8px;background:var(--surface-2)}
+.mi-pc.porte{border-color:var(--accent)}
+.mi-pcn{font-weight:800;font-size:12px;color:var(--ink-3);grid-row:1 / span 2}
+.mi-pc b{font-size:14px}
+.mi-pcs{font-size:12.5px;color:var(--ink-2);grid-column:2}
+.mi-pc button{grid-column:3;grid-row:1 / span 2}
+.mi-refl{border-left:3px solid var(--gold);padding:6px 12px;margin-top:10px}
+.mi-refl span{display:block;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+.mi-refl b{font-size:14px}.mi-refl p{font-size:13px;color:var(--ink-2);margin:2px 0 0}
+.mi-val{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 8px;background:var(--surface-2)}
+.mi-val details summary{cursor:pointer;font-size:13px;font-weight:600}
+.mi-mot{width:100%;min-height:54px;font:inherit;font-size:14px;border:1px solid var(--line-2);border-radius:8px;padding:7px 9px;background:var(--surface);color:var(--ink);margin:8px 0}
+@media(max-width:860px){ .mi-chips{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media(max-width:640px){
+  .mi>summary{grid-template-columns:auto minmax(0,1fr) auto}
+  .mi>summary .mi-p{display:none}
+  .mi-a{flex-wrap:wrap}
+  .mi-mot{font-size:16px}
+  .mi-pc{grid-template-columns:auto minmax(0,1fr)}
+  .mi-pc button{grid-column:2;grid-row:auto;justify-self:start}
+}
 .mm-reel{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px;cursor:help}
 .mbr-note{font-size:13px;color:var(--ink-3);margin:12px 0 0}
 .mbr-act{font-size:12px;color:var(--ink-3);margin-top:2px;white-space:nowrap}
@@ -1589,7 +1669,9 @@ a.mml-r:hover{border-color:var(--accent)}
   <main>
     <section class="view on" id="v-home">
       <div class="panel alr-home" id="homeAlertes" hidden></div>
+      <div class="panel alr-home" id="homePortes" hidden></div>
       <div class="panel welcome" id="welcome"></div>
+      <div class="panel" id="homeMissions" hidden></div>
       <div class="panel" id="homeActionsPanel" hidden>
         <h2>Mes actions de la semaine</h2>
         <p class="acts-n" id="homeActionsNote"></p>
@@ -3345,6 +3427,7 @@ function boot(){
   chargerParcours();
   chargerSurv();
   chargerAlertes();
+  chargerPortes();
   chargerVues();
   buildMembres();
   chargerRetours();
@@ -3660,7 +3743,8 @@ function buildContenu(){
     const pe=document.getElementById('homePrincipes');
     if(C.accueil.principes&&C.accueil.principes.length){ pe.innerHTML=C.accueil.principes.map(p=>'<div class="principe"><b>'+esc(p.t)+'</b><p>'+esc(p.d)+'</p></div>').join(''); pe.hidden=false; }
   }
-  if(C.parcours&&C.parcours.length){ document.getElementById('homeParcoursPanel').hidden=false; buildPhases(); }
+  if(misData()){ buildMissions(); buildProchaines(); }
+  else if(C.parcours&&C.parcours.length){ document.getElementById('homeParcoursPanel').hidden=false; buildPhases(); }
   if(C.rituels&&C.rituels.length){ document.getElementById('homeRituelsPanel').hidden=false;
     document.getElementById('homeRituels').innerHTML=C.rituels.map(r=>'<div class="rituel"><span class="q">'+esc(r.q||'')+'</span><b>'+esc(r.t)+'</b><p>'+esc(r.d)+'</p></div>').join(''); }
   buildFaq(false);
@@ -3749,7 +3833,8 @@ async function chargerParcours(){
     MOI_ID = (r.data && r.data.membre_id) || MOI_ID || null;
     if(MOI_ID){ chargerMM(); chargerLig(); }
     if(window.__booted){ try{ buildSurv(); buildSurvAccueil(); buildActions(); majOngletSurv(); }catch(e){} }
-    if(window.__booted && PARCOURS){ try{ buildPhases(); buildCat(); routeHash(); }catch(e){} }
+    if(window.__booted && PARCOURS){ try{ buildParcours(); buildCat(); routeHash(); }catch(e){} }
+    if(window.__booted && !PARCOURS){ try{ majParcours(); }catch(e){} }
     // le statut (progression ou annuaire) décide de ce qui est réservable : toutes les listes suivent
     if(window.__booted){ Object.keys(RENDERS).forEach(k=>{ if(k!=='cat' || !PARCOURS){ try{ RENDERS[k](); }catch(e){} } }); }
     // le statut est connu : les règles « accessibles à mon statut » peuvent maintenant se déclencher
@@ -3759,6 +3844,430 @@ async function chargerParcours(){
   }catch(e){ PARCOURS = null; return false; }
 }
 
+/* ---------- Parcours en missions (28/09/2026) ----------
+   Contenu : contenu_blocs.missions = {phases:[{id, n, t, statut, c, intro, ouvre:[portes], avenir,
+   missions:[{id:'1.1', t, pq, actions:[{id, t, v:'auto'|'moi', auto:<clé réseau>, k:<clé Kairos>,
+   pre:[…], opt, u}], pages:[slugs], liens:[{t,u}], pre:[…], obj:[…], horsPorte}], porte:{id, t, d, v:'parrain'|'auto',
+   k, pre:[…], criteres:[…]}}]} + contenu_blocs.reflexes = [{t, d}].
+   Prérequis : '1.1' = mission faite, '1.1/esp' = action faite, ['a','b'] = l'une des deux suffit.
+   État personnel : MIS[clé] = horodatage ISO (fait), '!'+ISO (défait), '~'+ISO (repris de l'ancien
+   parcours, date inconnue) — fusion entre appareils par horodatage le plus récent (etat.mis).
+   Validations « Kairos » (mail manager, objectifs saisis, formations, co-animation, DM) : calculées
+   sur les données, puis mémorisées dans MIS pour rester acquises. Portes 1 et 2 : validées par le
+   parrain (table parcours_portes, RPC mes_portes / porte_demander / portes_a_valider / porte_traiter),
+   ouvertes d'office à partir de BEMAN. Porte 3 : passage ADMAN. */
+let MIS = {}; try{ MIS = JSON.parse(localStorage.getItem('kairos_mis')||'{}') || {}; }catch(e){ MIS = {}; }
+const saveMis = () => { try{ localStorage.setItem('kairos_mis', JSON.stringify(MIS)); }catch(e){} planSync(); };
+const misTs = v => String(v||'').replace(/^[!~]/,'');
+const misFaitV = v => !!v && typeof v==='string' && v[0] !== '!';
+let PORTES = {}, PORTE_VALIDEUR = '', PORTES_OK = false, A_VALIDER = [];
+let MI_PHASE = null, MI_CHOISIE = false, MI_OUVERTE = null;
+// Correspondance ancien parcours (clés « phase-étape-case ») → nouvelles actions
+const MIS_MIGR = {
+  '0-0-3':'1.1/esp','0-0-4':'1.2/bac','0-0-5':'1.2/bcbg','0-0-6':'1.2/bravo',
+  '0-1-0':'1.3/entreprise','0-1-1':'1.4/rcpro','0-1-2':'1.5/mail','0-1-4':'1.5/mega','0-1-5':'1.5/drive',
+  '0-1-6':'1.3/urssaf','0-1-7':'1.3/facturation','0-1-8':'1.4/depot',
+  '0-2-0':'1.7/commande','0-2-1':'2.5/qcm_ass','0-2-2':'2.5/qcm_iob','0-2-3':'2.5/qcm_cif','0-2-4':'2.5/toulouse',
+  '0-2-5':'2.6/extranets','0-2-6':'2.6/post_ass','0-2-7':'2.6/post_iob','0-2-8':'2.6/post_cif','0-2-9':'2.6/equivalence',
+  '1-1-0':'1.6/primo','1-1-1':'2.2/rythme','1-1-2':'2.2/script','1-1-3':'2.3/r1','1-1-4':'2.4/etude',
+  '1-1-5':'2.7/client','1-1-6':'2.7/process','1-2-0':'2.8/astorg','1-2-1':'2.8/lefur','1-2-3':'2.8/relance',
+  '2-0-0':'3.1/lignee','2-2-0':'3.5/v1','2-2-1':'3.5/v2','2-2-2':'3.5/v3','2-2-3':'3.5/v4','2-2-4':'3.5/v5'
+};
+function misMigrer(){
+  if(MIS._mig) return false;
+  const quand = '~' + new Date().toISOString();
+  let n = 0;
+  Object.keys(CHECK||{}).forEach(k=>{ const cle = MIS_MIGR[k]; if(cle && CHECK[k] && !MIS[cle]){ MIS[cle] = quand; n++; } });
+  MIS._mig = 1;
+  saveMis();
+  return n;
+}
+const misData = () => (CONTENU && CONTENU.missions && Array.isArray(CONTENU.missions.phases)) ? CONTENU.missions : null;
+const misPhases = () => (misData()||{}).phases || [];
+function misTrouve(id){
+  for(const ph of misPhases()) for(const m of (ph.missions||[])){
+    if(m.id===id) return { ph, m };
+    for(const a of (m.actions||[])) if(m.id+'/'+a.id===id) return { ph, m, a };
+  }
+  return null;
+}
+const MI_RANGS = ['NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
+const miRang = () => MI_RANGS.indexOf(monStatut());
+// Les mois (AAAA-MM) où j'ai suivi une formation terminée (ateliers hors Parcours Découverte, formations)
+function miMoisFormes(){
+  const s = new Set();
+  if(!MOI_ID) return s;
+  [...A, ...F].forEach(a=>{
+    if(!a.start || !isPast(a) || (a.k==='a' && a.th==='PARCOURS DECOUVERTE')) return;
+    if(dejaInscrit(a)) s.add(a.start.slice(0,7));
+  });
+  return s;
+}
+function miTroisMois(){
+  const s = miMoisFormes();
+  const suiv = m => { let [y,mo] = m.split('-').map(Number); mo++; if(mo>12){ mo=1; y++; } return y+'-'+String(mo).padStart(2,'0'); };
+  return [...s].some(m => s.has(suiv(m)) && s.has(suiv(suiv(m))));
+}
+// Validations calculées par Kairos
+function miKairos(k){
+  try{
+    if(k==='mm4'){ const p = (MM_MUR||[]).find(x=>+x.membre_id===+MOI_ID); return !!(p && p.serie>=4); }
+    if(k==='obj') return !!(MM_OBJ && Object.keys(MM_OBJ).some(c=>MM_OBJ[c]!=null && MM_OBJ[c]!==''));
+    if(k==='form3') return miTroisMois();
+    if(k==='coanim') return !!MOI_ID && mmFormations(MM_ORIGINE, todayIso).anim >= 1;
+    if(k==='dm4') return !!MOI_ID && mmDmAssistes(MM_ORIGINE, todayIso).n >= 4;
+    if(k==='adman') return miRang() >= MI_RANGS.indexOf('ADMAN');
+  }catch(e){}
+  return false;
+}
+// État d'une action : {ok, d (jour), src:'reseau'|'kairos'|'moi'}
+function miAction(m, a){
+  const cle = m.id+'/'+a.id;
+  if(a.v==='auto' && a.auto){
+    const f = faitAuto(a.auto);
+    return { ok: estValide(f), d: f && f.d || '', f, src:'reseau' };
+  }
+  if(a.v==='auto' && a.k){
+    if(misFaitV(MIS[cle])) return { ok:true, d: misTs(MIS[cle]).slice(0,10), src:'kairos' };
+    return { ok:false, d:'', src:'kairos' };
+  }
+  const v = MIS[cle];
+  return { ok: misFaitV(v), d: misFaitV(v) && v[0]!=='~' ? misTs(v).slice(0,10) : '', src:'moi' };
+}
+// Mémorise les validations Kairos atteintes (elles restent acquises)
+function miVerrouKairos(){
+  let chg = false;
+  misPhases().forEach(ph=>(ph.missions||[]).forEach(m=>(m.actions||[]).forEach(a=>{
+    if(a.v!=='auto' || !a.k || a.k==='adman') return;
+    const cle = m.id+'/'+a.id;
+    if(!misFaitV(MIS[cle]) && miKairos(a.k)){ MIS[cle] = new Date().toISOString(); chg = true; }
+  })));
+  if(chg) saveMis();
+  return chg;
+}
+const miActionsComptees = m => (m.actions||[]).filter(a=>!a.opt);
+function miProg(m){
+  const l = miActionsComptees(m);
+  return { ok: l.filter(a=>miAction(m,a).ok).length, tot: l.length };
+}
+const miFaite = m => { const p = miProg(m); return p.tot > 0 && p.ok === p.tot; };
+function miPreOk(x){
+  if(Array.isArray(x)) return x.some(miPreOk);
+  const t = misTrouve(x); if(!t) return true;
+  return t.a ? miAction(t.m, t.a).ok : miFaite(t.m);
+}
+function miPreLib(x){
+  if(Array.isArray(x)) return x.map(miPreLib).join(' ou ');
+  const t = misTrouve(x); if(!t) return x;
+  return t.a ? t.a.t : t.m.id+' '+t.m.t;
+}
+const miManque = pre => (pre||[]).filter(x=>!miPreOk(x));
+// Portes
+function miPorte(id){
+  const ph = misPhases().find(p=>p.porte && p.porte.id===id);
+  const po = ph && ph.porte;
+  if(!po) return { ouverte:true };
+  if(po.v==='auto') return { ouverte: miKairos(po.k), auto:true, po, ph };
+  if(miRang() >= MI_RANGS.indexOf('BEMAN')) return { ouverte:true, office:true, po, ph };
+  const r = PORTES[id] || null;
+  if(r && r.statut==='validee') return { ouverte:true, r, po, ph };
+  const manque = miManque(po.pre);
+  if(r && r.statut==='demandee') return { ouverte:false, attente:true, r, manque, po, ph };
+  if(r && r.statut==='a_revoir') return { ouverte:false, revoir:true, r, manque, po, ph };
+  return { ouverte:false, prete: !manque.length, manque, po, ph };
+}
+const miPhaseOuverte = ph => (ph.ouvre||[]).every(id=>miPorte(id).ouverte);
+function miPhaseProg(ph){
+  let ok=0, tot=0;
+  (ph.missions||[]).forEach(m=>{ const p=miProg(m); ok+=p.ok; tot+=p.tot; });
+  return { ok, tot, pct: tot ? Math.round(ok*100/tot) : 0 };
+}
+// Une action que je peux cocher (ou décocher) maintenant
+function miCochable(ph, m, a){
+  if(a.v!=='moi') return false;
+  if(miAction(m,a).ok) return true;                      // décocher reste toujours possible
+  return miPhaseOuverte(ph) && !miManque(m.pre).length && !miManque(a.pre).length;
+}
+// Ce qui manque avant de pouvoir avancer sur une mission
+function miBlocage(ph, m){
+  if(!miPhaseOuverte(ph)){
+    const p = (ph.ouvre||[]).map(miPorte).find(x=>!x.ouverte);
+    return p && p.po ? 'S’ouvre après la '+(p.po.id==='porte1'?'porte 1':p.po.id==='porte2'?'porte 2':'porte 3')+' : '+p.po.t+'.' : 'Phase pas encore ouverte.';
+  }
+  const man = miManque(m.pre);
+  return man.length ? 'À faire d’abord : '+man.map(miPreLib).join(' ; ')+'.' : '';
+}
+function miEtat(ph, m){
+  if(miFaite(m)) return 'faite';
+  if(miBlocage(ph, m)) return 'bloquee';
+  return miProg(m).ok ? 'encours' : 'dispo';
+}
+// Les 3 prochaines missions : ouvertes, prérequis faits, pas terminées, dans l'ordre du parcours
+function miProchaines(n){
+  const out = [];
+  misPhases().forEach(ph=>{
+    if(ph.avenir || !miPhaseOuverte(ph)) return;
+    (ph.missions||[]).forEach(m=>{
+      const e = miEtat(ph, m);
+      if(e==='dispo' || e==='encours'){
+        // une mission entièrement automatique n'attend rien de moi : je ne la propose pas
+        if((m.actions||[]).every(a=>a.v==='auto')) return;
+        out.push({ ph, m, e });
+      }
+    });
+  });
+  out.sort((x,y)=>(y.e==='encours')-(x.e==='encours'));
+  return out.slice(0, n||3);
+}
+
+// ----- Rendu : le parcours -----
+const MI_ETAT_LIB = { faite:'Faite', encours:'En cours', dispo:'À faire', bloquee:'En attente' };
+function miPhaseDefaut(){
+  const l = misPhases();
+  for(const ph of l){
+    if(ph.avenir || !miPhaseOuverte(ph)) continue;
+    const prog = miPhaseProg(ph);
+    const porte = ph.porte ? miPorte(ph.porte.id) : { ouverte:true };
+    if(prog.ok < prog.tot || !porte.ouverte) return ph.id;
+  }
+  return (l[0]||{}).id;
+}
+function miActionHtml(ph, m, a){
+  const e = miAction(m, a), cle = m.id+'/'+a.id;
+  const coch = miCochable(ph, m, a);
+  const lien = a.u ? ' <a class="lk" href="'+esc(a.u)+'" target="_blank" rel="noopener">Voir ↗</a>' : '';
+  let tag, info = '';
+  if(a.v==='auto' && a.auto){
+    tag = '<span class="mi-v auto" title="Relevé automatiquement dans les données du réseau">Auto</span>';
+    info = e.ok ? (e.d ? 'Relevé par le réseau le '+fmtD(e.d) : 'Relevé par le réseau')
+                : (e.f && e.f.f ? 'Inscrit pour le '+fmtD(e.f.f)+' — validé après la séance' : 'Se valide tout seul dès que le réseau le relève');
+  } else if(a.v==='auto'){
+    tag = '<span class="mi-v auto" title="Calculé par Kairos à partir de tes données">Auto</span>';
+    info = e.ok ? 'Validé par Kairos'+(e.d?' le '+fmtD(e.d):'') : 'Se valide tout seul dès que Kairos le constate';
+  } else {
+    tag = '<span class="mi-v moi" title="À cocher par toi">Moi</span>';
+    if(e.ok) info = e.d ? 'Coché le '+fmtD(e.d) : 'Coché';
+    else if(!coch){ const man = miManque(a.pre); if(man.length && miPhaseOuverte(ph) && !miManque(m.pre).length) info = 'Après : '+man.map(miPreLib).join(' ou '); }
+  }
+  return '<li class="mi-a'+(e.ok?' ok':'')+(a.opt?' opt':'')+'">'
+    + '<label><input type="checkbox" data-mia="'+esc(cle)+'"'+(e.ok?' checked':'')+(coch?'':' disabled')+'>'
+    + '<span><span class="mi-at">'+esc(a.t)+(a.opt?' <small>(si concerné)</small>':'')+lien+'</span>'
+    + (info?'<small class="mi-ai">'+esc(info)+'</small>':'')+'</span></label>'+tag+'</li>';
+}
+function miMissionHtml(ph, m, ouverte){
+  const e = miEtat(ph, m), p = miProg(m), bl = e==='bloquee' ? miBlocage(ph, m) : '';
+  const C = CONTENU;
+  const pages = (m.pages||[]).filter(s=>C.pages && C.pages[s]).map(s=>'<a class="mi-f" href="#p/'+s+'">'+(C.pages[s].i?C.pages[s].i+' ':'📄 ')+esc(C.pages[s].t)+'</a>').join('')
+    + (m.liens||[]).map(l=>'<a class="mi-f ext" href="'+esc(l.u)+'" target="_blank" rel="noopener">🔗 '+esc(l.t)+' ↗</a>').join('');
+  return '<details class="mi mi-'+e+'" data-mi="'+esc(m.id)+'"'+(ouverte?' open':'')+'>'
+    + '<summary><span class="mi-n">'+esc(m.id)+'</span><span class="mi-t">'+esc(m.t)
+    + (m.horsPorte?' <span class="mi-hp" title="Pas nécessaire pour passer la porte 1 : peut se faire dans un second temps">Peut attendre</span>':'')+'</span>'
+    + '<span class="mi-e '+e+'">'+(e==='faite'?'✓ ':'')+MI_ETAT_LIB[e]+'</span>'
+    + '<span class="mi-p num">'+p.ok+'/'+p.tot+'</span></summary>'
+    + '<div class="mi-b">'+(m.pq?'<p class="mi-pq">'+esc(m.pq)+'</p>':'')
+    + (bl?'<p class="mi-bl">🔒 '+esc(bl)+'</p>':'')
+    + '<ul class="mi-al">'+(m.actions||[]).map(a=>miActionHtml(ph, m, a)).join('')+'</ul>'
+    + (pages?'<div class="mi-fs"><span class="mi-lab">Fiches pratiques</span>'+pages+'</div>':'')
+    + ((m.obj||[]).length?'<div class="mi-obj"><span class="mi-lab">Fait avancer</span>'+m.obj.map(o=>'<span>'+esc(o)+'</span>').join('')+'</div>':'')
+    + '</div></details>';
+}
+function miPorteHtml(ph){
+  const po = ph.porte; if(!po) return '';
+  const s = miPorte(po.id);
+  const num = po.id==='porte1'?'Porte 1':po.id==='porte2'?'Porte 2':'Porte 3';
+  let etat, corps = '';
+  if(s.ouverte){
+    etat = '<span class="mi-e faite">✓ Ouverte</span>';
+    corps = s.office ? '<p class="mi-ai">Ouverte d’office : ton statut ('+esc(monStatut())+') la dépasse déjà.</p>'
+          : s.auto ? '<p class="mi-ai">Passage ADMAN relevé par le réseau.</p>'
+          : '<p class="mi-ai">Validée'+(s.r.traite_nom?' par '+esc(s.r.traite_nom):'')+(s.r.traite_le?' le '+fmtD(isoJour(new Date(s.r.traite_le))):'')+'.'
+            +(s.r.mot?' « '+esc(s.r.mot)+' »':'')+'</p>';
+  } else if(s.auto){
+    etat = '<span class="mi-e bloquee">🔒 Fermée</span>';
+    corps = '<p class="mi-ai">'+esc(po.d||'')+'</p>';
+  } else if(s.attente){
+    etat = '<span class="mi-e encours">En attente de validation</span>';
+    corps = '<p class="mi-ai">Demande envoyée le '+fmtD(isoJour(new Date(s.r.demande_le)))+(PORTE_VALIDEUR?' à '+esc(PORTE_VALIDEUR):'')+'. Elle apparaît en haut de sa page d’accueil jusqu’à ce qu’il la traite.</p>';
+  } else {
+    const rev = s.revoir ? '<p class="mi-bl">Pas encore'+(s.r.traite_nom?', selon '+esc(s.r.traite_nom):'')+(s.r.mot?' : « '+esc(s.r.mot)+' »':'')+'</p>' : '';
+    if(s.prete){
+      etat = '<span class="mi-e dispo">Prête</span>';
+      corps = rev + '<p class="mi-ai">Toutes les missions nécessaires sont faites. Demande à '+(PORTE_VALIDEUR?esc(PORTE_VALIDEUR):'ton parrain')+' de faire le point avec toi.</p>'
+        + (SB && SBUSER && MOI_ID ? '<button type="button" class="alr-b pri" data-miporte="'+esc(po.id)+'">'+(s.revoir?'Redemander la validation':'Demander la validation à mon parrain')+'</button>' : '');
+    } else {
+      etat = '<span class="mi-e bloquee">🔒 '+s.manque.length+' mission'+(s.manque.length>1?'s':'')+' avant</span>';
+      corps = rev + '<p class="mi-ai">À terminer : '+esc(s.manque.map(miPreLib).join(' ; '))+'.</p>';
+    }
+  }
+  return '<div class="mi-porte'+(s.ouverte?' ok':'')+'" data-porte="'+esc(po.id)+'"><div class="mi-ph"><span class="mi-pn">'+num+'</span><b>'+esc(po.t)+'</b>'+etat+'</div>'
+    + (po.d && !s.auto ? '<p class="mi-pq">'+esc(po.d)+'</p>' : '')
+    + ((po.criteres||[]).length && !s.ouverte ? '<ul class="mi-cr">'+po.criteres.map(c=>'<li>'+esc(c)+'</li>').join('')+'</ul>' : '')
+    + corps + (po.v==='parrain' && !s.ouverte ? '<p class="mi-v-note"><span class="mi-v parrain">Parrain</span> la seule validation de ton parrain pour cette phase.</p>' : '')
+    + '</div>';
+}
+function buildMissions(){
+  const el = document.getElementById('homeParcoursPanel');
+  const D = misData();
+  if(!el || !D) return false;
+  if(misMigrer()===false){} // déjà fait
+  miVerrouKairos();
+  el.hidden = false;
+  if(!MI_CHOISIE || !misPhases().some(p=>p.id===MI_PHASE)) MI_PHASE = miPhaseDefaut();
+  const ph = misPhases().find(p=>p.id===MI_PHASE) || misPhases()[0];
+  const puces = misPhases().map(p=>{
+    const pr = miPhaseProg(p), ouv = miPhaseOuverte(p);
+    return '<button type="button" class="mi-chip '+esc(p.c||'')+(p.id===ph.id?' on':'')+(ouv?'':' ferme')+'" data-miph="'+esc(p.id)+'">'
+      + '<span class="mi-cn">Phase '+p.n+(ouv?'':' 🔒')+'</span><b>'+esc(p.t)+'</b><span class="mi-cs">Vise '+esc(p.statut||'')+(p.avenir?' · à venir':' · '+pr.ok+'/'+pr.tot)+'</span>'
+      + (p.avenir?'':'<span class="mi-bar"><i style="width:'+pr.pct+'%"></i></span>')+'</button>';
+  }).join('');
+  // mission ouverte par défaut : celle demandée, sinon la première en cours / à faire de la phase
+  let ouvrir = MI_OUVERTE;
+  if(!ouvrir || !(ph.missions||[]).some(m=>m.id===ouvrir)){
+    const m = (ph.missions||[]).find(m=>{ const e=miEtat(ph,m); return e==='encours'||e==='dispo'; });
+    ouvrir = m ? m.id : null;
+  }
+  const bloquee = !miPhaseOuverte(ph) && !ph.avenir;
+  const C = CONTENU, refl = C.reflexes || [];
+  const biblio = navSecs().map(sec=>'<div class="mi-bs"><b>'+esc(sec.t)+'</b>'+(sec.groupes||[]).map(g=>'<div class="mi-bg"><span>'+esc(g.t)+'</span>'
+      + (g.pages||[]).filter(s=>C.pages&&C.pages[s]).map(s=>'<a href="#p/'+s+'">'+(C.pages[s].i?C.pages[s].i+' ':'')+esc(C.pages[s].t)+'</a>').join('')+'</div>').join('')+'</div>').join('');
+  el.innerHTML = '<h2>Mon parcours <span class="badge-lig">4 phases · 3 portes</span></h2>'
+    + '<div class="mi-chips">'+puces+'</div>'
+    + '<div class="mi-body">'
+    + (ph.intro?'<div class="phase-intro">'+esc(ph.intro)+'</div>':'')
+    + (bloquee?'<p class="mi-bl">🔒 '+esc(miBlocage(ph, (ph.missions||[])[0]||{}))+' Tu peux déjà tout lire pour t’y préparer.</p>':'')
+    + (ph.missions||[]).map(m=>miMissionHtml(ph, m, m.id===ouvrir)).join('')
+    + miPorteHtml(ph)
+    + '</div>'
+    + (refl.length ? '<details class="mi-x"><summary>Les '+refl.length+' réflexes de la lignée</summary><div class="mi-rf">'
+        + refl.map(r=>'<div class="mi-r"><b>'+esc(r.t)+'</b><p>'+esc(r.d||'')+'</p></div>').join('')+'</div></details>' : '')
+    + (biblio ? '<details class="mi-x"><summary>Toutes les fiches pratiques</summary><div class="mi-bib">'+biblio+'</div></details>' : '');
+  return true;
+}
+// Accueil : mes prochaines missions + le réflexe de la semaine
+function buildProchaines(){
+  const el = document.getElementById('homeMissions');
+  if(!el) return;
+  if(!misData()){ el.hidden = true; return; }
+  const l = miProchaines(3);
+  const portes = misPhases().filter(p=>p.porte && p.porte.v==='parrain').map(p=>miPorte(p.porte.id)).filter(s=>!s.ouverte && (s.prete || s.attente));
+  const refl = (CONTENU.reflexes||[]);
+  const r = refl.length ? refl[(noSemaine(todayIso) - 1 + refl.length) % refl.length] : null;
+  if(!l.length && !portes.length && !r){ el.hidden = true; return; }
+  el.innerHTML = '<h2>Mes prochaines missions</h2>'
+    + portes.map(s=>'<div class="mi-pc porte"><span class="mi-pcn">'+(s.po.id==='porte1'?'Porte 1':'Porte 2')+'</span><b>'+esc(s.po.t)+'</b>'
+        + '<span class="mi-pcs">'+(s.attente?'En attente de validation'+(PORTE_VALIDEUR?' par '+esc(PORTE_VALIDEUR):''):'Prête : demande la validation à ton parrain')+'</span>'
+        + '<button type="button" class="alr-b" data-mialler="'+esc(s.ph.id)+'">Voir</button></div>').join('')
+    + l.map(x=>{ const p = miProg(x.m), a = (x.m.actions||[]).find(a=>!a.opt && !miAction(x.m,a).ok);
+        return '<div class="mi-pc"><span class="mi-pcn">'+esc(x.m.id)+'</span><b>'+esc(x.m.t)+'</b>'
+          + '<span class="mi-pcs">'+(a?'Prochaine action : '+esc(a.t):'')+' · '+p.ok+'/'+p.tot+'</span>'
+          + '<button type="button" class="alr-b" data-mialler="'+esc(x.ph.id)+'" data-mimis="'+esc(x.m.id)+'">Ouvrir</button></div>'; }).join('')
+    + (!l.length && !portes.length ? '<p class="mi-ai">Rien à faire de ton côté pour l’instant : les prochaines étapes se valident toutes seules.</p>' : '')
+    + (r ? '<div class="mi-refl"><span>Le réflexe de la semaine</span><b>'+esc(r.t)+'</b><p>'+esc(r.d||'')+'</p></div>' : '');
+  el.hidden = false;
+}
+// Accueil du parrain : les portes à valider, tout en haut (après les alertes)
+function buildAValider(){
+  const el = document.getElementById('homePortes');
+  if(!el) return;
+  if(!A_VALIDER.length){ el.hidden = true; el.innerHTML = ''; return; }
+  el.innerHTML = '<h2>À valider pour tes filleuls <span class="alr-pt">'+A_VALIDER.length+'</span></h2>'
+    + '<p class="mi-ai">Ces personnes ont terminé une phase et attendent ton point d’étape. C’est la seule validation qui te revient dans leur parcours.</p>'
+    + A_VALIDER.map((d,i)=>{
+        const po = misPhases().map(p=>p.porte).find(p=>p && p.id===d.porte) || { t:d.porte };
+        const res = Array.isArray(d.resume) ? d.resume : [];
+        return '<div class="mi-val" data-i="'+i+'"><div class="mi-ph"><b>'+esc(d.nom)+'</b><span>'+(d.porte==='porte1'?'Porte 1':'Porte 2')+' — '+esc(po.t)+'</span>'
+          + '<span class="mi-ai">demandé le '+fmtD(isoJour(new Date(d.demande_le)))+'</span></div>'
+          + (res.length ? '<details><summary>Ce qui est fait ('+res.length+')</summary><ul class="mi-cr">'
+              + res.map(x=>'<li>'+esc((x.id?x.id+' ':'')+(x.t||''))+(x.d?' <small>· '+esc(fmtD(x.d))+'</small>':'')+'</li>').join('')+'</ul></details>' : '')
+          + '<textarea class="mi-mot" maxlength="1000" placeholder="Un mot pour '+esc(d.nom)+' (facultatif)"></textarea>'
+          + '<div class="alr-fb"><button type="button" class="alr-b pri" data-mival="'+i+'">Valider la porte</button>'
+          + '<button type="button" class="alr-b" data-mirev="'+i+'">Pas encore</button></div><p class="alr-err" hidden></p></div>';
+      }).join('');
+  el.hidden = false;
+}
+async function chargerPortes(){
+  if(!SB || !SBUSER){ PORTES = {}; A_VALIDER = []; PORTES_OK = false; return false; }
+  try{
+    const [a, b] = await Promise.all([ SB.rpc('mes_portes'), SB.rpc('portes_a_valider') ]);
+    if(a.error) throw a.error;
+    PORTES = {}; PORTE_VALIDEUR = '';
+    (a.data||[]).forEach(r=>{ if(r.validateur) PORTE_VALIDEUR = r.validateur; if(r.porte) PORTES[r.porte] = r; });
+    A_VALIDER = (b && !b.error && b.data) || [];
+    PORTES_OK = true;
+  }catch(e){ PORTES_OK = false; }
+  majParcours();
+  return PORTES_OK;
+}
+function majParcours(){
+  if(!window.__booted) return;
+  try{ if(misData()) buildMissions(); }catch(e){ console.error(e); }
+  try{ buildProchaines(); }catch(e){ console.error(e); }
+  try{ buildAValider(); }catch(e){ console.error(e); }
+}
+// Résumé envoyé avec la demande : les missions de la phase, faites ou non, avec leur date
+function miResume(ph){
+  return (ph.missions||[]).map(m=>{
+    const ds = (m.actions||[]).map(a=>miAction(m,a)).filter(e=>e.ok && e.d).map(e=>e.d).sort();
+    return { id:m.id, t:m.t, fait: miFaite(m), d: miFaite(m) ? (ds.pop()||'') : '' };
+  }).filter(x=>x.fait);
+}
+async function miDemander(id){
+  const s = miPorte(id);
+  if(!s.po || !s.prete || !SB) return;
+  try{
+    const r = await SB.rpc('porte_demander', { p_porte:id, p_resume: miResume(s.ph) });
+    if(r && r.error) throw r.error;
+  }catch(e){ alert('La demande n’a pas pu partir. Réessaie dans un instant.'); return; }
+  await chargerPortes();
+}
+async function miTraiter(i, ok){
+  const d = A_VALIDER[i]; if(!d || !SB) return;
+  const box = document.querySelector('#homePortes .mi-val[data-i="'+i+'"]');
+  const mot = box ? (box.querySelector('.mi-mot')||{}).value || '' : '';
+  const err = box && box.querySelector('.alr-err');
+  if(!ok && !mot.trim()){ if(err){ err.hidden=false; err.textContent='Dis en un mot ce qu’il reste à faire.'; } return; }
+  try{
+    const r = await SB.rpc('porte_traiter', { p_membre:d.membre_id, p_porte:d.porte, p_ok:ok, p_mot:mot });
+    if(r && r.error) throw r.error;
+  }catch(e){ if(err){ err.hidden=false; err.textContent=(e&&e.message)||'Impossible pour l’instant.'; } return; }
+  await chargerPortes();
+}
+document.addEventListener('toggle', e=>{
+  const d = e.target;
+  if(d && d.matches && d.matches('details.mi') && d.open) MI_OUVERTE = d.dataset.mi;
+}, true);
+document.addEventListener('change', e=>{
+  const cb = e.target.closest && e.target.closest('input[data-mia]');
+  if(!cb) return;
+  const t = misTrouve(cb.dataset.mia);
+  if(!t || !t.a || !miCochable(t.ph, t.m, t.a)){ cb.checked = !cb.checked; return; }
+  MIS[cb.dataset.mia] = (cb.checked ? '' : '!') + new Date().toISOString();
+  saveMis();
+  MI_CHOISIE = true; MI_PHASE = t.ph.id; MI_OUVERTE = t.m.id;
+  majParcours();
+});
+document.addEventListener('click', e=>{
+  if(!e.target.closest) return;
+  const ch = e.target.closest('[data-miph]');
+  if(ch){ MI_PHASE = ch.dataset.miph; MI_CHOISIE = true; MI_OUVERTE = null; buildMissions(); return; }
+  const go = e.target.closest('[data-mialler]');
+  if(go){
+    MI_PHASE = go.dataset.mialler; MI_CHOISIE = true; MI_OUVERTE = go.dataset.mimis || null;
+    buildMissions();
+    const cible = document.querySelector(MI_OUVERTE ? '#homeParcoursPanel [data-mi="'+MI_OUVERTE+'"]' : '#homeParcoursPanel .mi-porte');
+    if(cible) cible.scrollIntoView({ behavior:'smooth', block:'start' });
+    return;
+  }
+  const po = e.target.closest('[data-miporte]');
+  if(po){ po.disabled = true; miDemander(po.dataset.miporte); return; }
+  const v = e.target.closest('[data-mival]');
+  if(v){ miTraiter(+v.dataset.mival, true); return; }
+  const rv = e.target.closest('[data-mirev]');
+  if(rv){ miTraiter(+rv.dataset.mirev, false); }
+});
+
+// L'ancien parcours (cases) ou le parcours en missions, selon le contenu publié
+function buildParcours(){ if(misData()) majParcours(); else buildPhases(); }
 function phaseProgress(ph,pi){
   let tot=0, ok=0;
   (ph.etapes||[]).forEach((e,ei)=>(e.check||[]).forEach((c,ci)=>{ tot++; if(caseCochee(pi+'-'+ei+'-'+ci, c)) ok++; }));
@@ -4842,6 +5351,7 @@ async function chargerMM(){
   await chargerMMLignee();
   document.querySelectorAll('[data-v="mm"]').forEach(b=>b.hidden=false);
   if(window.__booted){ try{ buildMM(); buildActions(); buildMMLignee(); }catch(e){} }
+  try{ majParcours(); }catch(e){}
   try{ routerQuandPret(); }catch(e){}
   return true;
 }
@@ -5022,6 +5532,7 @@ async function mmObjSauver(){
     setTimeout(()=>{ if(MM_ETAT.endsWith('✓')){ MM_ETAT=''; mmMajEtat(); } }, 2500);
   }catch(e){ MM_ETAT='Non enregistré — réessaie'; mmMajEtat(); }
   buildMM();
+  try{ majParcours(); }catch(e){}
 }
 
 /* --- rendu : briques --- */
@@ -6698,7 +7209,7 @@ const saveSem = ()=>{ try{ localStorage.setItem('kairos_sem', JSON.stringify(SEM
 // { etapes:[clés d'étapes annoncées], bk:'AAAA-MM-JJ de la dernière alerte lue' }
 let VU = {}; try{ VU = JSON.parse(localStorage.getItem('kairos_vu')||'{}'); }catch(e){}
 const saveVu = ()=>{ try{ localStorage.setItem('kairos_vu', JSON.stringify(VU)); }catch(e){} planSync(); };
-const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM, vu:VU, zone:ZONE_CHOISIE||undefined });
+const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, mis:MIS, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM, vu:VU, zone:ZONE_CHOISIE||undefined });
 let ACC_NOM_AFF = null;
 // Prénom de la personne connectée (Google), pour personnaliser l'accueil
 function prenomUser(){
@@ -6753,6 +7264,12 @@ async function syncPull(){
   (d.obj||[]).forEach(x=>{ if(!OBJ_OK.has(x)){ OBJ_OK.add(x); chg=true; } });
   const c=d.check||{};
   for(const k in c){ if(c[k]&&!CHECK[k]){ CHECK[k]=c[k]; chg=true; } }
+  // Parcours en missions : l'horodatage le plus récent l'emporte (cocher / décocher suivent d'un appareil à l'autre)
+  const mi = d.mis||{};
+  for(const k in mi){
+    if(k==='_mig'){ if(mi._mig && !MIS._mig){ MIS._mig = mi._mig; chg=true; } continue; }
+    if(typeof mi[k]==='string' && (!MIS[k] || misTs(mi[k]) > misTs(MIS[k]))){ MIS[k]=mi[k]; chg=true; }
+  }
   if(typeof d.nav==='boolean' && d.nav!==NAV_REPLIE){ try{ sideReplier(d.nav); }catch(e){} }
   // Actions de la semaine : fusion par vrai (une action faite sur un appareil l'est partout)
   const s = d.sem||{};
@@ -6770,10 +7287,11 @@ async function syncPull(){
       localStorage.setItem('kairos_favs', JSON.stringify([...FAVS]));
       localStorage.setItem('kairos_obj', JSON.stringify([...OBJ_OK]));
       localStorage.setItem('kairos_check', JSON.stringify(CHECK));
+      localStorage.setItem('kairos_mis', JSON.stringify(MIS));
       localStorage.setItem('kairos_sem', JSON.stringify(SEM));
       localStorage.setItem('kairos_vu', JSON.stringify(VU));
     }catch(e){}
-    try{ buildContenu(); buildAnn(); buildActions(); routeHash(); }catch(e){}
+    try{ buildContenu(); buildAnn(); buildActions(); majParcours(); routeHash(); }catch(e){}
   }
   syncPush();
 }
@@ -6818,7 +7336,7 @@ async function initSync(){
     SBUSER = session ? session.user : null;
     accMaj();
     if(SBUSER) signalerActivite();
-    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); chargerParcours(); chargerSurv(); chargerAlertes(); buildMembres(); chargerRetours(); }
+    if(window.__booted && SBUSER && !SYNC_FAIT){ SYNC_FAIT=true; syncPull(); chargerVeille(); chargerParcours(); chargerSurv(); chargerAlertes(); chargerPortes(); buildMembres(); chargerRetours(); }
     if(!SBUSER) SYNC_FAIT=false;
   });
   try{ const { data } = await SB.auth.getSession(); SBUSER = data && data.session ? data.session.user : null; }catch(e){ SBUSER=null; }
@@ -7303,7 +7821,7 @@ async function cntEnregistrer(){
   const p = CNT_PAGES.find(x=>x.slug===CNT_SLUG);
   if(p){ p.titre = maj.titre; p.icone = maj.icone; }
   cntListe();
-  await chargerContenu().then(()=>{ try{ buildContenu(); buildPhases(); buildSearchIndex(); }catch(e){} });
+  await chargerContenu().then(()=>{ try{ buildContenu(); buildParcours(); buildSearchIndex(); }catch(e){} });
 }
 async function cntRestaurer(id){
   if(!confirm('Remplacer la page par la version archivée ?')) return;
@@ -7333,7 +7851,7 @@ async function cntEnregistrerBloc(){
   const r = await SB.from('contenu_blocs').update({ valeur: val, maj: new Date().toISOString() }).eq('cle', CNT_BLOC);
   if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
   cntMsg('Bloc « '+CNT_BLOC+' » enregistré.');
-  await chargerContenu().then(()=>{ try{ buildContenu(); buildPhases(); buildSearchIndex(); }catch(e){} });
+  await chargerContenu().then(()=>{ try{ buildContenu(); buildParcours(); buildSearchIndex(); }catch(e){} });
 }
 document.addEventListener('input', e=>{
   if(e.target.closest && e.target.closest('#cntEdit')) CNT_SALE = true;

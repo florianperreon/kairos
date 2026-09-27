@@ -1,0 +1,838 @@
+{
+ "version": 1,
+ "phases": [
+  {
+   "id": "p1",
+   "n": 1,
+   "t": "Je pose mes fondations",
+   "statut": "NEOMAN",
+   "c": "gray",
+   "intro": "Bienvenue dans l'aventure 🙂 L'objectif des prochaines semaines n'est pas d'aller vite, mais d'aller bien : poser des fondations solides et prendre les bons réflexes. Chaque mission s'ouvre quand la précédente est prête ; tu n'as pas à tout faire en même temps.",
+   "missions": [
+    {
+     "id": "1.1",
+     "t": "Suivre le cursus initial, dans l'ordre",
+     "pq": "DM, AD, 3 jours puis ESP : chaque étape prépare la suivante. Les suivre dans l'ordre, sans en sauter, c'est la base de tout le reste.",
+     "actions": [
+      {
+       "id": "dm",
+       "t": "Découverte Métier (DM)",
+       "v": "auto",
+       "auto": "dm"
+      },
+      {
+       "id": "ad",
+       "t": "Atelier Démarrage (AD)",
+       "v": "auto",
+       "auto": "ad"
+      },
+      {
+       "id": "3j",
+       "t": "3 jours de la réussite",
+       "v": "auto",
+       "auto": "trois_jours"
+      },
+      {
+       "id": "esp",
+       "t": "ESP",
+       "v": "moi",
+       "pre": [
+        "1.1/3j"
+       ]
+      },
+      {
+       "id": "form1",
+       "t": "Première formation FORMAN réservée",
+       "v": "auto",
+       "auto": "formation_reservee"
+      }
+     ],
+     "pages": [
+      "esp"
+     ],
+     "obj": [
+      "NEOMAN : cursus initial obligatoire",
+      "NEOMAN : stage des 3 jours de la réussite"
+     ]
+    },
+    {
+     "id": "1.2",
+     "t": "Lire les 3 books de démarrage",
+     "pq": "Les règles administratives, les bases du métier et les règles de vie de l'organisation : ce qu'il faut savoir avant de se lancer.",
+     "actions": [
+      {
+       "id": "bac",
+       "t": "Lire et comprendre le BAC (Book Administratif du Consultant)",
+       "v": "moi"
+      },
+      {
+       "id": "bcbg",
+       "t": "Lire et comprendre le BCBG (Book du Consultant Bases Générales)",
+       "v": "moi"
+      },
+      {
+       "id": "bravo",
+       "t": "Lire et comprendre le BRAVO (Book des Règles À Vivre en Organisation)",
+       "v": "moi"
+      }
+     ],
+     "liens": [
+      {
+       "t": "Les 3 books de démarrage sur MyProdémial",
+       "u": "https://my.prodemial.fr/formations-terrain/auto-formation/books-demarrage"
+      }
+     ],
+     "pre": [
+      "1.1/dm"
+     ]
+    },
+    {
+     "id": "1.3",
+     "t": "Créer mon entreprise",
+     "pq": "Le statut qui te permettra d'être rémunéré. Au chômage ? On peut bloquer le versement des commissions : parles-en d'abord avec ton parrain.",
+     "actions": [
+      {
+       "id": "entreprise",
+       "t": "Entreprise créée (INPI / RSAC)",
+       "v": "moi"
+      },
+      {
+       "id": "urssaf",
+       "t": "Espace URSSAF créé (déclaration mensuelle du CA)",
+       "v": "moi"
+      },
+      {
+       "id": "facturation",
+       "t": "Plateforme de facturation électronique choisie",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "creation-d-entreprise",
+      "ma-micro-entreprise-au-quotidien",
+      "cumuler-chomage-are-et-micro-entreprise"
+     ],
+     "pre": [
+      "1.1/ad"
+     ],
+     "horsPorte": true,
+     "obj": [
+      "NEOMAN : inscrit au Greffe / INPI"
+     ]
+    },
+    {
+     "id": "1.4",
+     "t": "Me mettre en règle",
+     "pq": "Assuré, adhérent et à jour chez Prodémial avant ton premier client.",
+     "actions": [
+      {
+       "id": "rcpro",
+       "t": "RC Pro souscrite",
+       "v": "moi"
+      },
+      {
+       "id": "depot",
+       "t": "RSAC + RIB + attestation d’affiliation URSSAF déposés dans MyProdémial",
+       "v": "moi"
+      },
+      {
+       "id": "adhesion",
+       "t": "Adhésion à l'association FORMAN",
+       "v": "auto",
+       "auto": "adhesion"
+      }
+     ],
+     "pages": [
+      "coordonnees-professionnels-recommandations"
+     ],
+     "pre": [
+      "1.3"
+     ],
+     "horsPorte": true,
+     "obj": [
+      "NEOMAN : à jour chez Prodémial (dont RC Pro)",
+      "BEMAN : adhérent FORMAN"
+     ]
+    },
+    {
+     "id": "1.5",
+     "t": "Installer mes outils",
+     "pq": "Une adresse pro, un Drive rangé et l'accès au mail manager : les outils de tous les jours, prêts dès le départ.",
+     "actions": [
+      {
+       "id": "mail",
+       "t": "Adresse mail pro + signature",
+       "v": "moi"
+      },
+      {
+       "id": "drive",
+       "t": "Drive organisé",
+       "v": "moi"
+      },
+      {
+       "id": "mega",
+       "t": "Accès MEGA + mail manager demandés",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "organisation-de-la-boite-mail-signature",
+      "organisation-drive",
+      "acces-mega-mail-manager"
+     ]
+    },
+    {
+     "id": "1.6",
+     "t": "Constituer ma primo-liste",
+     "pq": "500 noms : la matière première de tes rendez-vous. Sans elle, pas de prospection régulière.",
+     "actions": [
+      {
+       "id": "primo",
+       "t": "Primo-liste d'au moins 500 noms",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "primo-liste",
+      "les-cles-de-la-prise-de-r1"
+     ],
+     "pre": [
+      "1.1/ad"
+     ],
+     "obj": [
+      "NEOMAN : primo-liste de 500 noms"
+     ]
+    },
+    {
+     "id": "1.7",
+     "t": "Lancer ma première habilitation",
+     "pq": "Les examens prennent du temps : les lancer tôt évite d'attendre au moment de signer ton premier client.",
+     "actions": [
+      {
+       "id": "commande",
+       "t": "Première formation commandée avec date d'examen fixée (Assurance recommandé)",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "tips-conseils-habilitations",
+      "examens-qcm"
+     ],
+     "pre": [
+      "1.1/ad"
+     ],
+     "obj": [
+      "NEOMAN : inscrit au stage MIA ou IOBSP"
+     ]
+    }
+   ],
+   "porte": {
+    "id": "porte1",
+    "t": "Point de démarrage avec mon parrain",
+    "v": "parrain",
+    "pre": [
+     "1.1",
+     "1.2",
+     "1.5",
+     "1.6",
+     "1.7"
+    ],
+    "d": "Ton parrain vérifie avec toi que les fondations sont posées, puis valide : les phases 2 et 3 s'ouvrent.",
+    "criteres": [
+     "Cursus initial terminé (DM, AD, 3 jours, ESP)",
+     "Books lus, outils installés",
+     "Primo-liste de 500 noms",
+     "Première habilitation lancée"
+    ]
+   }
+  },
+  {
+   "id": "p2",
+   "n": 2,
+   "t": "Je lance mon activité sereinement",
+   "statut": "BEMAN",
+   "c": "blue",
+   "ouvre": [
+    "porte1"
+   ],
+   "intro": "Trois compétences clés permettent de développer sereinement ton activité : la prise de R1, l'art de la mise en relation et la prise de DM. Ce sont les trois à maîtriser au plus vite.",
+   "missions": [
+    {
+     "id": "2.1",
+     "t": "Tenir mon mail manager chaque semaine",
+     "pq": "Le rendez-vous hebdo avec toi-même et ta lignée : c'est lui qui rend tes progrès visibles.",
+     "actions": [
+      {
+       "id": "mm4",
+       "t": "4 semaines publiées d'affilée",
+       "v": "auto",
+       "k": "mm4"
+      }
+     ],
+     "pages": [
+      "acces-mega-mail-manager"
+     ],
+     "pre": [
+      "1.5"
+     ],
+     "obj": [
+      "NEOMAN : réaliser régulièrement le mail manager"
+     ]
+    },
+    {
+     "id": "2.2",
+     "t": "Installer mon rythme de prospection",
+     "pq": "La régularité compte plus que le volume : quelques messages chaque semaine, un script maîtrisé.",
+     "actions": [
+      {
+       "id": "rythme",
+       "t": "Rythme de contacts fixé (ex. 4 messages chaque lundi)",
+       "v": "moi"
+      },
+      {
+       "id": "script",
+       "t": "Script de prise de R1 maîtrisé",
+       "v": "moi"
+      },
+      {
+       "id": "atelier",
+       "t": "Atelier Prise de R1 niveau 1",
+       "v": "auto",
+       "auto": "r1_n1"
+      }
+     ],
+     "pages": [
+      "les-cles-de-la-prise-de-r1",
+      "r0-trame-tips-conseils"
+     ],
+     "pre": [
+      "1.6"
+     ],
+     "obj": [
+      "NEOMAN : 3 rendez-vous d'avance",
+      "BEMAN : 6 rendez-vous d'avance"
+     ]
+    },
+    {
+     "id": "2.3",
+     "t": "Mener mes 2 premiers R1 accompagné",
+     "pq": "Au R1 on ne vend rien : on écoute et on cadre les objectifs. Les deux premiers se font avec un mentor de la lignée.",
+     "actions": [
+      {
+       "id": "r1",
+       "t": "2 premiers R1 réalisés avec un accompagnant",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "r1-trame-tips-conseils"
+     ],
+     "pre": [
+      "2.2"
+     ],
+     "obj": [
+      "NEOMAN : maîtrise du tronc commun"
+     ]
+    },
+    {
+     "id": "2.4",
+     "t": "Présenter ma première étude de cas",
+     "pq": "Un regard extérieur en 10 minutes avant le R2 vaut de l'or.",
+     "actions": [
+      {
+       "id": "etude",
+       "t": "Étude de cas présentée à la lignée avant le R2",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "je-fais-l-etude-de-cas",
+      "r2-trame-tips-conseils"
+     ],
+     "pre": [
+      "2.3"
+     ],
+     "obj": [
+      "NEOMAN : maîtrise d’un module spécifique",
+      "BEMAN : autonome en R2"
+     ]
+    },
+    {
+     "id": "2.5",
+     "t": "Réussir mes capacités professionnelles",
+     "pq": "Les QCM ouvrent le droit de conseiller et de signer. Ordre conseillé : Assurance, puis IOBSP, puis Agents liés ou CIF.",
+     "actions": [
+      {
+       "id": "qcm_ass",
+       "t": "QCM Assurance réussi",
+       "v": "moi"
+      },
+      {
+       "id": "qcm_iob",
+       "t": "QCM IOBSP réussi",
+       "v": "moi"
+      },
+      {
+       "id": "qcm_cif",
+       "t": "QCM Agents liés ou QCM CIF / AMF réussi",
+       "v": "moi"
+      },
+      {
+       "id": "toulouse",
+       "t": "Séminaire de professionnalisation à Toulouse",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "examens-qcm",
+      "tips-conseils-habilitations",
+      "correspondances-modules-cif-pbs"
+     ],
+     "pre": [
+      "1.7"
+     ],
+     "obj": [
+      "ADMAN : habilité MIA, IOBSP, immobilier et agent lié (ou CIF)"
+     ]
+    },
+    {
+     "id": "2.6",
+     "t": "Finaliser mes habilitations",
+     "pq": "Après chaque examen, quelques démarches pour pouvoir vraiment exercer.",
+     "actions": [
+      {
+       "id": "post_ass",
+       "t": "Démarches post-examen Assurance réalisées",
+       "v": "moi",
+       "pre": [
+        "2.5/qcm_ass"
+       ]
+      },
+      {
+       "id": "post_iob",
+       "t": "Démarches post-examen IOBSP réalisées",
+       "v": "moi",
+       "pre": [
+        "2.5/qcm_iob"
+       ]
+      },
+      {
+       "id": "post_cif",
+       "t": "Démarches post-examen Agents liés / CIF réalisées",
+       "v": "moi",
+       "pre": [
+        "2.5/qcm_cif"
+       ]
+      },
+      {
+       "id": "extranets",
+       "t": "Extranets partenaires demandés",
+       "v": "moi"
+      },
+      {
+       "id": "orias",
+       "t": "Numéro ORIAS obtenu",
+       "v": "moi"
+      },
+      {
+       "id": "equivalence",
+       "t": "Équivalence de diplôme vérifiée auprès de PBS (si diplôme)",
+       "v": "moi",
+       "opt": true
+      }
+     ],
+     "pages": [
+      "post-examen",
+      "post-habilitation-mia",
+      "je-deviens-cif",
+      "anacofi-adherer-passer-l-entretien-renouveler"
+     ],
+     "pre": [
+      [
+       "2.5/qcm_ass",
+       "2.5/qcm_iob",
+       "2.5/qcm_cif"
+      ]
+     ],
+     "obj": [
+      "BEMAN : numéro ORIAS"
+     ]
+    },
+    {
+     "id": "2.7",
+     "t": "Signer mon premier client",
+     "pq": "Le process DER → fiche conseil → bulletin maîtrisé, pour signer sereinement et sans re-signature.",
+     "actions": [
+      {
+       "id": "process",
+       "t": "Process de signature (DER → fiche conseil → bulletin) maîtrisé",
+       "v": "moi"
+      },
+      {
+       "id": "client",
+       "t": "Premier client signé",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "r2-signature-trame-tips-conseils",
+      "traitement-des-objections"
+     ],
+     "pre": [
+      "2.4",
+      [
+       "2.6/post_ass",
+       "2.6/post_iob",
+       "2.6/post_cif"
+      ]
+     ],
+     "obj": [
+      "NEOMAN : 2 foyers fiscaux clients",
+      "BEMAN : 1 vente immobilière ou SCPI",
+      "BEMAN : 25 k€ de VA en placements"
+     ]
+    },
+    {
+     "id": "2.8",
+     "t": "Obtenir mes premières mises en relation",
+     "pq": "La qualité de ta mise en relation fait la qualité de tes rendez-vous.",
+     "actions": [
+      {
+       "id": "astorg",
+       "t": "Maîtriser la méthode d'Aymeric d'Astorg",
+       "v": "moi"
+      },
+      {
+       "id": "lefur",
+       "t": "Maîtriser la méthode de Mathéo Le Fur",
+       "v": "moi"
+      },
+      {
+       "id": "atelier",
+       "t": "Atelier Mise en relation FORMAN",
+       "v": "auto",
+       "auto": "mise_en_relation"
+      },
+      {
+       "id": "relance",
+       "t": "Relancer mes clients sur la mise en relation",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "mise-en-relation-methode-aymeric-d-astorg",
+      "mise-en-relation-methode-matheo-le-fur",
+      "mise-en-relation-mails-de-relance"
+     ],
+     "pre": [
+      "2.7"
+     ]
+    },
+    {
+     "id": "2.9",
+     "t": "Inviter et accompagner mes premiers invités",
+     "pq": "Faire découvrir le métier à ton tour. Pas de pression avant DM + AD + 3 jours.",
+     "actions": [
+      {
+       "id": "dev1",
+       "t": "Formation Développement équipe niveau 1",
+       "v": "moi"
+      },
+      {
+       "id": "invite",
+       "t": "Premier invité en Découverte Métier",
+       "v": "auto",
+       "auto": "invite_dm"
+      },
+      {
+       "id": "filleul",
+       "t": "Premier filleul affilié",
+       "v": "auto",
+       "auto": "filleul_adherent"
+      }
+     ],
+     "pages": [
+      "philosophie-a-adopter-ressources-utiles",
+      "invitation-dm",
+      "debrief-post-dm",
+      "affilier-un-filleul",
+      "accompagner-mon-filleul-choix-de-la-premiere-habilitation",
+      "message-pre-ad",
+      "message-pre-3-jours"
+     ],
+     "pre": [
+      "1.1/3j"
+     ],
+     "obj": [
+      "NEOMAN : formation Développement équipe niveau 1",
+      "BEMAN : 2 personnes accompagnées en formation initiale"
+     ]
+    }
+   ],
+   "porte": {
+    "id": "porte2",
+    "t": "Point de lancement avec mon parrain",
+    "v": "parrain",
+    "pre": [
+     "2.1",
+     "2.2",
+     "2.3",
+     "2.4",
+     "2.7",
+     "2.8"
+    ],
+    "d": "Ton parrain fait le point avec toi sur ton lancement, puis valide. Avec le passage ADMAN, cette porte ouvre la phase 4.",
+    "criteres": [
+     "Premier client signé",
+     "Au moins une habilitation finalisée",
+     "Mail manager régulier",
+     "Rythme de R1 installé"
+    ]
+   }
+  },
+  {
+   "id": "p3",
+   "n": 3,
+   "t": "Je trouve mon rythme de croisière",
+   "statut": "ADMAN",
+   "c": "green",
+   "ouvre": [
+    "porte1"
+   ],
+   "intro": "Complémentaire de la phase 2, elle s'ouvre en même temps. Au démarrage, l'important n'est pas le ticket moyen mais le nombre de clients : les 30 premiers. Un marathon, pas un sprint.",
+   "missions": [
+    {
+     "id": "3.1",
+     "t": "Fixer mes objectifs de l'année",
+     "pq": "Des objectifs au 31/12 et au 31/07, fixés avec ta lignée, pour savoir chaque semaine où tu en es.",
+     "actions": [
+      {
+       "id": "obj",
+       "t": "Objectifs saisis dans Mail Manager › Mes objectifs",
+       "v": "auto",
+       "k": "obj"
+      },
+      {
+       "id": "lignee",
+       "t": "Objectifs revus avec ma lignée",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "passage-manager"
+     ]
+    },
+    {
+     "id": "3.2",
+     "t": "Valider mes objectifs NEOMAN puis BEMAN",
+     "pq": "Les objectifs officiels du réseau ; leur détail est dans Mail Manager › Mes objectifs.",
+     "actions": [
+      {
+       "id": "neo",
+       "t": "Objectifs NEOMAN validés",
+       "v": "auto",
+       "auto": "objectifs_neoman"
+      },
+      {
+       "id": "be",
+       "t": "Objectifs BEMAN validés",
+       "v": "auto",
+       "auto": "objectifs_beman"
+      }
+     ],
+     "pages": [
+      "passage-manager"
+     ],
+     "obj": [
+      "NEOMAN et BEMAN : tous les objectifs"
+     ]
+    },
+    {
+     "id": "3.3",
+     "t": "Me former chaque mois",
+     "pq": "Au moins une formation FORMAN par mois, les UDP, les présentiels : c'est le boost qu'il faut pour réussir.",
+     "actions": [
+      {
+       "id": "form3",
+       "t": "Une formation par mois, 3 mois d'affilée",
+       "v": "auto",
+       "k": "form3"
+      },
+      {
+       "id": "udp",
+       "t": "Participer aux UDP",
+       "v": "auto",
+       "auto": "udp"
+      }
+     ],
+     "pages": [
+      "financer-les-udp-et-la-formation-continue-agefice"
+     ],
+     "obj": [
+      "ADMAN : 1 formation ou événement dans le dernier mois"
+     ]
+    },
+    {
+     "id": "3.4",
+     "t": "Travailler ma communication",
+     "pq": "Comprendre ton profil et celui de tes clients pour adapter ton discours.",
+     "actions": [
+      {
+       "id": "com1",
+       "t": "Atelier Clefs de la communication niveau 1",
+       "v": "auto",
+       "auto": "com_n1"
+      },
+      {
+       "id": "com2",
+       "t": "Atelier Clefs de la communication niveau 2",
+       "v": "auto",
+       "auto": "com_n2"
+      }
+     ],
+     "pages": [
+      "profils-de-communication-hbdi"
+     ]
+    },
+    {
+     "id": "3.5",
+     "t": "Nourrir ma posture",
+     "pq": "Cinq vidéos choisies par la lignée pour garder le cap.",
+     "actions": [
+      {
+       "id": "v1",
+       "t": "Regarder la vidéo Conquérir ou Périr !",
+       "v": "moi",
+       "u": "https://drive.google.com/file/d/1Dv3Q4J35-JQyO-ga5DvaAB1Nt-Dypf4W/view"
+      },
+      {
+       "id": "v2",
+       "t": "Regarder la vidéo Stratégie de la Fourmi (Lionel Charles)",
+       "v": "moi",
+       "u": "https://vimeo.com/1161365643/047163a4d5?fl=ip&fe=ec"
+      },
+      {
+       "id": "v3",
+       "t": "Regarder la vidéo Dans la tête d'un maître de la procrastination (TED VOSTFR)",
+       "v": "moi",
+       "u": "https://www.ted.com/talks/tim_urban_inside_the_mind_of_a_master_procrastinator"
+      },
+      {
+       "id": "v4",
+       "t": "Regarder L'art de vendre l'assurance-vie (Forum du Patrimoine 2026)",
+       "v": "moi",
+       "u": "https://vimeo.com/1164700339/5ce900dac2"
+      },
+      {
+       "id": "v5",
+       "t": "Regarder Ambition Galaxie – les clés du succès",
+       "v": "moi",
+       "u": "https://vimeo.com/1164678588/b364e0b10d"
+      }
+     ]
+    },
+    {
+     "id": "3.6",
+     "t": "Devenir autonome en R2 sur mes modules",
+     "pq": "Présenter seul une solution adaptée, module par module.",
+     "actions": [
+      {
+       "id": "immo",
+       "t": "Autonome en R2 : immobilier",
+       "v": "moi"
+      },
+      {
+       "id": "per",
+       "t": "Autonome en R2 : PER",
+       "v": "moi"
+      },
+      {
+       "id": "av",
+       "t": "Autonome en R2 : assurance vie",
+       "v": "moi"
+      },
+      {
+       "id": "lmnp",
+       "t": "Autonome en R2 : LMNP",
+       "v": "moi"
+      }
+     ],
+     "pages": [
+      "assurance-vie-maitriser-et-vendre",
+      "allocations-av-per",
+      "per-le-transfert-vers-un-perin-comment-ca-marche",
+      "immobilier-les-bases",
+      "tips-optimisation-fiscale-per-chomage"
+     ],
+     "pre": [
+      "2.4"
+     ],
+     "obj": [
+      "BEMAN : autonome en R2 immobilier, PER, assurance vie",
+      "ADMAN : autonome en R2 LMNP"
+     ]
+    },
+    {
+     "id": "3.7",
+     "t": "Co-animer ma première formation",
+     "pq": "Transmettre, c'est apprendre deux fois.",
+     "actions": [
+      {
+       "id": "coanim",
+       "t": "Une formation co-animée",
+       "v": "auto",
+       "k": "coanim"
+      }
+     ],
+     "obj": [
+      "ADMAN : avoir co-animé 1 formation"
+     ]
+    },
+    {
+     "id": "3.8",
+     "t": "Accompagner 4 personnes en Découverte Métier",
+     "pq": "Chaque DM se fait avec le parrain : c'est là que ton équipe commence.",
+     "actions": [
+      {
+       "id": "dm4",
+       "t": "4 filleuls venus en Découverte Métier",
+       "v": "auto",
+       "k": "dm4"
+      }
+     ],
+     "pages": [
+      "invitation-dm",
+      "debrief-post-dm"
+     ],
+     "pre": [
+      "2.9"
+     ],
+     "obj": [
+      "ADMAN : 4 personnes accompagnées en Journée Découverte"
+     ]
+    }
+   ],
+   "porte": {
+    "id": "porte3",
+    "t": "Passage ADMAN",
+    "v": "auto",
+    "k": "adman",
+    "d": "Relevé automatiquement : la porte s'ouvre dès que le réseau te passe ADMAN."
+   }
+  },
+  {
+   "id": "p4",
+   "n": 4,
+   "t": "Objectif Galaxie",
+   "statut": "MAN et plus",
+   "c": "gold",
+   "ouvre": [
+    "porte2",
+    "porte3"
+   ],
+   "avenir": true,
+   "intro": "Le contenu de cette phase sera dévoilé prochainement. En attendant, consolide ton activité et développe ton équipe.",
+   "missions": []
+  }
+ ]
+}
