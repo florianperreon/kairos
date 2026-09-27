@@ -36,6 +36,7 @@ npx playwright test -g Dates # une famille
 python garde.py              # le garde-fou seul
 python nouveautes.py         # la détection des nouveautés (depuis la racine du dépôt)
 python calendrier.py         # le relevé des vacances scolaires
+python pagination.py         # la lecture des séances malgré la pagination instable de l'API
 ```
 
 ## Ce qui est couvert

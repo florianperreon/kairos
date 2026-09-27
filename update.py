@@ -231,17 +231,48 @@ def get_ld(url, params=None, tries=3):
         time.sleep(1.5 * (i + 1))
     raise RuntimeError(f"requête en échec ({last})")
 
-def list_all(api, endpoint, today_iso):
+def _pages_fenetre(api, endpoint, params):
     items, page = [], 1
     while True:
-        d = get(f"{api}/api/{endpoint}",
-                params={"order[startDate]": "asc", "startDate[after]": today_iso, "page": page})
-        batch = d if isinstance(d, list) else d.get("hydra:member", [])
+        p = dict(params); p["page"] = page
+        d = get(f"{api}/api/{endpoint}", params=p)
+        batch = d if isinstance(d, list) else (d or {}).get("hydra:member", [])
         items.extend(batch)
-        if len(batch) < 30:
+        if len(batch) < 30 or page > 60:
             break
         page += 1
     return items
+
+def list_all(api, endpoint, today_iso):
+    """Toutes les séances à partir de `today_iso`.
+
+    La pagination de l'API est INSTABLE (constaté le 28/09/2026 sur les ateliers : 485 annoncés, 485 lignes
+    reçues mais seulement 476 distinctes — 9 doublons et 9 séances jamais servies, dont deux Découvertes
+    Métier du 26/09 ; le tri demandé n'y change rien). On relit donc la période par fenêtres de 7 jours
+    (25 séances au plus par semaine, une seule page) et on fusionne avec la pagination classique."""
+    items = _pages_fenetre(api, endpoint, {"order[startDate]": "asc", "startDate[after]": today_iso})
+    jours = sorted(str(x.get("startDate") or "")[:10] for x in items if x.get("startDate"))
+    debut = max(today_iso, jours[0]) if jours else today_iso
+    fin = (pdate_iso(jours[-1]) if jours else datetime.date.fromisoformat(today_iso[:10])) + datetime.timedelta(days=60)
+    fenetres, d = [], datetime.date.fromisoformat(debut[:10])
+    while d <= fin:
+        fenetres.append((d, d + datetime.timedelta(days=7)))
+        d += datetime.timedelta(days=7)
+    with ThreadPoolExecutor(max_workers=12) as ex:
+        lots = list(ex.map(lambda w: _pages_fenetre(api, endpoint, {
+            "startDate[after]": w[0].isoformat(), "startDate[strictly_before]": w[1].isoformat()}), fenetres))
+    vus = {x["id"] for x in items}
+    rattrapes = 0
+    for lot in lots:
+        for x in lot:
+            if x["id"] not in vus:
+                vus.add(x["id"]); items.append(x); rattrapes += 1
+    if rattrapes:
+        print(f"{endpoint} : {rattrapes} séance(s) absente(s) de la pagination, rattrapée(s) par fenêtres de 7 jours")
+    return dedup(items)
+
+def pdate_iso(s):
+    return datetime.date.fromisoformat(str(s)[:10])
 
 def fetch_details(api, endpoint, ids):
     out = {}

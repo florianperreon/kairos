@@ -3301,7 +3301,7 @@ test.describe('Mail Manager — formations suivies et (co)animées', () => {
       A.push(s(1, 'Découverte Métier matinée', dansExo, [20028, 30001, 30004]),
              s(2, 'Découverte métier visio', dansExo, ['30001']),                 // déjà comptée
              s(3, 'Découverte Métier', j(6), [20028, 30005]),                     // pas encore passée
-             s(4, 'Atelier Démarrage', dansExo, [30005]),                          // pas une DM
+             s(4, 'Atelier Démarrage', dansExo, [30005]),                          // sa DM date de l'exercice précédent : l'AD ne la recompte pas
              s(5, 'Découverte Métier', vAddDays(ech.debut, -20), [30005]));        // exercice précédent
       const d = mmDmAssistes(ech.debut, todayIso);
       const fo = mmFormations(ech.debut, todayIso);
@@ -3316,6 +3316,26 @@ test.describe('Mail Manager — formations suivies et (co)animées', () => {
     expect(r.suiv, 'ma présence en DM n’est pas une formation suivie').toBe(0);
     expect(r.ligne).toContain('déjà 2 depuis le 1er août');
     expect(erreurs).toEqual([]);
+  });
+
+  // Cas réel de Florian (28/09/2026) : 4 filleuls venus en DM, mais le réseau n'en inscrit que 2 sur une DM ;
+  // les 2 autres n'apparaissent que sur un Atelier Démarrage (l'un passé, l'autre à venir).
+  test('DM prouvée par l’AD : 2 inscrits en DM + 1 AD passé + 1 AD à venir = 4, la mission 3.8 est validée', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const j = n => { const d = new Date(); d.setDate(d.getDate() + n); return isoJour(d); };
+      MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Florian PERREON' });
+      const fil = [1, 2, 3, 4, 5].map(i => ({ id: 30100 + i, name: 'Filleul ' + i }));
+      fil.forEach(f => byId.set(f.id, f)); children.set(norm('Florian PERREON'), fil);
+      const s = (id, titre, start, guests) => ({ k: 'a', id, th: 'PARCOURS DECOUVERTE', title: titre, start, end: start, pilotes: '', guests, url: '#' });
+      A.length = 0; E.length = 0; F.length = 0;
+      A.push(s(1, 'Découverte métier visio', j(-150), [30101, 30102]),
+             s(2, 'Atelier Démarrage', j(-60), [30103]),
+             s(3, 'Atelier Démarrage', j(13), [30104]),
+             s(4, 'Découverte métier visio', j(20), [30105]));          // DM seulement à venir : pas encore venu
+      return { n: mmDmAssistes(MM_ORIGINE, todayIso).n, k: miKairos('dm4') };
+    });
+    expect(r).toEqual({ n: 4, k: true });
   });
 
   test('Mes objectifs : les deux lignes, avec le réalisé', async ({ page }) => {

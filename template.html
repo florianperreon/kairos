@@ -5275,12 +5275,28 @@ function mmDescendants(){
 // fois. La DM impose la présence du parrain : ma propre participation à un Parcours Découverte se
 // compte donc ici, et jamais dans les formations suivies. On ne filtre pas sur ma présence : dans
 // les données du réseau, le parrain n'est inscrit que sur ~60 % des places de DM.
+// Complément du 28/09/2026 : le réseau n'inscrit pas toujours l'invité sur la DM elle-même (constaté pour
+// 2 des 4 filleuls de Florian : aucune DM à leur nom, mais un Atelier Démarrage). Or on ne s'inscrit pas à
+// l'AD ni aux 3 Jours sans être passé par la DM : une inscription à l'AD ou aux 3 Jours, même à venir, prouve
+// la DM. Elle compte alors à la date de cette première inscription (aujourd'hui si l'AD est à venir).
 function mmDmAssistes(deb, fin){
   const ids = new Map(mmMesFilleuls().map(m=>[m.id, m.name]));
-  const vus = new Map();
+  const dm = new Map(), suite = new Map();          // id -> première date vue
+  const note = (mp, id, d) => { if(!mp.has(id) || d < mp.get(id)) mp.set(id, d); };
   [].concat(A||[], E||[]).forEach(a=>{
-    if(!a.start || a.start < deb || a.start > fin || !isPast(a) || mmTitreCat(a.title)!=='dm') return;
-    (a.guests||[]).forEach(g=>{ if(ids.has(+g)) vus.set(+g, ids.get(+g)); });
+    const cat = a.start ? mmTitreCat(a.title) : '';
+    if(!cat) return;
+    (a.guests||[]).forEach(g=>{
+      const id = +g; if(!ids.has(id)) return;
+      if(cat==='dm'){ if(isPast(a)) note(dm, id, a.start); }
+      else note(suite, id, a.start);                  // AD ou 3 Jours : passés ou à venir
+    });
+  });
+  const vus = new Map();
+  ids.forEach((nom, id)=>{
+    // AD à venir : la DM a déjà eu lieu, au plus tard aujourd'hui
+    const d = dm.has(id) ? dm.get(id) : (suite.has(id) ? (suite.get(id) < todayIso ? suite.get(id) : todayIso) : null);
+    if(d && d >= deb && d <= fin) vus.set(id, nom);
   });
   return { n:vus.size, noms:[...vus.values()] };
 }
