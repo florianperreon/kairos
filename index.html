@@ -5413,9 +5413,11 @@ function mmAuto(sem){
   a.filN  = mes.filter(m=>ADH.has(m.id)).map(m=>m.name);
   a.filIN = mes.filter(m=>!ADH.has(m.id)).map(m=>m.name);
   const deb = mmEcheances().debut;
-  const ex = mmInvites(deb, MM_FIN);
+  // 28/09/2026 : l'exercice et le cumul s'arrêtent à aujourd'hui. Une AD à venir (Jordan, 10/10) n'est pas
+  // encore faite : elle comptait dans le bandeau des fiches S39 et S40. Les deux semaines gardent les inscrits.
+  const ex = mmInvites(deb, todayIso);
   a.inv = ex.n; a.invN = ex.noms;                        // sur l'exercice en cours
-  const tt = mmInvites(MM_ORIGINE, MM_FIN, true);
+  const tt = mmInvites(MM_ORIGINE, todayIso, true);
   a.invT = tt.n; a.invTN = tt.noms;                      // depuis le début
   const fo = mmFormations(deb, todayIso);                // sur l'exercice en cours, séances terminées
   a.fsuiv = fo.suiv; a.fanim = fo.anim; a.fsuivN = fo.suivN; a.fanimN = fo.animN;
@@ -5889,7 +5891,7 @@ function mmSynthese(d, a, ro, obj, ech){
         + mmInvEnAttente(a)+'</b>'+mmNoms(a.filIN)+'</div>' : '')
     + '</div>'
     + (a.dorm ? '<p class="mm-note">⚠︎ '+a.dorm+' filleul'+(a.dorm>1?'s':'')+' adhérent'+(a.dorm>1?'s':'')+' sans séance depuis plus de 60 jours.</p>' : '')
-    + '<p class="mm-note">Invités comptés depuis le '+fmtD(ech.debut)+' (début d’exercice) — un filleul déjà adhérent n’est plus compté comme invité.</p>'
+    + '<p class="mm-note">Invités comptés du '+fmtD(ech.debut)+' (début d’exercice) à aujourd’hui, séances à venir exclues — un filleul déjà adhérent n’est plus compté comme invité.</p>'
     + '<label class="mm-lab">Depuis le début <small style="font-weight:400;color:var(--ink-3)">— tous exercices, celles et ceux devenus adhérents compris</small></label>'
     + mmInvBloc(a.invT, a.invTN, 'Aucun invité en séance pour l’instant.')
 

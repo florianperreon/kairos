@@ -148,7 +148,8 @@ test.describe('Mail Manager', () => {
   test('un filleul déjà adhérent n’est pas compté comme invité (règle du 14/09/2026)', async ({ page }) => {
     await ouvrir(page);
     const j = jours();
-    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE.map(v => v === '@@SAMEDI@@' ? j.samedi : v), dm: j.dm });
+    // DM posée au samedi passé : depuis le 28/09/2026, une séance à venir ne compte plus sur l'exercice.
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE.map(v => v === '@@SAMEDI@@' ? j.samedi : v), dm: j.samedi });
     const r = await page.evaluate(() => { const a = mmAuto(mmSemCour()); return { inv: a.inv, noms: a.invN, fil: a.fil, adh: a.filadh }; });
     expect(r.fil).toBe(2);
     expect(r.adh).toBe(1);
@@ -1016,6 +1017,20 @@ test.describe('Mail Manager — invités relevés et lecture du mur', () => {
     }, { vieux: j(-200) });
     expect(a.invT, 'depuis le début').toMatchObject({ dm: 3, ad: 2, jr: 0 });
     expect(a.invTN.dm).toContain('Angélique Sansdm');
+  });
+
+  test('une AD à venir ne compte ni sur l’exercice ni depuis le début (cas de Jordan, 28/09/2026)', async ({ page }) => {
+    await ouvrir(page);
+    const sem = await page.evaluate(() => mmSemCour());
+    const semPassee = await page.evaluate((sem) => vAddDays(sem, -4), sem);
+    await poserReseau(page, { semPassee, semCours: j(0), vieux: j(-200), futurLoin: j(120) });
+    const a = await page.evaluate((D) => {
+      A.push({ ...A[1], id: 10, start: D.futur, end: D.futur, guests: [30001] });   // AD dans 12 jours
+      return mmAuto(mmSemCour());
+    }, { futur: j(12) });
+    expect(a.inv.ad, 'exercice : seule l’AD passée').toBe(1);
+    expect(a.invT.ad, 'depuis le début : idem').toBe(1);
+    expect(a.invC.ad, 'semaine en cours : pas concernée').toBe(0);
   });
 
   test('l’historique des sessions suivies remonte au début, et l’à-venir n’a plus d’horizon', async ({ page }) => {
