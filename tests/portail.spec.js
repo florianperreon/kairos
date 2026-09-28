@@ -3180,6 +3180,41 @@ test.describe('Mes alertes', () => {
     expect(erreurs).toEqual([]);
   });
 
+  test('carte d’alerte : pavé date, lieu sans doublon, pas de « Nouveau », et le signet enregistre (28/09/2026)', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    await fauxSB(page, {});
+    const r = await page.evaluate(async () => {
+      ALR_REGLES = window.__REGLES(); ALR = []; ALR_OK = true; SURV = new Set();
+      await alrDetecter();
+      buildHome(); buildAlertes();
+      const carte = () => document.querySelector('#homeAlertes .alr-it[data-alrcle="a:2"]');
+      const c = carte();
+      const avant = { tuile: !!c.querySelector('.alr-dt .n'), nouveau: /Nouveau/.test(c.textContent),
+                      lieu: c.querySelector('.alr-d').textContent, signet: c.querySelector('[data-surv]').textContent };
+      window.__req = [];
+      c.querySelector('[data-surv]').click();
+      await new Promise(r => setTimeout(r, 30));
+      const ins = window.__req.find(x => x.table === 'surveillances');
+      return { avant, enregistre: SURV.has('a:2'), ins: ins && ins.ops[0][0],
+               apres: carte().querySelector('[data-surv]').textContent, on: carte().querySelector('[data-surv]').classList.contains('on') };
+    });
+    expect(r.avant.tuile, 'pavé date').toBe(true);
+    expect(r.avant.nouveau, 'pas de badge Nouveau sur une alerte').toBe(false);
+    expect(r.avant.signet).toBe('Enregistrer');
+    expect(r.ins).toBe('insert');
+    expect(r.enregistre).toBe(true);
+    expect(r.apres, 'la carte se redessine après le clic').toBe('Enregistrée');
+    expect(r.on).toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('alrLieu : capitales adoucies, ville pas répétée', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => alrLieu('VIGNEUX DE BRETAGNE', 'FORMAN NANTES PAYS DE LA LOIRE — VIGNEUX DE BRETAGNE'));
+    expect(r).toBe('Forman Nantes Pays de la Loire — Vigneux de Bretagne');
+  });
+
   test('une alerte dont la séance a quitté le réseau reste affichée grâce à sa photo', async ({ page }) => {
     await ouvrir(page);
     await preparer(page);

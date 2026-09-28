@@ -407,16 +407,34 @@ nav.botbar .nv-pt{margin-left:4px}
 .alr-b.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .alr-b.pri:hover{filter:brightness(1.08)}
 .alr-b.dang{color:var(--bad)}
-.alr-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
-.alr-it{border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--surface-2);display:flex;flex-direction:column;gap:4px;min-width:0}
-.alr-it .alr-q{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--ink-3)}
-.alr-it .alr-k{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
-.alr-it .alr-t{font-weight:700;color:var(--ink);text-decoration:none;overflow-wrap:anywhere}
-.alr-it .alr-t:hover{text-decoration:underline}
-.alr-it .alr-d{font-size:13px;color:var(--ink-2)}
-.alr-it .alr-x{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:12.5px}
+.alr-l{display:flex;flex-direction:column;gap:10px}
+.alr-it{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface-2);display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:14px;align-items:center;min-width:0}
+.alr-dt{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 0;line-height:1.1;align-self:start}
+.alr-dt .j{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3)}
+.alr-dt .n{font-family:"Sora",system-ui,sans-serif;font-size:22px;font-weight:700;color:var(--ink);margin:1px 0}
+.alr-dt .m{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--accent)}
+.alr-c{display:flex;flex-direction:column;gap:3px;min-width:0}
+.alr-it .alr-q{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap;font-size:12px;color:var(--ink-3)}
+.alr-it .alr-k{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent)}
+.alr-it .alr-t{font-family:"Sora",system-ui,sans-serif;font-size:16px;font-weight:700;color:var(--ink);text-decoration:none;overflow-wrap:anywhere;line-height:1.3}
+.alr-it .alr-t:hover{color:var(--accent)}
+.alr-it .alr-d{font-size:13.5px;color:var(--ink-2)}
+.alr-it .alr-x{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px;font-size:12px}
 .alr-it .alr-fin{font-size:12.5px;color:var(--ink-3);font-style:italic}
-.alr-it .alr-pied{display:flex;justify-content:flex-end;margin-top:4px}
+.alr-it .xtra.places:not(.full):not(.tendu),.alr-it .xtra.pub:not(.restreint){background:var(--surface);border:1px solid var(--line)}
+.alr-acts{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap;max-width:360px}
+.alr-acts .xtra.act{font-size:13px;padding:6px 10px;border-radius:8px}
+.alr-acts .gcal-j{font-size:12.5px}
+.alr-b.alr-sv{display:inline-flex;align-items:center;gap:6px}
+.alr-b.alr-sv svg{width:15px;height:15px}
+.alr-b.alr-sv.on{background:var(--accent-soft);border-color:var(--accent)}
+.alr-b.alr-vu{color:var(--ink-2)}
+@media(max-width:700px){
+  .alr-it{grid-template-columns:50px minmax(0,1fr);gap:10px 12px}
+  .alr-acts{grid-column:1 / -1;justify-content:flex-start;max-width:none}
+  .alr-acts .alr-vu{margin-left:auto}
+  .alr-acts .xtra.act,.alr-acts .alr-b{padding:5px 9px;font-size:12.5px}
+}
 .alr-pt{display:inline-block;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:99px;background:var(--encours);color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center;vertical-align:1px}
 .alr-page .alr-intro{font-size:14px;color:var(--ink-2);margin:0 0 14px;line-height:1.55}
 .alr-regles{display:flex;flex-direction:column;gap:10px;margin:0 0 18px}
@@ -2498,6 +2516,28 @@ function alrSeance(cle){
   return alrSeances().find(a=>a.k===k && String(a.id)===id) || null;
 }
 const alrNomRegle = id => { const r=ALR_REGLES.find(x=>x.id===id); return r ? r.nom : ''; };
+// Carte d'alerte sur l'accueil (refonte 28/09/2026) : une ligne par séance — pavé date à gauche,
+// l'essentiel au centre (type, titre, horaire, lieu, public, places), les actions à droite.
+// Plus de badge « Nouveau » (une alerte l'est par définition), lieu sans doublon, noms en capitales adoucis.
+const ALR_PETITS = new Set(['de','du','des','la','le','les','et','sur','en','au','aux','d','l']);
+function alrCasse(s){
+  s = String(s||'').trim();
+  if(!s || s !== s.toUpperCase() || !/[A-ZÀ-Ý]{3}/.test(s)) return s;   // seulement le texte tout en capitales
+  return s.toLowerCase().replace(/[a-zà-ÿ]+/g, (m, i) => (i>0 && ALR_PETITS.has(m)) ? m : m.charAt(0).toUpperCase()+m.slice(1));
+}
+function alrLieu(lieu, site){
+  const l = alrCasse(lieu), s = alrCasse(site);
+  if(!s || norm(s)===norm(l)) return l;
+  if(!l || norm(s).includes(norm(l))) return s;       // « Forman Nantes … — Vigneux de Bretagne » contient déjà la ville
+  return l+' · '+s;
+}
+function alrSignet(a){
+  if(!SBUSER || !a || isPast(a)) return '';
+  const on = SURV.has(survCle(a));
+  return '<button type="button" class="alr-b alr-sv'+(on?' on':'')+'" data-surv="'+esc(survCle(a))+'" aria-pressed="'+on+'" title="'
+    + (on?'Enregistrée dans Mes sessions — cliquer pour retirer':'Enregistrer : je la retrouve dans Mes sessions et je suis prévenu quand les places s’épuisent')+'">'
+    + (on?SIGNET_PLEIN:SIGNET_VIDE)+'<span>'+(on?'Enregistrée':'Enregistrer')+'</span></button>';
+}
 function alrCarte(p){
   const a = alrSeance(p.cle), s = p.x.seance||{};
   const type = a ? alrTypeDe(a) : s.type;
@@ -2505,19 +2545,42 @@ function alrCarte(p){
   const start = a ? a.start : s.start, hor = a ? a.hor : s.hor, lieu = a ? a.lieu : s.lieu;
   const site = a ? alrSiteLib(a.siteId) : s.site;
   const noms = p.regles.map(alrNomRegle).filter(Boolean);
-  const pub = p.x.apparue_le ? 'publiée le '+fmtD(String(p.x.apparue_le).slice(0,10)) : '';
+  const pub = p.x.apparue_le ? 'Publiée le '+fmtD(String(p.x.apparue_le).slice(0,10)) : '';
+  const d = start ? new Date(String(start).slice(0,10)+'T00:00:00') : null;
+  const tuile = d ? '<div class="alr-dt" title="'+esc(fmtDJour(start))+'"><span class="j">'+JOURS[d.getDay()].slice(0,3)+'.</span>'
+      + '<span class="n">'+d.getDate()+'</span><span class="m">'+MOIS_ABR[d.getMonth()]+'</span></div>' : '<div class="alr-dt"></div>';
+  const actif = a && !isPast(a);
+  const chips = [];
+  if(a){
+    if(dejaInscrit(a)) chips.push('<span class="xtra insc">Inscrit</span>');
+    if(a.pub!=null) chips.push('<span class="xtra pub'+(a.pub?' restreint':'')+'">'+esc(pubLabel(a.pub))+'</span>');
+    const pl = survPlaces(a);
+    if(pl) chips.push('<span class="xtra places'+(pl.complet?' full':(pl.tendu?' tendu':''))+'" title="Inscrits / places">'
+      + a.total+'/'+a.max+' inscrits'+(pl.complet?' · complet':(pl.tendu?' · plus que '+pl.reste:''))+'</span>');
+    else if(a.total>0) chips.push('<span class="xtra places">'+a.total+' inscrit'+(a.total>1?'s':'')+'</span>');
+    const lig = (a.guests||[]).filter(id=>LIGNEE_IDS.has(id)).map(id=>byId.get(id)).filter(Boolean);
+    if(lig.length) chips.push('<span class="xtra lig-in">Lignée : '+lig.map(m=>'<span class="lig-open" data-id="'+m.id+'">'+esc(m.name)+'</span>').join(', ')+'</span>');
+  }
   let fin = '';
   if(!a) fin = '<div class="alr-fin">Cette séance n’est plus proposée par le réseau.</div>';
   else if(isPast(a)) fin = '<div class="alr-fin">Séance passée.</div>';
-  return '<div class="alr-it" data-alrcle="'+esc(p.cle)+'">'
+  const acts = [];
+  if(actif){
+    const sv = alrSignet(a); if(sv) acts.push(sv);
+    const gc = gcalHtml(a); if(gc) acts.push(gc.replace('>Google Agenda ↗<','>Agenda ↗<'));
+    const st = a.siteId!=null ? SITES[a.siteId] : null;
+    if(st && (st[2]||st[1])) acts.push('<a class="xtra act" href="'+esc(mapsUrl(st))+'" target="_blank" rel="noopener">Itinéraire ↗</a>');
+  }
+  acts.push('<button type="button" class="alr-b alr-vu" data-alrvu="'+esc(p.cle)+'" title="Retirer cette alerte de l’accueil">Vu</button>');
+  return '<div class="alr-it" data-alrcle="'+esc(p.cle)+'">' + tuile
+    + '<div class="alr-c">'
     + '<div class="alr-q"><span class="alr-k">'+esc(ALR_TYPE_LIB[type]||'Séance')+'</span>'
-    + (noms.length ? '<span title="Règle'+(noms.length>1?'s':'')+' qui a déclenché l’alerte">🔔 '+esc(noms.join(' · '))+'</span>' : '')
-    + (pub ? '<span>'+esc(pub)+'</span>' : '')+'</div>'
+    + (noms.length ? '<span title="'+esc((noms.length>1?'Règles':'Règle')+' qui a déclenché l’alerte'+(pub?' · '+pub:''))+'">🔔 '+esc(noms.join(' · '))+'</span>' : (pub?'<span>'+esc(pub)+'</span>':''))+'</div>'
     + (url ? '<a class="alr-t" href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(titre||'')+'</a>' : '<b class="alr-t">'+esc(titre||'')+'</b>')
-    + '<div class="alr-d">'+esc(start?fmtDJour(start):'')+(hor?' · '+esc(hor):'')+(lieu?' · '+esc(lieu):'')
-    + (site && norm(site)!==norm(lieu||'') ? ' · '+esc(site) : '')+'</div>'
-    + (a && !isPast(a) ? '<div class="alr-x">'+evExtras(a)+'</div>' : fin)
-    + '<div class="alr-pied"><button type="button" class="alr-b" data-alrvu="'+esc(p.cle)+'" title="Retirer cette alerte de l’accueil">Vu</button></div>'
+    + '<div class="alr-d">'+[hor?esc(String(hor).replace(/\s*-\s*/,' – ')):'', esc(alrLieu(lieu, site))].filter(Boolean).join(' · ')+'</div>'
+    + (chips.length ? '<div class="alr-x">'+chips.join('')+'</div>' : '') + fin
+    + '</div>'
+    + '<div class="alr-acts">'+acts.join('')+'</div>'
     + '</div>';
 }
 function buildAlertes(){
@@ -3063,6 +3126,7 @@ function rafraichirListes(){
   try{ buildSimple('for', F, id=>BASE+'formation/detail/'+id, 'formation'); }catch(e){}
   try{ buildSimple('evt', E, id=>BASE+'event/detail/'+id, 'événement'); }catch(e){}
   try{ buildHome(); buildSurvAccueil(); buildActions(); buildMMLignee(); }catch(e){}
+  try{ buildAlertes(); }catch(e){}      // la carte d'alerte porte aussi le signet (28/09/2026)
   try{ routeHash(); }catch(e){}
 }
 function survCarte(o, passe){
