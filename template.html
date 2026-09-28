@@ -5281,10 +5281,24 @@ const MM_ORIGINE = '2000-01-01', MM_FIN = '9999-12-31';
 function mmInvites(d1, d2, tous){
   const ids = new Map(mmMesFilleuls().filter(m=>tous || !ADH.has(m.id)).map(m=>[m.id, m.name]));
   const vus = {dm:new Map(), ad:new Map(), jr:new Map()};
+  const dmVue = new Set(), suite = new Map();        // id -> 1re date d'AD / 3 Jours (toutes périodes)
   [].concat(A||[],E||[]).forEach(s=>{
     const k = mmTitreCat(s.title);
-    if(!k || !s.start || s.start<d1 || s.start>d2) return;
-    (s.guests||[]).forEach(g=>{ if(ids.has(+g)) vus[k].set(+g, ids.get(+g)); });
+    if(!k || !s.start) return;
+    (s.guests||[]).forEach(g=>{
+      const id=+g; if(!ids.has(id)) return;
+      if(k==='dm') dmVue.add(id);
+      else if(!suite.has(id) || s.start < suite.get(id)) suite.set(id, s.start);
+      if(s.start>=d1 && s.start<=d2) vus[k].set(id, ids.get(id));
+    });
+  });
+  // 28/09/2026 : même règle que mmDmAssistes. Le réseau n'inscrit pas toujours l'invité sur sa DM
+  // (cas d'Angélique : pas de DM à son nom, mais l'AD). L'AD ou les 3 Jours prouvent la DM, qu'on
+  // date à la première de ces inscriptions (aujourd'hui si elle est à venir).
+  suite.forEach((d, id)=>{
+    if(dmVue.has(id)) return;
+    const dd = d < todayIso ? d : todayIso;
+    if(dd>=d1 && dd<=d2) vus.dm.set(id, ids.get(id));
   });
   return { n:{dm:vus.dm.size, ad:vus.ad.size, jr:vus.jr.size},
            noms:{dm:[...vus.dm.values()], ad:[...vus.ad.values()], jr:[...vus.jr.values()]} };

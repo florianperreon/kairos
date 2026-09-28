@@ -1003,6 +1003,21 @@ test.describe('Mail Manager — invités relevés et lecture du mur', () => {
     expect(a.invTN.dm.sort()).toEqual(['Filleul Adherent', 'Invitée Nonadherente']);
   });
 
+  test('un filleul inscrit à l’AD sans DM à son nom est compté en DM (cas d’Angélique, 28/09/2026)', async ({ page }) => {
+    await ouvrir(page);
+    const sem = await page.evaluate(() => mmSemCour());
+    const semPassee = await page.evaluate((sem) => vAddDays(sem, -4), sem);
+    await poserReseau(page, { semPassee, semCours: j(0), vieux: j(-200), futurLoin: j(120) });
+    const a = await page.evaluate((D) => {
+      const f = { id: 30009, name: 'Angélique Sansdm', parrain: 'Moi Test' };
+      byId.set(f.id, f); children.get(norm('Moi Test')).push(f); ADH.add(f.id);
+      A.push({ ...A[1], id: 9, start: D.vieux, end: D.vieux, guests: [30009] });   // AD seule, jamais de DM
+      return mmAuto(mmSemCour());
+    }, { vieux: j(-200) });
+    expect(a.invT, 'depuis le début').toMatchObject({ dm: 3, ad: 2, jr: 0 });
+    expect(a.invTN.dm).toContain('Angélique Sansdm');
+  });
+
   test('l’historique des sessions suivies remonte au début, et l’à-venir n’a plus d’horizon', async ({ page }) => {
     await ouvrir(page);
     const sem = await page.evaluate(() => mmSemCour());
