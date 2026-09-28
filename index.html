@@ -257,27 +257,37 @@ section.view.on{display:block}
 .vbk-ax{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:1px 8px}
 .vbk>b{font-family:"Sora";font-size:15px}.vbk p{margin:4px 0;color:var(--ink-2)}
 .vlast{border-top:4px solid var(--accent)}
-.vaxes{display:grid;gap:14px}@media(min-width:900px){.vaxes{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.vax{background:var(--surface-2);border-radius:12px;padding:14px 16px}.vax.off{opacity:.55}
-.vax-h{display:flex;align-items:center;gap:8px;font-family:"Sora";font-size:15px;font-weight:700;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
-.vic{font-size:18px}
-.vtag{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700}
-.vsujet h3{font-family:"Sora";font-size:15.5px;font-weight:700;margin:4px 0}
-.vsujet p{font-size:14px;color:var(--ink-2);margin:4px 0}
 .vimp{display:block;background:var(--surface);border-left:3px solid var(--gold);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13.5px}
 .vimp b{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--gold-ink);margin-bottom:2px}
-.vimp-in{display:block;font-size:13px;color:var(--ok);margin-top:2px}
 .vsrcs{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .vsrc{font-size:12.5px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--surface);border-radius:20px;padding:2px 9px;display:inline-block}
 .vsrc:hover{border-color:var(--accent)}
 .vbr{margin-top:10px}
 .vbr-t{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:700;margin-bottom:4px}
-.vbr ul{margin:0;padding-left:18px;font-size:13.5px}.vbr li{margin:6px 0;color:var(--ink-2)}.vbr li b{color:var(--ink);font-weight:700}
 .vempty{font-size:14px;color:var(--ink-3);margin:0}
+.vrows{margin-top:4px}
+.vrow{border-top:1px solid var(--line)}.vrow:first-child{border-top:0}
+.vrow>summary,.vrow.off{display:grid;grid-template-columns:26px 88px minmax(0,1fr) auto;gap:10px;align-items:start;padding:12px 2px;cursor:pointer;list-style:none}
+.vrow>summary::-webkit-details-marker,.vbrv>summary::-webkit-details-marker,.vbk-det>summary::-webkit-details-marker{display:none}
+.vrow.off{cursor:default;opacity:.6}
+.vic{font-size:18px;line-height:1.3}
+.vaxn{font-size:12.5px;font-weight:700;color:var(--ink-2);padding-top:2px}
+.vtt b{display:block;font-family:"Sora";font-size:15px;line-height:1.35}
+.vrow>summary:hover .vtt b,.vbrv>summary:hover b{color:var(--accent)}
+.vimp1{display:block;font-size:13.5px;color:var(--ok);margin-top:2px;line-height:1.45}
+.vrow[open]>summary .vimp1,.vbrv[open]>summary .vimp1{display:none}
+.vnb{font-size:12px;color:var(--ink-2);background:var(--surface-2);border-radius:20px;padding:1px 8px;margin-top:2px;white-space:nowrap}
+.vdet{margin:0 0 14px 124px;font-size:14px;color:var(--ink-2)}.vdet>p{margin:0 0 8px}
+.vdet .vimp,.vbrv-d .vimp,.vbk-det .vimp{background:var(--gold-soft);border-left:0;color:var(--ink)}
+.vdet .vbr-t{margin-top:14px}
+.vbrv{border-top:1px solid var(--line);padding:7px 0}.vbrv>summary{cursor:pointer;list-style:none}
+.vbrv>summary b{color:var(--ink);font-size:14px}.vbrv-d{padding:6px 0 2px}.vbrv-d p{margin:0 0 6px}
+.vbk-det>summary{cursor:pointer;list-style:none;font-size:12.5px;color:var(--accent);margin-top:6px}.vbk-det p{margin:6px 0;color:var(--ink-2)}
+@media(max-width:700px){.vrow>summary,.vrow.off{grid-template-columns:24px minmax(0,1fr) auto}.vaxn{display:none}.vdet{margin-left:0}}
 details.vhist{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:10px;background:var(--surface)}
 details.vhist>summary{cursor:pointer;font-weight:600;font-size:14.5px}
 details.vhist[open]>summary{margin-bottom:12px;color:var(--accent)}
-.vhist-b .vax{background:var(--ground)}.vbks.arch{margin-top:12px}
+.vbks.arch{margin-top:12px}
 .badge-lig{background:var(--gold-soft);color:var(--gold-ink);border-radius:5px;font-size:11px;font-weight:700;padding:1px 6px;letter-spacing:.03em}
 table{width:100%;border-collapse:collapse;font-size:14.5px}
 th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line);white-space:nowrap}
@@ -4987,28 +4997,72 @@ const vPeriode = (du,au) => {
 const vLink = (u,t) => u ? '<a class="vsrc" href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(t||'source')+' ↗</a>' : '';
 const vSrcs = arr => (arr&&arr.length) ? '<div class="vsrcs">'+arr.map(s=>vLink(s.u,s.t)).join('')+'</div>' : '';
 const vImp = txt => txt ? '<div class="vimp"><b>Ce que ça change pour toi</b><span>'+esc(txt)+'</span></div>' : '';
-function vSujetHtml(s){
-  if(!s||!s.t) return '';
-  return '<div class="vsujet"><span class="vtag">Le sujet de la semaine</span><h3>'+esc(s.t)+'</h3>'
-    + (s.r?'<p>'+esc(s.r)+'</p>':'') + vImp(s.i) + vSrcs(s.src) + '</div>';
+// Affichage « brief » (proposition A retenue par Florian le 28/09/2026) : une ligne par axe — titre du sujet
+// + première phrase de « ce que ça change » —, le détail (résumé, impact complet, sources, brèves) au clic.
+// Les brèves s'ouvrent à leur tour une par une. Replié, une édition tient sur un écran.
+const VCOURT = {fisca:'Fiscalité', marches:'Marchés', produits:'Produits', metier:'Profession', clients:'Clients'};
+const vCourt = ax => VCOURT[ax.id] || String(ax.t||ax.id).split(/ [&—-] /)[0];
+// première phrase d'un texte (sans couper « 4,5 % » ni « n°2026-341 »)
+const vPhrase = s => { const t=String(s||'').trim(); const m=t.match(/^.+?[.!?…](?=\s+[A-ZÀ-ÖØ-Þ«"(]|$)/); return (m?m[0]:t).trim(); };
+const vImp1 = txt => txt ? '<span class="vimp1">→ '+esc(vPhrase(txt))+'</span>' : '';
+// le reste de l'impact, quand la première phrase ne suffit pas
+const vImpSuite = txt => { const p=vPhrase(txt); return (txt && p.length < String(txt).trim().length) ? vImp(txt) : ''; };
+
+// Anti-redondance à l'affichage (28/09/2026) : même règle que la fonction veille-publier. Filet de sécurité
+// pour l'historique déjà en base — une news n'est montrée qu'une fois dans ce qui s'affiche ensemble.
+const V_VIDES = new Set(('pour dans avec sans sous plus moins entre apres avant depuis vers chez leur leurs cette ces sont '
+  +'etre avoir fait faire mais comme tout tous toute toutes selon aussi encore deja lors dont quand ainsi elle elles ils nous '
+  +'vous votre notre une des les aux que qui est ont sera annonce annonces nouveau nouvelle nouvelles hausse baisse recul fin '
+  +'debut semaine mois annee ans').split(' '));
+function vJetons(s){
+  const n=String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return new Set((n.match(/[a-z0-9]+(?:[,.][0-9]+)?/g)||[]).filter(m=>(m.length>=4||/\d/.test(m))&&!V_VIDES.has(m)));
 }
-function vBrevesHtml(list){
-  if(!list||!list.length) return '';
-  return '<div class="vbr"><span class="vbr-t">En bref</span><ul>'+list.map(b=>'<li><b>'+esc(b.t)+'</b>'
-    +(b.r?' — '+esc(b.r):'')
-    +(b.i?'<span class="vimp-in">→ '+esc(b.i)+'</span>':'')
-    +(b.u?' '+vLink(b.u,b.s||'source'):'')+'</li>').join('')+'</ul></div>';
+function vProches(a, b){
+  const inter=(x,y)=>{let n=0; x.forEach(v=>{ if(y.has(v)) n++; }); return n;};
+  const ta=vJetons(a.t), tb=vJetons(b.t), c=inter(ta,tb);
+  if(c>=3 && c/Math.max(1,Math.min(ta.size,tb.size))>=0.6) return true;
+  const la=vJetons(a.t+' '+(a.r||'')), lb=vJetons(b.t+' '+(b.r||'')), c2=inter(la,lb);
+  return c2/Math.max(1,la.size+lb.size-c2)>=0.25;
+}
+// Retire d'une édition les brèves qui reprennent une news déjà affichée (alertes, sujets, brèves précédentes).
+function vSansDoublons(ed, dejaVus){
+  const vus=(dejaVus||[]).slice(), items={};
+  vAxes().forEach(ax=>{ const it=(ed.items||{})[ax.id]; if(it&&it.sujet&&it.sujet.t) vus.push(it.sujet); });
+  vAxes().forEach(ax=>{
+    const it=(ed.items||{})[ax.id]; if(!it) return;
+    const br=(it.breves||[]).filter(b=>{ if(!b||!b.t||vus.some(v=>vProches(b,v))) return false; vus.push(b); return true; });
+    items[ax.id]=Object.assign({}, it, {breves:br});
+  });
+  return Object.assign({}, ed, {items});
+}
+
+function vBreveHtml(b){
+  return '<details class="vbrv"><summary><b>'+esc(b.t)+'</b>'+vImp1(b.i)+'</summary><div class="vbrv-d">'
+    + (b.r?'<p>'+esc(b.r)+'</p>':'') + vImpSuite(b.i) + (b.u?'<div class="vsrcs">'+vLink(b.u,b.s||'source')+'</div>':'') + '</div></details>';
 }
 function vAxeHtml(ed, ax){
   const it = (ed.items||{})[ax.id];
-  const body = it ? (vSujetHtml(it.sujet)+vBrevesHtml(it.breves)) : '<p class="vempty">Pas de veille publiée pour cet axe cette semaine.</p>';
-  return '<div class="vax'+(it?'':' off')+'"><div class="vax-h"><span class="vic">'+(ax.ic||'•')+'</span><b>'+esc(ax.t)+'</b></div>'+body+'</div>';
+  const s = it && it.sujet && it.sujet.t ? it.sujet : null, br = (it && it.breves) || [];
+  const tete = '<span class="vic">'+(ax.ic||'•')+'</span><span class="vaxn">'+esc(vCourt(ax))+'</span>';
+  if(!s && !br.length)
+    return '<div class="vrow off">'+tete+'<span class="vtt"><span class="vempty">Pas de veille publiée pour ce thème cette semaine.</span></span></div>';
+  const titre = s ? s : br[0], reste = s ? br : br.slice(1);
+  return '<details class="vrow"><summary>'+tete+'<span class="vtt"><b>'+esc(titre.t)+'</b>'+vImp1(titre.i)+'</span>'
+    + (reste.length?'<span class="vnb" title="'+reste.length+' autre'+(reste.length>1?'s':'')+' news">+'+reste.length+'</span>':'<span></span>')
+    + '</summary><div class="vdet">'
+    + (titre.r?'<p>'+esc(titre.r)+'</p>':'') + vImp(titre.i)
+    + (s ? vSrcs(s.src) : (titre.u?'<div class="vsrcs">'+vLink(titre.u,titre.s||'source')+'</div>':''))
+    + (reste.length?'<span class="vbr-t">Aussi cette semaine</span>'+reste.map(vBreveHtml).join(''):'')
+    + '</div></details>';
 }
-const vEditionHtml = ed => '<div class="vaxes">'+vAxes().map(a=>vAxeHtml(ed,a)).join('')+'</div>';
+const vEditionHtml = ed => '<div class="vrows">'+vAxes().map(a=>vAxeHtml(ed,a)).join('')+'</div>';
 function vBkHtml(b){
   const ax = vAx(b.axe);
-  return '<div class="vbk"><div class="vbk-h"><span class="vbk-d">'+esc(fmtD(b.d))+'</span><span class="vbk-ax">'+(ax.ic||'•')+' '+esc(ax.t)+'</span></div>'
-    + '<b>'+esc(b.t)+'</b>' + (b.r?'<p>'+esc(b.r)+'</p>':'') + vImp(b.i) + vLink(b.u,b.s||'source') + '</div>';
+  return '<div class="vbk"><div class="vbk-h"><span class="vbk-d">Alerte · '+esc(fmtD(b.d))+'</span><span class="vbk-ax">'+(ax.ic||'•')+' '+esc(vCourt(ax))+'</span></div>'
+    + '<b>'+esc(b.t)+'</b>' + vImp1(b.i)
+    + ((b.r||b.u)?'<details class="vbk-det"><summary>Détail et source</summary>'+(b.r?'<p>'+esc(b.r)+'</p>':'')+vImpSuite(b.i)+(b.u?vLink(b.u,b.s||'source'):'')+'</details>':'')
+    + '</div>';
 }
 function buildVeille(){
   const btn = document.querySelector('nav.tabs button[data-v="veille"]');
@@ -5020,22 +5074,22 @@ function buildVeille(){
   const bk = (VEILLE.breaking||[]).filter(b=>b.d>=lundi).sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   document.getElementById('veilleHead').innerHTML =
     '<div class="vhead-t"><h2>Veille patrimoniale</h2></div>'
-    + '<p class="vhead-s">Cinq axes suivis chaque semaine : '+vAxes().map(a=>(a.ic||'')+' '+esc(a.t)).join(' · ')+'.</p>'
+    + '<p class="vhead-s">L’essentiel en une minute : une ligne par thème, clique pour le détail et les autres news.</p>'
     + (VEILLE.maj ? '<p class="vhead-m">Dernière mise à jour le '+esc(fmtD(VEILLE.maj.slice(0,10)))+' à '+esc(VEILLE.maj.slice(11,16).replace(':','h'))+'</p>' : '');
   const bkEl = document.getElementById('veilleBreak');
   // Bloc « Breaking news » affiché seulement quand il y a une alerte cette semaine (règle Florian 13/09/2026)
   bkEl.hidden = bk.length===0;
-  bkEl.innerHTML = bk.length ? '<h2><span class="vdot"></span>Breaking news — semaine en cours</h2><div class="vbks">'+bk.map(vBkHtml).join('')+'</div>' : '';
+  bkEl.innerHTML = bk.length ? '<h2><span class="vdot"></span>Alertes de la semaine</h2><div class="vbks">'+bk.map(vBkHtml).join('')+'</div>' : '';
   bkEl.classList.toggle('hot', bk.length>0);
   document.getElementById('veilleLast').innerHTML = last
-    ? '<div class="panel vlast"><div class="vhead-t"><h2>La semaine '+esc(vPeriode(last.du,last.au))+'</h2><span class="badge-lig">Semaine passée</span></div>'+vEditionHtml(last)+'</div>'
+    ? '<div class="panel vlast"><div class="vhead-t"><h2>La semaine '+esc(vPeriode(last.du,last.au))+'</h2><span class="badge-lig">Semaine passée</span></div>'+vEditionHtml(vSansDoublons(last, bk))+'</div>'
     : '<div class="panel"><p class="vempty">Première édition attendue lundi matin à 4 h.</p></div>';
   const hist = eds.slice(1);
   document.getElementById('veilleHistoPanel').hidden = hist.length===0;
   document.getElementById('veilleHisto').innerHTML = hist.map(ed=>{
     const hbk = (VEILLE.breaking||[]).filter(b=>b.d>vAddDays(ed.au,0) && b.d<=vAddDays(ed.au,7)).sort((a,b)=>(a.d||'').localeCompare(b.d||''));
     return '<details class="vhist"><summary>Semaine '+esc(vPeriode(ed.du,ed.au))+(hbk.length?' · '+hbk.length+' alerte'+(hbk.length>1?'s':''):'')+'</summary>'
-      + '<div class="vhist-b">'+vEditionHtml(ed)
+      + '<div class="vhist-b">'+vEditionHtml(vSansDoublons(ed))
       + (hbk.length?'<div class="vbks arch"><span class="vbr-t">Alertes de la semaine suivante</span>'+hbk.map(vBkHtml).join('')+'</div>':'')
       + '</div></details>';
   }).join('');

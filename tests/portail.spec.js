@@ -3764,3 +3764,64 @@ test.describe('Ma lignée — parcours des filleuls', () => {
     expect(t).toContain('Ma lignée → Parcours');
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Veille — une news ne s’affiche qu’une fois (28/09/2026)', () => {
+  test('une brève qui reprend une alerte, un sujet ou une autre brève est retirée', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const ed = { du: '2026-09-21', au: '2026-09-27', items: {
+        metier: { sujet: { t: 'Baromètre 2026 du marché des CGP : 92 % de confiance', r: '55 % envisagent une opération de rapprochement ou de croissance externe, 77 % de cabinets de une à deux personnes.' },
+          breves: [{ t: 'Croissance externe : une majorité de cabinets ouverts à un rapprochement', r: 'Selon le baromètre, 55 % des CGP envisagent une opération de rapprochement ou de croissance externe ; 77 % de cabinets de une à deux personnes.' },
+                   { t: 'ORIAS : 7 712 CIF enregistrés, en hausse de 9,3 %', r: 'Le rapport annuel de l’ORIAS recense 7 712 conseillers.' }] },
+        clients: { sujet: { t: 'Épargne réglementée : léger sursaut en août', r: 'Le Livret A a collecté 460 M€.' },
+          breves: [{ t: 'Conjoint collaborateur : bascule obligatoire avant le 31 décembre 2026', r: 'Les conjoints collaborateurs déclarés avant 2022 doivent opter.' }] },
+        fisca: { sujet: { t: 'Niches fiscales : 460 dispositifs', r: '' },
+          breves: [{ t: 'Fin du statut de conjoint collaborateur au 31 décembre 2026', r: 'Les conjoints ayant opté avant 2022 doivent basculer.' }] },
+        marches: { sujet: { t: 'Le CAC 40 met fin à six semaines de baisse', r: '' },
+          breves: [{ t: 'Spread OAT-Bund record à 1,10 point, OAT 10 ans à 4,65 %', r: '' }] } } };
+      const alertes = [{ t: 'Nouveau record du spread OAT-Bund à 1,10 point', r: 'OAT 10 ans à 4,65 %.' }];
+      const e = vSansDoublons(ed, alertes);
+      const html = vEditionHtml(e);
+      return { metier: e.items.metier.breves.map(b => b.t), clients: e.items.clients.breves.length,
+               fisca: e.items.fisca.breves.length, marches: e.items.marches.breves.length, accents: html.includes('Épargne réglementée') };
+    });
+    expect(r.metier, 'la brève qui redit le sujet part, l’autre reste').toEqual(['ORIAS : 7 712 CIF enregistrés, en hausse de 9,3 %']);
+    expect(r.fisca + r.clients, 'conjoint collaborateur une seule fois').toBe(1);
+    expect(r.marches, 'la brève qui redit l’alerte de la semaine part').toBe(0);
+    expect(r.accents, 'les accents passent tels quels').toBe(true);
+  });
+});
+
+test.describe('Veille — affichage « brief » (proposition A, 28/09/2026)', () => {
+  test('une ligne par thème, impact en une phrase, détail et brèves repliés', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      VEILLE = { maj: '2026-09-28T02:20', breaking: [], editions: [{ du: '2026-09-21', au: '2026-09-27', items: {
+        produits: { sujet: { t: 'SCPI : les parts en attente de retrait refluent de 31 %', r: 'Résumé long du sujet.',
+            i: 'C’est le bon moment pour un audit de liquidité, ligne par ligne. Une SCPI qui collecte n’est pas forcément liquide.',
+            src: [{ t: 'ASPIM', u: 'https://www.aspim.fr/' }] },
+          breves: [{ t: 'OPCI : la décollecte s’atténue', r: 'Au S1 2026, 337 M€ de décollecte nette.', i: 'Vérifier la poche immobilière. Et le reste.', u: 'https://x.fr', s: 'ASPIM' },
+                   { t: 'Dette privée en UC', r: 'Lancement d’une UC.', i: 'Devoir d’explication renforcé.', u: '', s: '' }] } } }] };
+      buildVeille(); showTab('veille');
+      const rows = [...document.querySelectorAll('#veilleLast details.vrow')];
+      const off = document.querySelectorAll('#veilleLast .vrow.off').length;
+      const p = rows[0];
+      return { n: rows.length, off, ouvert: p.open, titre: p.querySelector('.vtt b').textContent,
+               imp: p.querySelector('summary .vimp1').textContent, nb: p.querySelector('.vnb').textContent,
+               breves: p.querySelectorAll('details.vbrv').length, sources: p.querySelectorAll('.vdet .vsrc').length,
+               hauteur: document.getElementById('veilleLast').getBoundingClientRect().height };
+    });
+    expect(r.n, 'seul le thème publié est cliquable').toBe(1);
+    expect(r.off, 'les quatre autres thèmes sont signalés vides').toBe(4);
+    expect(r.ouvert, 'replié par défaut').toBe(false);
+    expect(r.titre).toBe('SCPI : les parts en attente de retrait refluent de 31 %');
+    expect(r.imp, 'la première phrase seulement').toBe('→ C’est le bon moment pour un audit de liquidité, ligne par ligne.');
+    expect(r.nb).toBe('+2');
+    expect(r.breves).toBe(2);
+    expect(r.sources).toBeGreaterThan(0);
+    expect(r.hauteur, 'replié, ça tient sur un écran').toBeLessThan(700);
+  });
+});
