@@ -1736,7 +1736,6 @@ a.mml-r:hover{border-color:var(--accent)}
       <div class="panel alr-home" id="homeAlertes" hidden></div>
       <div class="panel alr-home" id="homePortes" hidden></div>
       <div class="panel welcome" id="welcome"></div>
-      <div class="panel" id="homeMissions" hidden></div>
       <div class="panel" id="homeActionsPanel" hidden>
         <h2>Mes actions de la semaine</h2>
         <p class="acts-n" id="homeActionsNote"></p>
@@ -3350,6 +3349,16 @@ function buildActions(){
       href:'#annuaire', fait:semFait('filleuls'), go:'Voir' });
   }
 
+  // 6 bis) Parcours : points d'étape et prochaines missions (ex-encart « Mes prochaines missions »)
+  try{
+    const mi = miActionsAccueil();
+    if(mi.length){ evaluable = true; actions.push(...mi); }
+    const r = miReflexeSemaine();
+    if(r){ evaluable = true;
+      actions.push({ cle:'reflexe', manuel:true, t:'Le réflexe de la semaine : '+r.t, d:r.d||'',
+        href:'#accueil', fait:semFait('reflexe'), go:'Fait' }); }
+  }catch(e){ console.error(e); }
+
   // 7) Remplir mon mail manager — première action de la liste le lundi, mise en avant dès le mardi
   if(typeof MM_COUR !== 'undefined' && MOI_ID && MM && !(MM_REG && MM_REG.participe === false)){
     evaluable = true;
@@ -3377,7 +3386,8 @@ function buildActions(){
     : '';
   liste.innerHTML = actions.map(a =>
     '<a class="sact' + (a.fait?' fait':'') + (a.cls?' '+a.cls:'') + '" href="' + a.href + '" data-act="' + esc(a.cle) + '"'
-    + (a.manuel?' data-manuel="1"':'') + (a.ancre?' data-ancre="'+esc(a.ancre)+'"':'') + '>'
+    + (a.manuel?' data-manuel="1"':'') + (a.ancre?' data-ancre="'+esc(a.ancre)+'"':'')
+    + (a.mialler?' data-mialler="'+esc(a.mialler)+'"':'') + (a.mimis?' data-mimis="'+esc(a.mimis)+'"':'') + '>'
     + '<span class="ck">' + (a.fait?'✓':'') + '</span>'
     + '<span class="tx"><b>' + esc(a.t) + (a.urg?'<span class="urg">'+esc(a.urg)+'</span>':'') + '</b>'
     + '<p>' + esc(a.d) + '</p></span>'
@@ -3389,6 +3399,7 @@ function buildActions(){
 document.addEventListener('click', e => {
   const a = e.target.closest && e.target.closest('.sact[data-act]');
   if(!a) return;
+  if(a.dataset.mialler || a.dataset.act === 'reflexe') e.preventDefault();
   const cle = a.dataset.act;
   if(cle === 'etapes'){
     const set = new Set(VU.etapes || []);
@@ -4278,28 +4289,33 @@ function buildMissions(){
     + (biblio ? '<details class="mi-x"><summary>Toutes les fiches pratiques</summary><div class="mi-bib">'+biblio+'</div></details>' : '');
   return true;
 }
-// Accueil : mes prochaines missions + le réflexe de la semaine
-function buildProchaines(){
-  const el = document.getElementById('homeMissions');
-  if(!el) return;
-  if(!misData()){ el.hidden = true; return; }
-  const l = miProchaines(3);
-  const portes = misPhases().filter(p=>p.porte && p.porte.v==='parrain').map(p=>miPorte(p.porte.id)).filter(s=>!s.ouverte && (s.prete || s.attente));
-  const refl = (CONTENU.reflexes||[]);
-  const r = refl.length ? refl[(noSemaine(todayIso) - 1 + refl.length) % refl.length] : null;
-  if(!l.length && !portes.length && !r){ el.hidden = true; return; }
-  el.innerHTML = '<h2>Mes prochaines missions</h2>'
-    + portes.map(s=>'<div class="mi-pc porte"><span class="mi-pcn">'+miPorteNom(s.po.id)+'</span><b>'+esc(s.po.t)+'</b>'
-        + '<span class="mi-pcs">'+(s.attente?'En attente de validation'+(PORTE_VALIDEUR?' par '+esc(PORTE_VALIDEUR):''):'Prêt : demande la validation à ton parrain')+'</span>'
-        + '<button type="button" class="alr-b" data-mialler="'+esc(s.ph.id)+'">Voir</button></div>').join('')
-    + l.map(x=>{ const p = miProg(x.m), a = (x.m.actions||[]).find(a=>!a.opt && !miAction(x.m,a).ok);
-        return '<div class="mi-pc"><span class="mi-pcn">'+esc(x.m.id)+'</span><b>'+esc(x.m.t)+'</b>'
-          + '<span class="mi-pcs">'+(a?'Prochaine action : '+esc(a.t):'')+' · '+p.ok+'/'+p.tot+'</span>'
-          + '<button type="button" class="alr-b" data-mialler="'+esc(x.ph.id)+'" data-mimis="'+esc(x.m.id)+'">Ouvrir</button></div>'; }).join('')
-    + (!l.length && !portes.length ? '<p class="mi-ai">Rien à faire de ton côté pour l’instant : les prochaines étapes se valident toutes seules.</p>' : '')
-    + (r ? '<div class="mi-refl"><span>Le réflexe de la semaine</span><b>'+esc(r.t)+'</b><p>'+esc(r.d||'')+'</p></div>' : '');
-  el.hidden = false;
+// Accueil : les prochaines missions, les points d'étape et le réflexe de la semaine ne forment plus un
+// encart à part (18/10/2026, règle Florian) : ils sont versés dans « Mes actions de la semaine ».
+function miActionsAccueil(){
+  if(typeof misData !== 'function' || !misData()) return [];
+  const out = [];
+  misPhases().filter(p=>p.porte && p.porte.v==='parrain').map(p=>miPorte(p.porte.id))
+    .filter(s=>!s.ouverte && (s.prete || s.attente)).forEach(s=>{
+      out.push({ cle:'porte-'+s.po.id, cls:'att', t:miPorteNom(s.po.id).replace(/<[^>]*>/g,'')+' — '+s.po.t,
+        urg: s.attente ? 'en attente' : 'prêt',
+        d: s.attente ? 'En attente de validation'+(PORTE_VALIDEUR?' par '+PORTE_VALIDEUR:'')
+                     : 'Prêt : demande la validation à ton parrain',
+        href:'#accueil', mialler:s.ph.id, fait:false, go:'Voir' });
+    });
+  miProchaines(3).forEach(x=>{
+    const pr = miProg(x.m), a = (x.m.actions||[]).find(a=>!a.opt && !miAction(x.m,a).ok);
+    out.push({ cle:'mi-'+x.m.id, t:'Mission '+x.m.id+' — '+x.m.t,
+      urg: x.e==='encours' ? 'en cours' : '',
+      d: (a ? 'Prochaine action : '+a.t+' · ' : '')+pr.ok+'/'+pr.tot,
+      href:'#accueil', mialler:x.ph.id, mimis:x.m.id, fait:false, go:'Ouvrir' });
+  });
+  return out;
 }
+function miReflexeSemaine(){
+  const refl = (CONTENU && CONTENU.reflexes) || [];
+  return refl.length ? refl[(noSemaine(todayIso) - 1 + refl.length) % refl.length] : null;
+}
+function buildProchaines(){ buildActions(); }
 // Accueil du parrain : les portes à valider, tout en haut (après les alertes)
 function buildAValider(){
   const el = document.getElementById('homePortes');
@@ -5686,13 +5702,12 @@ function mmEnRetard(){
   const desc = MM_LIG ? mmLigIds() : mmDescendants();
   return MM_MUR.filter(p=>p.participe && p.statut!=='publie' && desc.has(p.membre_id));
 }
+// 18/10/2026 (règle Florian) : plus de pastille « mail managers non remplis » sur le menu ni sur « Le mur »
+// — le chiffre n'était pas pertinent. mmEnRetard() reste disponible pour le reste du Mail Manager.
 function mmBadge(){
   const b=document.getElementById('mmBadge');
-  const n=mmEnRetard().length;
-  if(b){ b.hidden=!n; b.textContent=n||''; }
-  document.querySelectorAll('[data-v="mm"] .l').forEach(l=>{
-    l.innerHTML='Mail Manager'+(n?' <span class="sub-badge">'+n+'</span>':'');
-  });
+  if(b){ b.hidden=true; b.textContent=''; }
+  document.querySelectorAll('[data-v="mm"] .l').forEach(l=>{ l.textContent='Mail Manager'; });
 }
 
 /* --- sauvegarde --- */

@@ -3530,7 +3530,7 @@ test.describe('Parcours en missions', () => {
       mail: document.querySelector('input[data-mia="1.5/mail"]').disabled,
       bl12: document.querySelector('[data-mi="1.2"] .mi-bl').textContent,
       porte: document.querySelector('.mi-porte .mi-e').textContent,
-      prochaines: [...document.querySelectorAll('#homeMissions .mi-pc .mi-pcn')].map(x => x.textContent),
+      prochaines: [...document.querySelectorAll('#homeActions .sact[data-mimis]')].map(x => x.dataset.mimis),
     }));
     expect(r.puces).toEqual([false, true, true, true]);
     expect(r.bac).toBe(true);                       // attend la DM
@@ -3565,7 +3565,7 @@ test.describe('Parcours en missions', () => {
   });
 
   // 28/09/2026 : cocher une case ne déplace rien. Jeu d'essai pessimiste : la case termine la mission 1.5,
-  // qui sort alors de « Mes prochaines missions » (bloc PLUS HAUT dans la page, qui rétrécit) ; une autre
+  // qui sort alors de « Mes actions de la semaine » (bloc PLUS HAUT dans la page, qui rétrécit) ; une autre
   // mission (1.2) est dépliée et doit le rester ; aucune autre ne doit s'ouvrir.
   test('cocher une case : rien ne bouge à l’écran, les blocs dépliés restent dépliés', async ({ page }) => {
     await page.setViewportSize({ width: 1100, height: 700 });
@@ -3578,12 +3578,12 @@ test.describe('Parcours en missions', () => {
     const avant = await page.evaluate(() => ({
       y: document.querySelector('input[data-mia="1.5/mega"]').closest('.mi-a').getBoundingClientRect().top,
       ouverts: [...document.querySelectorAll('details.mi[open]')].map(d => d.dataset.mi),
-      prochaines: document.querySelectorAll('#homeMissions .mi-pc').length }));
+      prochaines: document.querySelectorAll('#homeActions .sact[data-mimis]').length }));
     await page.check('input[data-mia="1.5/mega"]');
     const apres = await page.evaluate(() => ({
       y: document.querySelector('input[data-mia="1.5/mega"]').closest('.mi-a').getBoundingClientRect().top,
       ouverts: [...document.querySelectorAll('details.mi[open]')].map(d => d.dataset.mi),
-      prochaines: document.querySelectorAll('#homeMissions .mi-pc').length,
+      prochaines: document.querySelectorAll('#homeActions .sact[data-mimis]').length,
       coche: document.querySelector('input[data-mia="1.5/mega"]').checked,
       etat: document.querySelector('[data-mi="1.5"] .mi-e').textContent }));
     expect(apres.coche).toBe(true);
@@ -3599,7 +3599,7 @@ test.describe('Parcours en missions', () => {
     const mis = {}; ['1.1/esp', '1.2/bac', '1.2/bcbg', '1.2/bravo', '1.5/mail', '1.5/drive', '1.5/mega', '1.6/primo', '1.7/commande'].forEach(k => mis[k] = quand);
     await poser(page, { mis, etapes: { dm: ok, ad: ok, trois_jours: ok, formation_reservee: ok } });
     const avant = await page.evaluate(() => ({ e: document.querySelector('.mi-porte .mi-e').textContent, btn: !!document.querySelector('[data-miporte="porte1"]'),
-      carte: [...document.querySelectorAll('#homeMissions .mi-pc.porte')].length }));
+      carte: [...document.querySelectorAll('#homeActions .sact[data-act^="porte-"]')].length }));
     expect(avant).toEqual({ e: 'Prêt', btn: true, carte: 1 });
     await page.click('[data-miporte="porte1"]');
     await page.waitForTimeout(50);
