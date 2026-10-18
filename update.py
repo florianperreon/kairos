@@ -231,14 +231,14 @@ def get_ld(url, params=None, tries=3):
         time.sleep(1.5 * (i + 1))
     raise RuntimeError(f"requête en échec ({last})")
 
-def _pages_fenetre(api, endpoint, params):
+def _pages_fenetre(api, endpoint, params, max_pages=60):
     items, page = [], 1
     while True:
         p = dict(params); p["page"] = page
         d = get(f"{api}/api/{endpoint}", params=p)
         batch = d if isinstance(d, list) else (d or {}).get("hydra:member", [])
         items.extend(batch)
-        if len(batch) < 30 or page > 60:
+        if len(batch) < 30 or page > max_pages:
             break
         page += 1
     return items
@@ -250,10 +250,13 @@ def list_all(api, endpoint, today_iso):
     reçues mais seulement 476 distinctes — 9 doublons et 9 séances jamais servies, dont deux Découvertes
     Métier du 26/09 ; le tri demandé n'y change rien). On relit donc la période par fenêtres de 7 jours
     (25 séances au plus par semaine, une seule page) et on fusionne avec la pagination classique."""
-    items = _pages_fenetre(api, endpoint, {"order[startDate]": "asc", "startDate[after]": today_iso})
+    # Plafond relevé (18/10/2026) : en mode complet l'historique dépasse 61 pages (≈ 2 770 ateliers depuis 2022)
+    items = _pages_fenetre(api, endpoint, {"order[startDate]": "asc", "startDate[after]": today_iso}, max_pages=300)
     jours = sorted(str(x.get("startDate") or "")[:10] for x in items if x.get("startDate"))
     debut = max(today_iso, jours[0]) if jours else today_iso
-    fin = (pdate_iso(jours[-1]) if jours else datetime.date.fromisoformat(today_iso[:10])) + datetime.timedelta(days=60)
+    # Les fenêtres vont au moins jusqu'à aujourd'hui + 60 j, même si la pagination a été tronquée (18/10/2026)
+    auj = datetime.date.today()
+    fin = max(pdate_iso(jours[-1]) if jours else auj, auj) + datetime.timedelta(days=60)
     fenetres, d = [], datetime.date.fromisoformat(debut[:10])
     while d <= fin:
         fenetres.append((d, d + datetime.timedelta(days=7)))
