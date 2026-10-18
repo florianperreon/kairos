@@ -2261,7 +2261,32 @@ const pilotesHtml = (str,ctx={}) => (str||'').split(',').map(x=>x.trim()).filter
 const isLigneePilote = str => { const n=norm(str||''); return LIGNEE.some(l=>n.includes(l)); };
 // session « moins recommandée » : son PILOTE (premier nom ; les suivants sont les copilotes) est dans la liste des moins conseillés
 const allMoins = str => { const ps=(str||'').split(',').map(x=>x.trim()).filter(Boolean); return ps.length>0 && isMoins(ps[0]); };
-const mapsUrl = s => s[4] ? s[4] : 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent([s[2],s[3],s[1]].filter(Boolean).join(' '));
+// Lien « Itinéraire » (18/10/2026) : le champ gmap du réseau n'est pas fiable (liens tronqués, « &amp; »,
+// goo.gl morts, « - », adresse en clair, URL d'un restaurant, /place/Nom/@lat,lng qui ouvre une fiche vide).
+// On construit donc toujours un lien d'itinéraire Google Maps : coordonnées exactes du lieu (!3d…!4d…) si
+// le lien en porte, sinon l'adresse (nom + rue + code postal + ville), sinon des coordonnées en clair ou
+// le centre de la carte (@lat,lng). Rien d'exploitable (visio, « A définir ») : pas de lien.
+const MAPS_VIDE = /^(-+|zoom.*|visio.*|a definir|vous referez.*)$/;
+function mapsDest(s){
+  if(/zoom|visio/.test(norm(s[0]))) return '';
+  const g = String(s[4]||'').replace(/&amp;/g,'&');
+  let m = g.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+  if(m) return m[1]+','+m[2];
+  const ok = x => { x = String(x||'').trim(); return x && !MAPS_VIDE.test(norm(x)) ? x : ''; };
+  const adr = ok(s[2]), ville = ok(s[1]);
+  if(adr || ville){
+    const nom = ok(s[0]);
+    // le nom n'aide que s'il désigne un lieu (« Golf… », « Hôtel… ») ; « FORMAN NANTES … » brouille la recherche
+    const lieu = nom && !/forman|zoom|universite|^dm /.test(norm(nom)) && !norm(adr).includes(norm(nom)) ? nom : '';
+    return [lieu, adr, /^\d{4,5}$/.test(String(s[3]||'').trim()) ? s[3] : '', ville].filter(Boolean).join(' ');
+  }
+  m = g.match(/^\s*(-?\d+)[,.](\d+)\s*,\s*(-?\d+)[,.](\d+)\s*$/);
+  if(m) return m[1]+'.'+m[2]+','+m[3]+'.'+m[4];
+  m = g.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if(m) return m[1]+','+m[2];
+  return '';
+}
+const mapsUrl = s => { const d = s ? mapsDest(s) : ''; return d ? 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(d) : ''; };
 const isPast = a => a.end < todayIso;
 const pubLabel = p => p===''?'Ouvert à tous':(p==='?'?'Public restreint':p+' et +');
 // Accès selon le statut : chaque atelier vise un statut minimum (pub), '' = ouvert à tous
@@ -2574,7 +2599,7 @@ function alrCarte(p){
     const sv = alrSignet(a); if(sv) acts.push(sv);
     const gc = gcalHtml(a); if(gc) acts.push(gc.replace('>Google Agenda ↗<','>Agenda ↗<'));
     const st = a.siteId!=null ? SITES[a.siteId] : null;
-    if(st && (st[2]||st[1])) acts.push('<a class="xtra act" href="'+esc(mapsUrl(st))+'" target="_blank" rel="noopener">Itinéraire ↗</a>');
+    if(mapsUrl(st)) acts.push('<a class="xtra act" href="'+esc(mapsUrl(st))+'" target="_blank" rel="noopener">Itinéraire ↗</a>');
   }
   acts.push('<button type="button" class="alr-b alr-vu" data-alrvu="'+esc(p.cle)+'" title="Retirer cette alerte de l’accueil">Vu</button>');
   return '<div class="alr-it" data-alrcle="'+esc(p.cle)+'">' + tuile
@@ -3029,7 +3054,7 @@ function evExtras(a){
   const et=survEtoile(a); if(et) parts.push(et);
   const gc=gcalHtml(a); if(gc) parts.push(gc);
   const st=a.siteId!=null?SITES[a.siteId]:null;
-  if(st&&(st[2]||st[1])) parts.push('<a class="xtra act" href="'+esc(mapsUrl(st))+'" target="_blank" rel="noopener" title="'+esc([st[0],st[2],st[3],st[1]].filter(Boolean).join(', '))+'">Itinéraire ↗</a>');
+  if(mapsUrl(st)) parts.push('<a class="xtra act" href="'+esc(mapsUrl(st))+'" target="_blank" rel="noopener" title="'+esc([st[0],st[2],st[3],st[1]].filter(Boolean).join(', '))+'">Itinéraire ↗</a>');
   return parts.length?'<div class="xtras">'+parts.join(' ')+'</div>':'';
 }
 document.addEventListener('click',e=>{ const el=e.target.closest('.lig-open'); if(el) openSheet(+el.dataset.id); });

@@ -699,7 +699,7 @@
     {
      "id": "3.5",
      "t": "Nourrir ma posture",
-     "pq": "Cinq vidéos choisies par la lignée pour garder le cap.",
+     "pq": "Six vidéos choisies par la lignée pour garder le cap.",
      "actions": [
       {
        "id": "v1",
@@ -730,6 +730,12 @@
        "t": "Regarder Ambition Galaxie – les clés du succès",
        "v": "moi",
        "u": "https://vimeo.com/1164678588/b364e0b10d"
+      },
+      {
+       "id": "v6",
+       "t": "Regarder la vidéo Convention Nationale 2026 : Xavier Nicoli",
+       "u": "https://vimeo.com/1232306900/ae9c6794c6?fl=pl&fe=vl",
+       "v": "moi"
       }
      ]
     },
