@@ -502,6 +502,9 @@ AUDIT_AUTORISES |= {m.strip().lower() for m in (os.environ.get("AUDIT_AUTORISES"
 # Correspondance libellé d'atelier -> clé d'étape du parcours Kairos.
 # L'ordre compte : la première règle qui correspond gagne.
 ETAPES_ATELIERS = [
+    # Mission 2.9 (18/10/2026) : atelier « Développement Equipe - Niveau 1 » (thème DEVELOPPEMENT)
+    ("dev_n1", ("developpement equipe", "niveau 1")),
+    ("dev_n1", ("developpement equipe", "n1")),
     ("com_n2", ("communication", "niveau 2")),
     ("com_n2", ("communication", "n2")),
     ("com_n1", ("communication", "niveau 1")),

@@ -3229,6 +3229,7 @@ const ETAPE_LIB = {
   dm:'Découverte Métier', ad:'Atelier Démarrage', trois_jours:'3 Jours de la Réussite',
   r1_n1:'Prise de R1 niveau 1', mise_en_relation:'Art de la Mise en Relation',
   com_n1:'Clés de la Communication N1', com_n2:'Clés de la Communication N2',
+  dev_n1:'Développement équipe niveau 1',
   udp:'Universités', adhesion:'Cotisation réglée',
   formation_reservee:'Première formation réservée',
   invite_dm:'Premier invité en Découverte Métier',
@@ -3922,7 +3923,8 @@ const AUTO_LIB = {
   dm:'Découverte Métier', ad:'Atelier Démarrage', trois_jours:'3 Jours', formation_reservee:'formation réservée',
   adhesion:'adhésion', r1_n1:'atelier Prise de R1', mise_en_relation:'atelier Mise en relation',
   filleul_adherent:'filleul adhérent', invite_dm:'invité en DM', objectifs_neoman:'objectifs NEOMAN', objectifs_beman:'objectifs BEMAN',
-  udp:'UDP', com_n1:'Clefs de la communication N1', com_n2:'Clefs de la communication N2'
+  udp:'UDP', com_n1:'Clefs de la communication N1', com_n2:'Clefs de la communication N2',
+  dev_n1:'Développement équipe niveau 1'
 };
 // Libellé d'une case -> clé automatique (null si la case reste manuelle)
 function cleAuto(lib){
@@ -4072,6 +4074,9 @@ function miAction(m, a){
   const cle = m.id+'/'+a.id;
   if(a.v==='auto' && a.auto){
     const f = faitAuto(a.auto);
+    // a.reprise : action autrefois cochée à la main (ex. 2.9 Développement équipe N1, passée en
+    // automatique le 18/10/2026) — une case déjà cochée reste acquise.
+    if(!estValide(f) && a.reprise && misFaitV(MIS[cle])) return { ok:true, d: MIS[cle][0]!=='~' ? misTs(MIS[cle]).slice(0,10) : '', src:'moi' };
     return { ok: estValide(f), d: f && f.d || '', f, src:'reseau' };
   }
   if(a.v==='auto' && a.k){
@@ -4189,7 +4194,7 @@ function miActionHtml(ph, m, a){
   let tag, info = '';
   if(a.v==='auto' && a.auto){
     tag = '<span class="mi-v auto" title="Relevé automatiquement dans les données du réseau">Auto</span>';
-    info = e.ok ? (e.d ? 'Relevé par le réseau le '+fmtD(e.d) : 'Relevé par le réseau')
+    info = e.ok ? (e.src==='moi' ? 'Coché'+(e.d?' le '+fmtD(e.d):'')+' avant le relevé automatique' : e.d ? 'Relevé par le réseau le '+fmtD(e.d) : 'Relevé par le réseau')
                 : (e.f && e.f.f ? 'Inscrit pour le '+fmtD(e.f.f)+' — validé après la séance' : 'Se valide tout seul dès que le réseau le relève');
   } else if(a.v==='auto'){
     tag = '<span class="mi-v auto" title="Calculé par Kairos à partir de tes données">Auto</span>';

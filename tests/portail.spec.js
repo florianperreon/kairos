@@ -3646,6 +3646,20 @@ test.describe('Parcours en missions', () => {
     expect(b).toBe(true);
   });
 
+  // 18/10/2026 : 2.9 « Formation Développement équipe niveau 1 » est relevée par le réseau (étape dev_n1)
+  test('2.9 : la formation Développement équipe N1 se valide toute seule, une ancienne case cochée reste acquise', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page, { etapes: { dev_n1: ok } });
+    const a = await page.evaluate(() => { const t = misTrouve('2.9/dev1'); const e = miAction(t.m, t.a); return { v: t.a.v, ok: e.ok, src: e.src }; });
+    expect(a).toEqual({ v: 'auto', ok: true, src: 'reseau' });
+    await poser(page, { mis: { '2.9/dev1': '2026-09-20T10:00:00.000Z' } });
+    const b = await page.evaluate(() => { const t = misTrouve('2.9/dev1'); const e = miAction(t.m, t.a); return { ok: e.ok, src: e.src }; });
+    expect(b).toEqual({ ok: true, src: 'moi' });
+    await poser(page);
+    const c = await page.evaluate(() => { const t = misTrouve('2.9/dev1'); return miAction(t.m, t.a).ok; });
+    expect(c).toBe(false);
+  });
+
   test('parrain : la demande s’affiche en haut de l’accueil, « Pas encore » exige un mot', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poser(page, { statut: 'ROLE_BEMAN', aValider: [{ membre_id: 20521, nom: 'Filleule Test', porte: 'porte1', demande_le: '2026-09-27T10:00:00Z', resume: [{ id: '1.1', t: 'Cursus', d: '2026-09-01' }] }] });

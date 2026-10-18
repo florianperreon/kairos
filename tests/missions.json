@@ -536,7 +536,9 @@
       {
        "id": "dev1",
        "t": "Formation Développement équipe niveau 1",
-       "v": "moi"
+       "v": "auto",
+       "auto": "dev_n1",
+       "reprise": true
       },
       {
        "id": "invite",
