@@ -660,13 +660,13 @@ test.describe('Nouveautés', () => {
     expect(r.a3.nonVu).toBe(false);
   });
 
-  test('le bandeau d’accueil trie par date d’ajout et pose un point sur les onglets', async ({ page }) => {
+  test('Admin → Nouveautés trie par date d’ajout et pose un point sur les onglets', async ({ page }) => {
     await ouvrir(page);
     await poserNouv(page, '');
     const r = await page.evaluate(() => {
       R.length = 0; F.length = 0; E.length = 0;
       buildNouv(); nvPoints();
-      const el = document.getElementById('homeNouv');
+      const el = document.getElementById('admNouv');
       return {
         visible: !el.hidden,
         titre: el.querySelector('.nv-h h2').textContent,
@@ -689,14 +689,14 @@ test.describe('Nouveautés', () => {
     const r = await page.evaluate(() => {
       R.length = 0; F.length = 0; E.length = 0;
       buildNouv();
-      const dates = [...document.querySelectorAll('#homeNouv .nv-d')].map(x => x.textContent);
+      const dates = [...document.querySelectorAll('#admNouv .nv-d')].map(x => x.textContent);
       const it = neufTout()[0].a;
       it.pilotes = 'Diane P., Aymeric A.'; buildNouv();
-      const deux = document.querySelector('#homeNouv .nv-d').textContent;
+      const deux = document.querySelector('#admNouv .nv-d').textContent;
       it.pilotes = 'Diane P.'; buildNouv();
-      const un = document.querySelector('#homeNouv .nv-d').textContent;
+      const un = document.querySelector('#admNouv .nv-d').textContent;
       it.pilotes = ''; buildNouv();
-      const aucun = document.querySelector('#homeNouv .nv-d').textContent;
+      const aucun = document.querySelector('#admNouv .nv-d').textContent;
       return { dates, deux, un, aucun, jeudi: fmtDJour('2026-09-24'), dimanche: fmtDJour('2026-09-20') };
     });
     expect(r.jeudi).toBe('jeudi 24/09/2026');

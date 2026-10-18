@@ -1747,7 +1747,6 @@ a.mml-r:hover{border-color:var(--accent)}
       <div class="bdstrip" id="homeBd" hidden></div>
       <div class="bdstrip surv-strip" id="homeSurv" hidden></div>
       <div class="panel" id="homeWeekPanel"><h2>Les 7 prochains jours <span class="badge-lig">Lignée</span> <span class="wk-inline num" id="homeWeekS"></span></h2><div class="wjal" id="homeJalons" hidden></div><div class="week" id="homeWeek"></div></div>
-      <div class="panel nv-panel" id="homeNouv" hidden></div>
       <div class="principes" id="homePrincipes" hidden></div>
       <div class="panel" id="homeParcoursPanel" hidden><h2>Où en es-tu ? <span class="badge-lig">Ton parcours en 4 phases</span></h2><div class="phases" id="homePhases"></div><div class="etapes" id="homeEtapes"></div></div>
       <div class="panel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
@@ -1949,8 +1948,13 @@ a.mml-r:hover{border-color:var(--accent)}
         <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
         <button data-s="cnt">Contenu</button>
         <button data-s="stats">Statistiques</button>
+        <button data-s="nouv">Nouveautés</button>
         <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
       </nav>
+
+      <div class="subview" id="sv-nouv">
+        <div class="panel nv-panel" id="admNouv"></div>
+      </div>
 
       <div class="subview" id="sv-jrn">
       <div class="panel">
@@ -2322,15 +2326,17 @@ const neufType   = a => a.k==='a' ? (a.th==='PARCOURS DECOUVERTE' ? 'Parcours d�
 const neufTout   = () => [...A, ...R, ...F, ...E].map(a=>({a, e:neufEtat(a)})).filter(x=>x.e);
 const RENDERS = {};
 
-// Le bandeau de l'accueil : les nouveautés les plus récentes, tous types confondus.
+// Admin → Nouveautés (18/10/2026, règle Florian : retiré de l'accueil) : les ajouts et modifications
+// des 14 derniers jours, tous types confondus, du plus récent au plus ancien — la liste complète.
 function buildNouv(){
-  const el = document.getElementById('homeNouv'); if(!el) return;
+  const el = document.getElementById('admNouv'); if(!el) return;
   const tous = neufTout().sort((x,y)=>Date.parse(y.e.le)-Date.parse(x.e.le));
-  if(!tous.length){ el.hidden=true; el.innerHTML=''; return; }
+  if(!tous.length){ el.classList.add('nv-calme');
+    el.innerHTML='<div class="nv-h"><h2>Nouveautés</h2></div><p class="nv-s">Aucun ajout ni modification sur les '+NEUF_J+' derniers jours.</p>'; return; }
   const nonVus = tous.filter(x=>neufNonVu(x.e));
   const n = nonVus.length;
   const source = n ? nonVus : tous;
-  const aff = source.slice(0, n?10:5), reste = source.length - aff.length;
+  const aff = source, reste = 0;
   const titre = n ? (n+' nouveauté'+(n>1?'s':'')+(VU_LE?' depuis ta dernière visite':' ces '+NEUF_J+' derniers jours'))
                   : 'Rien de neuf depuis ta dernière visite';
   const ligne = x => {
@@ -3655,8 +3661,8 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','dem','cnt','stats','jrn'];
-const ADMIN_SLUG={mbr:'membres',dem:'demandes',cnt:'contenu',stats:'statistiques',jrn:'journal'};
+const ADMIN_SUBS=['mbr','dem','cnt','stats','nouv','jrn'];
+const ADMIN_SLUG={mbr:'membres',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 function showAdminSub(s){
