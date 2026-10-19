@@ -3660,6 +3660,18 @@ test.describe('Parcours en missions', () => {
     expect(c).toBe(false);
   });
 
+  // 19/10/2026 : une demande d'accès retrouve sa fiche même accentuée différemment, invités compris
+  test('demandes d’accès : suggestion de fiche sans accents, invité·e compris', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      M.push({ id: 99901, name: 'Anais Testard', nn: norm('Anais Testard'), nm: 'x@y.fr', date: todayIso });
+      const h = demSuggestions({ nom: 'Anaïs TESTÂRD', email: 'testarda@gmail.com' });
+      return { h, invite: !ADH.has(99901) };
+    });
+    expect(r.h).toContain('data-fiche="Anais Testard · #99901"');
+    expect(r.h).toContain('invité·e');
+  });
+
   test('parrain : la demande s’affiche en haut de l’accueil, « Pas encore » exige un mot', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poser(page, { statut: 'ROLE_BEMAN', aValider: [{ membre_id: 20521, nom: 'Filleule Test', porte: 'porte1', demande_le: '2026-09-27T10:00:00Z', resume: [{ id: '1.1', t: 'Cursus', d: '2026-09-01' }] }] });

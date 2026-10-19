@@ -994,6 +994,7 @@ p.mi-ai{margin:4px 0 8px}
 #demTbl .dem-act button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;margin-left:6px}
 #demTbl .dem-ok{border-color:var(--gold);color:var(--gold-ink);font-weight:700}
 #demTbl .dem-no:hover{border-color:var(--bad);color:var(--bad)}
+#demTbl .dem-sug{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}#demTbl .dem-s{border:1px solid var(--line-2);background:var(--surface);color:var(--accent);border-radius:7px;padding:2px 8px;font:inherit;font-size:12px;cursor:pointer}#demTbl .dem-s small{color:var(--ink-3)}#demTbl .dem-s:hover{background:var(--accent-soft)}
 #demTbl .dem-n{font-size:11px;color:var(--encours-ink);font-weight:700}
 
 /* Accès en attente */
@@ -8010,6 +8011,25 @@ function majBadgeJrn(n){
   if(b){ b.hidden = !n; b.textContent = n || ''; }
   majBadgeAdmin();
 }
+// Fiches qui ressemblent au nom de la demande, sans tenir compte des accents ni de la casse
+// (« Anaïs HOËLLARD » retrouve « Anais Hoellard ») : un clic remplit le champ.
+function demSuggestions(d){
+  if(!Array.isArray(M) || !M.length) return '';
+  const mots = norm((d.nom||'') + ' ' + String(d.email||'').split('@')[0].replace(/[._\-\d]+/g,' '))
+    .replace(/[^a-z ]+/g,' ').split(/\s+/).filter(w=>w.length>=3);
+  const nomMots = norm(d.nom||'').replace(/[^a-z ]+/g,' ').split(/\s+/).filter(w=>w.length>=3);
+  if(!mots.length) return '';
+  const res = M.map(m=>{
+    const n = ' '+m.nn.replace(/[^a-z ]+/g,' ')+' ';
+    let sc = 0;
+    nomMots.forEach(w=>{ if(n.includes(' '+w+' ')) sc += 2; });
+    mots.forEach(w=>{ if(n.includes(w)) sc += 1; });
+    if(m.nm && d.email && m.nm === norm(d.email)) sc += 10;
+    return { m, sc };
+  }).filter(x=>x.sc >= 3).sort((a,b)=>b.sc-a.sc || (ADH.has(b.m.id)-ADH.has(a.m.id))).slice(0,3);
+  return res.length ? '<div class="dem-sug">'+res.map(x=>'<button type="button" class="dem-s" data-fiche="'+esc(x.m.name)+' · #'+x.m.id+'">'
+    + esc(x.m.name)+' <small>#'+x.m.id+(ADH.has(x.m.id)?'':' · invité·e')+'</small></button>').join('')+'</div>' : '';
+}
 async function buildDemandes(){
   const body=document.getElementById('demBody');
   if(!SB||!SBUSER||!body) return false;
@@ -8021,11 +8041,14 @@ async function buildDemandes(){
   }catch(e){ return false; }
   if(DEM_STATUT==='en_attente') majBadgeDem(DEMANDES.length);
   else { try{ const c=await SB.from('demandes_acces').select('email',{count:'exact',head:true}).eq('statut','en_attente'); majBadgeDem(c.count||0); }catch(e){} }
-  // liste de choix : adhérents, pour rapprocher un compte d'une fiche
+  // liste de choix pour rapprocher un compte d'une fiche (19/10/2026) : les adhérents ET les invités
+  // inscrits depuis moins d'un an — une nouvelle recrue n'a pas encore réglé sa cotisation.
   const dl=document.getElementById('demAnnuaire');
   if(dl && !dl.dataset.pret && Array.isArray(M) && M.length){
-    dl.innerHTML = M.filter(m=>ADH.has(m.id)).slice(0,4000)
-      .map(m=>'<option value="'+esc(m.name)+' · #'+m.id+'"></option>').join('');
+    const an = vAddDays(todayIso, -365);
+    dl.innerHTML = M.filter(m=>ADH.has(m.id) || (m.date && m.date >= an))
+      .sort((a,b)=>(ADH.has(b.id)-ADH.has(a.id)) || a.name.localeCompare(b.name,'fr'))
+      .map(m=>'<option value="'+esc(m.name)+' · #'+m.id+'">'+(ADH.has(m.id)?'':'invité·e')+'</option>').join('');
     dl.dataset.pret='1';
   }
   const vide = {en_attente:'Aucune demande en attente.', refusee:'Aucune demande refusée.', validee:'Aucune demande validée.'}[DEM_STATUT];
@@ -8039,7 +8062,7 @@ async function buildDemandes(){
     return '<tr data-mail="'+esc(d.email)+'">'
       + '<td><b>'+esc(nom)+'</b><div class="mbr-mail">'+esc(d.email)+'</div></td>'
       + '<td class="num">'+esc(fmtQuand(d.derniere))+(d.tentatives>1?' <span class="dem-n">'+d.tentatives+' tentatives</span>':'')+traite+'</td>'
-      + '<td>'+(d.statut==='validee'?'':'<input class="dem-pick" list="demAnnuaire" placeholder="Rechercher la fiche…" autocomplete="off">')+'</td>'
+      + '<td>'+(d.statut==='validee'?'':'<input class="dem-pick" list="demAnnuaire" placeholder="Rechercher la fiche…" autocomplete="off">'+demSuggestions(d))+'</td>'
       + '<td class="dem-act">'+act+'</td></tr>';
   }).join('') : '<tr><td colspan="4" style="color:var(--ink-2)">'+vide+'</td></tr>';
   const n=document.getElementById('demNote');
@@ -8089,6 +8112,8 @@ async function traiterDemande(tr, valider){
 document.addEventListener('click', e=>{
   const f=e.target.closest && e.target.closest('#demFiltres button');
   if(f){ DEM_STATUT=f.dataset.st; document.querySelectorAll('#demFiltres button').forEach(b=>b.classList.toggle('on',b===f)); buildDemandes(); return; }
+  const sug=e.target.closest && e.target.closest('.dem-s');
+  if(sug){ const i=sug.closest('tr').querySelector('.dem-pick'); if(i) i.value=sug.dataset.fiche; return; }
   const ok=e.target.closest && e.target.closest('.dem-ok');
   const no=e.target.closest && e.target.closest('.dem-no');
   if(!ok && !no) return;
