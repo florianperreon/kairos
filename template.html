@@ -947,6 +947,34 @@ p.mi-ai{margin:4px 0 8px}
 .mi-rf{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:10px}
 .mi-r{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2)}
 .mi-r b{font-size:13.5px}.mi-r p{font-size:12.5px;color:var(--ink-2);margin:4px 0 0}
+/* Fiches pratiques */
+.ff-intro p{color:var(--ink-2);margin:4px 0 12px}
+.ff-filters{display:block;margin-bottom:0}
+.filters.ff-filters input[type=search]{max-width:none;min-width:0;width:100%;padding:11px 14px;border:1px solid var(--line-2);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;font-size:15px;box-sizing:border-box}
+.ff-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.ff-chips button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.ff-chips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.ff-sec{margin:0 0 22px}.ff-sec h3{font-size:16px;margin:0 0 10px}.ff-sec h3 span{font-size:12px;color:var(--ink-3);font-weight:600;margin-left:4px}
+.ff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.ff-card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;transition:border-color .15s,box-shadow .15s}
+.ff-card:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.ff-card>a{display:flex;gap:12px;padding:13px 42px 13px 14px;color:inherit;text-decoration:none;height:100%;box-sizing:border-box}
+.ff-ic{font-size:22px;line-height:1.1;flex:none}.ff-tx{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ff-tx b{font-size:14.5px}.ff-d{font-size:12.5px;color:var(--ink-2);line-height:1.4}.ff-ray{font-size:11.5px;color:var(--accent);font-weight:700}
+.ff-star{border:0;background:none;cursor:pointer;font-size:19px;line-height:1;color:var(--ink-3);opacity:.45;padding:4px}
+.ff-star:hover{opacity:.9}.ff-star.on{color:#c9a227;opacity:1}
+.ff-card .ff-star{position:absolute;top:8px;right:8px}
+.ps-head h1 .ff-star{font-size:20px;vertical-align:2px}
+.ff-n{font-size:13px;color:var(--ink-3);margin:0 0 8px}.ff-vide{color:var(--ink-2);font-size:14px}
+#homeFiches .hf-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#homeFiches .hf-h h2{margin:0}.hf-tout{font-size:13.5px;font-weight:700;color:var(--accent);text-decoration:none}
+.hf-s{font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 6px}
+.hf-l{display:flex;flex-wrap:wrap;gap:8px}
+.hf-p{font-size:14px;color:var(--ink-2);margin:8px 0 0}
+@media (max-width:760px){.ff-chips{flex-wrap:nowrap;overflow-x:auto;margin-left:-4px;margin-right:-4px;padding:0 4px 4px;scrollbar-width:none}.ff-chips::-webkit-scrollbar{display:none}.ff-chips button{flex:none}.ff-card>a{padding:12px 40px 12px 12px}}
+.hf-a{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-2);background:var(--surface-2);border-radius:9px;padding:7px 11px;color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:600}
+.hf-a:hover{border-color:var(--accent)}
+.mi-tout{display:block;margin-top:12px;font-weight:700;color:var(--accent);text-decoration:none}
 .mi-bib{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .mi-bs>b{font-size:13px}
 .mi-bg{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin-top:4px;font-size:13px}
@@ -1709,6 +1737,7 @@ a.mml-r:hover{border-color:var(--accent)}
       <button data-v="evt" title="Événements"><span class="i" data-i="evt"></span><span class="l">Événements</span></button>
       <button data-v="ann" title="Annuaire"><span class="i" data-i="ann"></span><span class="l">Annuaire</span></button>
       <div class="grp">S'informer &amp; outils</div>
+      <button data-v="fiches" title="Fiches pratiques"><span class="i" data-i="fiches"></span><span class="l">Fiches pratiques</span></button>
       <button data-v="veille" hidden title="Veille"><span class="i" data-i="veille"></span><span class="l">Veille</span></button>
       <button data-v="res" title="Ressources"><span class="i" data-i="res"></span><span class="l">Ressources</span></button>
     </div>
@@ -1727,7 +1756,7 @@ a.mml-r:hover{border-color:var(--accent)}
     <button type="button" class="top-home go-home" title="Accueil" aria-label="Accueil"><div class="mark"><span class="t1"></span><span class="t2"></span><span class="t3"></span></div>
     <div class="brand">KAIROS</div></button>
     <button class="search-big" id="searchBtn" title="Rechercher partout (Ctrl K)">
-      <span class="i" data-i="search"></span><span class="ph">Rechercher un atelier, un membre, une question…</span><span class="kbd">Ctrl K</span>
+      <span class="i" data-i="search"></span><span class="ph">Rechercher un atelier, une fiche, un membre…</span><span class="kbd">Ctrl K</span>
     </button>
     <div class="top-maj" id="brandMaj"></div>
   </header>
@@ -1743,6 +1772,7 @@ a.mml-r:hover{border-color:var(--accent)}
         <div class="acts" id="homeActions"></div>
         <p class="acts-ok" id="homeActionsOk" hidden>Well done ; tu es à jour !</p>
       </div>
+      <div class="panel" id="homeFiches" hidden></div>
       <div class="panel" id="homeMMLig" hidden></div>
       <div class="valeurs" id="homeValeurs" hidden></div>
       <div class="bdstrip" id="homeBd" hidden></div>
@@ -1761,6 +1791,16 @@ a.mml-r:hover{border-color:var(--accent)}
       <div class="panel vbreak" id="veilleBreak"></div>
       <div id="veilleLast"></div>
       <div class="panel" id="veilleHistoPanel" hidden><h2>Historique</h2><div id="veilleHisto"></div></div>
+    </section>
+
+    <section class="view" id="v-fiches">
+      <div class="panel ff-intro">
+        <h2>Fiches pratiques</h2>
+        <p>Tout le savoir-faire de la lignée, rangé par thème : démarches, examens, prospection, rendez-vous, produits, équipe. Clique sur ☆ pour garder une fiche dans tes favoris.</p>
+        <div class="filters ff-filters"><input type="search" id="fichesQ" placeholder="Rechercher dans les fiches (ex. : ARE, relance, Anacofi, PER…)" autocomplete="off"><input type="hidden" id="fichesR" value=""></div>
+        <div class="ff-chips" id="fichesChips"></div>
+      </div>
+      <div id="fichesListe"></div>
     </section>
 
     <section class="view" id="v-res">
@@ -3598,6 +3638,7 @@ function showTab(v){
   if(v === 'lig'){ try{ buildLig(); }catch(e){ console.error(e); } }
   if(v === 'fb'){ try{ buildRetours(); }catch(e){} }
   if(v === 'res'){ try{ buildRes(); }catch(e){ console.error(e); } }
+  if(v === 'fiches'){ try{ buildFiches(); }catch(e){ console.error(e); } }
   // Ouvrir la veille vaut lecture : pas de case à cocher de plus
   if(v === 'veille' && VEILLE){
     try{
@@ -3639,6 +3680,7 @@ const ICO = {
   for:'<path d="M12 6.8S9.9 4.6 3.4 4.6v12.6c6.5 0 8.6 2.2 8.6 2.2s2.1-2.2 8.6-2.2V4.6C14.1 4.6 12 6.8 12 6.8Z"/><path d="M12 6.8v12.6"/>',
   evt:'<rect x="3.2" y="5.4" width="17.6" height="15.4" rx="2.6"/><path d="M3.2 10.3h17.6"/><path d="M8.2 3.2v4.2M15.8 3.2v4.2"/><path d="M8 14.2h2M14 14.2h2M8 17.4h2M14 17.4h2"/>',
   ann:'<rect x="3.2" y="4.2" width="17.6" height="15.6" rx="2.6"/><circle cx="9.6" cy="10.6" r="2.4"/><path d="M6 16.4c.6-1.7 1.9-2.6 3.6-2.6s3 .9 3.6 2.6"/><path d="M16.2 9.6h2.6M16.2 13.2h2.6"/>',
+  fiches:'<path d="M6.2 3.4h8.2l4.4 4.4v12.8H6.2Z"/><path d="M14.4 3.4v4.4h4.4"/><path d="M9.2 12h6.6M9.2 15.4h6.6M9.2 8.6h2.6"/>',
   res:'<rect x="3.2" y="7.4" width="17.6" height="12.6" rx="2.2"/><path d="M8.6 7.4V5.6a1.8 1.8 0 0 1 1.8-1.8h3.2a1.8 1.8 0 0 1 1.8 1.8v1.8"/><path d="M3.2 12.6h17.6"/><path d="M10.4 11.2v2.8h3.2v-2.8"/>',
   veille:'<path d="M3.6 5.4h12.8v13.2H5.6a2 2 0 0 1-2-2V5.4Z"/><path d="M16.4 8.6h2.2a1.8 1.8 0 0 1 1.8 1.8v6.4a2 2 0 0 1-2 2h-2"/><path d="M6.6 8.8h6.8M6.6 12h6.8M6.6 15.2h4"/>',
   admin:'<circle cx="12" cy="12" r="3.1"/><path d="M19.1 14.2a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a1.9 1.9 0 1 1-3.8 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a1.9 1.9 0 1 1 0-3.8h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a1.9 1.9 0 1 1 0 3.8h-.1a1.6 1.6 0 0 0-1.5 1Z"/>',
@@ -3706,9 +3748,9 @@ document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('cli
 
 /* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
-const TABS=['home','veille','res','surv','pd','mm','lig','cat','reu','for','evt','ann','fb','admin'];
+const TABS=['home','veille','fiches','res','surv','pd','mm','lig','cat','reu','for','evt','ann','fb','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',res:'ressources',surv:'mes-sessions',pd:'parcours-decouverte',mm:'mail-manager',lig:'ma-lignee',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',fb:'ameliorer-kairos',admin:'admin'};
+const TAB_SLUG={home:'accueil',veille:'veille',fiches:'fiches-pratiques',res:'ressources',surv:'mes-sessions',pd:'parcours-decouverte',mm:'mail-manager',lig:'ma-lignee',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',fb:'ameliorer-kairos',admin:'admin'};
 // Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
 // « enregistre » : ancienne adresse de l'onglet, gardée pour que les liens déjà partagés fonctionnent
 const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin',enregistre:'surv'});
@@ -3915,6 +3957,7 @@ function buildContenu(){
     const pe=document.getElementById('homePrincipes');
     if(C.accueil.principes&&C.accueil.principes.length){ pe.innerHTML=C.accueil.principes.map(p=>'<div class="principe"><b>'+esc(p.t)+'</b><p>'+esc(p.d)+'</p></div>').join(''); pe.hidden=false; }
   }
+  try{ buildFichesAccueil(); }catch(e){}
   if(misData()){ buildMissions(); buildProchaines(); }
   else if(C.parcours&&C.parcours.length){ document.getElementById('homeParcoursPanel').hidden=false; buildPhases(); }
   if(C.rituels&&C.rituels.length){ document.getElementById('homeRituelsPanel').hidden=false;
@@ -4323,7 +4366,7 @@ function buildMissions(){
     + '</div>'
     + (refl.length ? '<details class="mi-x"><summary>Les '+refl.length+' réflexes de la lignée</summary><div class="mi-rf">'
         + refl.map(r=>'<div class="mi-r"><b>'+esc(r.t)+'</b><p>'+esc(r.d||'')+'</p></div>').join('')+'</div></details>' : '')
-    + (biblio ? '<details class="mi-x"><summary>Toutes les fiches pratiques</summary><div class="mi-bib">'+biblio+'</div></details>' : '');
+    + (biblio ? '<a class="mi-x mi-tout" href="#fiches-pratiques">📚 Toutes les fiches pratiques, rangées par thème →</a>' : '');
   return true;
 }
 // Accueil : les prochaines missions, les points d'étape et le réflexe de la semaine ne forment plus un
@@ -4352,7 +4395,7 @@ function miReflexeSemaine(){
   const refl = (CONTENU && CONTENU.reflexes) || [];
   return refl.length ? refl[(noSemaine(todayIso) - 1 + refl.length) % refl.length] : null;
 }
-function buildProchaines(){ buildActions(); }
+function buildProchaines(){ buildActions(); try{ buildFichesAccueil(); }catch(e){ console.error(e); } }
 // Accueil du parrain : les portes à valider, tout en haut (après les alertes)
 function buildAValider(){
   const el = document.getElementById('homePortes');
@@ -4573,7 +4616,7 @@ function showPage(slug){
   const sib=pageSiblings(slug); const i=sib.indexOf(slug); const prev=sib[i-1], next=sib[i+1];
   const path=pagePath(slug);
   const card=document.getElementById('psheetCard');
-  card.innerHTML='<div class="ps-head"><button class="ps-close" id="psClose" title="Fermer (Échap)">✕</button><div class="crumb">'+path.map(x=>esc(x)).join(' › ')+'</div><h1>'+(p.i?p.i+' ':'')+esc(p.t)+'</h1>'+
+  card.innerHTML='<div class="ps-head"><button class="ps-close" id="psClose" title="Fermer (Échap)">✕</button><div class="crumb">'+path.map(x=>esc(x)).join(' › ')+'</div><h1>'+(p.i?p.i+' ':'')+esc(p.t)+' '+ffavBtn(slug)+'</h1>'+
     (sib.length>1?'<div class="ps-tabs">'+sib.map(x=>'<a href="#p/'+x+'" class="'+(x===slug?'on':'')+'">'+(C.pages[x].i?C.pages[x].i+' ':'')+esc(C.pages[x].t)+'</a>').join('')+'</div>':'')+'</div>'+
     '<div class="ps-body">'+freshBanner(p)+'<div class="nc">'+p.h+'</div></div>'+
     '<div class="ps-foot"><span>'+(prev?'<a href="#p/'+prev+'">← '+esc(C.pages[prev].t)+'</a>':'<span class="kbd">Échap pour fermer</span>')+'</span><span>'+(next?'<a href="#p/'+next+'">'+esc(C.pages[next].t)+' →</a>':'')+'</span></div>';
@@ -4610,6 +4653,111 @@ document.addEventListener('click',e=>{
     if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(ok,fallback); } else fallback();
   }
 });
+
+/* ---------- Fiches pratiques (20/10/2026, règle Florian) ----------
+   Onglet dédié rangé par thème métier (contenu_blocs.fiches = [{t, i, pages:[slug…]}], éditable dans
+   Admin → Contenu → Autres blocs), recherche sans accents dans les titres ET le contenu, favoris ★
+   synchronisés entre appareils (FFAV = {slug: horodatage, « ! » devant = retiré}), et sur l'accueil
+   « Les fiches qui te servent maintenant » (fiches des missions en cours). Les fiches restent aussi
+   attachées à chaque mission du parcours. Une fiche rangée nulle part tombe dans « Autres fiches ». */
+let FFAV = {}; try{ FFAV = JSON.parse(localStorage.getItem('kairos_ffav')||'{}') || {}; }catch(e){ FFAV = {}; }
+const ffavOn = s => typeof FFAV[s]==='string' && FFAV[s][0] !== '!';
+function ffavBascule(s){
+  FFAV[s] = (ffavOn(s) ? '!' : '') + new Date().toISOString();
+  try{ localStorage.setItem('kairos_ffav', JSON.stringify(FFAV)); }catch(e){}
+  planSync();
+  document.querySelectorAll('[data-ffav="'+s+'"]').forEach(b=>{ b.classList.toggle('on', ffavOn(s)); b.title = ffavOn(s) ? 'Retirer des favoris' : 'Ajouter aux favoris'; b.setAttribute('aria-pressed', ffavOn(s)); });
+  if(curTab==='fiches') buildFiches();
+  buildFichesAccueil();
+}
+const ffavBtn = s => '<button type="button" class="ff-star'+(ffavOn(s)?' on':'')+'" data-ffav="'+esc(s)+'" aria-pressed="'+ffavOn(s)+'" title="'+(ffavOn(s)?'Retirer des favoris':'Ajouter aux favoris')+'">★</button>';
+// Rayons : le bloc « fiches », sinon les groupes du parcours (repli)
+function fichesRayons(){
+  const C = CONTENU || {}, P = C.pages || {};
+  let r = Array.isArray(C.fiches) && C.fiches.length ? C.fiches.map(x=>({ t:x.t, i:x.i||'', pages:(x.pages||[]).filter(s=>P[s]) }))
+        : navSecs().flatMap(sec=>(sec.groupes||[]).map(g=>({ t:g.t, i:'', pages:(g.pages||[]).filter(s=>P[s]) })));
+  const vus = new Set(r.flatMap(x=>x.pages));
+  const reste = Object.keys(P).filter(s=>!vus.has(s)).sort((a,b)=>(P[a].n||0)-(P[b].n||0));
+  if(reste.length) r.push({ t:'Autres fiches', i:'📄', pages:reste });
+  return r.filter(x=>x.pages.length);
+}
+const FF_TXT = {};
+function ffTexte(s){
+  if(FF_TXT[s]) return FF_TXT[s];
+  const p = CONTENU.pages[s];
+  const d = document.createElement('div'); d.innerHTML = p.h || '';
+  d.querySelectorAll('script,style,button').forEach(x=>x.remove());
+  const t = (d.textContent || '').replace(/\s+/g,' ').trim();
+  // description : la première phrase utile (paragraphe, puce ou cellule), sans les adresses web
+  const net = x => x.textContent.replace(/https?:\/\/\S+/g,'').replace(/\s+/g,' ').replace(/\s*:\s*$/,'').trim();
+  const prem = [...d.querySelectorAll('p,li,td')].map(net).find(x=>x.length > 30 && !/^(✍️|Fiche en cours)/.test(x)) || '';
+  return FF_TXT[s] = { n: norm(p.t + ' ' + t), d: prem.length > 140 ? prem.slice(0,137).replace(/\s\S*$/,'') + '…' : prem };
+}
+// Fiches de la phase en cours (missions du parcours)
+function fichesPhase(){
+  try{
+    if(!misData()) return [];
+    const ph = misPhases().find(p=>p.id===miPhaseDefaut());
+    return ph ? [...new Set((ph.missions||[]).flatMap(m=>m.pages||[]))].filter(s=>CONTENU.pages[s]) : [];
+  }catch(e){ return []; }
+}
+function ffCarte(s, rayon){
+  const p = CONTENU.pages[s], x = ffTexte(s);
+  return '<div class="ff-card"><a href="#p/'+esc(s)+'"><span class="ff-ic">'+(p.i||'📄')+'</span><span class="ff-tx"><b>'+esc(p.t)+'</b>'
+    + (rayon ? '<span class="ff-ray">'+esc(rayon)+'</span>' : '') + '<span class="ff-d">'+esc(x.d)+'</span></span></a>'+ffavBtn(s)+'</div>';
+}
+function buildFiches(){
+  const el = document.getElementById('fichesListe'), chipsEl = document.getElementById('fichesChips');
+  if(!el || !CONTENU || !CONTENU.pages) return;
+  const R = fichesRayons(), filtre = (document.getElementById('fichesR')||{}).value || '';
+  const q = norm((document.getElementById('fichesQ')||{}).value || '').trim();
+  const favs = Object.keys(CONTENU.pages).filter(ffavOn), phase = fichesPhase();
+  const chips = [['', 'Toutes']].concat(R.map((r,i)=>['r'+i, (r.i?r.i+' ':'')+r.t]));
+  if(phase.length) chips.push(['phase', '🧭 Ma phase en cours']);
+  chips.push(['fav', '★ Mes favoris'+(favs.length?' ('+favs.length+')':'')]);
+  chipsEl.innerHTML = chips.map(([k,l])=>'<button type="button" data-ff="'+k+'"'+(k===filtre?' class="on"':'')+'>'+esc(l)+'</button>').join('');
+  const rayonDe = {}; R.forEach(r=>r.pages.forEach(s=>{ rayonDe[s] = (r.i?r.i+' ':'')+r.t; }));
+  let sections;
+  if(filtre==='fav') sections = [{ t:'★ Mes favoris', pages:favs, vide:'Aucun favori pour l’instant : clique sur l’étoile ☆ d’une fiche pour la retrouver ici.' }];
+  else if(filtre==='phase') sections = [{ t:'🧭 Les fiches de ma phase en cours', pages:phase }];
+  else if(/^r\d+$/.test(filtre) && R[+filtre.slice(1)]) { const r = R[+filtre.slice(1)]; sections = [{ t:(r.i?r.i+' ':'')+r.t, pages:r.pages }]; }
+  else sections = R.map(r=>({ t:(r.i?r.i+' ':'')+r.t, pages:r.pages }));
+  if(q){
+    const mots = q.split(/\s+/).filter(Boolean);
+    const ok = s => mots.every(m=>ffTexte(s).n.includes(m));
+    const titre = s => mots.every(m=>norm(CONTENU.pages[s].t).includes(m));
+    const tous = [...new Set(sections.flatMap(x=>x.pages))].filter(ok).sort((a,b)=>titre(b)-titre(a));
+    el.innerHTML = tous.length ? '<p class="ff-n">'+tous.length+' fiche'+(tous.length>1?'s':'')+'</p><div class="ff-grid">'+tous.map(s=>ffCarte(s, rayonDe[s])).join('')+'</div>'
+      : '<p class="ff-vide">Aucune fiche ne contient « '+esc(document.getElementById('fichesQ').value)+' ». Essaie un autre mot, ou pose la question à ta lignée.</p>';
+    return;
+  }
+  el.innerHTML = sections.map(x=>'<section class="ff-sec"><h3>'+esc(x.t)+' <span>'+x.pages.length+'</span></h3>'
+    + (x.pages.length ? '<div class="ff-grid">'+x.pages.map(s=>ffCarte(s)).join('')+'</div>' : '<p class="ff-vide">'+esc(x.vide||'Aucune fiche.')+'</p>')+'</section>').join('');
+}
+// Accueil : les fiches des missions en cours, puis mes favoris
+function buildFichesAccueil(){
+  const el = document.getElementById('homeFiches');
+  if(!el || !CONTENU || !CONTENU.pages) return;
+  let mo = [];
+  try{ if(misData()) mo = [...new Set(miProchaines(3).flatMap(x=>x.m.pages||[]))].filter(s=>CONTENU.pages[s]).slice(0,6); }catch(e){}
+  const favs = Object.keys(CONTENU.pages).filter(s=>ffavOn(s) && !mo.includes(s)).slice(0,6);
+  const lien = s => '<a class="hf-a" href="#p/'+esc(s)+'"><span>'+(CONTENU.pages[s].i||'📄')+'</span>'+esc(CONTENU.pages[s].t)+'</a>';
+  el.innerHTML = '<div class="hf-h"><h2>Les fiches qui te servent maintenant</h2><a class="hf-tout" href="#fiches-pratiques">Toutes les fiches pratiques →</a></div>'
+    + (mo.length ? '<p class="hf-s">Pour tes missions en cours</p><div class="hf-l">'+mo.map(lien).join('')+'</div>'
+                 : '<p class="hf-p">Retrouve toutes les fiches, rangées par thème, dans l’onglet Fiches pratiques.</p>')
+    + (favs.length ? '<p class="hf-s">★ Mes favoris</p><div class="hf-l">'+favs.map(lien).join('')+'</div>' : '');
+  el.hidden = false;
+}
+document.addEventListener('click', e=>{
+  const st = e.target.closest && e.target.closest('[data-ffav]');
+  if(st){ e.preventDefault(); e.stopPropagation(); ffavBascule(st.dataset.ffav); return; }
+  const c = e.target.closest && e.target.closest('#fichesChips button[data-ff]');
+  if(c){ const i = document.getElementById('fichesR'); i.value = c.dataset.ff; buildFiches(); syncHash(false); return; }
+  const t = e.target.closest && e.target.closest('a[href="#fiches-pratiques"]');
+  if(t){ e.preventDefault(); showTab('fiches'); curTab='fiches'; syncHash(true); window.scrollTo({top:0}); }
+}, true);
+(()=>{ const q = document.getElementById('fichesQ'); if(q) q.addEventListener('input', ()=>{ buildFiches(); syncHash(false); });
+       const r = document.getElementById('fichesR'); if(r) r.addEventListener('input', ()=>buildFiches()); })();
 
 /* ---------- Graphiques SVG ---------- */
 const tip = document.getElementById('tip');
@@ -5230,7 +5378,7 @@ const strip=h=>(h||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
 function buildSearchIndex(){
   SIDX=[];
   const C=CONTENU||{};
-  Object.keys(C.pages||{}).forEach(s=>{ const p=C.pages[s]; SIDX.push({g:'Pages',ic:p.i||'📄',t:p.t,s:pagePath(s).slice(-1)[0]||'',k:norm(p.t),kx:norm(strip(p.h)).slice(0,20000),act:()=>{ try{history.pushState(null,'','#p/'+s);}catch(_){ } showPage(s);}}); });
+  Object.keys(C.pages||{}).forEach(s=>{ const p=C.pages[s]; SIDX.push({g:'Fiches pratiques',ic:p.i||'📄',t:p.t,s:(()=>{ try{ const r=fichesRayons().find(x=>x.pages.includes(s)); return r?r.t:''; }catch(e){ return ''; } })()||pagePath(s).slice(-1)[0]||'',k:norm(p.t),kx:norm(strip(p.h)).slice(0,20000),act:()=>{ try{history.pushState(null,'','#p/'+s);}catch(_){ } showPage(s);}}); });
   (C.faq||[]).forEach((f,i)=>SIDX.push({g:'Questions fréquentes',ic:'❓',t:f.q,s:f.th,k:norm(f.q),kx:norm(strip(f.a)),act:()=>{ showTab('home'); if(!C.faqPubliee) buildFaq(true); const det=[...document.querySelectorAll('#faqList details')].find(d=>d.querySelector('summary').textContent.startsWith(f.q.slice(0,40))); if(det){ det.open=true; det.scrollIntoView({behavior:'smooth',block:'center'}); } else document.getElementById('homeFaqPanel').scrollIntoView({behavior:'smooth'}); }}));
   (C.objections||[]).forEach(o=>SIDX.push({g:'Objections',ic:'💬',t:o.o,s:o.tag||'',k:norm(o.o),kx:norm((o.r||[]).join(' ')),act:()=>{ try{history.pushState(null,'','#p/traitement-des-objections');}catch(_){ } showPage('traitement-des-objections'); setTimeout(()=>{ const d=document.getElementById('obj-'+o.id); if(d){ d.open=true; d.scrollIntoView({behavior:'smooth',block:'center'}); } },80); }}));
   const ev=(list,g,ic,p)=>list.filter(a=>!isPast(a)).forEach(a=>SIDX.push({g,ic,t:a.title,s:fmtD(a.start)+(a.lieu?' · '+a.lieu:''),k:norm(a.title),kx:norm(a.pilotes+' '+a.lieu),act:()=>{ const tab=(p==='cat'&&a.th==='PARCOURS DECOUVERTE')?'pd':p; showTab(tab); const q=document.getElementById(p+'Q'); if(q&&tab!=='pd'){ q.value=a.title; q.dispatchEvent(new Event('input')); } window.scrollTo({top:0}); }}));
@@ -7635,7 +7783,7 @@ const saveSem = ()=>{ try{ localStorage.setItem('kairos_sem', JSON.stringify(SEM
 // { etapes:[clés d'étapes annoncées], bk:'AAAA-MM-JJ de la dernière alerte lue' }
 let VU = {}; try{ VU = JSON.parse(localStorage.getItem('kairos_vu')||'{}'); }catch(e){}
 const saveVu = ()=>{ try{ localStorage.setItem('kairos_vu', JSON.stringify(VU)); }catch(e){} planSync(); };
-const etatLocal = ()=>({ favs:[...FAVS], check:CHECK, mis:MIS, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM, vu:VU, zone:ZONE_CHOISIE||undefined });
+const etatLocal = ()=>({ ffav:FFAV, favs:[...FAVS], check:CHECK, mis:MIS, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM, vu:VU, zone:ZONE_CHOISIE||undefined });
 let ACC_NOM_AFF = null;
 // Prénom de la personne connectée (Google), pour personnaliser l'accueil
 function prenomUser(){
@@ -7696,6 +7844,9 @@ async function syncPull(){
     if(k==='_mig'){ if(mi._mig && !MIS._mig){ MIS._mig = mi._mig; chg=true; } continue; }
     if(typeof mi[k]==='string' && (!MIS[k] || misTs(mi[k]) > misTs(MIS[k]))){ MIS[k]=mi[k]; chg=true; }
   }
+  // Favoris des fiches : l'horodatage le plus récent l'emporte (ajout / retrait suivent d'un appareil à l'autre)
+  const ff = d.ffav||{};
+  for(const k in ff){ if(typeof ff[k]==='string' && (!FFAV[k] || misTs(ff[k]) > misTs(FFAV[k]))){ FFAV[k]=ff[k]; chg=true; } }
   if(typeof d.nav==='boolean' && d.nav!==NAV_REPLIE){ try{ sideReplier(d.nav); }catch(e){} }
   // Actions de la semaine : fusion par vrai (une action faite sur un appareil l'est partout)
   const s = d.sem||{};
@@ -7716,9 +7867,10 @@ async function syncPull(){
       localStorage.setItem('kairos_check', JSON.stringify(CHECK));
       localStorage.setItem('kairos_mis', JSON.stringify(MIS));
       localStorage.setItem('kairos_sem', JSON.stringify(SEM));
+      localStorage.setItem('kairos_ffav', JSON.stringify(FFAV));
       localStorage.setItem('kairos_vu', JSON.stringify(VU));
     }catch(e){}
-    try{ buildContenu(); buildAnn(); buildActions(); majParcours(); routeHash(); }catch(e){}
+    try{ buildContenu(); buildAnn(); buildActions(); majParcours(); buildFichesAccueil(); if(curTab==='fiches') buildFiches(); routeHash(); }catch(e){}
   }
   syncPush();
 }

@@ -3886,3 +3886,64 @@ test.describe('Veille — affichage « brief » (proposition A, 28/09/2026)', ()
     expect(r.hauteur, 'replié, ça tient sur un écran').toBeLessThan(700);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Fiches pratiques (20/10/2026)', () => {
+  const contenu = () => {
+    CONTENU = Object.assign(CONTENU || {}, {
+      pages: {
+        'cumuler-chomage-are': { t: 'Cumuler chômage (ARE) et micro-entreprise', i: '🧭', n: 2, h: '<p>Beaucoup d’entre nous démarrent l’activité en étant indemnisés par France Travail.</p>' },
+        'relances': { t: 'Relances & templates : prospects sans réponse', i: '🔁', n: 3, h: '<p>Tu as fait un R0 et plus de nouvelles : voici le process de la lignée.</p><pre>Salut [Prénom], j’ai essayé de te joindre</pre>' },
+        'examens-qcm': { t: 'Examens QCM', i: '🎓', n: 4, h: '<ol><li>Utiliser <a href="https://zoom.us/join">https://zoom.us/join</a> dans Chrome et pas l’application Zoom.</li></ol>' },
+        'orpheline': { t: 'Fiche sans rayon', i: '', n: 9, h: '<p>Une fiche que personne n’a encore rangée dans un rayon.</p>' },
+      },
+      fiches: [
+        { t: 'Administratif & statut', i: '🧾', pages: ['cumuler-chomage-are'] },
+        { t: 'Prospection & mises en relation', i: '📞', pages: ['relances', 'inexistante'] },
+        { t: 'Habilitations & examens', i: '🎓', pages: ['examens-qcm'] },
+      ],
+    });
+  };
+  test('rayons par thème, fiche non rangée dans « Autres fiches », description sans adresse web', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate((f) => {
+      eval('(' + f + ')')();
+      showTab('fiches'); curTab = 'fiches';
+      return {
+        rayons: [...document.querySelectorAll('#fichesListe .ff-sec h3')].map(h => h.firstChild.textContent.trim()),
+        cartes: document.querySelectorAll('#fichesListe .ff-card').length,
+        desc: [...document.querySelectorAll('#fichesListe .ff-d')].map(d => d.textContent),
+        menu: !!document.querySelector('#side [data-v="fiches"]'),
+      };
+    }, contenu.toString());
+    expect(r.menu).toBe(true);
+    expect(r.rayons).toEqual(['🧾 Administratif & statut', '📞 Prospection & mises en relation', '🎓 Habilitations & examens', '📄 Autres fiches']);
+    expect(r.cartes).toBe(4);
+    expect(r.desc.join(' ')).not.toContain('https://');
+    expect(r.desc).toContain('Utiliser dans Chrome et pas l’application Zoom.');
+    expect(erreurs).toEqual([]);
+  });
+  test('recherche sans accents dans le titre et le contenu, puis favoris ★', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate((f) => {
+      eval('(' + f + ')')();
+      showTab('fiches'); curTab = 'fiches';
+      const q = document.getElementById('fichesQ');
+      const chercher = v => { q.value = v; q.dispatchEvent(new Event('input')); return [...document.querySelectorAll('#fichesListe .ff-card b')].map(b => b.textContent); };
+      const are = chercher('chomage');            // titre accentué
+      const corps = chercher('essaye joindre');   // contenu d'un modèle (« essayé »)
+      const rien = chercher('zzzz');
+      chercher('');
+      document.querySelector('[data-ffav="relances"]').click();
+      document.querySelector('#fichesChips [data-ff="fav"]').click();
+      const favs = [...document.querySelectorAll('#fichesListe .ff-card b')].map(b => b.textContent);
+      return { are, corps, rien, favs, stocke: ffavOn('relances'), etat: !!etatLocal().ffav.relances };
+    }, contenu.toString());
+    expect(r.are).toEqual(['Cumuler chômage (ARE) et micro-entreprise']);
+    expect(r.corps).toEqual(['Relances & templates : prospects sans réponse']);
+    expect(r.rien).toEqual([]);
+    expect(r.favs).toEqual(['Relances & templates : prospects sans réponse']);
+    expect(r.stocke).toBe(true);
+    expect(r.etat).toBe(true);
+  });
+});
