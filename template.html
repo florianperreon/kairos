@@ -966,14 +966,7 @@ p.mi-ai{margin:4px 0 8px}
 .ff-card .ff-star{position:absolute;top:8px;right:8px}
 .ps-head h1 .ff-star{font-size:20px;vertical-align:2px}
 .ff-n{font-size:13px;color:var(--ink-3);margin:0 0 8px}.ff-vide{color:var(--ink-2);font-size:14px}
-#homeFiches .hf-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
-#homeFiches .hf-h h2{margin:0}.hf-tout{font-size:13.5px;font-weight:700;color:var(--accent);text-decoration:none}
-.hf-s{font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 6px}
-.hf-l{display:flex;flex-wrap:wrap;gap:8px}
-.hf-p{font-size:14px;color:var(--ink-2);margin:8px 0 0}
 @media (max-width:760px){.ff-chips{flex-wrap:nowrap;overflow-x:auto;margin-left:-4px;margin-right:-4px;padding:0 4px 4px;scrollbar-width:none}.ff-chips::-webkit-scrollbar{display:none}.ff-chips button{flex:none}.ff-card>a{padding:12px 40px 12px 12px}}
-.hf-a{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-2);background:var(--surface-2);border-radius:9px;padding:7px 11px;color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:600}
-.hf-a:hover{border-color:var(--accent)}
 .mi-tout{display:block;margin-top:12px;font-weight:700;color:var(--accent);text-decoration:none}
 .mi-bib{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .mi-bs>b{font-size:13px}
@@ -1772,7 +1765,6 @@ a.mml-r:hover{border-color:var(--accent)}
         <div class="acts" id="homeActions"></div>
         <p class="acts-ok" id="homeActionsOk" hidden>Well done ; tu es à jour !</p>
       </div>
-      <div class="panel" id="homeFiches" hidden></div>
       <div class="panel" id="homeMMLig" hidden></div>
       <div class="valeurs" id="homeValeurs" hidden></div>
       <div class="bdstrip" id="homeBd" hidden></div>
@@ -3957,7 +3949,6 @@ function buildContenu(){
     const pe=document.getElementById('homePrincipes');
     if(C.accueil.principes&&C.accueil.principes.length){ pe.innerHTML=C.accueil.principes.map(p=>'<div class="principe"><b>'+esc(p.t)+'</b><p>'+esc(p.d)+'</p></div>').join(''); pe.hidden=false; }
   }
-  try{ buildFichesAccueil(); }catch(e){}
   if(misData()){ buildMissions(); buildProchaines(); }
   else if(C.parcours&&C.parcours.length){ document.getElementById('homeParcoursPanel').hidden=false; buildPhases(); }
   if(C.rituels&&C.rituels.length){ document.getElementById('homeRituelsPanel').hidden=false;
@@ -4395,7 +4386,7 @@ function miReflexeSemaine(){
   const refl = (CONTENU && CONTENU.reflexes) || [];
   return refl.length ? refl[(noSemaine(todayIso) - 1 + refl.length) % refl.length] : null;
 }
-function buildProchaines(){ buildActions(); try{ buildFichesAccueil(); }catch(e){ console.error(e); } }
+function buildProchaines(){ buildActions(); }
 // Accueil du parrain : les portes à valider, tout en haut (après les alertes)
 function buildAValider(){
   const el = document.getElementById('homePortes');
@@ -4657,8 +4648,8 @@ document.addEventListener('click',e=>{
 /* ---------- Fiches pratiques (20/10/2026, règle Florian) ----------
    Onglet dédié rangé par thème métier (contenu_blocs.fiches = [{t, i, pages:[slug…]}], éditable dans
    Admin → Contenu → Autres blocs), recherche sans accents dans les titres ET le contenu, favoris ★
-   synchronisés entre appareils (FFAV = {slug: horodatage, « ! » devant = retiré}), et sur l'accueil
-   « Les fiches qui te servent maintenant » (fiches des missions en cours). Les fiches restent aussi
+   synchronisés entre appareils (FFAV = {slug: horodatage, « ! » devant = retiré}). Le bloc d'accueil
+   « Les fiches qui te servent maintenant » a été retiré le 21/10/2026 (règle Florian). Les fiches restent aussi
    attachées à chaque mission du parcours. Une fiche rangée nulle part tombe dans « Autres fiches ». */
 let FFAV = {}; try{ FFAV = JSON.parse(localStorage.getItem('kairos_ffav')||'{}') || {}; }catch(e){ FFAV = {}; }
 const ffavOn = s => typeof FFAV[s]==='string' && FFAV[s][0] !== '!';
@@ -4668,7 +4659,6 @@ function ffavBascule(s){
   planSync();
   document.querySelectorAll('[data-ffav="'+s+'"]').forEach(b=>{ b.classList.toggle('on', ffavOn(s)); b.title = ffavOn(s) ? 'Retirer des favoris' : 'Ajouter aux favoris'; b.setAttribute('aria-pressed', ffavOn(s)); });
   if(curTab==='fiches') buildFiches();
-  buildFichesAccueil();
 }
 const ffavBtn = s => '<button type="button" class="ff-star'+(ffavOn(s)?' on':'')+'" data-ffav="'+esc(s)+'" aria-pressed="'+ffavOn(s)+'" title="'+(ffavOn(s)?'Retirer des favoris':'Ajouter aux favoris')+'">★</button>';
 // Rayons : le bloc « fiches », sinon les groupes du parcours (repli)
@@ -4733,20 +4723,6 @@ function buildFiches(){
   }
   el.innerHTML = sections.map(x=>'<section class="ff-sec"><h3>'+esc(x.t)+' <span>'+x.pages.length+'</span></h3>'
     + (x.pages.length ? '<div class="ff-grid">'+x.pages.map(s=>ffCarte(s)).join('')+'</div>' : '<p class="ff-vide">'+esc(x.vide||'Aucune fiche.')+'</p>')+'</section>').join('');
-}
-// Accueil : les fiches des missions en cours, puis mes favoris
-function buildFichesAccueil(){
-  const el = document.getElementById('homeFiches');
-  if(!el || !CONTENU || !CONTENU.pages) return;
-  let mo = [];
-  try{ if(misData()) mo = [...new Set(miProchaines(3).flatMap(x=>x.m.pages||[]))].filter(s=>CONTENU.pages[s]).slice(0,6); }catch(e){}
-  const favs = Object.keys(CONTENU.pages).filter(s=>ffavOn(s) && !mo.includes(s)).slice(0,6);
-  const lien = s => '<a class="hf-a" href="#p/'+esc(s)+'"><span>'+(CONTENU.pages[s].i||'📄')+'</span>'+esc(CONTENU.pages[s].t)+'</a>';
-  el.innerHTML = '<div class="hf-h"><h2>Les fiches qui te servent maintenant</h2><a class="hf-tout" href="#fiches-pratiques">Toutes les fiches pratiques →</a></div>'
-    + (mo.length ? '<p class="hf-s">Pour tes missions en cours</p><div class="hf-l">'+mo.map(lien).join('')+'</div>'
-                 : '<p class="hf-p">Retrouve toutes les fiches, rangées par thème, dans l’onglet Fiches pratiques.</p>')
-    + (favs.length ? '<p class="hf-s">★ Mes favoris</p><div class="hf-l">'+favs.map(lien).join('')+'</div>' : '');
-  el.hidden = false;
 }
 document.addEventListener('click', e=>{
   const st = e.target.closest && e.target.closest('[data-ffav]');
@@ -7870,7 +7846,7 @@ async function syncPull(){
       localStorage.setItem('kairos_ffav', JSON.stringify(FFAV));
       localStorage.setItem('kairos_vu', JSON.stringify(VU));
     }catch(e){}
-    try{ buildContenu(); buildAnn(); buildActions(); majParcours(); buildFichesAccueil(); if(curTab==='fiches') buildFiches(); routeHash(); }catch(e){}
+    try{ buildContenu(); buildAnn(); buildActions(); majParcours(); if(curTab==='fiches') buildFiches(); routeHash(); }catch(e){}
   }
   syncPush();
 }
