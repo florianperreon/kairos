@@ -967,6 +967,13 @@ p.mi-ai{margin:4px 0 8px}
 .ps-head h1 .ff-star{font-size:20px;vertical-align:2px}
 .ff-n{font-size:13px;color:var(--ink-3);margin:0 0 8px}.ff-vide{color:var(--ink-2);font-size:14px}
 @media (max-width:760px){.ff-chips{flex-wrap:nowrap;overflow-x:auto;margin-left:-4px;margin-right:-4px;padding:0 4px 4px;scrollbar-width:none}.ff-chips::-webkit-scrollbar{display:none}.ff-chips button{flex:none}.ff-card>a{padding:12px 40px 12px 12px}}
+.ff-lock{background:var(--surface-2);border-style:dashed}
+.ff-lock .ff-tx b{color:var(--ink-2)}.ff-lock .ff-d{color:var(--ink-3)}.ff-lock:hover{border-color:var(--line-2);box-shadow:none}
+.ff-verr{font-size:13px;color:var(--ink-3);margin:10px 0 0}
+.ff-verrou{display:flex;gap:14px;align-items:flex-start;background:var(--surface-2);border:1px dashed var(--line-2);border-radius:12px;padding:18px}
+.ff-verrou>span{font-size:28px}.ff-verrou p{color:var(--ink-2);margin:6px 0 0}.ff-verrou .acc-btn{display:inline-block;margin-top:12px;text-decoration:none}
+.mi-f.lock{color:var(--ink-3);border-style:dashed;background:var(--surface-2)}
+.ps-tabs a.lock{opacity:.6}
 .mi-tout{display:block;margin-top:12px;font-weight:700;color:var(--accent);text-decoration:none}
 .mi-bib{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 .mi-bs>b{font-size:13px}
@@ -1791,6 +1798,7 @@ a.mml-r:hover{border-color:var(--accent)}
         <p>Tout le savoir-faire de la lignée, rangé par thème : démarches, examens, prospection, rendez-vous, produits, équipe. Clique sur ☆ pour garder une fiche dans tes favoris.</p>
         <div class="filters ff-filters"><input type="search" id="fichesQ" placeholder="Rechercher dans les fiches (ex. : ARE, relance, Anacofi, PER…)" autocomplete="off"><input type="hidden" id="fichesR" value=""></div>
         <div class="ff-chips" id="fichesChips"></div>
+        <p class="ff-verr" id="fichesVerr" hidden></p>
       </div>
       <div id="fichesListe"></div>
     </section>
@@ -3424,6 +3432,15 @@ function buildActions(){
         href:'#accueil', fait:semFait('reflexe'), go:'Fait' }); }
   }catch(e){ console.error(e); }
 
+  // 6 ter) Fiches pratiques débloquées depuis la dernière visite (21/10/2026)
+  try{
+    const nf = fichesNouvelles();
+    if(nf.length){ evaluable = true;
+      actions.push({ cle:'fiches', t: nf.length>1 ? nf.length+' nouvelles fiches pratiques débloquées' : 'Une nouvelle fiche pratique débloquée',
+        urg:'nouveau', d: nf.slice(0,3).map(s=>CONTENU.pages[s].t).join(' · ') + (nf.length>3 ? ' · +'+(nf.length-3) : ''),
+        href:'#fiches-pratiques', fait:false, go:'Voir' }); }
+  }catch(e){ console.error(e); }
+
   // 7) Remplir mon mail manager — première action de la liste le lundi, mise en avant dès le mardi
   if(typeof MM_COUR !== 'undefined' && MOI_ID && MM && !(MM_REG && MM_REG.participe === false)){
     evaluable = true;
@@ -3466,7 +3483,8 @@ document.addEventListener('click', e => {
   if(!a) return;
   if(a.dataset.mialler || a.dataset.act === 'reflexe') e.preventDefault();
   const cle = a.dataset.act;
-  if(cle === 'etapes'){
+  if(cle === 'fiches'){ fichesMarquerVues(); }
+  else if(cle === 'etapes'){
     const set = new Set(VU.etapes || []);
     etapesNouvelles().forEach(k => set.add(k));
     VU.etapes = [...set];
@@ -4272,7 +4290,8 @@ function miActionHtml(ph, m, a){
 function miMissionHtml(ph, m, ouverte){
   const e = miEtat(ph, m), p = miProg(m), bl = e==='bloquee' ? miBlocage(ph, m) : '';
   const C = CONTENU;
-  const pages = (m.pages||[]).filter(s=>C.pages && C.pages[s]).map(s=>'<a class="mi-f" href="#p/'+s+'">'+(C.pages[s].i?C.pages[s].i+' ':'📄 ')+esc(C.pages[s].t)+'</a>').join('')
+  const pages = (m.pages||[]).filter(s=>C.pages && C.pages[s]).map(s=>{ const ac=ficheAcces(s);
+    return '<a class="mi-f'+(ac.ok?'':' lock')+'" href="#p/'+s+'"'+(ac.ok?'':' title="'+esc(ac.raison)+'"')+'>'+(ac.ok?(C.pages[s].i?C.pages[s].i+' ':'📄 '):'🔒 ')+esc(C.pages[s].t)+'</a>'; }).join('')
     + (m.liens||[]).map(l=>'<a class="mi-f ext" href="'+esc(l.u)+'" target="_blank" rel="noopener">🔗 '+esc(l.t)+' ↗</a>').join('');
   return '<details class="mi mi-'+e+'" data-mi="'+esc(m.id)+'"'+(ouverte?' open':'')+'>'
     + '<summary><span class="mi-n">'+esc(m.id)+'</span><span class="mi-t">'+esc(m.t)
@@ -4351,7 +4370,7 @@ function buildMissions(){
     + '<p class="mi-vis">👀 Ton parrain et ta lignée montante voient ton avancement (Ma lignée → Parcours).</p>'
     + '<div class="mi-body">'
     + (ph.intro?'<div class="phase-intro">'+esc(ph.intro)+'</div>':'')
-    + (bloquee?'<p class="mi-bl">🔒 '+esc(miBlocage(ph, (ph.missions||[])[0]||{}))+' Tu peux déjà tout lire pour t’y préparer.</p>':'')
+    + (bloquee?'<p class="mi-bl">🔒 '+esc(miBlocage(ph, (ph.missions||[])[0]||{}))+' Ses fiches pratiques s’ouvriront au fur et à mesure de tes missions.</p>':'')
     + (ph.missions||[]).map(m=>miMissionHtml(ph, m, MI_GARDE ? MI_GARDE.mis.has(m.id) : m.id===ouvrir)).join('')
     + miPorteHtml(ph)
     + '</div>'
@@ -4604,11 +4623,19 @@ function pageSiblings(slug){
 }
 function showPage(slug){
   const C=CONTENU; const p=C.pages[slug]; if(!p) return;
+  const acc=ficheAcces(slug);
+  if(!acc.ok){
+    const card=document.getElementById('psheetCard'); card.innerHTML=ficheVerrouHtml(slug, acc);
+    const sh=document.getElementById('psheet'); sh.classList.add('on'); sh.setAttribute('aria-hidden','false'); document.body.classList.add('ps-open');
+    document.getElementById('psClose').addEventListener('click',closePage);
+    const v=card.querySelector('.ff-vers-parcours'); if(v) v.addEventListener('click',e=>{ e.preventDefault(); closePage(); showTab('home'); curTab='home'; syncHash(true); });
+    return;
+  }
   const sib=pageSiblings(slug); const i=sib.indexOf(slug); const prev=sib[i-1], next=sib[i+1];
   const path=pagePath(slug);
   const card=document.getElementById('psheetCard');
   card.innerHTML='<div class="ps-head"><button class="ps-close" id="psClose" title="Fermer (Échap)">✕</button><div class="crumb">'+path.map(x=>esc(x)).join(' › ')+'</div><h1>'+(p.i?p.i+' ':'')+esc(p.t)+' '+ffavBtn(slug)+'</h1>'+
-    (sib.length>1?'<div class="ps-tabs">'+sib.map(x=>'<a href="#p/'+x+'" class="'+(x===slug?'on':'')+'">'+(C.pages[x].i?C.pages[x].i+' ':'')+esc(C.pages[x].t)+'</a>').join('')+'</div>':'')+'</div>'+
+    (sib.length>1?'<div class="ps-tabs">'+sib.map(x=>'<a href="#p/'+x+'" class="'+(x===slug?'on':'')+(ficheOuverte(x)?'':' lock')+'">'+(ficheOuverte(x)?(C.pages[x].i?C.pages[x].i+' ':''):'🔒 ')+esc(C.pages[x].t)+'</a>').join('')+'</div>':'')+'</div>'+
     '<div class="ps-body">'+freshBanner(p)+'<div class="nc">'+p.h+'</div></div>'+
     '<div class="ps-foot"><span>'+(prev?'<a href="#p/'+prev+'">← '+esc(C.pages[prev].t)+'</a>':'<span class="kbd">Échap pour fermer</span>')+'</span><span>'+(next?'<a href="#p/'+next+'">'+esc(C.pages[next].t)+' →</a>':'')+'</span></div>';
   const sh=document.getElementById('psheet'); sh.classList.add('on'); sh.setAttribute('aria-hidden','false'); document.body.classList.add('ps-open');
@@ -4644,6 +4671,63 @@ document.addEventListener('click',e=>{
     if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(ok,fallback); } else fallback();
   }
 });
+
+/* ---------- Accès progressif aux fiches (21/10/2026, règle Florian) ----------
+   Une fiche s'ouvre quand la première mission qui y renvoie devient accessible (phase ouverte et
+   prérequis faits) ; une mission faite garde ses fiches. Exceptions : admins = tout ; statut réseau
+   BEMAN = missions des phases 1-2, ADMAN et plus = tout. Socle commun ouvert dès le premier jour
+   (contenu_blocs.fiches_acces.socle) ; les autres fiches sans mission s'ouvrent avec la phase 3.
+   Verrouillage à l'écran (onglet, Ctrl K, liens entre fiches, pastilles des missions). Sans contenu
+   « missions » (ancien parcours, tests), tout reste ouvert. */
+const FICHES_SOCLE = ['contacts-infos-utiles-reseau','outils-prodemial','outils-bureautique','documents-utiles','rappels-importants-a-mettre-en-place'];
+function ficheAcces(slug){
+  try{
+    if(EST_ADMIN || !CONTENU || typeof misData!=='function' || !misData()) return { ok:true };
+    const acc = CONTENU.fiches_acces || {};
+    if((acc.socle || FICHES_SOCLE).includes(slug)) return { ok:true };
+    const rang = miRang();
+    if(rang >= MI_RANGS.indexOf('ADMAN')) return { ok:true };
+    const phases = misPhases();
+    let premiere = null;
+    for(const ph of phases){
+      for(const m of (ph.missions||[])){
+        if(!(m.pages||[]).includes(slug)) continue;
+        if(rang >= MI_RANGS.indexOf('BEMAN') && +ph.n <= 2) return { ok:true };
+        if(miFaite(m) || (!ph.avenir && miPhaseOuverte(ph) && !miManque(m.pre).length)) return { ok:true };
+        if(!premiere) premiere = { ph, m };
+      }
+    }
+    if(premiere) return { ok:false, m:premiere.m, ph:premiere.ph,
+      raison:'S’ouvre avec la mission '+premiere.m.id+' « '+premiere.m.t+' »', detail: miBlocage(premiere.ph, premiere.m) };
+    // fiche sans mission : avec la phase 3 (ou réglage fiches_acces.phase = {slug: n})
+    const n = +((acc.phase||{})[slug] || 3), ph = phases.find(p=>+p.n===n);
+    if(!ph || (!ph.avenir && miPhaseOuverte(ph)) || (rang >= MI_RANGS.indexOf('BEMAN') && n <= 2)) return { ok:true };
+    return { ok:false, ph, raison:'S’ouvre avec la phase '+n+' « '+ph.t+' »', detail: miBlocage(ph, (ph.missions||[])[0]||{}) };
+  }catch(e){ return { ok:true }; }
+}
+const ficheOuverte = s => ficheAcces(s).ok;
+// Fiche verrouillée ouverte par un lien, la recherche ou une adresse : on montre pourquoi, pas le contenu
+function ficheVerrouHtml(slug, a){
+  const p = CONTENU.pages[slug];
+  return '<div class="ps-head"><button class="ps-close" id="psClose" title="Fermer (Échap)">✕</button><div class="crumb">Fiches pratiques</div><h1>'+(p.i?p.i+' ':'')+esc(p.t)+'</h1></div>'
+    + '<div class="ps-body"><div class="ff-verrou"><span>🔒</span><div><b>Cette fiche n’est pas encore débloquée.</b><p>'+esc(a.raison)+'.'+(a.detail?' '+esc(a.detail):'')+'</p>'
+    + '<p>Les fiches s’ouvrent au fur et à mesure de ton parcours : avance sur tes missions et elles se débloqueront toutes seules.</p>'
+    + '<a class="acc-btn ff-vers-parcours" href="#accueil" data-mialler="'+esc((a.ph||{}).id||'')+'"'+(a.m?' data-mimis="'+esc(a.m.id)+'"':'')+'>Voir dans mon parcours</a></div></div></div>';
+}
+// Fiches débloquées pas encore annoncées (VU.fiches = slugs déjà vus ouverts)
+function fichesNouvelles(){
+  if(!CONTENU || !CONTENU.pages || typeof misData!=='function' || !misData()) return [];
+  const ouvertes = Object.keys(CONTENU.pages).filter(ficheOuverte);
+  if(!Array.isArray(VU.fiches)){ VU.fiches = ouvertes; saveVu(); return []; }   // premier passage : rien à annoncer
+  const vues = new Set(VU.fiches);
+  return ouvertes.filter(s=>!vues.has(s));
+}
+function fichesMarquerVues(){
+  if(!CONTENU || !CONTENU.pages || typeof misData!=='function' || !misData()) return;
+  const set = new Set(VU.fiches || []); let chg = false;
+  Object.keys(CONTENU.pages).filter(ficheOuverte).forEach(s=>{ if(!set.has(s)){ set.add(s); chg = true; } });
+  if(chg){ VU.fiches = [...set]; saveVu(); try{ buildActions(); }catch(e){} }
+}
 
 /* ---------- Fiches pratiques (20/10/2026, règle Florian) ----------
    Onglet dédié rangé par thème métier (contenu_blocs.fiches = [{t, i, pages:[slug…]}], éditable dans
@@ -4692,7 +4776,9 @@ function fichesPhase(){
   }catch(e){ return []; }
 }
 function ffCarte(s, rayon){
-  const p = CONTENU.pages[s], x = ffTexte(s);
+  const p = CONTENU.pages[s], x = ffTexte(s), a = ficheAcces(s);
+  if(!a.ok) return '<div class="ff-card ff-lock"><a href="#p/'+esc(s)+'" title="'+esc(a.raison)+'"><span class="ff-ic">🔒</span><span class="ff-tx"><b>'+esc(p.t)+'</b>'
+    + (rayon ? '<span class="ff-ray">'+esc(rayon)+'</span>' : '') + '<span class="ff-d">'+esc(a.raison)+'</span></span></a></div>';
   return '<div class="ff-card"><a href="#p/'+esc(s)+'"><span class="ff-ic">'+(p.i||'📄')+'</span><span class="ff-tx"><b>'+esc(p.t)+'</b>'
     + (rayon ? '<span class="ff-ray">'+esc(rayon)+'</span>' : '') + '<span class="ff-d">'+esc(x.d)+'</span></span></a>'+ffavBtn(s)+'</div>';
 }
@@ -4712,6 +4798,10 @@ function buildFiches(){
   else if(filtre==='phase') sections = [{ t:'🧭 Les fiches de ma phase en cours', pages:phase }];
   else if(/^r\d+$/.test(filtre) && R[+filtre.slice(1)]) { const r = R[+filtre.slice(1)]; sections = [{ t:(r.i?r.i+' ':'')+r.t, pages:r.pages }]; }
   else sections = R.map(r=>({ t:(r.i?r.i+' ':'')+r.t, pages:r.pages }));
+  fichesMarquerVues();
+  const nbVerr = Object.keys(CONTENU.pages).filter(s=>!ficheOuverte(s)).length;
+  const info = document.getElementById('fichesVerr');
+  if(info){ info.hidden = !nbVerr; info.textContent = '🔒 '+nbVerr+' fiche'+(nbVerr>1?'s':'')+' encore à débloquer : elles s’ouvrent au fur et à mesure de tes missions.'; }
   if(q){
     const mots = q.split(/\s+/).filter(Boolean);
     const ok = s => mots.every(m=>ffTexte(s).n.includes(m));
@@ -7833,6 +7923,10 @@ async function syncPull(){
     if(set.size !== (VU.etapes||[]).length){ VU.etapes = [...set]; chg=true; }
   }
   if(v.bk && v.bk > (VU.bk||'')){ VU.bk = v.bk; chg=true; }
+  if(Array.isArray(v.fiches)){
+    const set = new Set([...(VU.fiches||[]), ...v.fiches]);
+    if(!Array.isArray(VU.fiches) || set.size !== VU.fiches.length){ VU.fiches = [...set]; chg=true; }
+  }
   if(v.acc && v.acc.t && v.acc.t > ((VU.acc||{}).t||'')){ VU.acc = v.acc; chg=true; try{ buildWelcome(); }catch(e){} }
   // Zone scolaire : le choix fait sur un autre appareil est repris tant qu'aucun choix n'a été fait ici
   if(/^[ABC]$/.test(d.zone||'') && !ZONE_CHOISIE){ ZONE_CHOISIE=d.zone; try{ localStorage.setItem('kairos_zone', d.zone); }catch(e){} try{ calRafraichir(); }catch(e){} }
@@ -7931,6 +8025,7 @@ async function buildMembres(){
   if(btn) btn.hidden=false;
   EST_ADMIN=true;
   try{ routerQuandPret(); }catch(e){}
+  try{ if(curTab==='fiches') buildFiches(); majParcours(); }catch(e){}
   try{ buildRetours(); }catch(e){}
   buildDemandes();
   buildContenuAdmin();

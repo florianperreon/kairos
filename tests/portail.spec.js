@@ -3507,6 +3507,58 @@ test.describe('Parcours en missions', () => {
   }, { missions: MISSIONS, o });
   const ok = { d: '2026-05-01' };
 
+  // 21/10/2026 : les fiches s'ouvrent au fur et à mesure des missions
+  test('accès progressif aux fiches : par mission, socle commun, statut réseau, admin', async ({ page }) => {
+    await ouvrir(page);
+    const etat = async (o) => { await poser(page, o); return page.evaluate(() => {
+      ['creation-d-entreprise','organisation-drive','r1-trame-tips-conseils','assurance-vie-maitriser-et-vendre','obligations-du-cif','outils-prodemial']
+        .forEach(s => { CONTENU.pages[s] = { t: s, h: '<p>Contenu de la fiche '+s+'.</p>' }; });
+      const r = {}; Object.keys(CONTENU.pages).forEach(s => { r[s] = ficheAcces(s).ok; });
+      r.raison = ficheAcces('creation-d-entreprise').raison || '';
+      return r; }); };
+    const neuf = await etat({});
+    expect(neuf.esp).toBe(true);                         // 1.1 sans prérequis
+    expect(neuf['organisation-drive']).toBe(true);       // 1.5 sans prérequis
+    expect(neuf['outils-prodemial']).toBe(true);         // socle commun
+    expect(neuf['creation-d-entreprise']).toBe(false);   // 1.3 attend l'Atelier Démarrage
+    expect(neuf.raison).toContain('1.3');
+    expect(neuf['r1-trame-tips-conseils']).toBe(false);
+    expect(neuf['obligations-du-cif']).toBe(false);      // sans mission : avec la phase 3
+    const ad = await etat({ etapes: { dm: ok, ad: ok } });
+    expect(ad['creation-d-entreprise']).toBe(true);
+    const beman = await etat({ statut: 'ROLE_BEMAN' });
+    expect(beman['r1-trame-tips-conseils']).toBe(true);  // phases 1-2 d'office
+    expect(beman['assurance-vie-maitriser-et-vendre']).toBe(false);
+    const adman = await etat({ statut: 'ROLE_ADMAN' });
+    expect(Object.values(adman).filter(v => v === false)).toEqual([]);
+    await poser(page, {});
+    const verrou = await page.evaluate(() => {
+      CONTENU.pages['r1-trame-tips-conseils'] = { t: 'R1', h: '<p>SECRET</p>' };
+      showPage('r1-trame-tips-conseils');
+      const h = document.getElementById('psheetCard').innerHTML;
+      EST_ADMIN = true; const admin = ficheAcces('r1-trame-tips-conseils').ok; EST_ADMIN = false;
+      return { secret: h.includes('SECRET'), cadenas: h.includes('pas encore débloquée'), admin };
+    });
+    expect(verrou).toEqual({ secret: false, cadenas: true, admin: true });
+  });
+
+  test('fiches débloquées : rien d’annoncé au premier passage, puis « nouvelles fiches » dans les actions', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page, {});
+    const r = await page.evaluate(() => {
+      CONTENU.pages['creation-d-entreprise'] = { t: 'Création d’entreprise', h: '' };
+      VU = {};
+      const premier = fichesNouvelles().length;
+      PARCOURS.etapes = { dm: { d: '2026-05-01' }, ad: { d: '2026-05-02' } };
+      const apres = fichesNouvelles();
+      fichesMarquerVues();
+      return { premier, apres, ensuite: fichesNouvelles().length };
+    });
+    expect(r.premier).toBe(0);
+    expect(r.apres).toContain('creation-d-entreprise');
+    expect(r.ensuite).toBe(0);
+  });
+
   test('le contenu tient debout : chaque prérequis désigne une mission ou une action qui existe', async ({ page }) => {
     const ids = new Set();
     MISSIONS.phases.forEach(ph => ph.missions.forEach(m => { ids.add(m.id); m.actions.forEach(a => ids.add(m.id + '/' + a.id)); }));
