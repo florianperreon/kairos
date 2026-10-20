@@ -3758,6 +3758,47 @@ test.describe('Parcours en missions', () => {
     expect(r.html).toContain('Atelier Démarrage du 03/10/2026');
   });
 
+  // 21/10/2026 : Admin → Activité
+  test('Admin → Activité : vue d’ensemble, tableau trié, missions par phase et détail', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page, {});
+    const r = await page.evaluate(() => {
+      EST_ADMIN = true;
+      const auj = todayIso, sem = mmSemCour();
+      const brut = [
+        { membre_id: 30001, nom: 'Alice Active', emails: ['a@x.invalid'], premier: '2026-09-01T10:00:00Z', dernier_acces: new Date().toISOString(),
+          jours: [auj, vAddDays(auj, -2), vAddDays(auj, -20)], parcours: { statut: 'ROLE_NEOMAN', etapes: { dm: { d: '2026-05-01' }, ad: { d: '2026-05-02' } } },
+          mis: { '1.5/mail': '2026-10-01T10:00:00Z' }, ffav: { 'esp': '2026-10-01T10:00:00Z', 'x': '!2026-10-02T10:00:00Z' }, portes: {},
+          mm: [{ s: vAddDays(sem, -7), st: 'publie' }, { s: sem, st: 'publie' }], mm_participe: true, mm_objectifs: true,
+          enregistrements: 3, regles: 2, regles_actives: 1, alertes: 4, retours: 1,
+          usage: [{ j: auj, t: 'fiche', c: 'esp', n: 2, d: new Date().toISOString() }, { j: auj, t: 'onglet', c: 'fiches', n: 1, d: new Date().toISOString() }] },
+        { membre_id: 30002, nom: 'Bob Dormeur', emails: ['b@x.invalid'], premier: '2026-08-01T10:00:00Z', dernier_acces: '2026-08-02T10:00:00Z',
+          jours: [], parcours: null, mis: {}, ffav: {}, portes: {}, mm: [], enregistrements: 0, regles: 0, regles_actives: 0, alertes: 0, retours: 0, usage: [] },
+      ];
+      ACT = brut.map(x => Object.assign(x, { _c: actCalc(x) }));
+      showTab('admin'); showAdminSub('act');
+      const noms = () => [...document.querySelectorAll('.act-tbl tr.act-l b')].map(b => b.textContent);
+      const ordre = noms();
+      document.querySelector('.act-tbl tr.act-l').click();
+      const det = document.querySelector('.act-det');
+      const a = ACT[0]._c;
+      document.getElementById('actF').value = 'inactifs'; document.getElementById('actF').dispatchEvent(new Event('input'));
+      return { ordre, inactifs: noms(), det: !!det && det.textContent.includes('Phase 1'), serie: a.serie, mmPub: a.mmPub, favs: a.favs.length,
+               lu: a.fiches.length, j30: a.j30, p1: a.phases[0], vue: document.getElementById('actVue').textContent };
+    });
+    expect(r.ordre).toEqual(['Alice Active', 'Bob Dormeur']);   // tri par dernier accès décroissant
+    expect(r.inactifs).toEqual(['Bob Dormeur']);
+    expect(r.det).toBe(true);
+    expect(r.serie).toBe(2);
+    expect(r.mmPub).toBe(2);
+    expect(r.favs).toBe(1);
+    expect(r.lu).toBe(1);
+    expect(r.j30).toBe(3);
+    expect(r.p1.n).toBe(1);
+    expect(r.vue).toContain('actifs cette semaine');
+    expect(erreurs).toEqual([]);
+  });
+
   test('parrain : la demande s’affiche en haut de l’accueil, « Pas encore » exige un mot', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poser(page, { statut: 'ROLE_BEMAN', aValider: [{ membre_id: 20521, nom: 'Filleule Test', porte: 'porte1', demande_le: '2026-09-27T10:00:00Z', resume: [{ id: '1.1', t: 'Cursus', d: '2026-09-01' }] }] });

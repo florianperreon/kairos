@@ -967,6 +967,29 @@ p.mi-ai{margin:4px 0 8px}
 .ps-head h1 .ff-star{font-size:20px;vertical-align:2px}
 .ff-n{font-size:13px;color:var(--ink-3);margin:0 0 8px}.ff-vide{color:var(--ink-2);font-size:14px}
 @media (max-width:760px){.ff-chips{flex-wrap:nowrap;overflow-x:auto;margin-left:-4px;margin-right:-4px;padding:0 4px 4px;scrollbar-width:none}.ff-chips::-webkit-scrollbar{display:none}.ff-chips button{flex:none}.ff-card>a{padding:12px 40px 12px 12px}}
+/* Admin → Activité */
+.act-filtres{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.act-filtres input,.act-filtres select{padding:8px 11px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:14px}
+.act-filtres input{flex:1;min-width:200px}
+.act-filtres .acc-btn{width:auto;flex:none;margin:0}
+.act-tuiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.act-t{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.act-t b{font-size:20px}.act-t span{font-size:12.5px;color:var(--ink-3)}
+.act-tops{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.act-tops h3{font-size:14px;margin:0 0 6px}.act-top{font-size:13.5px;padding:3px 0}.act-top span{color:var(--ink-3);font-size:12px}
+.act-tbl th[data-tri]{cursor:pointer;white-space:nowrap}.act-tbl th.on{color:var(--accent)}
+.act-tbl tr.act-l{cursor:pointer}.act-tbl tr.act-l:hover td,.act-tbl tr.act-l.on td{background:var(--accent-soft)}
+.act-ph{display:inline-block;font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 6px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap;margin:1px 0}
+.act-ph.ok{background:rgba(34,160,90,.15);color:#1d7f49}.act-ph.ferme{opacity:.55}
+.act-s{font-size:11px;font-weight:700;color:var(--accent)}
+.act-det td{background:var(--surface-2)}
+.act-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;padding:6px 2px}
+.act-grid h4{font-size:13px;margin:8px 0 6px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3)}
+.act-dph{margin-bottom:8px}.act-dph b{font-size:13px}.act-mi{font-size:12.5px;color:var(--ink-2);padding:1px 0}.act-mi span{color:var(--ink-3);font-size:11.5px}
+.act-mi.faite{color:#1d7f49}.act-mi.bloquee{color:var(--ink-3)}
+.act-bars{display:flex;align-items:flex-end;gap:4px;height:52px}.act-bars i{display:block;width:14px;background:var(--accent);border-radius:3px 3px 0 0;opacity:.85}
+.act-mml{display:flex;flex-wrap:wrap;gap:4px}.act-mm{font-size:11px;border:1px solid var(--line-2);border-radius:6px;padding:1px 5px;color:var(--ink-3)}.act-mm.ok{background:rgba(34,160,90,.15);color:#1d7f49;border-color:transparent}
+.act-u{font-size:12.5px;padding:2px 0}.act-u span{color:var(--ink-3);display:inline-block;width:78px}.act-u em{color:var(--ink-3);font-style:normal}
 .ff-lock{background:var(--surface-2);border-style:dashed}
 .ff-lock .ff-tx b{color:var(--ink-2)}.ff-lock .ff-d{color:var(--ink-3)}.ff-lock:hover{border-color:var(--line-2);box-shadow:none}
 .ff-or{font-size:11.5px;color:var(--ink-3);font-weight:600;margin-top:3px}
@@ -1987,12 +2010,30 @@ a.mml-r:hover{border-color:var(--accent)}
     <section class="view" id="v-admin">
       <nav class="subtabs" id="adminSub">
         <button data-s="mbr" class="on">Membres</button>
+        <button data-s="act">Activité</button>
         <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
         <button data-s="cnt">Contenu</button>
         <button data-s="stats">Statistiques</button>
         <button data-s="nouv">Nouveautés</button>
         <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
       </nav>
+
+      <div class="subview" id="sv-act">
+        <div class="panel">
+          <h2>Vue d’ensemble</h2>
+          <div id="actVue"><p class="mbr-sub">Chargement…</p></div>
+        </div>
+        <div class="panel">
+          <h2>Activité par personne</h2>
+          <p class="mbr-sub">Clique sur une ligne pour le détail (parcours mission par mission, connexions, mail managers, dernières fiches ouvertes). Clique sur un titre de colonne pour trier.</p>
+          <div class="act-filtres">
+            <input type="search" id="actQ" placeholder="Rechercher une personne…" autocomplete="off">
+            <select id="actF"><option value="">Tout le monde</option><option value="actifs">Actifs sur 30 jours</option><option value="inactifs">Inactifs depuis 30 jours</option><option value="lignee">Ma lignée descendante</option><option value="ph1">En phase 1</option><option value="ph2">En phase 2</option><option value="ph3">En phase 3</option></select>
+            <button type="button" id="actCsv" class="acc-btn">Exporter en CSV</button>
+          </div>
+          <div id="actListe"></div>
+        </div>
+      </div>
 
       <div class="subview" id="sv-nouv">
         <div class="panel nv-panel" id="admNouv"></div>
@@ -3650,6 +3691,7 @@ function showTab(v){
   if(v === 'fb'){ try{ buildRetours(); }catch(e){} }
   if(v === 'res'){ try{ buildRes(); }catch(e){ console.error(e); } }
   if(v === 'fiches'){ try{ buildFiches(); }catch(e){ console.error(e); } }
+  if(v && v !== 'home') noterUsage('onglet', v);
   // Ouvrir la veille vaut lecture : pas de case à cocher de plus
   if(v === 'veille' && VEILLE){
     try{
@@ -3741,8 +3783,8 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','dem','cnt','stats','nouv','jrn'];
-const ADMIN_SLUG={mbr:'membres',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal'};
+const ADMIN_SUBS=['mbr','act','dem','cnt','stats','nouv','jrn'];
+const ADMIN_SLUG={mbr:'membres',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 function showAdminSub(s){
@@ -3750,6 +3792,7 @@ function showAdminSub(s){
   curSub=s;
   document.querySelectorAll('#adminSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
+  if(s==='act'){ try{ if(ACT) buildActivite(); else chargerActivite(); }catch(e){ console.error(e); } }
 }
 document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('click',()=>{
   showAdminSub(b.dataset.s);
@@ -4662,6 +4705,7 @@ function showPage(slug){
   card.querySelector('.ps-body').scrollTop=0;
   document.getElementById('psClose').addEventListener('click',closePage);
   if(card.querySelector('#objTrain')) initObjections(card);
+  noterUsage('fiche', slug);
 }
 // Bandeau « contenu daté » : p.maj = "AAAA-MM" de la dernière vérification des chiffres (frais, minimums, plafonds, allocations…)
 function freshBanner(p){
@@ -4691,6 +4735,161 @@ document.addEventListener('click',e=>{
     if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(ok,fallback); } else fallback();
   }
 });
+
+/* ---------- Mesure d'usage et Admin → Activité (21/10/2026, règle Florian) ----------
+   noterUsage : chaque ouverture de fiche, d'onglet ou de simulateur est comptée par jour (RPC noter_usage,
+   table usage_jour, lisible des seuls admins). Admin → Activité : RPC activite_admin() (admins uniquement)
+   → vue d'ensemble, tableau triable par personne avec export CSV, fiche détaillée au clic. Les missions par
+   phase sont recalculées comme dans « Ma lignée » (même logique que le parcours de la personne). */
+const USAGE_VU = {};
+function noterUsage(type, cle){
+  try{
+    if(!SB || !SBUSER || !cle) return;
+    const k = type+':'+cle, t = Date.now();
+    if(USAGE_VU[k] && t - USAGE_VU[k] < 5*60000) return;     // une ouverture comptée toutes les 5 min au plus
+    USAGE_VU[k] = t;
+    SB.rpc('noter_usage', { p_type:type, p_cle:String(cle) }).then(()=>{}, ()=>{});
+  }catch(e){}
+}
+let ACT = null, ACT_TRI = { col:'acces', dir:-1 }, ACT_OUVERT = null;
+function actCtx(r, fn){
+  const sv = { MIS, PARCOURS, PORTES, MOI_ID };
+  MIS = Object.assign({}, r.mis || {}); PARCOURS = r.parcours || null; PORTES = r.portes || {}; MOI_ID = r.membre_id;
+  try{
+    misPhases().forEach(ph=>(ph.missions||[]).forEach(m=>(m.actions||[]).forEach(a=>{
+      const cle = m.id+'/'+a.id;
+      if(a.v==='auto' && LIG_KAIROS_VIF.includes(a.k) && !misFaitV(MIS[cle]) && miKairos(a.k)) MIS[cle] = '~';
+    })));
+    return fn();
+  } finally { MIS = sv.MIS; PARCOURS = sv.PARCOURS; PORTES = sv.PORTES; MOI_ID = sv.MOI_ID; }
+}
+const actJour = d => String(d||'').slice(0,10);
+function actCalc(r){
+  const auj = todayIso, j = (r.jours||[]).map(actJour);
+  const depuis = n => j.filter(x=>x > vAddDays(auj, -n)).length;
+  const pub = (r.mm||[]).filter(x=>x.st==='publie').map(x=>x.s).sort();
+  let serie = 0;
+  if(pub.length){ serie = 1; for(let i=pub.length-1; i>0 && vAddDays(pub[i], -7)===pub[i-1]; i--) serie++; }
+  const usage = r.usage || [];
+  const fiches = [...new Set(usage.filter(u=>u.t==='fiche').map(u=>u.c))];
+  const favs = Object.keys(r.ffav||{}).filter(k=>typeof r.ffav[k]==='string' && r.ffav[k][0]!=='!');
+  let phases = [], phaseCour = '', statut = String((r.parcours||{}).statut||'').replace('ROLE_','');
+  if(misData()) actCtx(r, ()=>{
+    phases = misPhases().filter(p=>!p.avenir).map(p=>{ const g = miPhaseProg(p); return { n:p.n, ok:g.ok, tot:g.tot, ouverte:miPhaseOuverte(p) }; });
+    const c = misPhases().find(p=>p.id===miPhaseDefaut()); phaseCour = c ? c.n : '';
+  });
+  const portes = Object.entries(r.portes||{}).map(([k,v])=>({ k, ...v }));
+  return { j7:depuis(7), j30:depuis(30), j90:depuis(90), mmPub:pub.length, mmBrouillon:(r.mm||[]).filter(x=>x.st!=='publie').length,
+           mmDer: pub[pub.length-1] || '', serie, fiches, favs, phases, phaseCour, statut, portes,
+           misOk: phases.reduce((s,p)=>s+p.ok,0) };
+}
+async function chargerActivite(){
+  if(!SB || !SBUSER || !EST_ADMIN) return;
+  const el = document.getElementById('actListe');
+  try{
+    const r = await SB.rpc('activite_admin');
+    if(r.error) throw r.error;
+    ACT = (r.data || []).map(x=>Object.assign(x, { _c: actCalc(x) }));
+  }catch(e){
+    if(el) el.innerHTML = '<p class="mbr-sub">Activité indisponible : la fonction <code>activite_admin</code> n’est pas encore installée dans la base.</p>';
+    return;
+  }
+  buildActivite();
+}
+const actLibUsage = u => u.t==='fiche' ? ((CONTENU&&CONTENU.pages&&CONTENU.pages[u.c]) ? '📄 '+CONTENU.pages[u.c].t : '📄 '+u.c)
+  : u.t==='onglet' ? '🗂 '+((document.querySelector('#side [data-v="'+u.c+'"]')||{}).title || u.c) : '🧮 '+u.c;
+function actFiltre(){
+  const q = norm((document.getElementById('actQ')||{}).value||'').trim();
+  const f = (document.getElementById('actF')||{}).value || '';
+  const mes = new Set();
+  if(f==='lignee' && MOI_ID){ const moi = byId.get(MOI_ID); const pile = moi ? [norm(moi.name)] : [];
+    while(pile.length){ const n = pile.pop(); (children.get(n)||[]).forEach(c=>{ if(!mes.has(c.id)){ mes.add(c.id); pile.push(norm(c.name)); } }); } }
+  return (ACT||[]).filter(r=>{
+    const c = r._c;
+    if(q && !norm((r.nom||'')+' '+(r.emails||[]).join(' ')).includes(q)) return false;
+    if(f==='actifs' && !c.j30) return false;
+    if(f==='inactifs' && c.j30) return false;
+    if(f==='lignee' && !mes.has(r.membre_id)) return false;
+    if(/^ph\d$/.test(f) && String(c.phaseCour)!==f.slice(2)) return false;
+    return true;
+  });
+}
+const ACT_COLS = [
+  ['nom','Personne', r=>norm(r.nom||'')], ['acces','Dernier accès', r=>r.dernier_acces||''], ['j30','Jours actifs (30 j)', r=>r._c.j30],
+  ['mm','Mail managers publiés', r=>r._c.mmPub], ['parc','Missions validées', r=>r._c.misOk], ['enr','Enregistr.', r=>+r.enregistrements||0],
+  ['al','Alertes', r=>+r.regles_actives||0], ['fav','Favoris', r=>r._c.favs.length], ['lu','Fiches lues', r=>r._c.fiches.length]
+];
+function buildActivite(){
+  const el = document.getElementById('actListe'), vue = document.getElementById('actVue');
+  if(!el || !ACT) return;
+  // vue d'ensemble
+  const tous = ACT.map(r=>r._c), sem = mmSemCour();
+  const pubSem = ACT.filter(r=>(r.mm||[]).some(x=>x.s===sem && x.st==='publie')).length;
+  const partic = ACT.filter(r=>r.mm_participe!==false && (r.mm||[]).length).length;
+  const parPh = {}; tous.forEach(c=>{ if(c.phaseCour) parPh[c.phaseCour] = (parPh[c.phaseCour]||0)+1; });
+  const top = type => { const m = {}; ACT.forEach(r=>(r.usage||[]).filter(u=>u.t===type).forEach(u=>{ const x = m[u.c] || (m[u.c] = { c:u.c, t:type, n:0, p:new Set() }); x.n += u.n; x.p.add(r.membre_id); }));
+    return Object.values(m).sort((a,b)=>b.p.size-a.p.size || b.n-a.n).slice(0,5); };
+  const tuile = (v, l) => '<div class="act-t"><b>'+v+'</b><span>'+l+'</span></div>';
+  if(vue) vue.innerHTML = '<div class="act-tuiles">'
+    + tuile(tous.filter(c=>c.j7).length+' / '+ACT.length, 'actifs cette semaine')
+    + tuile(tous.filter(c=>c.j30).length, 'actifs sur 30 jours')
+    + tuile(pubSem+(partic?' / '+partic:''), 'Mail Manager publiés (semaine du '+fmtD(sem)+')')
+    + tuile(Object.keys(parPh).sort().map(k=>'P'+k+' : '+parPh[k]).join(' · ') || '—', 'personnes par phase en cours')
+    + '</div><div class="act-tops"><div><h3>Fiches les plus lues</h3>'+(top('fiche').map(x=>'<div class="act-top">'+esc(actLibUsage({t:'fiche',c:x.c}))+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
+    + '</div><div><h3>Onglets les plus utilisés</h3>'+(top('onglet').map(x=>'<div class="act-top">'+esc(actLibUsage({t:'onglet',c:x.c}))+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
+    + '</div></div>';
+  // tableau
+  const col = ACT_COLS.find(c=>c[0]===ACT_TRI.col) || ACT_COLS[1];
+  const lignes = actFiltre().sort((a,b)=>{ const x = col[2](a), y = col[2](b); return (x<y?-1:x>y?1:0)*ACT_TRI.dir; });
+  const parc = c => c.phases.map(p=>'<span class="act-ph'+(p.ok===p.tot&&p.tot?' ok':'')+(p.ouverte?'':' ferme')+'">P'+p.n+' '+p.ok+'/'+p.tot+'</span>').join(' ');
+  el.innerHTML = '<div class="tbl-wrap"><table class="act-tbl"><thead><tr>'+ACT_COLS.map(c=>'<th data-tri="'+c[0]+'" class="'+(c[0]===ACT_TRI.col?'on':'')+'">'+c[1]+(c[0]===ACT_TRI.col?(ACT_TRI.dir>0?' ▲':' ▼'):'')+'</th>').join('')+'</tr></thead><tbody>'
+    + lignes.map(r=>{ const c = r._c;
+      return '<tr class="act-l'+(ACT_OUVERT===r.membre_id?' on':'')+'" data-act="'+r.membre_id+'"><td><b>'+esc(r.nom||(r.emails||[])[0]||'—')+'</b><div class="mbr-mail">'+esc(c.statut||'')+(c.phaseCour?' · phase '+c.phaseCour:'')+'</div></td>'
+        + '<td class="num">'+esc(fmtQuand(r.dernier_acces))+'</td><td class="num">'+c.j30+'</td>'
+        + '<td class="num">'+c.mmPub+(c.serie>1?' <span class="act-s">série '+c.serie+'</span>':'')+(c.mmDer?'<div class="mbr-mail">dernier '+fmtD(c.mmDer)+'</div>':'')+'</td>'
+        + '<td>'+(parc(c)||'—')+'</td><td class="num">'+(+r.enregistrements||0)+'</td><td class="num">'+(+r.regles_actives||0)+'</td>'
+        + '<td class="num">'+c.favs.length+'</td><td class="num">'+c.fiches.length+'</td></tr>'
+        + (ACT_OUVERT===r.membre_id ? '<tr class="act-det"><td colspan="'+ACT_COLS.length+'">'+actDetail(r)+'</td></tr>' : '');
+    }).join('') + '</tbody></table></div><p class="mbr-sub">'+lignes.length+' personne'+(lignes.length>1?'s':'')+'. Mesure des fiches, onglets et simulateurs ouverts depuis le 21/10/2026.</p>';
+}
+function actDetail(r){
+  const c = r._c;
+  let parc = '';
+  if(misData()) parc = actCtx(r, ()=>misPhases().filter(p=>!p.avenir).map(ph=>'<div class="act-dph"><b>Phase '+ph.n+' — '+esc(ph.t)+'</b>'
+    + (ph.missions||[]).map(m=>{ const e = miEtat(ph, m), g = miProg(m);
+        return '<div class="act-mi '+e+'">'+(e==='faite'?'✓':e==='encours'?'◐':e==='bloquee'?'🔒':'○')+' '+esc(m.id+' '+m.t)+' <span>'+g.ok+'/'+g.tot+'</span></div>'; }).join('')+'</div>').join(''));
+  const sems = []; for(let i=11;i>=0;i--) sems.push(vAddDays(vMonday(todayIso), -7*i));
+  const jours = new Set((r.jours||[]).map(actJour));
+  const conn = sems.map(s=>{ let n=0; for(let d=0; d<7; d++) if(jours.has(vAddDays(s,d))) n++; return '<i title="semaine du '+fmtD(s)+' : '+n+' jour(s)" style="height:'+(4+n*6)+'px"></i>'; }).join('');
+  const mm = (r.mm||[]).slice(-12).map(x=>'<span class="act-mm '+(x.st==='publie'?'ok':'')+'" title="'+esc((x.st==='publie'?'publié':'brouillon')+' — semaine du '+fmtD(x.s))+'">'+fmtD(x.s).slice(0,5)+'</span>').join('');
+  const portes = c.portes.map(p=>'<div>'+esc(miPorteNom(p.k))+' : '+esc(p.statut)+(p.demande_le?' · demandé le '+fmtD(actJour(p.demande_le)):'')+(p.traite_le?' · traité le '+fmtD(actJour(p.traite_le)):'')+'</div>').join('');
+  const usage = (r.usage||[]).slice(0,15).map(u=>'<div class="act-u"><span>'+esc(fmtD(actJour(u.d)))+'</span>'+esc(actLibUsage(u))+(u.n>1?' <em>×'+u.n+'</em>':'')+'</div>').join('');
+  return '<div class="act-grid"><div><h4>Parcours</h4>'+(parc||'<p class="mbr-sub">—</p>')+(portes?'<h4>Points d’étape</h4>'+portes:'')+'</div>'
+    + '<div><h4>Connexions (12 semaines)</h4><div class="act-bars">'+conn+'</div>'
+    + '<p class="mbr-sub">'+c.j7+' j sur 7 · '+c.j30+' j sur 30 · '+c.j90+' j sur 90 — inscrit le '+fmtD(actJour(r.premier))+'</p>'
+    + '<h4>Mail Manager</h4><div class="act-mml">'+(mm||'<span class="mbr-sub">aucun</span>')+'</div>'
+    + '<p class="mbr-sub">'+c.mmPub+' publié(s), '+c.mmBrouillon+' brouillon(s)'+(r.mm_participe===false?' · ne participe pas':'')+(r.mm_objectifs?' · objectifs saisis':'')+'</p>'
+    + '<h4>Autres</h4><p class="mbr-sub">'+(+r.enregistrements||0)+' séance(s) enregistrée(s) · '+(+r.regles||0)+' règle(s) d’alerte ('+(+r.regles_actives||0)+' active(s)) · '+(+r.alertes||0)+' alerte(s) reçue(s) · '+(+r.retours||0)+' retour(s) envoyés · '+c.favs.length+' favori(s)</p></div>'
+    + '<div><h4>Dernières ouvertures</h4>'+(usage||'<p class="mbr-sub">Rien depuis le 21/10/2026.</p>')+(c.fiches.length?'<p class="mbr-sub">'+c.fiches.length+' fiche(s) différente(s) lue(s).</p>':'')+'</div></div>';
+}
+function actCsv(){
+  const l = actFiltre(), sep = ';', q = v => '"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const tete = ['Personne','E-mails','Statut','Phase en cours','Dernier accès','Jours actifs 7 j','Jours actifs 30 j','Mail managers publiés','Série','Dernier publié','Missions validées']
+    .concat((l[0]&&l[0]._c.phases||[]).map(p=>'Phase '+p.n)).concat(['Enregistrements','Règles d’alerte actives','Favoris','Fiches lues']);
+  const rows = l.map(r=>{ const c = r._c; return [r.nom, (r.emails||[]).join(' '), c.statut, c.phaseCour, actJour(r.dernier_acces), c.j7, c.j30, c.mmPub, c.serie, c.mmDer, c.misOk]
+    .concat(c.phases.map(p=>p.ok+'/'+p.tot)).concat([+r.enregistrements||0, +r.regles_actives||0, c.favs.length, c.fiches.length]); });
+  const txt = '﻿'+[tete].concat(rows).map(x=>x.map(q).join(sep)).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type:'text/csv;charset=utf-8' }));
+  a.download = 'kairos-activite-'+todayIso+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+document.addEventListener('click', e=>{
+  const th = e.target.closest && e.target.closest('.act-tbl th[data-tri]');
+  if(th){ const c = th.dataset.tri; ACT_TRI = { col:c, dir: ACT_TRI.col===c ? -ACT_TRI.dir : (c==='nom'?1:-1) }; buildActivite(); return; }
+  const tr = e.target.closest && e.target.closest('.act-tbl tr.act-l');
+  if(tr){ const id = +tr.dataset.act; ACT_OUVERT = ACT_OUVERT===id ? null : id; buildActivite(); return; }
+  if(e.target.closest && e.target.closest('#actCsv')) actCsv();
+});
+(()=>{ ['actQ','actF'].forEach(id=>{ const x = document.getElementById(id); if(x) x.addEventListener('input', buildActivite); }); })();
 
 /* ---------- Accès progressif aux fiches (21/10/2026, règle Florian) ----------
    Une fiche s'ouvre quand la première mission qui y renvoie devient accessible (phase ouverte et
@@ -10121,8 +10320,8 @@ function buildRes(){
     document.getElementById('resLiens').innerHTML=document.getElementById('homeRes').innerHTML || C.ressources.map(r=>'<a class="resc" href="'+esc(r.u||'#')+'" target="_blank" rel="noopener"><b>'+esc(r.t)+'</b><p>'+esc(r.d||'')+'</p></a>').join('');
   }
 }
-function rsOuvrirSim(id){ if(!rsDef(id)) return; RS_SIM=id; rsRenderSim(); }
-function rsOuvrirDoc(id){ if(!rsDef(id)) return; RS_DOC=id; rsRenderDoc(); }
+function rsOuvrirSim(id){ if(!rsDef(id)) return; RS_SIM=id; rsRenderSim(); noterUsage('simu', rsDef(id).slug||id); }
+function rsOuvrirDoc(id){ if(!rsDef(id)) return; RS_DOC=id; rsRenderDoc(); noterUsage('simu', 'courrier:'+(rsDef(id).slug||id)); }
 function rsTabState(p){
   if(RS_SUB!=='sim') p.set('s', RS_SLUG[RS_SUB]);
   if(RS_SUB==='doc' && RS_DOC!=='heb') p.set('modele', rsDef(RS_DOC).slug);
