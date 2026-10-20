@@ -4165,13 +4165,32 @@ function miAction(m, a){
   const v = MIS[cle];
   return { ok: misFaitV(v), d: misFaitV(v) && v[0]!=='~' ? misTs(v).slice(0,10) : '', src:'moi' };
 }
+// Ce qui déclenche une validation Kairos, en clair (affiché sous la case, 21/10/2026)
+function miPreuve(k){
+  try{
+    if(k==='coanim'){ const l = mmFormations(MM_ORIGINE, todayIso).animL || [];
+      return l.length ? l[0].t+' du '+fmtD(l[0].d)+(l.length>1 ? ' (+'+(l.length-1)+')' : '') : ''; }
+    if(k==='dm4'){ const r = mmDmAssistes(MM_ORIGINE, todayIso); return r.n ? r.n+' filleuls en DM : '+r.noms.join(', ') : ''; }
+    if(k==='mm4') return 'Mail Manager publié 4 semaines de suite';
+    if(k==='form3') return 'une formation suivie 3 mois de suite';
+    if(k==='obj') return 'objectifs saisis dans le Mail Manager';
+  }catch(e){}
+  return '';
+}
+const miPreuveDe = cle => { const v = MIS['_p:'+cle]; return typeof v==='string' && v.includes('|') ? v.slice(v.indexOf('|')+1) : ''; };
 // Mémorise les validations Kairos atteintes (elles restent acquises)
 function miVerrouKairos(){
   let chg = false;
   misPhases().forEach(ph=>(ph.missions||[]).forEach(m=>(m.actions||[]).forEach(a=>{
     if(a.v!=='auto' || !a.k || a.k==='adman') return;
     const cle = m.id+'/'+a.id;
-    if(!misFaitV(MIS[cle]) && miKairos(a.k)){ MIS[cle] = new Date().toISOString(); chg = true; }
+    if(!misFaitV(MIS[cle]) && miKairos(a.k)){
+      const maint = new Date().toISOString(), pr = miPreuve(a.k);
+      MIS[cle] = maint;
+      // preuve gardée à côté (clé « _p: », ignorée par les compteurs) : ce qui a déclenché la validation (21/10/2026)
+      if(pr) MIS['_p:'+cle] = maint+'|'+pr;
+      chg = true;
+    }
   })));
   if(chg) saveMis();
   return chg;
@@ -4277,7 +4296,7 @@ function miActionHtml(ph, m, a){
                 : (e.f && e.f.f ? 'Inscrit pour le '+fmtD(e.f.f)+' — validé après la séance' : 'Se valide tout seul dès que le réseau le relève');
   } else if(a.v==='auto'){
     tag = '<span class="mi-v auto" title="Calculé par Kairos à partir de tes données">Auto</span>';
-    info = e.ok ? 'Validé par Kairos'+(e.d?' le '+fmtD(e.d):'') : 'Se valide tout seul dès que Kairos le constate';
+    info = e.ok ? 'Validé par Kairos'+(e.d?' le '+fmtD(e.d):'')+(miPreuveDe(cle)?' : '+miPreuveDe(cle):'') : 'Se valide tout seul dès que Kairos le constate';
   } else {
     tag = '<span class="mi-v moi" title="À cocher par toi">Moi</span>';
     if(e.ok) info = e.d ? 'Coché le '+fmtD(e.d) : 'Coché';
@@ -5775,15 +5794,16 @@ function mmDmAssistes(deb, fin){
 function mmFormations(deb, fin){
   const moi = MOI_ID ? byId.get(MOI_ID) : null;
   const nk = moi ? alrNomK(moi.name) : '';
-  const suiv = new Map(), anim = new Map();
+  const suiv = new Map(), anim = new Map(), animL = [];
   const cle = a => a.k==='f' ? 'f@'+a.start : a.k+':'+a.id;
   [...A, ...F].forEach(a=>{
     if(!a.start || a.start < deb || a.start > fin || !isPast(a)) return;
     const pd = a.k==='a' && a.th==='PARCOURS DECOUVERTE';
     if(!pd && dejaInscrit(a) && !suiv.has(cle(a))) suiv.set(cle(a), a.title);
-    if(nk && String(a.pilotes||'').split(',').some(n=>alrNomK(n)===nk) && !anim.has(cle(a))) anim.set(cle(a), a.title);
+    if(nk && String(a.pilotes||'').split(',').some(n=>alrNomK(n)===nk) && !anim.has(cle(a))){ anim.set(cle(a), a.title); animL.push({ t:a.title, d:a.start }); }
   });
-  return { suiv:suiv.size, anim:anim.size, suivN:[...suiv.values()], animN:[...anim.values()] };
+  animL.sort((x,y)=>x.d<y.d?-1:1);
+  return { suiv:suiv.size, anim:anim.size, suivN:[...suiv.values()], animN:[...anim.values()], animL };
 }
 function mmAuto(sem){
   const a={};
@@ -7216,7 +7236,7 @@ function ligParcActionHtml(ph, m, a, prenom){
                 : (e.f && e.f.f ? 'inscrit pour le '+fmtD(e.f.f) : 'pas encore relevé');
   } else if(a.v==='auto'){
     src = '<span class="mi-v auto" title="Calculé par Kairos">Auto · Kairos</span>';
-    info = e.ok ? 'validé par Kairos'+(e.d ? ' le '+fmtD(e.d) : '') : (a.k==='obj' ? 'se valide quand '+prenom+' saisit ses objectifs' : 'pas encore constaté');
+    info = e.ok ? 'validé par Kairos'+(e.d ? ' le '+fmtD(e.d) : '')+(miPreuveDe(m.id+'/'+a.id) ? ' : '+miPreuveDe(m.id+'/'+a.id) : '') : (a.k==='obj' ? 'se valide quand '+prenom+' saisit ses objectifs' : 'pas encore constaté');
   } else {
     src = '<span class="mi-v moi" title="Case cochée par '+esc(prenom)+'">Coché par '+esc(prenom)+'</span>';
     info = e.ok ? (e.d ? 'coché le '+fmtD(e.d) : 'coché (ancien parcours)') : 'à faire';

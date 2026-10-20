@@ -3741,6 +3741,23 @@ test.describe('Parcours en missions', () => {
     expect(r.h).toContain('invité·e');
   });
 
+  // 21/10/2026 : une validation Kairos garde ce qui l'a déclenchée, affiché sous la case
+  test('validation « formation co-animée » : la séance qui l’a déclenchée est gardée et affichée', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page, {});
+    const r = await page.evaluate(() => {
+      const t = misTrouve('3.7/coanim');
+      const avant = miAction(t.m, t.a).ok;
+      A.push({ k:'a', id: 7777, th: '', title: 'Atelier Démarrage', start: '2026-10-03', end: '2026-10-03', pilotes: 'Pierre X, Test MOI', guests: [] });
+      majParcours();
+      return { avant, apres: miAction(t.m, t.a).ok, preuve: miPreuveDe('3.7/coanim'), html: miActionHtml(t.ph, t.m, t.a) };
+    });
+    expect(r.avant).toBe(false);
+    expect(r.apres).toBe(true);
+    expect(r.preuve).toBe('Atelier Démarrage du 03/10/2026');
+    expect(r.html).toContain('Atelier Démarrage du 03/10/2026');
+  });
+
   test('parrain : la demande s’affiche en haut de l’accueil, « Pas encore » exige un mot', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poser(page, { statut: 'ROLE_BEMAN', aValider: [{ membre_id: 20521, nom: 'Filleule Test', porte: 'porte1', demande_le: '2026-09-27T10:00:00Z', resume: [{ id: '1.1', t: 'Cursus', d: '2026-09-01' }] }] });
