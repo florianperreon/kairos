@@ -681,6 +681,14 @@ def parcours_membre(api, uid, membres, adh_ids):
     # Première formation réservée (même à venir) : on garde les deux dates
     for f in formations:
         noter("formation_reservee", f.get("startDate"), "formation")
+    # 21/10/2026 (règle Florian) : un atelier de formation compte aussi (ex. « Prise de R1 niveau 1 »),
+    # hors parcours d'accueil (DM, Atelier Démarrage, 3 Jours = thème PARCOURS DECOUVERTE ou étapes dm/ad/trois_jours)
+    for a in ateliers:
+        if _norm(a.get("thematic")) == "parcours decouverte":
+            continue
+        if _cle_etape(a.get("title"), ETAPES_ATELIERS) in ("dm", "ad", "trois_jours"):
+            continue
+        noter("formation_reservee", a.get("startDate"), "atelier")
 
     # Premier invité en DM : une séance où la personne est présente et où figure aussi l'un de ses filleuls
     for a in ateliers:
