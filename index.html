@@ -7437,7 +7437,8 @@ function ligParcActionHtml(ph, m, a, prenom){
     src = '<span class="mi-v auto" title="Calculé par Kairos">Auto · Kairos</span>';
     info = e.ok ? 'validé par Kairos'+(e.d ? ' le '+fmtD(e.d) : '')+(miPreuveDe(m.id+'/'+a.id) ? ' : '+miPreuveDe(m.id+'/'+a.id) : '') : (a.k==='obj' ? 'se valide quand '+prenom+' saisit ses objectifs' : 'pas encore constaté');
   } else {
-    src = '<span class="mi-v moi" title="Case cochée par '+esc(prenom)+'">Coché par '+esc(prenom)+'</span>';
+    src = e.ok ? '<span class="mi-v moi" title="Case cochée par '+esc(prenom)+'">Coché par '+esc(prenom)+'</span>'
+               : '<span class="mi-v moi" title="Case que '+esc(prenom)+' coche lui-même">À cocher par '+esc(prenom)+'</span>';
     info = e.ok ? (e.d ? 'coché le '+fmtD(e.d) : 'coché (ancien parcours)') : 'à faire';
   }
   return '<li class="lp-a'+(e.ok?' ok':'')+(a.opt?' opt':'')+'"><span class="lp-i">'+(e.ok?'✓':'○')+'</span>'

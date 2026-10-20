@@ -772,7 +772,10 @@ def sync_parcours(api, membres, adh_ids):
     except Exception as e:
         print(f"liste des membres à synchroniser indisponible ({e})")
         return
-    ids = [c["membre_id"] for c in cibles if c.get("membre_id")]
+    # Une personne peut avoir plusieurs adresses rapprochées de la même fiche : sans dédoublonnage, l'upsert
+    # reçoit deux fois le même membre_id et Postgres refuse TOUT le lot (« cannot affect row a second time ») —
+    # constaté le 21/10/2026 : aucune progression mise à jour depuis le 24/09/2026.
+    ids = list(dict.fromkeys(c["membre_id"] for c in cibles if c.get("membre_id")))
     if not ids:
         print("aucun compte rapproché : rien à synchroniser")
         return
@@ -788,6 +791,8 @@ def sync_parcours(api, membres, adh_ids):
                        headers={"x-kairos-token": KAIROS_TOKEN, "Content-Type": "application/json"},
                        timeout=300)
     print("progressions : " + rp.text[:200])
+    if not rp.ok:
+        raise RuntimeError(f"progressions refusées par la base ({rp.status_code})")
 
 # ---------------- contrôle préalable des endpoints ----------------
 def _echantillon(d):

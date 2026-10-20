@@ -3913,7 +3913,7 @@ test.describe('Ma lignée — parcours des filleuls', () => {
     const dm = await action(page, 101, '1.1/dm');
     expect(dm.ok).toBe(true); expect(dm.src).toBe('Auto · réseau'); expect(dm.info).toContain('relevé le');
     const bcbg = await action(page, 101, '1.2/bcbg');         // décochée : reste à faire
-    expect(bcbg).toEqual({ ok: false, info: 'à faire', src: 'Coché par Aline' });
+    expect(bcbg).toEqual({ ok: false, info: 'à faire', src: 'À cocher par Aline' });
     const mail = await action(page, 101, '1.5/mail');         // coché chez moi, pas chez elle
     expect(mail.ok).toBe(false);
     expect(erreurs).toEqual([]);
