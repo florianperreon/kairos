@@ -1268,6 +1268,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 }
 .lg-nv{display:block;font-size:11.5px;color:var(--ink-3);font-weight:500}
 .lg-mu{color:var(--ink-3)}
+.lg-tbl tr.lg-grp td{background:var(--surface-2);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);padding:6px 10px}
 .lg-up{color:var(--ok);font-weight:700}
 .lg-dn{color:var(--bad);font-weight:700}
 .lg-okk{font-size:12px;font-weight:700;color:var(--gold-ink)}
@@ -7282,7 +7283,8 @@ function ligLignes(){
   if(!LIG) return [];
   const cour = mmSemCour();
   const adh = (DATA && DATA.adhDates) || {};
-  const base = LIG.liste.filter(p => ADH.has(p.membre_id) && (LIG_PORTEE!=='directs' || p.niveau===1));
+  // adhérents + toute personne déjà sur Kairos, même invitée (21/10/2026, règle Florian)
+  const base = LIG.liste.filter(p => (ADH.has(p.membre_id) || p.connecte) && (LIG_PORTEE!=='directs' || p.niveau===1));
   const s = ligSeances(base.map(p=>p.membre_id));
   return base.map(p => {
     const id = p.membre_id, rows = LIG.mm[id] || [], der = rows[rows.length-1] || null;
@@ -7299,7 +7301,7 @@ function ligLignes(){
     else if(p.participe && (!der || der.semaine < vAddDays(cour,-7))) sig.push(['mm', der ? 'mail manager non publié depuis '+mmLibC(der.semaine) : 'aucun mail manager publié']);
     const obj = ligObjectifs(p);
     return {
-      id, nom:p.nom, niveau:p.niveau, parrain:p.parrain_id===MOI_ID ? '' : ligNom(p.parrain_id),
+      id, nom:p.nom, niveau:p.niveau, invite:!ADH.has(id), parrain:p.parrain_id===MOI_ID ? '' : ligNom(p.parrain_id),
       connecte:p.connecte, participe:p.participe, statut:ligStatut(p), obj,
       seance: vu || null, prochaine: s.pro[id] || null,
       adh: ad, exp, mm: der ? der.semaine : '', mmCour: !!(der && der.semaine===cour),
@@ -7315,6 +7317,8 @@ function ligTrier(l){
     obj: r.obj ? r.obj.n/r.obj.tot : -1, seance: r.seance ? r.seance.d : '', adh: r.exp || '',
     mm: r.mm || '', r1: r.r1, av: r.av==null?-1:r.av, va: r.va==null?-1:r.va, relance: r.relance })[col];
   return l.slice().sort((a,b)=>{
+    // d'abord les personnes sur Kairos, puis les adhérents qui n'y sont pas encore, quel que soit le tri (21/10/2026)
+    if(!!a.connecte !== !!b.connecte) return a.connecte ? -1 : 1;
     const x=val(a), y=val(b);
     const c = (typeof x==='string') ? x.localeCompare(y,'fr') : (x-y);
     return c ? c*k : (a.niveau-b.niveau) || a.nom.localeCompare(b.nom,'fr');
@@ -7337,7 +7341,7 @@ function buildLig(){
 
 function ligTableau(){
   const tout = LIG.liste.filter(p=>ADH.has(p.membre_id));
-  const invites = LIG.liste.length - tout.length;
+  const invites = LIG.liste.filter(p=>!ADH.has(p.membre_id) && !p.connecte).length;
   const l = ligTrier(ligLignes());
   const cour = mmSemCour();
   const aRelancer = l.filter(r=>r.relance>0).length;
@@ -7352,19 +7356,23 @@ function ligTableau(){
     return h;
   }
   const th = (c, t, cl) => '<th class="sortable'+(cl?' '+cl:'')+(LIG_TRI.col===c?' '+LIG_TRI.dir:'')+'" data-ligt="'+c+'">'+t+'</th>';
+  const nK = l.filter(r=>r.connecte).length;
+  h += '<p class="mm-sub" style="margin-top:8px">En tête : les '+nK+' personne'+(nK>1?'s':'')+' sur Kairos ; ensuite les '+(l.length-nK)+' adhérent'+(l.length-nK>1?'s':'')+' FORMAN pas encore sur Kairos.</p>';
   h += '</div><div class="tbl-wrap lg-tw"><table class="lg-tbl"><thead><tr>'
     + th('nom','Personne') + th('relance','À relancer') + th('statut','Statut') + th('obj','Objectifs')
     + th('seance','Dernière séance') + th('adh','Adhésion') + th('mm','Mail manager')
     + th('r1','R1 · 4 sem.','num') + th('av','RDV d’avance','num') + th('va','VA + VAA VC','num')
     + '</tr></thead><tbody>'
-    + l.map(r => {
+    + l.map((r, i) => {
+        const sep = (i===0 || l[i-1].connecte !== r.connecte)
+          ? '<tr class="lg-grp"><td colspan="10">'+(r.connecte ? 'Sur Kairos' : 'Adhérents FORMAN pas encore sur Kairos')+'</td></tr>' : '';
         const obj = r.obj ? '<span class="lg-jauge" title="'+r.obj.n+' objectifs validés sur '+r.obj.tot+'"><i style="width:'+Math.round(r.obj.n*100/r.obj.tot)+'%"></i></span> '+r.obj.n+'/'+r.obj.tot : '<span class="lg-mu">—</span>';
         const tend = r.r1t==null ? '' : (r.r1t>0 ? ' <span class="lg-up" title="en hausse sur les 4 semaines précédentes">↗</span>' : r.r1t<0 ? ' <span class="lg-dn" title="en baisse sur les 4 semaines précédentes">↘</span>' : ' <span class="lg-mu" title="stable">→</span>');
         const mm = !r.connecte ? '<span class="lg-mu">pas sur Kairos</span>'
                  : !r.participe ? '<span class="lg-mu">ne participe pas</span>'
                  : !r.mm ? '<span class="lg-mu">aucun</span>'
                  : (r.mmCour ? '<a href="#mail-manager?s=le-mur&v='+r.id+'" data-mmlig="'+r.id+'">✅ '+esc(mmLibC(r.mm))+'</a>' : esc(mmLibC(r.mm)));
-        return '<tr'+(r.relance?' class="lg-rel"':'')+'><td><b>'+esc(r.nom)+'</b><span class="lg-nv">'
+        return sep + '<tr'+(r.relance?' class="lg-rel"':'')+'><td><b>'+esc(r.nom)+'</b>'+(r.invite?' <span class="lg-mu">invité·e</span>':'')+'<span class="lg-nv">'
           + (r.niveau===1 ? 'filleul direct' : 'niveau '+r.niveau+(r.parrain?' · filleul de '+esc(r.parrain):'')) + '</span></td>'
           + '<td>'+(r.sig.length ? r.sig.map(([k,t])=>'<span class="lg-sig s-'+k+'">'+esc(t)+'</span>').join('') : '<span class="lg-okk">à jour</span>')+'</td>'
           + '<td>'+(r.statut ? '<span class="lg-st">'+esc(r.statut)+'</span>' : '<span class="lg-mu">—</span>')+'</td>'
@@ -7378,7 +7386,7 @@ function ligTableau(){
           + '<td class="num">'+(r.va==null ? '<span class="lg-mu">—</span>' : mmEur(r.va))+'</td></tr>';
       }).join('')
     + '</tbody></table></div>';
-  if(invites) h += '<p class="mm-note">'+invites+' membre'+(invites>1?'s':'')+' invité'+(invites>1?'s':'')+' (non adhérent'+(invites>1?'s':'')+') dans ta descendance — visibles dans l’arbre.</p>';
+  if(invites) h += '<p class="mm-note">'+invites+' membre'+(invites>1?'s':'')+' invité'+(invites>1?'s':'')+' (non adhérent'+(invites>1?'s':'')+', pas sur Kairos) dans ta descendance — visibles dans l’arbre.</p>';
   return h;
 }
 
@@ -7477,7 +7485,8 @@ function ligParcours(){
     + '<div class="mm-filtre"><button type="button" data-ligp=""'+(LIG_PORTEE?'':' class="on"')+'>Toute ma descendance</button>'
     + '<button type="button" data-ligp="directs"'+(LIG_PORTEE==='directs'?' class="on"':'')+'>Filleuls directs</button></div>';
   if(!misData()) return h + '<p class="mm-vide" style="margin-top:14px">Le parcours n’est pas encore chargé.</p></div>';
-  const base = LIG.liste.filter(p => ADH.has(p.membre_id) && (LIG_PORTEE!=='directs' || p.niveau===1));
+  // adhérents + toute personne déjà sur Kairos, même invitée (21/10/2026, règle Florian)
+  const base = LIG.liste.filter(p => (ADH.has(p.membre_id) || p.connecte) && (LIG_PORTEE!=='directs' || p.niveau===1));
   const co = base.filter(p=>p.connecte), sans = base.filter(p=>!p.connecte);
   if(!base.length) return h + '<p class="mm-vide" style="margin-top:14px">Pas encore d’adhérent dans ta descendance.</p></div>';
   if(co.length && !LIG.parcOk) h += '<p class="mi-bl" style="margin-top:12px">Les cases cochées n’ont pas pu être chargées : seules les validations du réseau s’affichent.</p>';

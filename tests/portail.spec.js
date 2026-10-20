@@ -1893,7 +1893,8 @@ test.describe('Ma lignée — tableau de bord, progression, victoires, arbre', (
       };
     });
     expect(r.noms).not.toContain('Invite');                   // non adhérent : hors tableau
-    expect(r.noms[r.noms.length - 1]).toBe('Aline');          // la plus à jour en dernier
+    // 21/10/2026 : d'abord les personnes sur Kairos (la plus à jour en dernier), puis les adhérents qui n'y sont pas
+    expect(r.noms).toEqual(['Chloe', 'Aline', 'Bea', 'Sous Invite']);
     expect(r.aline.sig).toEqual(['adh']);                     // adhésion à renouveler sous 30 jours
     expect(r.aline.r1).toBe(5);                               // 2 + 3 sur les 4 dernières semaines
     expect(r.aline.obj).toEqual({ n: 3, tot: 12 });
@@ -1901,7 +1902,7 @@ test.describe('Ma lignée — tableau de bord, progression, victoires, arbre', (
     expect(r.bea).toEqual(['seance', 'kairos']);              // vue il y a 90 jours, pas sur Kairos
     expect(r.chloe).toEqual(['seance']);                      // son mail manager de la semaine est publié
     expect(r.directs).toEqual(['Aline', 'Bea']);
-    expect(r.lignes).toBe(4);
+    expect(r.lignes).toBe(6);                                 // 4 personnes + 2 intertitres (sur Kairos / pas encore)
     expect(r.note).toContain('1 membre invité');
     expect(erreurs).toEqual([]);
   });

@@ -8,7 +8,7 @@
    - La page et meta.js sont demandés en « no-cache » : le navigateur revalide toujours auprès
      du serveur (304 si rien n'a changé), au lieu de servir sa copie pendant 10 minutes.
      C'est ce qui empêchait de voir une mise en ligne récente. */
-const VERSION = 'kairos-b5a3b1649c2934';
+const VERSION = 'kairos-b3e9331e26f233';
 const CORE = ['./', './index.html', './meta.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
 
 self.addEventListener('install', e => {
