@@ -969,6 +969,7 @@ p.mi-ai{margin:4px 0 8px}
 @media (max-width:760px){.ff-chips{flex-wrap:nowrap;overflow-x:auto;margin-left:-4px;margin-right:-4px;padding:0 4px 4px;scrollbar-width:none}.ff-chips::-webkit-scrollbar{display:none}.ff-chips button{flex:none}.ff-card>a{padding:12px 40px 12px 12px}}
 .ff-lock{background:var(--surface-2);border-style:dashed}
 .ff-lock .ff-tx b{color:var(--ink-2)}.ff-lock .ff-d{color:var(--ink-3)}.ff-lock:hover{border-color:var(--line-2);box-shadow:none}
+.ff-or{font-size:11.5px;color:var(--ink-3);font-weight:600;margin-top:3px}
 .ff-verr{font-size:13px;color:var(--ink-3);margin:10px 0 0}
 .ff-verrou{display:flex;gap:14px;align-items:flex-start;background:var(--surface-2);border:1px dashed var(--line-2);border-radius:12px;padding:18px}
 .ff-verrou>span{font-size:28px}.ff-verrou p{color:var(--ink-2);margin:6px 0 0}.ff-verrou .acc-btn{display:inline-block;margin-top:12px;text-decoration:none}
@@ -4682,28 +4683,42 @@ document.addEventListener('click',e=>{
 const FICHES_SOCLE = ['contacts-infos-utiles-reseau','outils-prodemial','outils-bureautique','documents-utiles','rappels-importants-a-mettre-en-place'];
 function ficheAcces(slug){
   try{
-    if(EST_ADMIN || !CONTENU || typeof misData!=='function' || !misData()) return { ok:true };
+    if(!CONTENU || typeof misData!=='function' || !misData()) return { ok:true };
     const acc = CONTENU.fiches_acces || {};
-    if((acc.socle || FICHES_SOCLE).includes(slug)) return { ok:true };
-    const rang = miRang();
-    if(rang >= MI_RANGS.indexOf('ADMAN')) return { ok:true };
-    const phases = misPhases();
-    let premiere = null;
-    for(const ph of phases){
-      for(const m of (ph.missions||[])){
-        if(!(m.pages||[]).includes(slug)) continue;
-        if(rang >= MI_RANGS.indexOf('BEMAN') && +ph.n <= 2) return { ok:true };
-        if(miFaite(m) || (!ph.avenir && miPhaseOuverte(ph) && !miManque(m.pre).length)) return { ok:true };
-        if(!premiere) premiere = { ph, m };
-      }
+    const phases = misPhases(), rang = miRang();
+    // missions qui renvoient à la fiche : la première accessible, sinon la première tout court
+    let ouverte = null, premiere = null;
+    for(const ph of phases) for(const m of (ph.missions||[])){
+      if(!(m.pages||[]).includes(slug)) continue;
+      if(!premiere) premiere = { ph, m };
+      if(!ouverte && (miFaite(m) || (!ph.avenir && miPhaseOuverte(ph) && !miManque(m.pre).length))) ouverte = { ph, m };
     }
-    if(premiere) return { ok:false, m:premiere.m, ph:premiere.ph,
-      raison:'S’ouvre avec la mission '+premiere.m.id+' « '+premiere.m.t+' »', detail: miBlocage(premiere.ph, premiere.m) };
-    // fiche sans mission : avec la phase 3 (ou réglage fiches_acces.phase = {slug: n})
+    const socle = (acc.socle || FICHES_SOCLE).includes(slug);
+    if(EST_ADMIN) return { ok:true, via:'admin', socle, m:(premiere||{}).m };
+    if(socle) return { ok:true, via:'socle' };
+    if(ouverte) return { ok:true, via:'mission', m:ouverte.m, ph:ouverte.ph };
+    if(rang >= MI_RANGS.indexOf('ADMAN')) return { ok:true, via:'statut', statut:MI_RANGS[rang] };
+    if(premiere){
+      if(rang >= MI_RANGS.indexOf('BEMAN') && +premiere.ph.n <= 2) return { ok:true, via:'statut', statut:'BEMAN' };
+      return { ok:false, m:premiere.m, ph:premiere.ph,
+        raison:'S’ouvre avec la mission '+premiere.m.id+' « '+premiere.m.t+' »', detail: miBlocage(premiere.ph, premiere.m) };
+    }
+    // fiche sans mission : avec la phase indiquée (fiches_acces.phase = {slug: n}, 3 par défaut)
     const n = +((acc.phase||{})[slug] || 3), ph = phases.find(p=>+p.n===n);
-    if(!ph || (!ph.avenir && miPhaseOuverte(ph)) || (rang >= MI_RANGS.indexOf('BEMAN') && n <= 2)) return { ok:true };
+    if(!ph || (!ph.avenir && miPhaseOuverte(ph))) return { ok:true, via:'phase', n };
+    if(rang >= MI_RANGS.indexOf('BEMAN') && n <= 2) return { ok:true, via:'statut', statut:'BEMAN' };
     return { ok:false, ph, raison:'S’ouvre avec la phase '+n+' « '+ph.t+' »', detail: miBlocage(ph, (ph.missions||[])[0]||{}) };
   }catch(e){ return { ok:true }; }
+}
+// « À quel moment la fiche a été débloquée » (cartes de l'onglet)
+function ficheOrigine(a){
+  if(!a || !a.ok || !a.via) return '';
+  if(a.via==='mission') return '🔓 Débloquée avec la mission '+a.m.id+' · '+a.m.t;
+  if(a.via==='socle') return '🔓 Ouverte dès le départ';
+  if(a.via==='phase') return '🔓 Débloquée avec la phase '+a.n;
+  if(a.via==='statut') return '🔓 Débloquée par ton statut '+a.statut;
+  if(a.via==='admin') return a.socle ? 'Socle commun · ouverte dès le départ' : (a.m ? 'Mission '+a.m.id+' · '+a.m.t : 'Fiche sans mission');
+  return '';
 }
 const ficheOuverte = s => ficheAcces(s).ok;
 // Fiche verrouillée ouverte par un lien, la recherche ou une adresse : on montre pourquoi, pas le contenu
@@ -4767,6 +4782,8 @@ function ffTexte(s){
   const prem = [...d.querySelectorAll('p,li,td')].map(net).find(x=>x.length > 30 && !/^(✍️|Fiche en cours)/.test(x)) || '';
   return FF_TXT[s] = { n: norm(p.t + ' ' + t), d: prem.length > 140 ? prem.slice(0,137).replace(/\s\S*$/,'') + '…' : prem };
 }
+// Résumé de quelques mots (contenu_blocs.fiches_resumes = {slug: texte}), sinon la 1re phrase utile
+const ficheResume = s => ((CONTENU && CONTENU.fiches_resumes) || {})[s] || ffTexte(s).d;
 // Fiches de la phase en cours (missions du parcours)
 function fichesPhase(){
   try{
@@ -4780,7 +4797,8 @@ function ffCarte(s, rayon){
   if(!a.ok) return '<div class="ff-card ff-lock"><a href="#p/'+esc(s)+'" title="'+esc(a.raison)+'"><span class="ff-ic">🔒</span><span class="ff-tx"><b>'+esc(p.t)+'</b>'
     + (rayon ? '<span class="ff-ray">'+esc(rayon)+'</span>' : '') + '<span class="ff-d">'+esc(a.raison)+'</span></span></a></div>';
   return '<div class="ff-card"><a href="#p/'+esc(s)+'"><span class="ff-ic">'+(p.i||'📄')+'</span><span class="ff-tx"><b>'+esc(p.t)+'</b>'
-    + (rayon ? '<span class="ff-ray">'+esc(rayon)+'</span>' : '') + '<span class="ff-d">'+esc(x.d)+'</span></span></a>'+ffavBtn(s)+'</div>';
+    + (rayon ? '<span class="ff-ray">'+esc(rayon)+'</span>' : '') + '<span class="ff-d">'+esc(ficheResume(s))+'</span>'
+    + (ficheOrigine(a) ? '<span class="ff-or">'+esc(ficheOrigine(a))+'</span>' : '') + '</span></a>'+ffavBtn(s)+'</div>';
 }
 function buildFiches(){
   const el = document.getElementById('fichesListe'), chipsEl = document.getElementById('fichesChips');

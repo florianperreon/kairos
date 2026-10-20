@@ -3542,6 +3542,23 @@ test.describe('Parcours en missions', () => {
     expect(verrou).toEqual({ secret: false, cadenas: true, admin: true });
   });
 
+  test('carte d’une fiche débloquée : résumé de quelques mots et mission qui l’a débloquée', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page, { etapes: { dm: ok, ad: ok } });
+    const r = await page.evaluate(() => {
+      CONTENU.pages['creation-d-entreprise'] = { t: 'Création d’entreprise', h: '<p>Vidéo tuto : https://exemple.invalid et la suite du contenu.</p>' };
+      CONTENU.pages['outils-prodemial'] = { t: 'Outils Prodemial', h: '<p>Un long début de contenu qui ne doit pas apparaître.</p>' };
+      CONTENU.fiches_resumes = { 'creation-d-entreprise': 'Créer son statut d’agent commercial : tuto vidéo, INPI, RSAC.' };
+      showTab('fiches'); curTab = 'fiches';
+      const carte = t => [...document.querySelectorAll('#fichesListe .ff-card')].find(c => c.querySelector('b').textContent === t);
+      const c1 = carte('Création d’entreprise'), c2 = carte('Outils Prodemial');
+      return { d1: c1.querySelector('.ff-d').textContent, o1: c1.querySelector('.ff-or').textContent, o2: c2.querySelector('.ff-or').textContent };
+    });
+    expect(r.d1).toBe('Créer son statut d’agent commercial : tuto vidéo, INPI, RSAC.');
+    expect(r.o1).toBe('🔓 Débloquée avec la mission 1.3 · Créer mon entreprise');
+    expect(r.o2).toBe('🔓 Ouverte dès le départ');
+  });
+
   test('fiches débloquées : rien d’annoncé au premier passage, puis « nouvelles fiches » dans les actions', async ({ page }) => {
     await ouvrir(page);
     await poser(page, {});
