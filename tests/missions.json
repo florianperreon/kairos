@@ -763,6 +763,11 @@
        "id": "lmnp",
        "t": "Autonome en R2 : LMNP",
        "v": "moi"
+      },
+      {
+       "id": "girardin",
+       "t": "Autonome en R2 : Girardin industriel",
+       "v": "moi"
       }
      ],
      "pages": [
@@ -770,7 +775,8 @@
       "allocations-av-per",
       "per-le-transfert-vers-un-perin-comment-ca-marche",
       "immobilier-les-bases",
-      "tips-optimisation-fiscale-per-chomage"
+      "tips-optimisation-fiscale-per-chomage",
+      "girardin-industriel"
      ],
      "pre": [
       "2.4"
