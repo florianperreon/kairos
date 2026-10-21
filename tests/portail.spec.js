@@ -4239,6 +4239,7 @@ test.describe('Éditeurs visuels des blocs (21/10/2026)', () => {
   });
   test('FAQ : réponse en HTML avec aperçu, bascule JSON aller-retour', async ({ page }) => {
     await ouvrirBloc(page, 'faq', [{ q: 'Combien ?', th: 'Argent', a: '<p>Peu</p>' }]);
+    await expect(page.locator('#blTitre')).toHaveText('Questions fréquentes');
     await page.locator('#blEdit details.bl-it summary').first().click();
     await page.locator('#blEdit textarea[data-p=\'[0,"a"]\']').fill('<p><b>Beaucoup</b></p>');
     await expect(page.locator('#blEdit .bl-ap b')).toHaveText('Beaucoup');
@@ -4268,5 +4269,142 @@ test.describe('Éditeurs visuels des blocs (21/10/2026)', () => {
     await page.locator('#blEdit select[data-blajout]').selectOption(slug);
     expect(await page.evaluate(() => BL.val[0].pages)).toEqual([slug]);
     await expect(page.locator('#blEdit .bl-pg')).toHaveCount(1);
+  });
+});
+
+test.describe('Historique, brouillon et conflit (21/10/2026)', () => {
+  // Faux Supabase en mémoire : contenu_pages, contenu_versions, contenu_blocs, contenu_blocs_versions
+  const poserSB = (page, T) => page.evaluate((T) => {
+    window.__T = T;
+    const q = (t) => {
+      const st = { f: [], op: 'select', v: null };
+      const rows = () => (window.__T[t] || []).filter(r => st.f.every(([k, v]) => r[k] === v));
+      const fin = async () => {
+        if (st.op === 'update') { const l = rows(); l.forEach(r => { Object.assign(r, st.v, { maj: 'M' + (++window.__T.n), par: 'moi@x.fr' }); }); return { data: l.map(r => ({ ...r })), error: null }; }
+        if (st.op === 'insert') { (window.__T[t] = window.__T[t] || []).push({ ...st.v, maj: 'M' + (++window.__T.n) }); return { data: null, error: null }; }
+        return { data: rows().map(r => ({ ...r })), error: null };
+      };
+      const o = { select() { return o; }, eq(k, v) { st.f.push([k, v]); return o; }, order() { return o; }, limit() { return o; },
+        update(v) { st.op = 'update'; st.v = v; return o; }, insert(v) { st.op = 'insert'; st.v = v; return fin(); },
+        maybeSingle: async () => { const r = await fin(); return { data: r.data[0] || null, error: null }; }, then: (a, b) => fin().then(a, b) };
+      return o;
+    };
+    SB = { from: q, rpc: async () => ({ data: null, error: null }) }; SBUSER = { id: 'u', email: 'moi@x.fr' };
+    try { Object.keys(localStorage).filter(k => k.startsWith('kairos-brouillon:')).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+    const z = document.querySelector('#cntEdit').closest('.adm-panel, section, div[id]') || document.querySelector('#cntEdit').parentElement;
+    const box = document.getElementById('cntEdit').parentElement; document.body.prepend(box); box.style.cssText = 'position:relative;z-index:1;background:#fff;padding:10px';
+  }, T);
+  const T0 = () => ({ n: 10,
+    contenu_pages: [{ slug: 'esp', titre: 'ESP', icone: '🎓', html: '<p>Bonjour tout le monde</p><p>Ligne stable</p>', ordre: null, maj: 'M1', par: 'remi.d@x.fr' }],
+    contenu_versions: [{ id: 7, slug: 'esp', titre: 'ESP', icone: '🎓', html: '<p>Bonjour le monde</p><p>Ligne stable</p><p>Ancienne fin</p>', par: 'florian.perreon@x.fr', mise_le: '2026-10-01T10:00:00Z', remplacee_le: '2026-10-05T10:00:00Z' },
+      { id: 8, slug: 'vieille', titre: 'Vieille fiche', icone: '📄', html: '<p>x</p>', motif: 'suppression', remplacee_le: '2026-10-06T10:00:00Z' }],
+    contenu_blocs: [{ cle: 'reflexes', valeur: [{ t: 'Un', d: 'a' }], maj: 'B1', par: null }],
+    contenu_blocs_versions: [{ id: 3, cle: 'reflexes', valeur: [{ t: 'Zéro', d: 'a' }], remplacee_le: '2026-10-02T10:00:00Z' }] });
+
+  test('différences : lignes et mots, portions identiques repliées', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const a = hiLignes('<h2>Titre</h2><p>Le chat dort</p><ul><li>Un</li><li>Deux</li></ul><div class="tpl"><button class="copy">Copier</button><pre>Salut\nToi</pre></div>');
+      const d = hiDiff(['a', 'Le chat dort', 'b'], ['a', 'Le chien dort', 'b', 'c']);
+      const long = hiDiff([...'abcdefghijkl'].map(String), [...'abcdefghijkX'].map(String));
+      return { a, d, rien: hiDiff(['x'], ['x']).html, pli: long.html.includes('lignes identiques') };
+    });
+    expect(r.a).toEqual(['Titre', 'Le chat dort', 'Un', 'Deux', 'Salut', 'Toi']);
+    expect(r.d.plus).toBe(2); expect(r.d.moins).toBe(1);
+    expect(r.d.html).toContain('<del>chat</del>'); expect(r.d.html).toContain('<ins>chien</ins>');
+    expect(r.rien).toContain('Aucune différence');
+    expect(r.pli).toBe(true);
+  });
+
+  test('historique d’une fiche : liste, auteur, différences, aperçu, restauration', async ({ page }) => {
+    await ouvrir(page);
+    await poserSB(page, T0());
+    await page.evaluate(async () => { CNT_PAGES = [{ slug: 'esp', titre: 'ESP' }]; await cntOuvrir('esp'); });
+    await expect(page.locator('#cntHist')).toContainText('par Remi D');
+    await page.locator('#cntHistBtn').click();
+    await expect(page.locator('#hiFond')).toBeVisible();
+    await expect(page.locator('.hi-v')).toHaveCount(3);        // éditeur, en ligne, une version (la fiche supprimée n'est pas mélangée)
+    await expect(page.locator('.hi-v.on')).toContainText('Version du');
+    await expect(page.locator('.hi-v.on small')).toContainText('Florian Perreon');
+    await expect(page.locator('.hi-diff ins')).toContainText(['tout']);
+    await expect(page.locator('.hi-diff .hd-moins').last()).toContainText('Ancienne fin');
+    await page.locator('[data-hivue="apercu"]').click();
+    await expect(page.locator('.hi-apercu')).toContainText('Ancienne fin');
+    await page.locator('[data-hi="restaurer"]').click();
+    await expect(page.locator('#hiFond')).toHaveCount(0);
+    expect(await page.evaluate(() => cntHtmlCourant())).toContain('Ancienne fin');
+    expect(await page.evaluate(() => CNT_SALE)).toBe(true);
+  });
+
+  test('brouillon automatique : gardé, proposé à la réouverture, jeté après enregistrement', async ({ page }) => {
+    await ouvrir(page);
+    await poserSB(page, T0());
+    await page.evaluate(async () => { CNT_PAGES = [{ slug: 'esp', titre: 'ESP' }]; await cntOuvrir('esp'); });
+    await page.evaluate(() => { cntMode('code'); cntEl('cntHtml').value = '<p>Brouillon en cours</p>'; CNT_SALE = true; brTic(); });
+    expect(await page.evaluate(() => brLire('page:esp').h)).toBe('<p>Brouillon en cours</p>');
+    // on « recharge » : la fiche se rouvre sans les modifications, le bandeau propose le brouillon
+    await page.evaluate(async () => { CNT_SALE = false; CNT_SLUG = null; await cntOuvrir('esp'); });
+    await expect(page.locator('#cntBrouillon')).toBeVisible();
+    await expect(page.locator('#cntBrouillon')).toContainText('Brouillon non enregistré');
+    await page.locator('#cntBrouillon [data-br="reprendre"]').click();
+    expect(await page.evaluate(() => cntHtmlCourant())).toContain('Brouillon en cours');
+    await expect(page.locator('#cntBrouillon')).toBeHidden();
+    await page.evaluate(() => { REG = null; window.regEnregistrer = async () => {}; });
+    await page.evaluate(() => cntEnregistrer());
+    await expect.poll(() => page.evaluate(() => brLire('page:esp'))).toBeNull();
+    expect(await page.evaluate(() => window.__T.contenu_pages[0].html)).toContain('Brouillon en cours');
+  });
+
+  test('conflit : quelqu’un a enregistré depuis l’ouverture → alerte, annuler ne publie rien', async ({ page }) => {
+    await ouvrir(page);
+    await poserSB(page, T0());
+    await page.evaluate(async () => { CNT_PAGES = [{ slug: 'esp', titre: 'ESP' }]; await cntOuvrir('esp'); window.regEnregistrer = async () => {}; });
+    await page.evaluate(() => { const p = window.__T.contenu_pages[0]; p.maj = 'M99'; p.par = 'justine.b@x.fr'; p.html = '<p>Version de Justine</p>'; });
+    await page.evaluate(() => { cntMode('code'); cntEl('cntHtml').value = '<p>Ma version</p>'; CNT_SALE = true; window.__p = cntEnregistrer(); });
+    await expect(page.locator('.hi-conf')).toContainText('Justine B');
+    await page.locator('[data-hc="annuler"]').click();
+    await page.evaluate(() => window.__p);
+    expect(await page.evaluate(() => window.__T.contenu_pages[0].html)).toBe('<p>Version de Justine</p>');
+    await expect(page.locator('#cntMsg')).toContainText('annulé');
+    // on enregistre quand même
+    await page.evaluate(() => { window.__p = cntEnregistrer(); });
+    await page.locator('[data-hc="ecraser"]').click();
+    await page.evaluate(() => window.__p);
+    expect(await page.evaluate(() => window.__T.contenu_pages[0].html)).toBe('<p>Ma version</p>');
+    // juste après mon enregistrement, plus d'alerte
+    await page.evaluate(() => { CNT_SALE = true; window.__p = cntEnregistrer(); });
+    await page.evaluate(() => window.__p);
+    await expect(page.locator('.hi-conf')).toHaveCount(0);
+  });
+
+  test('blocs : historique, brouillon et conflit', async ({ page }) => {
+    await ouvrir(page);
+    await poserSB(page, T0());
+    await page.evaluate(() => { const z = document.querySelector('.cnt-blocs'); document.body.prepend(z); });
+    await page.evaluate(() => cntOuvrirBloc('reflexes'));
+    await expect(page.locator('#blHistBtn')).toBeVisible();
+    await page.locator('#blHistBtn').click();
+    await expect(page.locator('.hi-v')).toHaveCount(3);
+    await expect(page.locator('.hi-diff')).toContainText('Zéro');
+    await page.locator('.hi-x').click();
+    await page.evaluate(() => { BL.val[0].t = 'Deux'; BL.sale = true; brTic(); });
+    expect(await page.evaluate(() => brLire('bloc:reflexes').val[0].t)).toBe('Deux');
+    await page.evaluate(() => { window.__T.contenu_blocs[0].maj = 'B9'; window.__T.contenu_blocs[0].par = 'remi.d@x.fr'; window.__p = blEnregistrer(); });
+    await expect(page.locator('.hi-conf')).toContainText('Remi D');
+    await page.locator('[data-hc="ecraser"]').click();
+    await page.evaluate(() => window.__p);
+    expect(await page.evaluate(() => window.__T.contenu_blocs[0].valeur[0].t)).toBe('Deux');
+    expect(await page.evaluate(() => brLire('bloc:reflexes'))).toBeNull();
+  });
+
+  test('fiches supprimées : liste et recréation', async ({ page }) => {
+    await ouvrir(page);
+    await poserSB(page, T0());
+    await page.evaluate(() => { CNT_PAGES = [{ slug: 'esp', titre: 'ESP' }]; window.cntRecharger = async () => {}; window.buildContenuAdmin = async () => { CNT_PAGES = window.__T.contenu_pages.map(p => ({ slug: p.slug, titre: p.titre })); return true; }; });
+    await page.evaluate(() => hiSupprimees());
+    await expect(page.locator('.hi-supl')).toHaveCount(1);
+    await expect(page.locator('.hi-supl')).toContainText('Vieille fiche');
+    await page.locator('[data-hirecree]').click();
+    await expect.poll(() => page.evaluate(() => window.__T.contenu_pages.map(p => p.slug))).toEqual(['esp', 'vieille']);
   });
 });

@@ -1178,6 +1178,51 @@ p.mi-ai{margin:4px 0 8px}
 .bl-pages select{padding:4px 8px !important;font-size:12.5px !important;max-width:260px}
 .bl-ap{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:6px 10px;font-size:13px;max-height:180px;overflow:auto}
 
+/* Historique, brouillon, conflit */
+.br-bandeau{margin:8px 0;padding:8px 12px;border:1px solid #e6c36a;background:#fff8e1;color:#5c4400;border-radius:9px;font-size:13px;line-height:1.6}
+.br-bandeau button{border:1px solid #d9b44a;background:#fff;color:#5c4400;border-radius:7px;padding:2px 9px;font:inherit;font-size:12.5px;cursor:pointer;margin-left:2px}
+.hi-fond{position:fixed;inset:0;z-index:2000;background:rgba(15,18,30,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+.hi-fen{background:var(--surface);color:var(--ink);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:min(1100px,100%);max-height:min(88vh,900px);display:flex;flex-direction:column;overflow:hidden}
+.hi-tete{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.hi-tete h3{margin:0;font-size:16px;flex:1}
+.hi-x{border:0;background:none;font-size:18px;cursor:pointer;color:var(--ink-2)}
+.hi-corps{padding:14px 16px;overflow:auto}
+.hi-grille{display:grid;grid-template-columns:270px 1fr;gap:14px;min-height:0}
+.hi-liste{display:flex;flex-direction:column;gap:4px;max-height:70vh;overflow:auto;padding-right:4px}
+.hi-v{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:9px;padding:7px 10px;font:inherit;font-size:13px;cursor:pointer}
+.hi-v small{color:var(--ink-3);font-size:11.5px}
+.hi-v.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--bg))}
+.hi-v.sup b{color:#b42318}
+.hi-sep{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin:8px 0 2px}
+.hi-vide,.hd-rien{color:var(--ink-3);font-size:13px}
+.hi-droite{min-width:0}
+.hi-onglets{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.hi-onglets button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:5px 11px;font:inherit;font-size:12.5px;cursor:pointer}
+.hi-onglets button.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.hi-onglets .acc-btn,.hi-conf-b .acc-btn{margin-left:auto;background:var(--accent);color:#fff;border-color:var(--accent)}
+.hd-leg{font-size:12.5px;color:var(--ink-2);margin:0 0 6px}
+.hd-plus{color:#067647;font-weight:700}.hd-moins{color:#b42318;font-weight:700}
+.hd-titre{font-size:13px;margin:0 0 6px}
+.hi-diff{border:1px solid var(--line);border-radius:9px;max-height:62vh;overflow:auto;font-size:13px;line-height:1.5;background:var(--bg)}
+.hd-l{padding:2px 10px 2px 26px;position:relative;white-space:pre-wrap;word-break:break-word;color:var(--ink-2)}
+.hd-l>span{position:absolute;left:9px;font-weight:800}
+.hd-plus.hd-l,.hd-l.hd-plus{background:#ecfdf3;color:#05603a}.hd-l.hd-moins{background:#fef3f2;color:#912018}
+.hi-diff ins,.hd-titre ins{background:#abefc6;text-decoration:none;border-radius:3px}
+.hi-diff del,.hd-titre del,.hd-leg del{background:#fecdca;border-radius:3px}
+.hd-leg ins{background:#abefc6;text-decoration:none;border-radius:3px}
+.hd-pli{padding:2px 10px;color:var(--ink-3);font-size:12px;font-style:italic;background:var(--surface-2)}
+.hi-apercu{border:1px solid var(--line);border-radius:9px;padding:10px 16px;max-height:62vh;overflow:auto;background:var(--bg)}
+.hi-apercu h1{font-size:20px}
+.hi-json{border:1px solid var(--line);border-radius:9px;padding:10px;max-height:62vh;overflow:auto;font-size:12px;background:var(--bg);margin:0}
+.hi-conf{font-size:14px;line-height:1.6;margin:0 0 12px}
+.hi-conf-b{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.hi-conf-b button{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 13px;font:inherit;font-size:13px;cursor:pointer}
+.hi-sups{display:flex;flex-direction:column;gap:6px}
+.hi-supl{display:flex;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--line);border-radius:9px;padding:7px 10px}
+.hi-supl small{display:block;color:var(--ink-3);font-size:11.5px}
+.hi-supl button{border:1px solid var(--line-2);background:var(--surface);border-radius:8px;padding:5px 11px;cursor:pointer;font:inherit;font-size:12.5px}
+@media (max-width:760px){.hi-grille{grid-template-columns:1fr}.hi-liste{max-height:30vh}}
+
 .cnt-barre{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;padding:6px;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;background:var(--surface-2)}
 .cnt-barre button{border:1px solid transparent;background:transparent;color:var(--ink-2);border-radius:7px;padding:5px 9px;font-size:13px;cursor:pointer;font-family:inherit}
 .cnt-barre button:hover{background:var(--surface);border-color:var(--line);color:var(--ink)}
@@ -2196,7 +2241,7 @@ a.mml-r:hover{border-color:var(--accent)}
           <p class="mbr-sub">Chaque modification est publiée immédiatement pour toute la lignée, et la version précédente est archivée.</p>
           <div class="cnt-wrap">
             <div class="cnt-col">
-              <div class="cnt-tete"><input type="search" id="cntQ" placeholder="Filtrer les pages…" autocomplete="off"><button type="button" id="cntNouvelle" title="Créer une nouvelle fiche">+ Nouvelle</button></div>
+              <div class="cnt-tete"><input type="search" id="cntQ" placeholder="Filtrer les pages…" autocomplete="off"><button type="button" id="cntNouvelle" title="Créer une nouvelle fiche">+ Nouvelle</button><button type="button" id="cntSupprimees" title="Fiches supprimées (les recréer)">🗑</button></div>
               <div class="cnt-liste" id="cntListe"></div>
             </div>
             <div class="cnt-col cnt-form">
@@ -2207,6 +2252,7 @@ a.mml-r:hover{border-color:var(--accent)}
                   <label class="court" title="Position de la page dans les listes du parcours">Ordre<input type="number" id="cntMin" min="1" max="99"></label>
                 </div>
                 <div class="cnt-slug">Adresse : <code id="cntSlug"></code></div>
+                <div class="br-bandeau" id="cntBrouillon" hidden></div>
                 <details class="cnt-reg" id="cntReg"></details>
                 <div class="cnt-barre" id="cntBarre"></div>
                 <div class="nc cnt-wys" id="cntWys" contenteditable="true" spellcheck="true"></div>
@@ -2218,6 +2264,7 @@ a.mml-r:hover{border-color:var(--accent)}
                   <button type="button" id="cntCode">‹ › Code HTML</button>
                   <button type="button" id="cntApercu" title="Voir la fiche comme un membre">👁 Aperçu</button>
                   <button type="button" id="cntDupliquer">Dupliquer</button>
+                  <button type="button" id="cntHistBtn" title="Toutes les versions, les différences, restaurer">🕓 Historique</button>
                   <button type="button" id="cntSupprimer" class="cnt-danger">Supprimer</button>
                   <span class="cnt-hist" id="cntHist"></span>
                 </div>
@@ -2225,7 +2272,8 @@ a.mml-r:hover{border-color:var(--accent)}
               <div class="cnt-blocs">
                 <h3>Autres blocs</h3>
                 <p class="mbr-sub">Parcours en missions, FAQ, objections, rayons des fiches, réflexes, rituels, ressources… se modifient avec un formulaire. Le JSON reste accessible en mode expert.</p>
-                <div class="bl-choix"><select id="cntBlocs"></select><button type="button" id="blBascule" class="bl-b" hidden>JSON (expert)</button></div>
+                <div class="bl-choix"><select id="cntBlocs"></select><button type="button" id="blBascule" class="bl-b" hidden>JSON (expert)</button><button type="button" id="blHistBtn" class="bl-b" hidden>🕓 Historique</button></div>
+                <div class="br-bandeau" id="blBrouillon" hidden></div>
                 <div id="blVisuel" hidden>
                   <div class="bl-head"><h4 id="blTitre"></h4><button type="button" id="blSave" class="acc-btn">Enregistrer</button></div>
                   <div id="blEdit"></div>
@@ -9261,7 +9309,7 @@ const BL_MISSION = { type:'objet', champs:[
   { k:'actions', l:'Cases à cocher', type:'liste', item:BL_ACTION, titre:blTitre('t'), nouveau:()=>({ id:'', t:'', v:'moi' }) },
 ]};
 const BL_SCHEMAS = {
-  missions: { titre:'Parcours en missions', type:'objet', champs:[
+  missions: { nom:'Parcours en missions', type:'objet', champs:[
     { k:'phases', l:'Phases', type:'liste', titre:x=>'Phase '+(x.n||'?')+' — '+(x.t||''), nouveau:()=>({ id:'', n:'', t:'', statut:'', c:'gray', intro:'', missions:[] }), item:{ type:'objet', champs:[
       { k:'id', l:'Identifiant', type:'texte', court:true, aide:'ex. p2' }, { k:'n', l:'Numéro', type:'nombre', court:true },
       { k:'t', l:'Titre', type:'texte' }, { k:'statut', l:'Statut visé', type:'texte', court:true }, { k:'c', l:'Couleur', type:'choix', options:BL_COULEURS },
@@ -9274,31 +9322,31 @@ const BL_SCHEMAS = {
         { k:'d', l:'Description', type:'long' }, { k:'pre', l:'Missions à faire avant', type:'refs' },
         { k:'criteres', l:'Critères (un par ligne)', type:'lignes' } ] },
       { k:'missions', l:'Missions', type:'liste', item:BL_MISSION, titre:blTitre('id','t'), nouveau:()=>({ id:'', t:'', pq:'', pre:[], pages:[], actions:[] }) } ] } } ] },
-  faq: { titre:'Questions fréquentes', type:'liste', titre:blTitre('q'), nouveau:()=>({ q:'', th:'', a:'<p></p>' }), item:{ type:'objet', champs:[
+  faq: { nom:'Questions fréquentes', type:'liste', titre:blTitre('q'), nouveau:()=>({ q:'', th:'', a:'<p></p>' }), item:{ type:'objet', champs:[
     { k:'q', l:'Question', type:'texte' }, { k:'th', l:'Thème', type:'suggestions', suggestions:b=>[...new Set((b||[]).map(x=>x.th).filter(Boolean))] },
     { k:'a', l:'Réponse', type:'html' }, { k:'src', l:'Réponse de', type:'texte', court:true } ] } },
-  faqPubliee: { titre:'FAQ publiée sur l’accueil', type:'case', l:'Afficher la FAQ sur l’accueil' },
-  objections: { titre:'Objections', type:'liste', titre:blTitre('o'), nouveau:()=>({ o:'', tag:'', r:[] }), item:{ type:'objet', champs:[
+  faqPubliee: { nom:'FAQ publiée sur l’accueil', type:'case', l:'Afficher la FAQ sur l’accueil' },
+  objections: { nom:'Objections', type:'liste', titre:blTitre('o'), nouveau:()=>({ o:'', tag:'', r:[] }), item:{ type:'objet', champs:[
     { k:'o', l:'Objection', type:'texte' }, { k:'tag', l:'Moment', type:'suggestions', suggestions:b=>[...new Set((b||[]).map(x=>x.tag).filter(Boolean))] },
     { k:'r', l:'Réponses de la lignée (une par ligne)', type:'lignes' }, { k:'src', l:'Source', type:'texte', court:true },
     { k:'id', l:'Identifiant', type:'texte', court:true, aide:'rempli tout seul si vide' } ] } },
-  fiches: { titre:'Rayons des Fiches pratiques', type:'liste', titre:x=>(x.i?x.i+' ':'')+(x.t||'(sans titre)')+' · '+((x.pages||[]).length)+' fiche(s)', nouveau:()=>({ i:'📄', t:'', pages:[] }), item:{ type:'objet', champs:[
+  fiches: { nom:'Rayons des Fiches pratiques', type:'liste', titre:x=>(x.i?x.i+' ':'')+(x.t||'(sans titre)')+' · '+((x.pages||[]).length)+' fiche(s)', nouveau:()=>({ i:'📄', t:'', pages:[] }), item:{ type:'objet', champs:[
     { k:'i', l:'Icône', type:'texte', court:true }, { k:'t', l:'Nom du rayon', type:'texte' }, { k:'pages', l:'Fiches (dans l’ordre)', type:'pages' } ] } },
-  nav: { titre:'Bibliothèque du parcours (fil d’Ariane)', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', c:'gray', groupes:[] }), item:{ type:'objet', champs:[
+  nav: { nom:'Bibliothèque du parcours (fil d’Ariane)', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', c:'gray', groupes:[] }), item:{ type:'objet', champs:[
     { k:'t', l:'Titre de la phase', type:'texte' }, { k:'c', l:'Couleur', type:'choix', options:BL_COULEURS },
     { k:'groupes', l:'Groupes', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', pages:[] }), item:{ type:'objet', champs:[
       { k:'t', l:'Nom du groupe', type:'texte' }, { k:'pages', l:'Fiches', type:'pages' } ] } } ] } },
-  reflexes: { titre:'Réflexes de la lignée', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', d:'' }), item:{ type:'objet', champs:[
+  reflexes: { nom:'Réflexes de la lignée', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', d:'' }), item:{ type:'objet', champs:[
     { k:'t', l:'Réflexe', type:'texte' }, { k:'d', l:'Explication', type:'long' } ] } },
-  rituels: { titre:'Rituels de la lignée', type:'liste', titre:blTitre('n'), nouveau:()=>({ n:'', t:'', q:'', d:'', r:{ dow:1, s:'09:00', e:'10:00' } }), item:{ type:'objet', champs:[
+  rituels: { nom:'Rituels de la lignée', type:'liste', titre:blTitre('n'), nouveau:()=>({ n:'', t:'', q:'', d:'', r:{ dow:1, s:'09:00', e:'10:00' } }), item:{ type:'objet', champs:[
     { k:'n', l:'Nom', type:'texte' }, { k:'t', l:'Quand (texte affiché)', type:'texte' }, { k:'q', l:'Étiquette (ex. Hebdo · Discord)', type:'texte' },
     { k:'d', l:'Description', type:'long' },
     { k:'r', l:'Récurrence (pour « Les 7 prochains jours »)', type:'objet', facultatif:true, champs:[
       { k:'dow', l:'Jour', type:'choix', nombre:true, options:BL_JOURS }, { k:'s', l:'Début (HH:MM)', type:'texte', court:true }, { k:'e', l:'Fin (HH:MM)', type:'texte', court:true } ] } ] } },
-  ressources: { titre:'Ressources utiles (accueil)', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', k:'', d:'', u:'', r:'' }), item:{ type:'objet', champs:[
+  ressources: { nom:'Ressources utiles (accueil)', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', k:'', d:'', u:'', r:'' }), item:{ type:'objet', champs:[
     { k:'t', l:'Nom', type:'texte' }, { k:'k', l:'Type (Outil, Document…)', type:'texte', court:true }, { k:'d', l:'Description', type:'long' },
     { k:'u', l:'Lien', type:'texte' }, { k:'r', l:'Recommandé par', type:'texte', court:true } ] } },
-  accueil: { titre:'Accueil', type:'objet', champs:[
+  accueil: { nom:'Accueil', type:'objet', champs:[
     { k:'intro', l:'Texte d’introduction', type:'long' },
     { k:'valeurs', l:'Nos valeurs', type:'liste', titre:blTitre('t'), nouveau:()=>({ i:'', t:'', d:'' }), item:{ type:'objet', champs:[
       { k:'i', l:'Icône', type:'texte', court:true }, { k:'t', l:'Valeur', type:'texte' }, { k:'d', l:'Explication (au survol)', type:'long' } ] } } ] },
@@ -9364,7 +9412,7 @@ function blOuvrir(cle, val){
   cntEl('cntBlocEdit').hidden = vis;
   cntEl('blBascule').hidden = !vis;
   cntEl('blBascule').textContent = 'JSON (expert)';
-  if(vis){ cntEl('blTitre').textContent = BL.schema.titre || cle; blRendre(); }
+  if(vis){ cntEl('blTitre').textContent = BL.schema.nom || cle; blRendre(); }
 }
 // Contrôles avant enregistrement
 function blControles(){
@@ -9391,11 +9439,14 @@ async function blEnregistrer(){
   const { err, av } = blControles();
   if(err.length){ cntMsg('À corriger avant d’enregistrer : '+err.join(' · '), true); return; }
   if(av.length && !confirm('Points d’attention :\n\n• '+av.join('\n• ')+'\n\nEnregistrer quand même ?')) return;
-  const r = await SB.from('contenu_blocs').update({ valeur: BL.val, maj: new Date().toISOString() }).eq('cle', BL.cle);
+  if(!(await hiVerifBloc(BL.cle, BL.maj))){ cntMsg('Enregistrement annulé.'); return; }
+  const r = await SB.from('contenu_blocs').update({ valeur: BL.val, maj: new Date().toISOString() }).eq('cle', BL.cle).select('maj');
   if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
+  if(r.data && r.data[0]) BL.maj = r.data[0].maj;
+  brJeter('bloc:'+BL.cle); delete BR_DERNIER['bloc:'+BL.cle]; brBandeau('blBrouillon', null);
   cntEl('cntBlocJson').value = JSON.stringify(BL.val, null, 2);
   BL.sale = false;
-  cntMsg('« '+(BL.schema.titre||BL.cle)+' » enregistré. C’est en ligne pour tout le monde.');
+  cntMsg('« '+(BL.schema.nom||BL.cle)+' » enregistré. C’est en ligne pour tout le monde.');
   await cntRecharger();
 }
 document.addEventListener('input', e=>{
@@ -9457,6 +9508,247 @@ document.addEventListener('click', e=>{
   if(rt){ e.preventDefault(); if(!confirm('Retirer ce bloc ?')) return; blSet(BL.val, JSON.parse(rt.dataset.blretire), undefined); BL.sale = true; blRendre(); }
 });
 
+/* ---------- Historique, brouillon automatique, alerte de conflit (étape D, 21/10/2026, règle Florian) ----------
+   • Historique complet : chaque fiche garde ses 60 dernières versions (et sa dernière version si elle est supprimée),
+     chaque bloc ses 40 dernières — avec la date et l'auteur. Aperçu, différences avec la version en cours, restauration.
+   • Brouillon automatique : tant qu'une fiche ou un bloc a des modifications non enregistrées, elles sont gardées dans
+     ce navigateur toutes les 3 s ; à la réouverture, Kairos propose de les reprendre.
+   • Conflit : avant d'enregistrer, Kairos vérifie que personne n'a enregistré la fiche (ou le bloc) depuis son ouverture. */
+let CNT_MAJ = null, CNT_PAR = null;
+const hiQuand = ts => { if(!ts) return ''; const d = new Date(ts); return isNaN(d) ? String(ts) : d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); };
+const hiQui = e => e ? String(e).split('@')[0].replace(/[._-]+/g,' ').replace(/\b\w/g, c=>c.toUpperCase()) : '';
+// Brouillons (navigateur uniquement)
+const BR_PREF = 'kairos-brouillon:';
+function brLire(k){ try{ const x = localStorage.getItem(BR_PREF+k); return x ? JSON.parse(x) : null; }catch(e){ return null; } }
+function brEcrire(k, v){ try{ localStorage.setItem(BR_PREF+k, JSON.stringify(v)); }catch(e){} }
+function brJeter(k){ try{ localStorage.removeItem(BR_PREF+k); }catch(e){} }
+let BR_DERNIER = {};
+function brTic(){
+  try{
+    if(CNT_SLUG && CNT_SALE && cntEl('cntTitre')){
+      const v = { t: cntEl('cntTitre').value, i: cntEl('cntIcone').value, o: cntEl('cntMin').value, h: cntHtmlCourant(), base: CNT_MAJ, le: new Date().toISOString() };
+      const sig = v.t+'\u0001'+v.i+'\u0001'+v.o+'\u0001'+v.h;
+      if(BR_DERNIER['page:'+CNT_SLUG] !== sig){ BR_DERNIER['page:'+CNT_SLUG] = sig; brEcrire('page:'+CNT_SLUG, v); }
+    }
+    if(BL && BL.sale){
+      const sig = JSON.stringify(BL.val);
+      if(BR_DERNIER['bloc:'+BL.cle] !== sig){ BR_DERNIER['bloc:'+BL.cle] = sig; brEcrire('bloc:'+BL.cle, { val: BL.val, base: BL.maj||null, le: new Date().toISOString() }); }
+    }
+  }catch(e){}
+}
+setInterval(brTic, 3000);
+function brBandeau(id, d, enLigne){
+  const z = cntEl(id); if(!z) return;
+  if(!d){ z.hidden = true; z.innerHTML = ''; return; }
+  const change = d.base && enLigne && d.base !== enLigne;
+  z.innerHTML = '📝 Brouillon non enregistré du '+esc(hiQuand(d.le))+(change ? ' — <b>attention, la version en ligne a changé depuis</b>' : '')+'. '
+    + '<button type="button" data-br="reprendre">Reprendre le brouillon</button> <button type="button" data-br="voir">Voir les différences</button> <button type="button" data-br="jeter">Le jeter</button>';
+  z.hidden = false;
+}
+// Fiche ouverte : y a-t-il un brouillon différent de la version en ligne ?
+function brVerifPage(srv){
+  const d = brLire('page:'+CNT_SLUG);
+  if(d && d.h === (srv.html||'') && d.t === (srv.titre||'') && d.i === (srv.icone||'')){ brJeter('page:'+CNT_SLUG); brBandeau('cntBrouillon', null); return; }
+  brBandeau('cntBrouillon', d, CNT_MAJ);
+}
+function brVerifBloc(){
+  if(!BL) return brBandeau('blBrouillon', null);
+  const d = brLire('bloc:'+BL.cle);
+  if(d && JSON.stringify(d.val) === JSON.stringify(BL.val)){ brJeter('bloc:'+BL.cle); brBandeau('blBrouillon', null); return; }
+  brBandeau('blBrouillon', d, BL.maj);
+}
+// Différences (texte lisible pour les fiches, JSON pour les blocs)
+function hiLignes(html){
+  const h = String(html||'').replace(/<(\/(p|li|h[1-6]|summary|div|tr|pre|blockquote|ul|ol|table)|br\s*\/?|hr\s*\/?)>/gi, '$&\n').replace(/<\/t[dh]>/gi, '$& · ');
+  const d = new DOMParser().parseFromString('<body>'+h+'</body>', 'text/html');
+  d.querySelectorAll('button.copy, script, style').forEach(x=>x.remove());
+  return (d.body.textContent||'').split('\n').map(x=>x.replace(/\s+/g,' ').replace(/( · )+$/,'').trim()).filter(Boolean);
+}
+function hiLcs(a, b){   // opérations : [type, valeur] avec type ' ' (identique), '-' (retiré), '+' (ajouté)
+  const n = a.length, m = b.length;
+  if(n*m > 4e6) return a.map(x=>['-',x]).concat(b.map(x=>['+',x]));
+  const T = Array.from({length:n+1}, ()=>new Uint32Array(m+1));
+  for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--) T[i][j] = a[i]===b[j] ? T[i+1][j+1]+1 : Math.max(T[i+1][j], T[i][j+1]);
+  const o = []; let i=0, j=0;
+  while(i<n && j<m){ if(a[i]===b[j]){ o.push([' ',a[i]]); i++; j++; } else if(T[i+1][j] >= T[i][j+1]) o.push(['-',a[i++]]); else o.push(['+',b[j++]]); }
+  while(i<n) o.push(['-',a[i++]]); while(j<m) o.push(['+',b[j++]]);
+  return o;
+}
+function hiMots(a, b){   // une ligne modifiée : surligne les mots retirés / ajoutés
+  const ops = hiLcs(a.split(/(\s+)/), b.split(/(\s+)/));
+  return { av: ops.filter(o=>o[0]!=='+').map(o=>o[0]==='-' ? '<del>'+esc(o[1])+'</del>' : esc(o[1])).join(''),
+           ap: ops.filter(o=>o[0]!=='-').map(o=>o[0]==='+' ? '<ins>'+esc(o[1])+'</ins>' : esc(o[1])).join('') };
+}
+function hiDiff(a, b){   // a = ancienne version, b = version comparée ; renvoie { html, plus, moins }
+  const ops = hiLcs(a, b); let plus = 0, moins = 0; const out = [];
+  for(let k=0; k<ops.length; k++){
+    const [t, v] = ops[k];
+    if(t===' '){ out.push({ t:' ', h:esc(v) }); continue; }
+    // regroupe un bloc de retraits suivi d'ajouts : lignes modifiées mot à mot
+    const R = [], A = [];
+    while(k<ops.length && ops[k][0]==='-') R.push(ops[k++][1]);
+    while(k<ops.length && ops[k][0]==='+') A.push(ops[k++][1]);
+    k--;
+    const p = Math.min(R.length, A.length);
+    for(let x=0;x<p;x++){ const w = hiMots(R[x], A[x]); out.push({ t:'-', h:w.av }); out.push({ t:'+', h:w.ap }); }
+    R.slice(p).forEach(v=>out.push({ t:'-', h:esc(v) })); A.slice(p).forEach(v=>out.push({ t:'+', h:esc(v) }));
+    moins += R.length; plus += A.length;
+  }
+  // replie les longues portions identiques
+  const html = []; let calme = [];
+  const vider = (fin) => { if(calme.length > 6){ html.push(...calme.slice(0,2).map(l=>'<div class="hd-l">'+l.h+'</div>'), '<div class="hd-pli">… '+(calme.length-4)+' lignes identiques …</div>', ...calme.slice(-2).map(l=>'<div class="hd-l">'+l.h+'</div>')); } else html.push(...calme.map(l=>'<div class="hd-l">'+l.h+'</div>')); calme = []; };
+  out.forEach(l=>{ if(l.t===' ') calme.push(l); else { vider(); html.push('<div class="hd-l hd-'+(l.t==='+'?'plus':'moins')+'"><span>'+l.t+'</span>'+l.h+'</div>'); } });
+  vider();
+  return { html: (plus||moins) ? html.join('') : '<p class="hd-rien">Aucune différence.</p>', plus, moins };
+}
+// Fenêtre
+function hiFenetre(titre, corps){
+  hiFermer();
+  const f = document.createElement('div');
+  f.className = 'hi-fond'; f.id = 'hiFond';
+  f.innerHTML = '<div class="hi-fen" role="dialog" aria-modal="true" aria-label="'+esc(titre)+'"><div class="hi-tete"><h3>'+esc(titre)+'</h3><button type="button" class="hi-x" data-hi="fermer" aria-label="Fermer">✕</button></div><div class="hi-corps">'+corps+'</div></div>';
+  document.body.appendChild(f);
+  return f;
+}
+function hiFermer(){ const f = document.getElementById('hiFond'); if(f) f.remove(); HI = null; }
+let HI = null;   // { type:'page'|'bloc', cle, versions:[…], courant:{…}, sel, vue }
+const hiTexte = (type, v) => type==='page' ? hiLignes(v.html) : (JSON.stringify(v.valeur, null, 2)||'').split('\n');
+async function hiOuvrir(type){
+  let versions = [], enLigne = null, courant;
+  if(type==='page'){
+    if(!CNT_SLUG) return;
+    const [l, v] = await Promise.all([
+      SB.from('contenu_pages').select('titre,icone,html,maj,par').eq('slug', CNT_SLUG).maybeSingle(),
+      SB.from('contenu_versions').select('id,titre,icone,html,par,mise_le,remplacee_le,motif').eq('slug', CNT_SLUG).order('remplacee_le',{ascending:false}).limit(60) ]);
+    if(l.data) enLigne = { id:'enligne', titre:l.data.titre, icone:l.data.icone, html:l.data.html, quand:l.data.maj, par:l.data.par, lib:'En ligne' };
+    versions = (v.data||[]).map(x=>({ id:x.id, titre:x.titre, icone:x.icone, html:x.html, quand:x.mise_le||null, fin:x.remplacee_le, par:x.par, motif:x.motif }));
+    courant = { id:'courant', titre:cntEl('cntTitre').value, icone:cntEl('cntIcone').value, html:cntHtmlCourant(), lib:'Dans l’éditeur'+(CNT_SALE?' (non enregistrée)':'') };
+  } else {
+    if(!BL) return;
+    const [l, v] = await Promise.all([
+      SB.from('contenu_blocs').select('valeur,maj,par').eq('cle', BL.cle).maybeSingle(),
+      SB.from('contenu_blocs_versions').select('id,valeur,par,mise_le,remplacee_le').eq('cle', BL.cle).order('remplacee_le',{ascending:false}).limit(40) ]);
+    if(l.data) enLigne = { id:'enligne', valeur:l.data.valeur, quand:l.data.maj, par:l.data.par, lib:'En ligne' };
+    versions = (v.data||[]).map(x=>({ id:x.id, valeur:x.valeur, quand:x.mise_le||null, fin:x.remplacee_le, par:x.par }));
+    courant = { id:'courant', valeur:BL.val, lib:'Dans l’éditeur'+(BL.sale?' (non enregistrée)':'') };
+  }
+  const br = brLire((type==='page'?'page:'+CNT_SLUG:'bloc:'+BL.cle));
+  const brouillon = br ? (type==='page' ? { id:'brouillon', titre:br.t, icone:br.i, html:br.h, quand:br.le, lib:'Brouillon (ce navigateur)' } : { id:'brouillon', valeur:br.val, quand:br.le, lib:'Brouillon (ce navigateur)' }) : null;
+  hiFenetre('Historique — '+(type==='page' ? (courant.titre||CNT_SLUG) : ((BL.schema&&BL.schema.nom)||BL.cle)), '<div class="hi-grille"><div class="hi-liste" id="hiListe"></div><div class="hi-droite" id="hiDroite"></div></div>');
+  HI = { type, cle: type==='page' ? CNT_SLUG : BL.cle, versions, enLigne, courant, brouillon, sel: versions[0] ? versions[0].id : (enLigne ? 'enligne' : 'courant'), vue: 'diff' };
+  hiRendre();
+}
+function hiTous(){ return [HI.courant, HI.brouillon, HI.enLigne].filter(Boolean).concat(HI.versions); }
+function hiRendre(){
+  if(!HI) return;
+  const L = document.getElementById('hiListe'), D = document.getElementById('hiDroite'); if(!L || !D) return;
+  const ligne = v => '<button type="button" class="hi-v'+(String(v.id)===String(HI.sel)?' on':'')+(v.motif==='suppression'?' sup':'')+'" data-hiv="'+esc(v.id)+'">'
+    + '<b>'+esc(v.lib || (v.motif==='suppression' ? 'Avant suppression' : 'Version du '+(v.quand ? hiQuand(v.quand) : '—')))+'</b>'
+    + '<small>'+(v.lib && v.quand ? esc(hiQuand(v.quand))+' · ' : '')+(v.par ? esc(hiQui(v.par)) : (v.lib ? '' : 'auteur non noté'))+(!v.lib && v.fin ? ' · remplacée le '+esc(hiQuand(v.fin)) : '')+'</small></button>';
+  L.innerHTML = [HI.courant, HI.brouillon, HI.enLigne].filter(Boolean).map(ligne).join('')
+    + '<div class="hi-sep">Versions précédentes ('+HI.versions.length+')</div>'
+    + (HI.versions.map(ligne).join('') || '<p class="hi-vide">Aucune version archivée pour l’instant. Chaque enregistrement en ajoutera une.</p>');
+  const v = hiTous().find(x=>String(x.id)===String(HI.sel)) || HI.courant;
+  const ref = String(v.id)==='courant' ? (HI.enLigne || HI.courant) : HI.courant;
+  const d = hiDiff(hiTexte(HI.type, v), hiTexte(HI.type, ref));
+  const nomRef = ref.id==='courant' ? 'la version dans l’éditeur' : 'la version en ligne';
+  const titreDiff = HI.type==='page' && (v.titre||'') !== (ref.titre||'') ? '<p class="hd-titre">Titre : <del>'+esc(v.titre||'')+'</del> → <ins>'+esc(ref.titre||'')+'</ins></p>' : '';
+  D.innerHTML = '<div class="hi-onglets"><button type="button" data-hivue="diff" class="'+(HI.vue==='diff'?'on':'')+'">Différences</button>'
+    + (HI.type==='page' ? '<button type="button" data-hivue="apercu" class="'+(HI.vue==='apercu'?'on':'')+'">Aperçu</button>' : '<button type="button" data-hivue="apercu" class="'+(HI.vue==='apercu'?'on':'')+'">Contenu</button>')
+    + (v.id!=='courant' ? '<button type="button" class="acc-btn" data-hi="restaurer">Remettre cette version dans l’éditeur</button>' : '')+'</div>'
+    + (HI.vue==='diff'
+        ? '<p class="hd-leg">De cette version vers '+nomRef+' : <span class="hd-plus">+'+d.plus+'</span> <span class="hd-moins">−'+d.moins+'</span> ligne(s). <del>barré</del> = n’y est plus, <ins>surligné</ins> = ajouté depuis.</p>'+titreDiff+'<div class="hi-diff">'+d.html+'</div>'
+        : (HI.type==='page' ? '<div class="hi-apercu nc"><h1>'+esc((v.icone?v.icone+' ':'')+(v.titre||''))+'</h1>'+wysPropre(v.html||'')+'</div>' : '<pre class="hi-json">'+esc(JSON.stringify(v.valeur, null, 2))+'</pre>'));
+}
+function hiRestaurer(){
+  const v = hiTous().find(x=>String(x.id)===String(HI.sel)); if(!v) return;
+  if(HI.type==='page'){
+    if(HI.cle !== CNT_SLUG) return;
+    cntEl('cntTitre').value = v.titre||''; if(v.icone!=null) cntEl('cntIcone').value = v.icone||'';
+    cntEl('cntHtml').value = v.html||'';
+    cntMode(CNT_MODE==='code'?'code':'visuel'); if(CNT_MODE==='visuel') cntVerifFidele(v.html||'');
+    CNT_SALE = true; brBandeau('cntBrouillon', null);
+    cntMsg('Version remise dans l’éditeur — vérifie puis « Enregistrer » pour la publier.');
+  } else {
+    if(!BL || HI.cle !== BL.cle) return;
+    const maj = BL.maj; blOuvrir(BL.cle, v.valeur); BL.maj = maj; BL.sale = true;
+    cntEl('cntBlocJson').value = JSON.stringify(v.valeur, null, 2); brBandeau('blBrouillon', null);
+    cntMsg('Version remise dans le formulaire — vérifie puis « Enregistrer » pour la publier.');
+  }
+  hiFermer();
+}
+// Conflit : quelqu'un a-t-il enregistré depuis l'ouverture ? → true si on peut enregistrer
+function hiConflit(type, autre){
+  return new Promise(res=>{
+    const f = hiFenetre('Modifié entre-temps',
+      '<p class="hi-conf">⚠️ <b>'+esc(hiQui(autre.par)||'Quelqu’un')+'</b> a enregistré '+(type==='page'?'cette fiche':'ce bloc')+' le <b>'+esc(hiQuand(autre.maj))+'</b>, après que tu l’as ouvert'+(type==='page'?'e':'')+'. Si tu enregistres maintenant, ses modifications seront remplacées par les tiennes (elles resteront dans l’historique).</p>'
+      + '<div class="hi-conf-b"><button type="button" data-hc="voir">Voir les différences</button><button type="button" data-hc="ecraser" class="cnt-danger">Enregistrer quand même</button><button type="button" data-hc="annuler" class="acc-btn">Annuler</button></div>');
+    f.addEventListener('click', e=>{
+      const b = e.target===f ? f : e.target.closest('[data-hc],[data-hi="fermer"]'); if(!b) return;
+      const k = (b.dataset && b.dataset.hc) || 'annuler';
+      hiFermer();
+      if(k==='voir'){ res(false); hiOuvrir(type).then(()=>{ if(HI){ HI.sel = 'enligne'; hiRendre(); } }); return; }
+      res(k==='ecraser');
+    });
+  });
+}
+async function hiVerifPage(){
+  if(!CNT_MAJ) return true;
+  const r = await SB.from('contenu_pages').select('maj,par').eq('slug', CNT_SLUG).maybeSingle();
+  if(r.error || !r.data || r.data.maj === CNT_MAJ) return true;
+  return hiConflit('page', r.data);
+}
+async function hiVerifBloc(cle, base){
+  if(!base) return true;
+  const r = await SB.from('contenu_blocs').select('maj,par').eq('cle', cle).maybeSingle();
+  if(r.error || !r.data || r.data.maj === base) return true;
+  return hiConflit('bloc', r.data);
+}
+// Fiches supprimées : on peut les recréer depuis leur dernière version
+async function hiSupprimees(){
+  const r = await SB.from('contenu_versions').select('id,slug,titre,icone,remplacee_le,par').eq('motif','suppression').order('remplacee_le',{ascending:false}).limit(100);
+  const vivantes = new Set(CNT_PAGES.map(p=>p.slug)), vus = new Set();
+  const l = (r.data||[]).filter(x=>!vivantes.has(x.slug) && !vus.has(x.slug) && vus.add(x.slug));
+  hiFenetre('Fiches supprimées', l.length
+    ? '<p class="mbr-sub">Recréer une fiche remet son contenu et son titre ; son rayon, ses missions et son accès sont à refaire dans « Réglages de la fiche ».</p><div class="hi-sups">'+l.map(x=>'<div class="hi-supl"><span>'+esc((x.icone?x.icone+' ':'')+(x.titre||x.slug))+'<small>supprimée le '+esc(hiQuand(x.remplacee_le))+'</small></span><button type="button" data-hirecree="'+x.id+'">Recréer</button></div>').join('')+'</div>'
+    : '<p class="hi-vide">Aucune fiche supprimée.</p>');
+}
+async function hiRecreer(id){
+  const v = await SB.from('contenu_versions').select('slug,titre,icone,html').eq('id', id).maybeSingle();
+  if(v.error || !v.data){ cntMsg('Version illisible.', true); return; }
+  const ins = await SB.from('contenu_pages').insert({ slug:v.data.slug, titre:v.data.titre, icone:v.data.icone, html:v.data.html });
+  if(ins.error){ cntMsg('Impossible de recréer : '+ins.error.message, true); return; }
+  hiFermer();
+  await buildContenuAdmin(); await cntRecharger(); await cntOuvrir(v.data.slug);
+  cntMsg('Fiche « '+(v.data.titre||v.data.slug)+' » recréée. Pense à ses réglages (rayon, missions, accès).');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest) return;
+  if(e.target.id==='cntHistBtn'){ hiOuvrir('page'); return; }
+  if(e.target.id==='blHistBtn'){ hiOuvrir('bloc'); return; }
+  if(e.target.id==='cntSupprimees'){ hiSupprimees(); return; }
+  const rc = e.target.closest('[data-hirecree]'); if(rc){ hiRecreer(+rc.dataset.hirecree); return; }
+  if(e.target.id==='hiFond' || e.target.closest('[data-hi="fermer"]')){ if(!e.target.closest('[data-hc]')) hiFermer(); return; }
+  if(!HI) {
+    const br = e.target.closest('[data-br]'); if(!br) return;
+    const pg = !!br.closest('#cntBrouillon'), k = pg ? 'page:'+CNT_SLUG : (BL ? 'bloc:'+BL.cle : null); if(!k) return;
+    const d = brLire(k);
+    if(br.dataset.br==='jeter'){ brJeter(k); brBandeau(pg?'cntBrouillon':'blBrouillon', null); return; }
+    if(br.dataset.br==='voir'){ hiOuvrir(pg?'page':'bloc').then(()=>{ if(HI && HI.brouillon){ HI.sel = 'brouillon'; hiRendre(); } }); return; }
+    if(br.dataset.br==='reprendre' && d){
+      if(pg){ cntEl('cntTitre').value = d.t||''; cntEl('cntIcone').value = d.i||''; cntEl('cntMin').value = d.o||''; cntEl('cntHtml').value = d.h||''; cntMode(CNT_MODE==='code'?'code':'visuel'); CNT_SALE = true; }
+      else { const maj = BL.maj; blOuvrir(BL.cle, d.val); BL.maj = maj; BL.sale = true; cntEl('cntBlocJson').value = JSON.stringify(d.val, null, 2); }
+      brBandeau(pg?'cntBrouillon':'blBrouillon', null);
+      cntMsg('Brouillon repris — « Enregistrer » pour le publier.');
+    }
+    return;
+  }
+  const v = e.target.closest('[data-hiv]'); if(v){ HI.sel = v.dataset.hiv; hiRendre(); return; }
+  const vu = e.target.closest('[data-hivue]'); if(vu){ HI.vue = vu.dataset.hivue; hiRendre(); return; }
+  if(e.target.closest('[data-hi="restaurer"]')){ hiRestaurer(); return; }
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && document.getElementById('hiFond')) hiFermer(); });
+
 // Édition du contenu éditorial (réservée aux administrateurs)
 let CNT_PAGES = [], CNT_SLUG = null, CNT_BLOC = null, CNT_SALE = false;
 const cntEl = id => document.getElementById(id);
@@ -9510,11 +9802,11 @@ function cntVerifFidele(html){
   cntEl('cntHtml').hidden = false; const b = cntEl('cntCode'); if(b) b.textContent = '← Éditeur visuel';
 }
 async function cntOuvrir(slug){
-  if(CNT_SALE && !confirm('Des modifications ne sont pas enregistrées. Les abandonner ?')) return;
+  if(CNT_SALE){ if(!confirm('Des modifications ne sont pas enregistrées. Les abandonner ?')) return; if(CNT_SLUG) brJeter('page:'+CNT_SLUG); }
   cntMsg('');
-  const r = await SB.from('contenu_pages').select('slug,titre,icone,html,ordre,maj').eq('slug',slug).maybeSingle();
+  const r = await SB.from('contenu_pages').select('slug,titre,icone,html,ordre,maj,par').eq('slug',slug).maybeSingle();
   if(r.error || !r.data){ cntMsg('Page illisible.', true); return; }
-  CNT_SLUG = slug; CNT_SALE = false;
+  CNT_SLUG = slug; CNT_SALE = false; CNT_MAJ = r.data.maj || null; CNT_PAR = r.data.par || null;
   cntEl('cntEdit').hidden = false;
   cntEl('cntTitre').value = r.data.titre||'';
   cntEl('cntIcone').value = r.data.icone||'';
@@ -9524,13 +9816,9 @@ async function cntOuvrir(slug){
   cntBarreOutils();
   cntMode('visuel');
   cntVerifFidele(r.data.html||'');
-  const v = await SB.from('contenu_versions').select('id,remplacee_le').eq('slug',slug).order('remplacee_le',{ascending:false}).limit(1);
   const h = cntEl('cntHist');
-  if(h){
-    const der = v.data && v.data[0];
-    h.innerHTML = der ? 'Version précédente archivée le '+esc(fmtD(String(der.remplacee_le).slice(0,10)))
-      +' <button type="button" id="cntRestaurer" data-id="'+der.id+'">Restaurer</button>' : 'Aucune version archivée.';
-  }
+  if(h) h.textContent = CNT_MAJ ? 'Modifiée le '+hiQuand(CNT_MAJ)+(CNT_PAR ? ' par '+hiQui(CNT_PAR) : '') : '';
+  brVerifPage(r.data);
   cntListe();
   try{ REG = await regLire(); regAfficher(slug); }catch(e){ const z = cntEl('cntReg'); if(z) z.innerHTML = '<summary>Réglages de la fiche (indisponibles)</summary>'; }
   cntEl('cntTitre').focus();
@@ -9539,14 +9827,18 @@ async function cntEnregistrer(){
   if(!CNT_SLUG) return;
   const btn = cntEl('cntSave');
   btn.disabled = true; cntMsg('Enregistrement…');
+  if(!(await hiVerifPage())){ btn.disabled = false; cntMsg('Enregistrement annulé.'); return; }
   const maj = { titre: cntEl('cntTitre').value.trim(), icone: cntEl('cntIcone').value.trim(),
                 html: cntHtmlCourant(), ordre: cntEl('cntMin').value ? +cntEl('cntMin').value : null };
-  const r = await SB.from('contenu_pages').update(maj).eq('slug', CNT_SLUG);
+  const r = await SB.from('contenu_pages').update(maj).eq('slug', CNT_SLUG).select('maj,par');
   btn.disabled = false;
   if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
+  if(r.data && r.data[0]){ CNT_MAJ = r.data[0].maj; CNT_PAR = r.data[0].par; const hh = cntEl('cntHist'); if(hh) hh.textContent = 'Modifiée le '+hiQuand(CNT_MAJ)+(CNT_PAR ? ' par '+hiQui(CNT_PAR) : ''); }
+  brJeter('page:'+CNT_SLUG); delete BR_DERNIER['page:'+CNT_SLUG]; brBandeau('cntBrouillon', null);
   try{ await regEnregistrer(CNT_SLUG); }
   catch(e){ cntMsg('Page enregistrée, mais les réglages n’ont pas pu l’être : '+e.message, true); return; }
   CNT_SALE = false;
+  if(BL && !BL.sale && REG_BLOCS.includes(BL.cle)) cntOuvrirBloc(BL.cle);
   cntMsg('Enregistré. La page et ses réglages sont à jour pour tout le monde.');
   const p = CNT_PAGES.find(x=>x.slug===CNT_SLUG);
   if(p){ p.titre = maj.titre; p.icone = maj.icone; }
@@ -9564,15 +9856,18 @@ async function cntRestaurer(id){
   cntMsg('Version restaurée dans l’éditeur — enregistre pour la publier.');
 }
 async function cntOuvrirBloc(cle){
-  if(BL && BL.sale && !confirm('Des modifications du bloc ne sont pas enregistrées. Les abandonner ?')){ cntEl('cntBlocs').value = BL.cle; return; }
+  if(BL && BL.sale && BL.cle !== cle){ if(!confirm('Des modifications du bloc ne sont pas enregistrées. Les abandonner ?')){ cntEl('cntBlocs').value = BL.cle; return; } brJeter('bloc:'+BL.cle); }
   CNT_BLOC = cle || null;
   const z = cntEl('cntBlocEdit');
-  if(!cle){ z.hidden = true; BL = null; cntEl('blVisuel').hidden = true; cntEl('blBascule').hidden = true; return; }
-  const r = await SB.from('contenu_blocs').select('valeur').eq('cle',cle).maybeSingle();
+  if(!cle){ z.hidden = true; BL = null; cntEl('blVisuel').hidden = true; cntEl('blBascule').hidden = true; cntEl('blHistBtn').hidden = true; brBandeau('blBrouillon', null); return; }
+  const r = await SB.from('contenu_blocs').select('valeur,maj,par').eq('cle',cle).maybeSingle();
   if(r.error || !r.data){ cntMsg('Bloc illisible.', true); return; }
   z.hidden = false;
   cntEl('cntBlocJson').value = JSON.stringify(r.data.valeur, null, 2);
   blOuvrir(cle, r.data.valeur);
+  BL.maj = r.data.maj || null; BL.par = r.data.par || null;
+  cntEl('blHistBtn').hidden = false;
+  brVerifBloc();
   cntMsg('');
 }
 async function cntEnregistrerBloc(){
@@ -9580,10 +9875,13 @@ async function cntEnregistrerBloc(){
   let val;
   try{ val = JSON.parse(cntEl('cntBlocJson').value); }
   catch(e){ cntMsg('JSON invalide : '+e.message, true); return; }
-  const r = await SB.from('contenu_blocs').update({ valeur: val, maj: new Date().toISOString() }).eq('cle', CNT_BLOC);
+  if(!(await hiVerifBloc(CNT_BLOC, BL && BL.cle===CNT_BLOC ? BL.maj : null))){ cntMsg('Enregistrement annulé.'); return; }
+  const r = await SB.from('contenu_blocs').update({ valeur: val, maj: new Date().toISOString() }).eq('cle', CNT_BLOC).select('maj');
   if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
+  brJeter('bloc:'+CNT_BLOC); delete BR_DERNIER['bloc:'+CNT_BLOC]; brBandeau('blBrouillon', null);
+  if(BL && BL.cle===CNT_BLOC && r.data && r.data[0]) BL.maj = r.data[0].maj;
   cntMsg('Bloc « '+CNT_BLOC+' » enregistré.');
-  if(BL && BL.cle===CNT_BLOC){ BL.val = val; BL.sale = false; }
+  if(BL && BL.cle===CNT_BLOC){ BL.val = val; BL.sale = false; blRendre(); }
   await cntRecharger();
 }
 document.addEventListener('input', e=>{
