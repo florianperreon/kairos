@@ -4075,3 +4075,63 @@ test.describe('Fiches pratiques (20/10/2026)', () => {
     expect(r.etat).toBe(true);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Éditeur de contenu (TipTap, 21/10/2026)', () => {
+  const PAGE_TYPE = '<div class="callout c-green_bg"><span class="ico">💡</span><div><p><b>Gras</b> et <i>italique</i>, <span class="c-red">rouge</span>, <u>souligné</u>.</p></div></div>'
+    + '<h2>Titre</h2><p class="note">Une note.</p><ul><li>Un</li><li>Deux <a href="#p/esp" class="plink">ESP</a></li></ul><ol><li>Premier</li></ol>'
+    + '<details class="h2"><summary><b>Section</b></summary><div class="dbody"><p>Contenu replié</p></div></details>'
+    + '<div class="tpl"><button class="copy" type="button">Copier</button><pre>Bonjour [Prénom],\nligne 2 <span class="c-red">[à compléter]</span></pre></div>'
+    + '<div class="tbl"><table><tbody><tr><th>Colonne</th><th>B</th></tr><tr><td>x<br>y</td><td><a href="https://exemple.invalid" target="_blank" rel="noopener">lien</a></td></tr></tbody></table></div>'
+    + '<blockquote><p>Citation</p></blockquote><div class="obj-goals"><div><b>Objectif</b> interne</div></div><div id="objTrain"></div><hr><p class="video">▶️ <a href="https://youtu.be/x" target="_blank" rel="noopener">Vidéo</a></p>';
+  test('une fiche existante est restituée à l’identique, blocs Kairos compris', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async (html) => {
+      const K = await edCharger(); edCreer(K);
+      ED.commands.setContent(html, false);
+      const sortie = edSortie(ED.getHTML());
+      return { pb: edFidele(html, sortie), sortie };
+    }, PAGE_TYPE);
+    expect(r.pb).toEqual([]);
+    for (const f of ['class="callout c-green_bg"', '<span class="ico">💡</span>', '<span class="c-red">rouge</span>', 'class="note"', 'href="#p/esp"', 'class="plink"',
+                     '<details class="h2"><summary><b>Section</b></summary><div class="dbody">', '<div class="tpl"><button class="copy" type="button">Copier</button><pre>Bonjour [Prénom],\nligne 2 <span class="c-red">[à compléter]</span></pre></div>',
+                     '<div class="tbl"><table>', 'target="_blank"', '<div class="obj-goals">', '<div id="objTrain"></div>', '<p class="video">']) expect(r.sortie).toContain(f);
+    expect(r.sortie).not.toContain('contenteditable');
+    expect(erreurs).toEqual([]);
+  });
+  test('insertion des blocs : encadré, section, modèle, tableau, lien vers une fiche ; annuler', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      const K = await edCharger(); edCreer(K);
+      ED.commands.setContent('<p>Texte</p>', false);
+      ED.commands.selectAll();
+      ED.chain().focus().wrapIn('encadre', { couleur:'orange', ico:'⚠️' }).run();
+      ED.commands.insertContentAt(ED.state.doc.content.size, '<p>Après</p>');
+      ED.commands.focus('end');
+      await edAction('section'); await edAction('modele'); await edAction('tableau');
+      const h = edSortie(ED.getHTML());
+      ED.chain().focus().undo().run();
+      const apres = edSortie(ED.getHTML());
+      return { h, defait: !apres.includes('class="tbl"') };
+    });
+    expect(r.h).toContain('<div class="callout c-orange_bg"><span class="ico">⚠️</span><div><p>Texte</p></div></div>');
+    expect(r.h).toContain('<details class="h2"><summary>Titre de la section</summary><div class="dbody">');
+    expect(r.h).toContain('<div class="tpl"><button class="copy" type="button">Copier</button><pre>');
+    expect(r.h).toContain('<div class="tbl"><table');
+    expect(r.defait).toBe(true);
+  });
+  test('coller depuis Word : structure gardée, styles et classes retirés', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      const K = await edCharger(); edCreer(K);
+      ED.commands.setContent('<p></p>', false);
+      const f = ED.view.someProp('transformPastedHTML');
+      const propre = f('<p class="MsoNormal" style="color:red"><b>Gras</b> <span class="c-red" style="font-size:20px">x</span></p><ul><li class="MsoList">A</li></ul>');
+      return propre;
+    });
+    expect(r).not.toContain('Mso');
+    expect(r).not.toContain('style=');
+    expect(r).toContain('<b>Gras</b>');
+    expect(r).toContain('<li>A</li>');
+  });
+});

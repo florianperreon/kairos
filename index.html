@@ -1089,6 +1089,46 @@ p.mi-ai{margin:4px 0 8px}
 .cnt-msg.err{color:#e05252}
 
 /* Éditeur visuel */
+/* Éditeur de contenu (TipTap) */
+#cntEdZone{position:relative;margin-top:8px}
+.ed-barre{display:flex;flex-wrap:wrap;gap:2px;align-items:center;padding:6px;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;background:var(--surface-2);position:sticky;top:64px;z-index:3}
+.ed-barre button,.ed-ctx button{border:1px solid transparent;background:transparent;color:var(--ink-2);border-radius:7px;padding:5px 8px;font-size:13px;cursor:pointer;font-family:inherit;line-height:1.2}
+.ed-barre button:hover,.ed-ctx button:hover{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.ed-barre button.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.ed-barre button:disabled{opacity:.35;cursor:default}
+.ed-sep{width:1px;height:20px;background:var(--line-2);margin:0 4px}
+.ed-ctx{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:5px 8px;border:1px solid var(--line);border-bottom:0;background:var(--accent-soft)}
+.ed-ct{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-right:6px}
+.ed-coul{min-width:30px}.ed-coul.on{outline:2px solid var(--accent)}
+.ed-corps .ed-pm{min-height:360px;max-height:65vh;overflow:auto;border:1px solid var(--line);border-radius:0 0 10px 10px;background:var(--bg);padding:14px 18px;font-size:14.5px;line-height:1.6;outline:none}
+.ed-corps .ed-pm:focus{box-shadow:inset 0 0 0 2px var(--accent)}
+.ed-pm p.is-editor-empty:first-child::before{content:attr(data-placeholder);color:var(--ink-3);float:left;height:0;pointer-events:none}
+.ed-pm .ed-section{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:8px 0;background:var(--surface)}
+.ed-pm .ed-section>summary{display:block;font-weight:700;border-bottom:1px dashed var(--line);padding-bottom:4px;margin-bottom:4px;list-style:none}
+.ed-pm .ed-section>summary::before{content:"▸ ";color:var(--ink-3)}
+.ed-pm .ed-section.h2>summary{font-size:16.5px}
+.ed-pm .tpl .copy{pointer-events:none;opacity:.6}
+.ed-pm td p,.ed-pm th p,.nc td>p:only-child,.nc th>p:only-child{margin:0}
+.ed-pm .selectedCell{background:var(--accent-soft)}
+.ed-pm .callout .ico{cursor:default}
+.ed-brut{border:1px dashed var(--line-2);border-radius:10px;margin:8px 0;background:var(--surface-2)}
+.ed-brut-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 10px;font-size:12px;color:var(--ink-3);border-bottom:1px dashed var(--line-2)}
+.ed-brut-h button{font-size:12px;border:1px solid var(--line-2);background:var(--surface);border-radius:6px;padding:2px 8px;cursor:pointer}
+.ed-brut-v{padding:8px 12px;max-height:220px;overflow:auto;opacity:.85}
+.ed-pm .ProseMirror-selectednode,.ed-pm .ProseMirror-selectednode.ed-brut{outline:2px solid var(--accent)}
+.ed-slash{position:absolute;z-index:20;background:var(--surface);border:1px solid var(--line-2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:4px;display:flex;flex-direction:column;min-width:220px;max-height:280px;overflow:auto}
+.ed-slash button{border:0;background:none;text-align:left;padding:7px 10px;border-radius:7px;font:inherit;font-size:13.5px;color:var(--ink);cursor:pointer}
+.ed-slash button.on,.ed-slash button:hover{background:var(--accent-soft)}
+.ed-modal{position:fixed;inset:0;background:rgba(10,12,20,.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.ed-modal-c{background:var(--surface);border-radius:14px;padding:18px 20px;width:min(520px,100%);box-shadow:0 20px 50px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:10px}
+.ed-modal-c h3{margin:0 0 4px;font-size:17px}
+.ed-modal-c label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--ink-2)}
+.ed-modal-c input,.ed-modal-c select,.ed-modal-c textarea{padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:14px}
+.ed-modal-c textarea{font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
+.ed-modal-a{display:flex;gap:8px;align-items:center;margin-top:4px}.ed-modal-a span{flex:1}
+.ed-modal-a button{border:1px solid var(--line-2);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit}
+.ed-alerte{background:#fff4e5;border:1px solid #f0c27a;color:#7a4b00;border-radius:8px;padding:8px 12px;font-size:13px;margin-top:8px}
+.nc p.video a{display:inline-block;font-weight:700}
 .cnt-barre{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;padding:6px;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;background:var(--surface-2)}
 .cnt-barre button{border:1px solid transparent;background:transparent;color:var(--ink-2);border-radius:7px;padding:5px 9px;font-size:13px;cursor:pointer;font-family:inherit}
 .cnt-barre button:hover{background:var(--surface);border-color:var(--line);color:var(--ink)}
@@ -2120,6 +2160,8 @@ a.mml-r:hover{border-color:var(--accent)}
                 <div class="cnt-slug">Adresse : <code id="cntSlug"></code></div>
                 <div class="cnt-barre" id="cntBarre"></div>
                 <div class="nc cnt-wys" id="cntWys" contenteditable="true" spellcheck="true"></div>
+                <div id="cntEdZone" hidden><div class="ed-barre" id="edBarre"></div><div class="ed-ctx" id="edCtx" hidden></div><div class="ed-corps" id="edCorps"></div><div class="ed-slash" id="edSlash" hidden></div></div>
+                <div class="ed-alerte" id="edAlerte" hidden></div>
                 <textarea id="cntHtml" spellcheck="false" placeholder="Contenu HTML de la page…" hidden></textarea>
                 <div class="cnt-actions">
                   <button type="button" id="cntSave" class="acc-btn">Enregistrer</button>
@@ -8591,6 +8633,313 @@ document.addEventListener('click', e=>{
   if(tr) traiterDemande(tr, !!ok);
 });
 
+/* ---------- Éditeur de contenu (TipTap, 21/10/2026, règle Florian) ----------
+   Le moteur (editeur.js, TipTap 2.27.3 regroupé) n'est chargé que dans Admin → Contenu.
+   Les blocs propres aux fiches Kairos sont de vrais éléments de l'éditeur : encadrés colorés,
+   sections repliables, modèles à copier, tableaux, liens vers une fiche, vidéos. Tout ce que
+   l'éditeur ne connaît pas (blocs interactifs, figures…) est gardé tel quel dans un « bloc spécial »
+   modifiable en HTML : rien n'est perdu. À l'ouverture d'une page, on vérifie que l'éditeur la
+   restitue à l'identique ; sinon la page s'ouvre en code HTML avec un avertissement.
+   Si le moteur ne se charge pas, l'ancien éditeur reste en place. */
+const ED_VERSION = '2.27.3-1';
+let ED = null, ED_PRET = null, ED_SLASH = null;
+function edCharger(){
+  if(window.KairosEditeur) return Promise.resolve(window.KairosEditeur);
+  if(ED_PRET) return ED_PRET;
+  ED_PRET = new Promise((ok, ko)=>{
+    const s = document.createElement('script');
+    s.src = 'editeur.js?v='+ED_VERSION;
+    s.onload = ()=> window.KairosEditeur ? ok(window.KairosEditeur) : ko(new Error('editeur'));
+    s.onerror = ()=>{ ED_PRET = null; ko(new Error('editeur')); };
+    document.head.appendChild(s);
+  });
+  return ED_PRET;
+}
+const ED_COULEURS = [['green','💡','Vert'],['blue','ℹ️','Bleu'],['orange','⚠️','Orange'],['red','⛔','Rouge'],['yellow','⭐','Jaune'],['gray','📝','Gris']];
+function edExtensions(K){
+  const { Node, Mark, Extension, StarterKit, Link, Underline, Table, TableRow, TableCell, TableHeader, Placeholder } = K;
+  const ClassesGlobales = Extension.create({ name:'classesGlobales', addGlobalAttributes(){ return [{
+    types:['paragraph','heading','blockquote','bulletList','orderedList','listItem'],
+    attributes:{
+      class:{ default:null, parseHTML:el=>el.getAttribute('class')||null, renderHTML:a=>a.class?{class:a.class}:{} },
+      id:{ default:null, parseHTML:el=>el.getAttribute('id')||null, renderHTML:a=>a.id?{id:a.id}:{} } } }]; } });
+  const Classe = Mark.create({ name:'classe', priority:40,
+    addAttributes(){ return { class:{ default:null, parseHTML:el=>el.getAttribute('class'), renderHTML:a=>a.class?{class:a.class}:{} } }; },
+    parseHTML(){ return [{ tag:'span[class]', getAttrs: el => el.classList.contains('ico') ? false : null }]; },
+    renderHTML({HTMLAttributes}){ return ['span', HTMLAttributes, 0]; } });
+  const Lien = Link.extend({ addAttributes(){ return Object.assign({}, this.parent ? this.parent() : {}, {
+      class:{ default:null, parseHTML:el=>el.getAttribute('class'), renderHTML:a=>a.class?{class:a.class}:{} } }); } })
+    .configure({ openOnClick:false, autolink:false, linkOnPaste:true, HTMLAttributes:{ target:null, rel:null, class:null } });
+  const Encadre = Node.create({ name:'encadre', group:'block', content:'block+', defining:true,
+    addAttributes(){ return { couleur:{ default:'blue' }, ico:{ default:'' } }; },
+    parseHTML(){ return [{ tag:'div.callout', priority:60,
+      getAttrs: el => { const m = (el.className.match(/c-(\w+)_bg/)||[])[1]; const i = el.querySelector(':scope > .ico'); return { couleur: m||'', ico: i ? i.textContent : '' }; },
+      contentElement: el => { const d = el.querySelector(':scope > div'); if(d) return d; const c = el.cloneNode(true); const i = c.querySelector(':scope > .ico'); if(i) i.remove(); return c; } }]; },
+    renderHTML({node}){ const out = ['div', { class:'callout'+(node.attrs.couleur?' c-'+node.attrs.couleur+'_bg':'') }];
+      if(node.attrs.ico) out.push(['span', { class:'ico', contenteditable:'false' }, node.attrs.ico]);
+      out.push(['div', 0]); return out; } });
+  const Section = Node.create({ name:'section', group:'block', content:'sectionTitre sectionCorps', defining:true,
+    addAttributes(){ return { niveau:{ default:'h2' }, ouvert:{ default:false } }; },
+    parseHTML(){ return [{ tag:'details', getAttrs: el => ({ niveau: el.classList.contains('h3')?'h3':(el.classList.contains('h2')?'h2':''), ouvert: el.hasAttribute('open') }) }]; },
+    renderHTML({node}){ const a = {}; if(node.attrs.niveau) a.class = node.attrs.niveau; if(node.attrs.ouvert) a.open = ''; return ['details', a, 0]; },
+    addNodeView(){ return ({node}) => { const dom = document.createElement('div'); dom.className = 'ed-section'+(node.attrs.niveau?' '+node.attrs.niveau:''); return { dom, contentDOM: dom }; }; } });
+  const SectionTitre = Node.create({ name:'sectionTitre', content:'inline*', defining:true,
+    parseHTML(){ return [{ tag:'summary' }]; }, renderHTML(){ return ['summary', 0]; } });
+  const SectionCorps = Node.create({ name:'sectionCorps', content:'block+',
+    parseHTML(){ return [{ tag:'div.dbody', priority:60 }]; }, renderHTML(){ return ['div', { class:'dbody' }, 0]; } });
+  const Modele = Node.create({ name:'modele', group:'block', content:'text*', marks:'classe', code:true, defining:true,
+    parseHTML(){ return [{ tag:'div.tpl', priority:60, preserveWhitespace:'full', contentElement: el => el.querySelector('pre') || el }]; },
+    renderHTML(){ return ['div', { class:'tpl' }, ['button', { class:'copy', type:'button', contenteditable:'false' }, 'Copier'], ['pre', 0]]; } });
+  const TableauBloc = Node.create({ name:'tableauBloc', group:'block', content:'table',
+    parseHTML(){ return [{ tag:'div.tbl', priority:60 }]; }, renderHTML(){ return ['div', { class:'tbl' }, 0]; } });
+  const brutRegle = tag => ({ tag, priority:20, getAttrs: el => ({ html: el.outerHTML }) });
+  const Brut = Node.create({ name:'brut', group:'block', atom:true, selectable:true, draggable:true,
+    addAttributes(){ return { html:{ default:'' } }; },
+    parseHTML(){ return ['div','figure','img','iframe','section','aside','video','audio','object'].map(brutRegle); },
+    renderHTML({node}){ const t = document.createElement('template'); t.innerHTML = node.attrs.html || '<div></div>'; return t.content.firstElementChild || ['div']; },
+    addNodeView(){ return ({node, getPos, editor}) => {
+      const dom = document.createElement('div'); dom.className = 'ed-brut'; dom.contentEditable = 'false';
+      dom.innerHTML = '<div class="ed-brut-h"><span>Bloc spécial (gardé tel quel)</span><button type="button">Modifier le HTML</button></div><div class="ed-brut-v nc"></div>';
+      dom.querySelector('.ed-brut-v').innerHTML = wysPropre(node.attrs.html);
+      dom.querySelector('button').addEventListener('click', async ()=>{
+        const r = await edModal('Bloc spécial — HTML', [{ k:'html', l:'Code HTML du bloc', v:node.attrs.html, type:'zone' }]);
+        if(r && typeof getPos==='function') editor.chain().focus().command(({tr})=>{ tr.setNodeMarkup(getPos(), undefined, { html: wysPropre(r.html) }); return true; }).run();
+      });
+      return { dom };
+    }; } });
+  return [
+    StarterKit.configure({ heading:{ levels:[2,3,4] } }),
+    Underline, Lien, ClassesGlobales, Classe, Encadre, Section, SectionTitre, SectionCorps, Modele, TableauBloc, Brut,
+    Table.configure({ resizable:false }), TableRow, TableHeader, TableCell,
+    Placeholder.configure({ placeholder:'Écris ici… (tape « / » pour insérer un bloc)' }),
+  ];
+}
+// Ce qui sort de l'éditeur : pas de contenteditable, liens externes dans un nouvel onglet
+function edSortie(html){
+  const d = document.createElement('div'); d.innerHTML = html || '';
+  d.querySelectorAll('[contenteditable]').forEach(n=>n.removeAttribute('contenteditable'));
+  // même HTML que les fiches existantes : <b>/<i>, pas de <p> seul dans une puce ou une cellule, tableaux sans styles de l'éditeur
+  const renomme = (sel, tag) => d.querySelectorAll(sel).forEach(n=>{ const x = document.createElement(tag); [...n.attributes].forEach(a=>x.setAttribute(a.name, a.value)); x.append(...n.childNodes); n.replaceWith(x); });
+  renomme('strong','b'); renomme('em','i');
+  d.querySelectorAll('li, td, th').forEach(c=>{ const k = [...c.childNodes].filter(n=>!(n.nodeType===3 && !n.textContent.trim()));
+    if(k.length===1 && k[0].nodeName==='P' && !k[0].attributes.length) k[0].replaceWith(...k[0].childNodes); });
+  d.querySelectorAll('table colgroup').forEach(n=>n.remove());
+  d.querySelectorAll('table, td, th').forEach(n=>{ n.removeAttribute('style'); if(n.getAttribute('colspan')==='1') n.removeAttribute('colspan'); if(n.getAttribute('rowspan')==='1') n.removeAttribute('rowspan'); });
+  d.querySelectorAll('a[href]').forEach(a=>{
+    const h = a.getAttribute('href') || '';
+    if(h.startsWith('#')){ a.removeAttribute('target'); a.removeAttribute('rel'); if(h.startsWith('#p/')) a.classList.add('plink'); }
+    else if(!h.startsWith('mailto:') && !h.startsWith('tel:')){ a.target = '_blank'; a.rel = 'noopener'; }
+  });
+  d.querySelectorAll('p:empty').forEach(p=>{ if(!p.attributes.length && p.parentElement && p.parentElement.children.length > 1) p.remove(); });
+  return wysPropre(d.innerHTML);
+}
+// L'éditeur restitue-t-il la page à l'identique ? (texte et blocs Kairos)
+function edFidele(avant, apres){
+  const lire = h => { const d = document.createElement('div'); d.innerHTML = h || ''; return d; };
+  const a = lire(avant), b = lire(apres), pb = [];
+  const txt = d => (d.textContent||'').replace(/\s+/g,' ').trim();
+  if(txt(a) !== txt(b)) pb.push('texte');
+  [['.callout','encadrés'],['details','sections repliables'],['.tpl','modèles à copier'],['table','tableaux'],['a[href]','liens'],['img','images'],['li','éléments de liste'],['h2,h3,h4','titres'],['[id]','blocs interactifs']]
+    .forEach(([s,l])=>{ if(b.querySelectorAll(s).length < a.querySelectorAll(s).length) pb.push(l); });
+  return pb;
+}
+function edCreer(K){
+  const zone = cntEl('edCorps');
+  if(!zone || ED) return ED;
+  ED = new K.Editor({ element: zone, extensions: edExtensions(K), content:'',
+    editorProps:{
+      attributes:{ class:'nc ed-pm', spellcheck:'true' },
+      transformPastedHTML: h => {
+        if(/data-pm-slice/.test(h)) return h;            // copier-coller depuis l'éditeur lui-même : on garde tout
+        const d = document.createElement('div'); d.innerHTML = h;
+        d.querySelectorAll('style,script,meta,link,o\\:p').forEach(n=>n.remove());
+        d.querySelectorAll('*').forEach(n=>{ n.removeAttribute('style'); n.removeAttribute('class'); n.removeAttribute('id'); });
+        return d.innerHTML;
+      } },
+    onUpdate: ()=>{ CNT_SALE = true; edSlash(); },
+    onSelectionUpdate: ()=>{ edContexte(); edEtatBarre(); edSlash(); },
+    onTransaction: ()=>{ edEtatBarre(); },
+  });
+  edBarre();
+  return ED;
+}
+// --- barre d'outils ---
+const ED_OUTILS = [
+  ['annuler','↶','Annuler (Ctrl+Z)', c=>c.undo()],
+  ['retablir','↷','Rétablir (Ctrl+Y)', c=>c.redo()],
+  '|',
+  ['h2','Titre','Titre de section', c=>c.toggleHeading({ level:2 }), e=>e.isActive('heading',{level:2})],
+  ['h3','Sous-titre','Sous-titre', c=>c.toggleHeading({ level:3 }), e=>e.isActive('heading',{level:3})],
+  ['p','¶','Texte normal', c=>c.setParagraph(), e=>e.isActive('paragraph')],
+  '|',
+  ['gras','<b>G</b>','Gras (Ctrl+B)', c=>c.toggleBold(), e=>e.isActive('bold')],
+  ['ital','<i>I</i>','Italique (Ctrl+I)', c=>c.toggleItalic(), e=>e.isActive('italic')],
+  ['soul','<u>S</u>','Souligné (Ctrl+U)', c=>c.toggleUnderline(), e=>e.isActive('underline')],
+  ['barre','<s>B</s>','Barré', c=>c.toggleStrike(), e=>e.isActive('strike')],
+  ['rouge','<span class="c-red">A</span>','Texte en rouge (à compléter, à remplacer…)', c=>c.toggleMark('classe',{ class:'c-red' }), e=>e.isActive('classe',{class:'c-red'})],
+  '|',
+  ['puces','• Liste','Liste à puces', c=>c.toggleBulletList(), e=>e.isActive('bulletList')],
+  ['num','1. Liste','Liste numérotée', c=>c.toggleOrderedList(), e=>e.isActive('orderedList')],
+  ['cit','❝','Citation', c=>c.toggleBlockquote(), e=>e.isActive('blockquote')],
+  '|',
+  ['lien','🔗 Lien','Lien vers un site', null],
+  ['fiche','📄 Fiche','Lien vers une autre fiche', null],
+  ['video','▶️ Vidéo','Vidéo YouTube / Vimeo', null],
+  '|',
+  ['encadre','💡 Encadré','Encadré coloré', null],
+  ['section','▸ Section','Section repliable', null],
+  ['modele','📋 Modèle','Modèle à copier (SMS, mail, script)', null],
+  ['tableau','▦ Tableau','Tableau', null],
+  ['hr','―','Séparateur', c=>c.setHorizontalRule()],
+  '|',
+  ['nettoyer','⌫','Retirer la mise en forme', c=>c.unsetAllMarks().clearNodes()],
+];
+function edBarre(){
+  const b = cntEl('edBarre'); if(!b) return;
+  b.innerHTML = ED_OUTILS.map((o,i)=> o==='|' ? '<span class="ed-sep"></span>'
+    : '<button type="button" data-ed="'+i+'" title="'+esc(o[2])+'">'+o[1]+'</button>').join('');
+}
+function edEtatBarre(){
+  if(!ED) return;
+  document.querySelectorAll('#edBarre button[data-ed]').forEach(btn=>{
+    const o = ED_OUTILS[+btn.dataset.ed]; btn.classList.toggle('on', !!(o[4] && o[4](ED)));
+  });
+  const u = document.querySelector('#edBarre [data-ed="0"]'), r = document.querySelector('#edBarre [data-ed="1"]');
+  if(u) u.disabled = !ED.can().undo(); if(r) r.disabled = !ED.can().redo();
+}
+async function edAction(cle){
+  if(!ED) return;
+  const o = ED_OUTILS.find(x=>x!=='|' && x[0]===cle);
+  if(o && o[3]){ o[3](ED.chain().focus()).run(); return; }
+  if(cle==='lien'){
+    const avant = ED.getAttributes('link').href || 'https://';
+    const r = await edModal('Lien vers un site', [{ k:'href', l:'Adresse (https://…)', v:avant }]
+      .concat(ED.state.selection.empty && !ED.isActive('link') ? [{ k:'txt', l:'Texte du lien', v:'' }] : []), ED.isActive('link') ? 'Retirer le lien' : '');
+    if(r===null) return;
+    if(r==='retirer'){ ED.chain().focus().extendMarkRange('link').unsetLink().run(); return; }
+    if(!r.href || r.href==='https://') return;
+    const attrs = { href:r.href.trim(), target:'_blank', rel:'noopener' };
+    if(r.txt) ED.chain().focus().insertContent({ type:'text', text:r.txt, marks:[{ type:'link', attrs }] }).run();
+    else ED.chain().focus().extendMarkRange('link').setLink(attrs).run();
+  }
+  if(cle==='fiche'){
+    const opts = (CNT_PAGES||[]).slice().sort((a,b)=>(a.titre||'').localeCompare(b.titre||'','fr')).map(p=>[p.slug, (p.icone?p.icone+' ':'')+(p.titre||p.slug)]);
+    const r = await edModal('Lien vers une autre fiche', [{ k:'slug', l:'Fiche', type:'liste', options:opts }]
+      .concat(ED.state.selection.empty ? [{ k:'txt', l:'Texte du lien (vide = titre de la fiche)', v:'' }] : []));
+    if(!r || !r.slug) return;
+    const p = (CNT_PAGES||[]).find(x=>x.slug===r.slug) || {};
+    const attrs = { href:'#p/'+r.slug, class:'plink', target:null, rel:null };
+    if(ED.state.selection.empty) ED.chain().focus().insertContent({ type:'text', text:r.txt || p.titre || r.slug, marks:[{ type:'link', attrs }] }).run();
+    else ED.chain().focus().setLink(attrs).run();
+  }
+  if(cle==='video'){
+    const r = await edModal('Vidéo', [{ k:'url', l:'Lien YouTube ou Vimeo', v:'https://' }, { k:'titre', l:'Titre affiché', v:'Regarder la vidéo' }]);
+    if(!r || !/^https?:\/\//.test(r.url||'')) return;
+    ED.chain().focus().insertContent('<p class="video">▶️ <a href="'+esc(r.url.trim())+'" target="_blank" rel="noopener">'+esc(r.titre||'Regarder la vidéo')+'</a></p>').run();
+  }
+  if(cle==='encadre'){
+    const r = await edModal('Encadré coloré', [{ k:'couleur', l:'Couleur', type:'liste', options:ED_COULEURS.map(([c,i,l])=>[c, i+' '+l]) }, { k:'ico', l:'Icône (un émoji, facultatif)', v:'' }]);
+    if(!r) return;
+    const ico = r.ico !== '' ? r.ico : ((ED_COULEURS.find(x=>x[0]===r.couleur)||[])[1] || '');
+    if(!ED.chain().focus().wrapIn('encadre', { couleur:r.couleur, ico }).run())
+      ED.chain().focus().insertContent({ type:'encadre', attrs:{ couleur:r.couleur, ico }, content:[{ type:'paragraph', content:[{ type:'text', text:'Texte de l’encadré' }] }] }).run();
+  }
+  if(cle==='section') ED.chain().focus().insertContent({ type:'section', attrs:{ niveau:'h2' }, content:[
+      { type:'sectionTitre', content:[{ type:'text', text:'Titre de la section' }] },
+      { type:'sectionCorps', content:[{ type:'paragraph' }] }] }).run();
+  if(cle==='modele') ED.chain().focus().insertContent({ type:'modele', content:[{ type:'text', text:'Bonjour [Prénom],\n…' }] }).run();
+  if(cle==='tableau') ED.chain().focus().insertContent('<div class="tbl"><table><tbody><tr><th><p>Colonne 1</p></th><th><p>Colonne 2</p></th></tr><tr><td><p></p></td><td><p></p></td></tr><tr><td><p></p></td><td><p></p></td></tr></tbody></table></div>').run();
+}
+// --- barre contextuelle : tableau, encadré, section, bloc ---
+function edContexte(){
+  const z = cntEl('edCtx'); if(!z || !ED) return;
+  let h = '';
+  if(ED.isActive('table')) h += '<span class="ed-ct">Tableau</span>'
+    + [['+ ligne','addRowAfter'],['+ colonne','addColumnAfter'],['− ligne','deleteRow'],['− colonne','deleteColumn'],['En-tête','toggleHeaderRow'],['Supprimer le tableau','supTableau']]
+      .map(([l,c])=>'<button type="button" data-edt="'+c+'">'+l+'</button>').join('');
+  if(ED.isActive('encadre')){ const a = ED.getAttributes('encadre');
+    h += '<span class="ed-ct">Encadré</span>' + ED_COULEURS.map(([c,i,l])=>'<button type="button" class="ed-coul c-'+c+'_bg'+(a.couleur===c?' on':'')+'" data-edc="'+c+'" title="'+l+'">'+i+'</button>').join('')
+      + '<button type="button" data-edt="icoEncadre">Icône…</button><button type="button" data-edt="sortirEncadre">Retirer l’encadré</button>'; }
+  if(ED.isActive('section')){ const a = ED.getAttributes('section');
+    h += '<span class="ed-ct">Section</span><button type="button" data-edt="niveauSection">'+(a.niveau==='h3'?'Titre plus grand':'Titre plus petit')+'</button>'
+      + '<button type="button" data-edt="ouvertSection">'+(a.ouvert?'Repliée par défaut':'Dépliée par défaut')+'</button><button type="button" data-edt="supSection">Supprimer la section</button>'; }
+  if(ED.isActive('modele')) h += '<span class="ed-ct">Modèle à copier</span><button type="button" data-edt="supModele">Supprimer le modèle</button>';
+  z.innerHTML = h; z.hidden = !h;
+}
+function edSupprimerParent(nom){
+  const { $from } = ED.state.selection;
+  for(let d = $from.depth; d > 0; d--){ if($from.node(d).type.name===nom){ const pos = $from.before(d); ED.chain().focus().command(({tr})=>{ tr.delete(pos, pos + $from.node(d).nodeSize); return true; }).run(); return; } }
+}
+async function edCtxAction(c){
+  if(!ED) return;
+  if(['addRowAfter','addColumnAfter','deleteRow','deleteColumn','toggleHeaderRow'].includes(c)){ ED.chain().focus()[c]().run(); return; }
+  if(c==='supTableau'){ edSupprimerParent('tableauBloc'); if(ED.isActive('table')) ED.chain().focus().deleteTable().run(); }
+  if(c==='sortirEncadre') ED.chain().focus().lift('encadre').run();
+  if(c==='icoEncadre'){ const r = await edModal('Icône de l’encadré', [{ k:'ico', l:'Un émoji (vide = aucune)', v:ED.getAttributes('encadre').ico||'' }]); if(r) ED.chain().focus().updateAttributes('encadre', { ico:r.ico }).run(); }
+  if(c==='niveauSection'){ const a = ED.getAttributes('section'); ED.chain().focus().updateAttributes('section', { niveau: a.niveau==='h3' ? 'h2' : 'h3' }).run(); }
+  if(c==='ouvertSection'){ const a = ED.getAttributes('section'); ED.chain().focus().updateAttributes('section', { ouvert: !a.ouvert }).run(); }
+  if(c==='supSection') edSupprimerParent('section');
+  if(c==='supModele') edSupprimerParent('modele');
+  edContexte();
+}
+// --- menu « / » ---
+const ED_SLASH_ITEMS = [['titre','Titre',c=>c.setHeading({level:2})],['sous-titre','Sous-titre',c=>c.setHeading({level:3})],['liste','Liste à puces',c=>c.toggleBulletList()],
+  ['numerotee','Liste numérotée',c=>c.toggleOrderedList()],['encadre','💡 Encadré coloré','encadre'],['section','▸ Section repliable','section'],['modele','📋 Modèle à copier','modele'],
+  ['tableau','▦ Tableau','tableau'],['fiche','📄 Lien vers une fiche','fiche'],['video','▶️ Vidéo','video'],['lien','🔗 Lien','lien'],['citation','❝ Citation',c=>c.toggleBlockquote()],['separateur','― Séparateur',c=>c.setHorizontalRule()]];
+function edSlash(){
+  const m = cntEl('edSlash'); if(!m || !ED) return;
+  const { $from, empty } = ED.state.selection;
+  const p = $from.parent, t = p.textContent || '';
+  if(!empty || p.type.name!=='paragraph' || !t.startsWith('/') || t.length > 20 || $from.parentOffset !== t.length){ m.hidden = true; ED_SLASH = null; return; }
+  const q = norm(t.slice(1));
+  const l = ED_SLASH_ITEMS.filter(([k,lib])=>!q || norm(k+' '+lib).includes(q));
+  if(!l.length){ m.hidden = true; ED_SLASH = null; return; }
+  ED_SLASH = { l, i: ED_SLASH && ED_SLASH.l.length===l.length ? Math.min(ED_SLASH.i, l.length-1) : 0, from: $from.start(), to: $from.pos };
+  const c = ED.view.coordsAtPos($from.pos), box = cntEl('cntEdZone').getBoundingClientRect();
+  m.style.left = (c.left - box.left)+'px'; m.style.top = (c.bottom - box.top + 4)+'px';
+  m.innerHTML = l.map(([k,lib],i)=>'<button type="button" data-eds="'+i+'"'+(i===ED_SLASH.i?' class="on"':'')+'>'+esc(lib)+'</button>').join('');
+  m.hidden = false;
+}
+function edSlashChoisir(i){
+  if(!ED_SLASH) return;
+  const it = ED_SLASH.l[i], { from, to } = ED_SLASH;
+  cntEl('edSlash').hidden = true; ED_SLASH = null;
+  ED.chain().focus().deleteRange({ from, to }).run();
+  if(typeof it[2]==='function') it[2](ED.chain().focus()).run(); else edAction(it[2]);
+}
+// --- petite fenêtre de saisie (remplace prompt()) ---
+function edModal(titre, champs, retirer){
+  return new Promise(ok=>{
+    const fond = document.createElement('div'); fond.className = 'ed-modal';
+    fond.innerHTML = '<form class="ed-modal-c"><h3>'+esc(titre)+'</h3>'
+      + champs.map(c=>'<label>'+esc(c.l)+(c.type==='zone' ? '<textarea name="'+c.k+'" rows="12">'+esc(c.v||'')+'</textarea>'
+          : c.type==='liste' ? '<select name="'+c.k+'">'+c.options.map(([v,l])=>'<option value="'+esc(v)+'">'+esc(l)+'</option>').join('')+'</select>'
+          : '<input name="'+c.k+'" value="'+esc(c.v||'')+'" autocomplete="off">')+'</label>').join('')
+      + '<div class="ed-modal-a">'+(retirer?'<button type="button" data-r="1">'+esc(retirer)+'</button>':'')+'<span></span><button type="button" data-a="1">Annuler</button><button type="submit" class="acc-btn">Valider</button></div></form>';
+    document.body.appendChild(fond);
+    const fin = v => { fond.remove(); ok(v); };
+    fond.addEventListener('click', e=>{ if(e.target===fond || e.target.dataset.a) fin(null); if(e.target.dataset.r) fin('retirer'); });
+    fond.addEventListener('keydown', e=>{ if(e.key==='Escape') fin(null); });
+    fond.querySelector('form').addEventListener('submit', e=>{ e.preventDefault(); const r = {}; champs.forEach(c=>{ r[c.k] = fond.querySelector('[name="'+c.k+'"]').value; }); fin(r); });
+    const f = fond.querySelector('input,select,textarea'); if(f) setTimeout(()=>f.focus(), 0);
+  });
+}
+document.addEventListener('mousedown', e=>{
+  const b = e.target.closest && e.target.closest('#edBarre button[data-ed]');
+  if(b){ e.preventDefault(); edAction(ED_OUTILS[+b.dataset.ed][0]); return; }
+  const t = e.target.closest && e.target.closest('#edCtx button');
+  if(t){ e.preventDefault(); if(t.dataset.edc) ED.chain().focus().updateAttributes('encadre', { couleur:t.dataset.edc }).run(), edContexte(); else edCtxAction(t.dataset.edt); return; }
+  const s = e.target.closest && e.target.closest('#edSlash button[data-eds]');
+  if(s){ e.preventDefault(); edSlashChoisir(+s.dataset.eds); }
+});
+document.addEventListener('keydown', e=>{
+  if(!ED_SLASH || !e.target.closest || !e.target.closest('#edCorps')) return;
+  if(e.key==='ArrowDown' || e.key==='ArrowUp'){ e.preventDefault(); ED_SLASH.i = (ED_SLASH.i + (e.key==='ArrowDown'?1:-1) + ED_SLASH.l.length) % ED_SLASH.l.length; edSlash(); }
+  else if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); edSlashChoisir(ED_SLASH.i); }
+  else if(e.key==='Escape'){ cntEl('edSlash').hidden = true; ED_SLASH = null; }
+}, true);
+window.addEventListener('beforeunload', e=>{ if(CNT_SALE && curTab==='admin'){ e.preventDefault(); e.returnValue = ''; } });
+
 // Éditeur visuel : ce que l'on voit est ce qui sera publié (aucune connaissance du HTML requise)
 let CNT_MODE = 'visuel';
 const OUTILS = [
@@ -8635,15 +8984,17 @@ function wysPropre(html){
   return d.innerHTML;
 }
 function cntHtmlCourant(){
-  return CNT_MODE==='code' ? cntEl('cntHtml').value : wysPropre(cntEl('cntWys').innerHTML);
+  return CNT_MODE==='code' ? cntEl('cntHtml').value : (ED ? edSortie(ED.getHTML()) : wysPropre(cntEl('cntWys').innerHTML));
 }
 function cntMode(m){
   CNT_MODE = m;
-  const wys = cntEl('cntWys'), code = cntEl('cntHtml'), b = cntEl('cntCode'), barre = cntEl('cntBarre');
-  if(m==='code'){ code.value = wysPropre(wys.innerHTML); }
+  const wys = cntEl('cntWys'), code = cntEl('cntHtml'), b = cntEl('cntCode'), barre = cntEl('cntBarre'), zone = cntEl('cntEdZone');
+  if(m==='code'){ code.value = ED ? edSortie(ED.getHTML()) : wysPropre(wys.innerHTML); }
+  else if(ED){ ED.commands.setContent(code.value || '', false); edContexte(); }
   else { wys.innerHTML = code.value; wysLiens(); }
-  wys.hidden = m==='code';
-  barre.hidden = m==='code';
+  wys.hidden = m==='code' || !!ED;
+  barre.hidden = m==='code' || !!ED;
+  if(zone) zone.hidden = m==='code' || !ED;
   code.hidden = m!=='code';
   if(b) b.textContent = m==='code' ? '← Éditeur visuel' : '‹ › Code HTML';
 }
@@ -8702,7 +9053,25 @@ async function buildContenuAdmin(){
       + (b.data||[]).map(x=>'<option value="'+esc(x.cle)+'">'+esc(x.cle)+'</option>').join('');
   }catch(e){ return false; }
   cntListe();
+  edCharger().then(K=>{
+    const etaitLa = !!ED; edCreer(K);
+    if(!etaitLa && ED && CNT_SLUG && CNT_MODE==='visuel' && !CNT_SALE){ cntMode('visuel'); cntVerifFidele(cntEl('cntHtml').value); }
+  }).catch(()=>{});
   return true;
+}
+// L'éditeur visuel restitue-t-il la page à l'identique ? Sinon : code HTML, pour ne rien perdre
+function cntVerifFidele(html){
+  const al = cntEl('edAlerte'); if(!al) return;
+  al.hidden = true;
+  if(!ED || CNT_MODE!=='visuel') return;
+  const pb = edFidele(html, edSortie(ED.getHTML()));
+  if(!pb.length) return;
+  al.innerHTML = '⚠️ L’éditeur visuel ne restitue pas exactement cette page ('+esc(pb.join(', '))+'). Elle s’ouvre en code HTML pour ne rien perdre ; tu peux repasser en éditeur visuel en connaissance de cause.';
+  al.hidden = false;
+  cntEl('cntHtml').value = html;
+  CNT_MODE = 'code';
+  ['cntWys','cntBarre','cntEdZone'].forEach(id=>{ const x = cntEl(id); if(x) x.hidden = true; });
+  cntEl('cntHtml').hidden = false; const b = cntEl('cntCode'); if(b) b.textContent = '← Éditeur visuel';
 }
 async function cntOuvrir(slug){
   if(CNT_SALE && !confirm('Des modifications ne sont pas enregistrées. Les abandonner ?')) return;
@@ -8718,6 +9087,7 @@ async function cntOuvrir(slug){
   cntEl('cntSlug').textContent = slug;
   cntBarreOutils();
   cntMode('visuel');
+  cntVerifFidele(r.data.html||'');
   const v = await SB.from('contenu_versions').select('id,remplacee_le').eq('slug',slug).order('remplacee_le',{ascending:false}).limit(1);
   const h = cntEl('cntHist');
   if(h){
