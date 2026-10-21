@@ -1129,6 +1129,55 @@ p.mi-ai{margin:4px 0 8px}
 .ed-modal-a button{border:1px solid var(--line-2);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit}
 .ed-alerte{background:#fff4e5;border:1px solid #f0c27a;color:#7a4b00;border-radius:8px;padding:8px 12px;font-size:13px;margin-top:8px}
 .nc p.video a{display:inline-block;font-weight:700}
+/* Réglages de la fiche */
+.cnt-reg{border:1px solid var(--line);border-radius:10px;background:var(--surface-2);margin:8px 0 10px;padding:0 12px}
+.cnt-reg>summary{cursor:pointer;font-weight:800;font-size:13px;padding:9px 0;color:var(--ink-2)}
+.reg-g{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding:0 0 12px}
+.reg-g>label,.reg-l{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--ink-2)}
+.reg-l{grid-column:1 / -1}
+.reg-g small{font-weight:400;color:var(--ink-3)}
+.reg-g input:not([type=checkbox]):not([type=radio]),.reg-g select{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13.5px;font-weight:400}
+.reg-mis{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px 14px;max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:8px 10px}
+.reg-ph b{display:block;font-size:12px;margin:2px 0 4px}
+.reg-c{display:flex;gap:6px;align-items:flex-start;font-weight:400;font-size:12.5px;color:var(--ink);padding:2px 0;cursor:pointer}
+.reg-t{font-size:12px}
+.reg-ph-sel{color:var(--ink-3)}.reg-ph-sel select{padding:2px 6px !important}
+.cnt-tete{display:flex;gap:8px;margin-bottom:8px}.cnt-tete input{flex:1;min-width:0}
+.cnt-tete button{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:7px 10px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.cnt-actions .cnt-danger{color:#b42318 !important;border-color:#f3b8b2 !important}
+.reg-apercu{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 8px}
+@media (max-width:760px){.reg-g{grid-template-columns:1fr}}
+/* Éditeurs visuels des blocs */
+.bl-choix{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bl-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.bl-head h4{margin:0;flex:1;font-size:15px}
+.bl-head button,.bl-b{border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:6px 11px;font:inherit;font-size:12.5px;cursor:pointer}
+.bl-plus{margin-top:6px;color:var(--accent);border-style:dashed}
+.bl-liste{display:flex;flex-direction:column;gap:6px}
+.bl-it{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.bl-it>summary{display:flex;gap:8px;align-items:center;padding:7px 10px;cursor:pointer;font-size:13.5px;list-style:none}
+.bl-it>summary::-webkit-details-marker{display:none}
+.bl-it>summary::before{content:"▸";color:var(--ink-3)}.bl-it[open]>summary::before{content:"▾"}
+.bl-n{font-size:11px;color:var(--ink-3);min-width:16px}.bl-tt{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bl-ops{display:flex;gap:2px}.bl-ops button{border:0;background:none;color:var(--ink-3);cursor:pointer;padding:2px 6px;border-radius:6px;font-size:13px}
+.bl-ops button:hover{background:var(--surface-2);color:var(--ink)}
+.bl-it[open]{background:var(--surface-2)}.bl-it .bl-it{background:var(--surface)}
+.bl-champs{display:flex;flex-wrap:wrap;gap:8px 12px;padding:6px 12px 12px}
+.bl-f{display:flex;flex-direction:column;gap:3px;flex:1 1 260px;min-width:0;font-size:12px}
+.bl-f.court{flex:0 1 150px}.bl-f.large{flex:1 1 100%}
+.bl-l{font-weight:700;color:var(--ink-2)}.bl-l small,.bl-f>small{font-weight:400;color:var(--ink-3)}
+.bl-f input:not([type=checkbox]),.bl-f select,.bl-f textarea{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:13.5px}
+.bl-f textarea{resize:vertical}
+.bl-case{flex-direction:row;align-items:center;gap:6px;font-size:13px;color:var(--ink);flex:1 1 100%}
+.bl-obj{border:1px dashed var(--line-2);border-radius:10px;padding:4px 0 0;margin:0}
+.bl-obj>legend{font-size:12px;font-weight:800;color:var(--ink-2);padding:0 6px}
+.bl-pages{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.bl-pg{display:inline-flex;align-items:center;gap:2px;background:var(--surface);border:1px solid var(--line-2);border-radius:99px;padding:2px 4px 2px 10px;font-size:12.5px}
+.bl-pg.inconnue{border-color:#e6a23c;color:#9a5b00}
+.bl-pg button{border:0;background:none;cursor:pointer;color:var(--ink-3);padding:0 4px;font-size:12px}
+.bl-pages select{padding:4px 8px !important;font-size:12.5px !important;max-width:260px}
+.bl-ap{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:6px 10px;font-size:13px;max-height:180px;overflow:auto}
+
 .cnt-barre{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;padding:6px;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;background:var(--surface-2)}
 .cnt-barre button{border:1px solid transparent;background:transparent;color:var(--ink-2);border-radius:7px;padding:5px 9px;font-size:13px;cursor:pointer;font-family:inherit}
 .cnt-barre button:hover{background:var(--surface);border-color:var(--line);color:var(--ink)}
@@ -2147,7 +2196,7 @@ a.mml-r:hover{border-color:var(--accent)}
           <p class="mbr-sub">Chaque modification est publiée immédiatement pour toute la lignée, et la version précédente est archivée.</p>
           <div class="cnt-wrap">
             <div class="cnt-col">
-              <input type="search" id="cntQ" placeholder="Filtrer les pages…" autocomplete="off">
+              <div class="cnt-tete"><input type="search" id="cntQ" placeholder="Filtrer les pages…" autocomplete="off"><button type="button" id="cntNouvelle" title="Créer une nouvelle fiche">+ Nouvelle</button></div>
               <div class="cnt-liste" id="cntListe"></div>
             </div>
             <div class="cnt-col cnt-form">
@@ -2158,6 +2207,7 @@ a.mml-r:hover{border-color:var(--accent)}
                   <label class="court" title="Position de la page dans les listes du parcours">Ordre<input type="number" id="cntMin" min="1" max="99"></label>
                 </div>
                 <div class="cnt-slug">Adresse : <code id="cntSlug"></code></div>
+                <details class="cnt-reg" id="cntReg"></details>
                 <div class="cnt-barre" id="cntBarre"></div>
                 <div class="nc cnt-wys" id="cntWys" contenteditable="true" spellcheck="true"></div>
                 <div id="cntEdZone" hidden><div class="ed-barre" id="edBarre"></div><div class="ed-ctx" id="edCtx" hidden></div><div class="ed-corps" id="edCorps"></div><div class="ed-slash" id="edSlash" hidden></div></div>
@@ -2166,13 +2216,20 @@ a.mml-r:hover{border-color:var(--accent)}
                 <div class="cnt-actions">
                   <button type="button" id="cntSave" class="acc-btn">Enregistrer</button>
                   <button type="button" id="cntCode">‹ › Code HTML</button>
+                  <button type="button" id="cntApercu" title="Voir la fiche comme un membre">👁 Aperçu</button>
+                  <button type="button" id="cntDupliquer">Dupliquer</button>
+                  <button type="button" id="cntSupprimer" class="cnt-danger">Supprimer</button>
                   <span class="cnt-hist" id="cntHist"></span>
                 </div>
               </div>
               <div class="cnt-blocs">
                 <h3>Autres blocs</h3>
-                <p class="mbr-sub">Parcours, FAQ, ressources, rituels, objections… édition directe en JSON, à manier avec précaution.</p>
-                <select id="cntBlocs"></select>
+                <p class="mbr-sub">Parcours en missions, FAQ, objections, rayons des fiches, réflexes, rituels, ressources… se modifient avec un formulaire. Le JSON reste accessible en mode expert.</p>
+                <div class="bl-choix"><select id="cntBlocs"></select><button type="button" id="blBascule" class="bl-b" hidden>JSON (expert)</button></div>
+                <div id="blVisuel" hidden>
+                  <div class="bl-head"><h4 id="blTitre"></h4><button type="button" id="blSave" class="acc-btn">Enregistrer</button></div>
+                  <div id="blEdit"></div>
+                </div>
                 <div id="cntBlocEdit" hidden>
                   <textarea id="cntBlocJson" spellcheck="false"></textarea>
                   <button type="button" id="cntBlocSave" class="acc-btn">Enregistrer le bloc</button>
@@ -8938,7 +8995,7 @@ document.addEventListener('keydown', e=>{
   else if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); edSlashChoisir(ED_SLASH.i); }
   else if(e.key==='Escape'){ cntEl('edSlash').hidden = true; ED_SLASH = null; }
 }, true);
-window.addEventListener('beforeunload', e=>{ if(CNT_SALE && curTab==='admin'){ e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('beforeunload', e=>{ if((CNT_SALE || (BL && BL.sale)) && curTab==='admin'){ e.preventDefault(); e.returnValue = ''; } });
 
 // Éditeur visuel : ce que l'on voit est ce qui sera publié (aucune connaissance du HTML requise)
 let CNT_MODE = 'visuel';
@@ -9021,6 +9078,385 @@ document.addEventListener('paste', e=>{
   document.execCommand('insertText', false, txt);
 });
 
+/* ---------- Réglages de la fiche (étape B, 21/10/2026, règle Florian) ----------
+   À côté de l'éditeur : résumé de la carte, rayon des Fiches pratiques, groupe du parcours (fil
+   d'Ariane), missions qui y renvoient, accès (selon les missions / socle / phase), et créer,
+   dupliquer, supprimer, aperçu « comme un membre ». Les blocs concernés (fiches, fiches_resumes,
+   fiches_acces, missions, nav) sont relus juste avant l'enregistrement et seuls ceux qui changent
+   sont réécrits : on n'écrase pas une modification faite entre-temps ailleurs. */
+const REG_BLOCS = ['fiches','fiches_resumes','fiches_acces','missions','nav'];
+let REG = null;     // blocs relus à l'ouverture de la fiche
+async function regLire(){
+  const r = await SB.from('contenu_blocs').select('cle,valeur').in('cle', REG_BLOCS);
+  if(r.error) throw r.error;
+  const o = {}; (r.data||[]).forEach(x=>{ o[x.cle] = x.valeur; });
+  return o;
+}
+const regPhases = B => ((B.missions||{}).phases||[]).filter(p=>!p.avenir);
+function regEtat(B, slug){
+  const rayon = (B.fiches||[]).findIndex(r=>(r.pages||[]).includes(slug));
+  let groupe = '';
+  (B.nav||[]).forEach((sec,i)=>(sec.groupes||[]).forEach((g,j)=>{ if((g.pages||[]).includes(slug)) groupe = i+'/'+j; }));
+  const missions = [];
+  regPhases(B).forEach(ph=>(ph.missions||[]).forEach(m=>{ if((m.pages||[]).includes(slug)) missions.push(m.id); }));
+  const acc = B.fiches_acces || {};
+  return { resume: (B.fiches_resumes||{})[slug] || '', rayon: rayon<0 ? '' : String(rayon), groupe, missions,
+           socle: (acc.socle||[]).includes(slug), phase: String((acc.phase||{})[slug] || '') };
+}
+function regAfficher(slug){
+  const z = cntEl('cntReg'); if(!z || !REG) return;
+  const e = regEtat(REG, slug);
+  const opt = (v, l, sel) => '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(l)+'</option>';
+  z.innerHTML = '<summary>Réglages de la fiche</summary><div class="reg-g">'
+    + '<label class="reg-l">Résumé sur la carte <small>quelques mots, affichés sous le titre dans Fiches pratiques</small><input id="regResume" maxlength="160" value="'+esc(e.resume)+'" placeholder="Ex. : Relancer un prospect silencieux en 3 temps, avec les SMS types."></label>'
+    + '<label>Rayon des Fiches pratiques<select id="regRayon">'+opt('', '— aucun (Autres fiches) —', e.rayon)+(REG.fiches||[]).map((r,i)=>opt(String(i), (r.i?r.i+' ':'')+r.t, e.rayon)).join('')+'</select></label>'
+    + '<label>Groupe du parcours <small>fil d’Ariane et fiches voisines</small><select id="regGroupe">'+opt('', '— aucun —', e.groupe)
+      + (REG.nav||[]).map((sec,i)=>(sec.groupes||[]).map((g,j)=>opt(i+'/'+j, String(sec.t||'').replace(/ —.*$/,'')+' › '+g.t, e.groupe)).join('')).join('')+'</select></label>'
+    + '<div class="reg-l"><span class="reg-t">Missions qui renvoient à cette fiche <small>la fiche apparaît dans ces missions et se débloque avec la première accessible</small></span><div class="reg-mis">'
+      + regPhases(REG).map(ph=>'<div class="reg-ph"><b>Phase '+ph.n+'</b>'+(ph.missions||[]).map(m=>'<label class="reg-c"><input type="checkbox" class="regMis" value="'+esc(m.id)+'"'+(e.missions.includes(m.id)?' checked':'')+'> '+esc(m.id+' '+m.t)+'</label>').join('')+'</div>').join('')
+    + '</div></div>'
+    + '<div class="reg-l"><span class="reg-t">Accès</span><label class="reg-c"><input type="radio" name="regAcces" value="missions"'+(e.socle?'':' checked')+'> Selon les missions cochées'
+      + ' <span class="reg-ph-sel">(sans mission : s’ouvre avec la phase <select id="regPhase">'+[1,2,3].map(n=>opt(String(n), String(n), e.phase||'3')).join('')+'</select>)</span></label>'
+      + '<label class="reg-c"><input type="radio" name="regAcces" value="socle"'+(e.socle?' checked':'')+'> Ouverte à tous dès le départ (socle commun)</label></div>'
+    + '</div>';
+}
+// Applique les réglages saisis à une copie fraîche des blocs ; renvoie les blocs modifiés
+function regAppliquer(B, slug){
+  const N = JSON.parse(JSON.stringify(B)), ch = new Set();
+  const lire = id => (cntEl(id)||{}).value;
+  const marque = (cle, avant) => { if(JSON.stringify(avant) !== JSON.stringify(N[cle])) ch.add(cle); };
+  // résumé
+  const resAv = JSON.parse(JSON.stringify(N.fiches_resumes||{})); N.fiches_resumes = N.fiches_resumes || {};
+  const res = (lire('regResume')||'').trim(); if(res) N.fiches_resumes[slug] = res; else delete N.fiches_resumes[slug];
+  marque('fiches_resumes', resAv);
+  // rayon : on garde la place si la fiche ne change pas de rayon
+  const fAv = JSON.parse(JSON.stringify(N.fiches||[])), ray = lire('regRayon');
+  (N.fiches||[]).forEach((r,i)=>{ if(String(i)!==ray) r.pages = (r.pages||[]).filter(s=>s!==slug); });
+  if(ray!=='' && N.fiches[+ray] && !(N.fiches[+ray].pages||[]).includes(slug)) (N.fiches[+ray].pages = N.fiches[+ray].pages||[]).push(slug);
+  marque('fiches', fAv);
+  // groupe du parcours
+  const nAv = JSON.parse(JSON.stringify(N.nav||[])), gr = lire('regGroupe');
+  (N.nav||[]).forEach((sec,i)=>(sec.groupes||[]).forEach((g,j)=>{ if(i+'/'+j!==gr) g.pages = (g.pages||[]).filter(s=>s!==slug); }));
+  if(gr){ const [i,j] = gr.split('/').map(Number); const g = ((N.nav[i]||{}).groupes||[])[j]; if(g && !(g.pages||[]).includes(slug)) (g.pages = g.pages||[]).push(slug); }
+  marque('nav', nAv);
+  // missions
+  const mAv = JSON.parse(JSON.stringify(N.missions||{})), coches = new Set([...document.querySelectorAll('.regMis:checked')].map(x=>x.value));
+  ((N.missions||{}).phases||[]).forEach(ph=>(ph.missions||[]).forEach(m=>{
+    const a = (m.pages||[]).includes(slug);
+    if(coches.has(m.id) && !a) (m.pages = m.pages||[]).push(slug);
+    if(!coches.has(m.id) && a) m.pages = m.pages.filter(s=>s!==slug);
+  }));
+  marque('missions', mAv);
+  // accès
+  const aAv = JSON.parse(JSON.stringify(N.fiches_acces||{})); N.fiches_acces = N.fiches_acces || {};
+  const socle = (document.querySelector('input[name="regAcces"]:checked')||{}).value === 'socle';
+  N.fiches_acces.socle = (N.fiches_acces.socle || FICHES_SOCLE.slice()).filter(s=>s!==slug); if(socle) N.fiches_acces.socle.push(slug);
+  N.fiches_acces.phase = N.fiches_acces.phase || {};
+  const ph = lire('regPhase'); if(!socle && !coches.size && ph && ph!=='3') N.fiches_acces.phase[slug] = +ph; else delete N.fiches_acces.phase[slug];
+  marque('fiches_acces', aAv);
+  return { N, ch };
+}
+async function regEnregistrer(slug){
+  if(!cntEl('regRayon')) return true;
+  const frais = await regLire();                         // relus maintenant : on n'écrase rien
+  const { N, ch } = regAppliquer(frais, slug);
+  for(const cle of ch){
+    const r = await SB.from('contenu_blocs').update({ valeur: N[cle], maj: new Date().toISOString() }).eq('cle', cle);
+    if(r.error) throw new Error('bloc « '+cle+' » : '+r.error.message);
+  }
+  REG = N;
+  return ch.size;
+}
+const regSlug = t => norm(t||'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60) || 'fiche';
+async function regSlugLibre(base){
+  const r = await SB.from('contenu_pages').select('slug'); const pris = new Set((r.data||[]).map(x=>x.slug));
+  let s = base, n = 2; while(pris.has(s)) s = base+'-'+(n++); return s;
+}
+async function cntCreer(copie){
+  if(CNT_SALE && !confirm('Des modifications ne sont pas enregistrées. Les abandonner ?')) return;
+  const r = await edModal(copie ? 'Dupliquer la fiche' : 'Nouvelle fiche', [{ k:'titre', l:'Titre', v: copie ? (cntEl('cntTitre').value+' (copie)') : '' }, { k:'icone', l:'Icône (un émoji)', v: copie ? cntEl('cntIcone').value : '📄' }]);
+  if(!r || !r.titre.trim()) return;
+  const slug = await regSlugLibre(regSlug(r.titre));
+  const ligne = { slug, titre:r.titre.trim(), icone:(r.icone||'').trim(), html: copie ? cntHtmlCourant() : '<p></p>', ordre: copie ? (cntEl('cntMin').value ? +cntEl('cntMin').value : null) : 99 };
+  const ins = await SB.from('contenu_pages').insert(ligne);
+  if(ins.error){ cntMsg('Création refusée : '+ins.error.message, true); return; }
+  CNT_SALE = false;
+  await buildContenuAdmin();
+  await cntOuvrir(slug);
+  cntMsg(copie ? 'Copie créée : pense à la ranger (réglages ci-dessus) puis à l’enregistrer.' : 'Fiche créée : écris son contenu, règle son rayon et ses missions, puis enregistre.');
+  const d = cntEl('cntReg'); if(d) d.open = true;
+}
+async function cntSupprimer(){
+  if(!CNT_SLUG) return;
+  const t = cntEl('cntTitre').value || CNT_SLUG;
+  if(!confirm('Supprimer définitivement la fiche « '+t+' » ? Elle disparaît des Fiches pratiques, du parcours et des missions. (Une copie reste archivée et peut être restaurée par Claude.)')) return;
+  const sl = CNT_SLUG;
+  await SB.from('contenu_pages').update({ maj: new Date().toISOString() }).eq('slug', sl);   // archive la version courante
+  const d = await SB.from('contenu_pages').delete().eq('slug', sl);
+  if(d.error){ cntMsg('Suppression refusée : '+d.error.message, true); return; }
+  try{   // retirer la fiche de tous les rangements
+    const B = await regLire(); const N = JSON.parse(JSON.stringify(B));
+    (N.fiches||[]).forEach(r=>{ r.pages = (r.pages||[]).filter(s=>s!==sl); });
+    (N.nav||[]).forEach(sec=>(sec.groupes||[]).forEach(g=>{ g.pages = (g.pages||[]).filter(s=>s!==sl); }));
+    ((N.missions||{}).phases||[]).forEach(ph=>(ph.missions||[]).forEach(m=>{ if(m.pages) m.pages = m.pages.filter(s=>s!==sl); }));
+    if(N.fiches_resumes) delete N.fiches_resumes[sl];
+    if(N.fiches_acces){ N.fiches_acces.socle = (N.fiches_acces.socle||[]).filter(s=>s!==sl); if(N.fiches_acces.phase) delete N.fiches_acces.phase[sl]; }
+    for(const cle of REG_BLOCS) if(JSON.stringify(B[cle])!==JSON.stringify(N[cle])) await SB.from('contenu_blocs').update({ valeur:N[cle], maj:new Date().toISOString() }).eq('cle', cle);
+  }catch(e){}
+  CNT_SLUG = null; CNT_SALE = false; cntEl('cntEdit').hidden = true;
+  await buildContenuAdmin();
+  await cntRecharger();
+  cntMsg('Fiche « '+t+' » supprimée.');
+}
+function cntApercu(){
+  if(!CNT_SLUG || !CONTENU) return;
+  CONTENU.pages = CONTENU.pages || {};
+  const sauv = CONTENU.pages[CNT_SLUG];
+  CONTENU.pages[CNT_SLUG] = Object.assign({}, sauv||{}, { t: cntEl('cntTitre').value, i: cntEl('cntIcone').value, h: cntHtmlCourant() });
+  try{ showPage(CNT_SLUG); } finally { if(sauv) CONTENU.pages[CNT_SLUG] = sauv; else delete CONTENU.pages[CNT_SLUG]; }
+  const h = document.querySelector('#psheetCard .ps-head h1'); if(h) h.insertAdjacentHTML('afterend', '<div class="reg-apercu">Aperçu — tel que les membres verront la fiche (modifications non enregistrées comprises)</div>');
+}
+async function cntRecharger(){
+  const C = await chargerContenu();
+  if(C) CONTENU = C;
+  try{ buildContenu(); buildParcours(); buildSearchIndex(); if(curTab==='fiches') buildFiches(); }catch(e){}
+}
+document.addEventListener('click', e=>{
+  if(e.target.id==='cntNouvelle'){ cntCreer(false); return; }
+  if(e.target.id==='cntDupliquer'){ cntCreer(true); return; }
+  if(e.target.id==='cntSupprimer'){ cntSupprimer(); return; }
+  if(e.target.id==='cntApercu'){ cntApercu(); return; }
+});
+document.addEventListener('change', e=>{ if(e.target.closest && e.target.closest('#cntReg')) CNT_SALE = true; });
+
+/* ---------- Éditeurs visuels des blocs (étape C, 21/10/2026, règle Florian) ----------
+   Les blocs de contenu (missions, FAQ, objections, rayons, parcours, réflexes, rituels, ressources,
+   accueil…) se modifient avec des formulaires au lieu du JSON brut. Un schéma par bloc décrit les champs ;
+   ce qui n'est pas décrit est conservé tel quel. Le JSON reste accessible (mode expert). Avant
+   d'enregistrer : contrôles (identifiants en double, prérequis qui ne pointent sur rien, fiches inconnues). */
+const BL_COULEURS = [['gray','Gris'],['blue','Bleu'],['green','Vert'],['orange','Orange'],['red','Rouge'],['purple','Violet'],['yellow','Jaune']];
+const BL_JOURS = [['1','Lundi'],['2','Mardi'],['3','Mercredi'],['4','Jeudi'],['5','Vendredi'],['6','Samedi'],['0','Dimanche']];
+const BL_AUTO = ['dm','ad','trois_jours','formation_reservee','adhesion','r1_n1','mise_en_relation','com_n1','com_n2','dev_n1','udp','invite_dm','filleul_adherent','objectifs_neoman','objectifs_beman'];
+const BL_KAIROS = [['mm4','Mail Manager publié 4 semaines de suite'],['obj','Objectifs saisis'],['form3','Une formation 3 mois de suite'],['coanim','Une formation co-animée'],['dm4','4 filleuls en DM'],['adman','Statut ADMAN atteint']];
+const blTitre = (...k) => x => k.map(c=>x && x[c]).filter(Boolean).join(' — ') || '(sans titre)';
+const BL_ACTION = { type:'objet', champs:[
+  { k:'id', l:'Identifiant', type:'texte', court:true, aide:'unique dans la mission (ex. esp)' },
+  { k:'t', l:'Libellé de la case', type:'texte' },
+  { k:'v', l:'Qui valide', type:'choix', options:[['moi','La personne coche elle-même'],['auto','Automatique']] },
+  { k:'auto', l:'Relevé par le réseau', type:'choix', vide:'—', options:BL_AUTO.map(x=>[x, (AUTO_LIB&&AUTO_LIB[x])||x]), si:x=>x.v==='auto' && !x.k },
+  { k:'k', l:'Constaté par Kairos', type:'choix', vide:'—', options:BL_KAIROS, si:x=>x.v==='auto' && !x.auto },
+  { k:'pre', l:'À faire avant', type:'refs' },
+  { k:'u', l:'Lien (facultatif)', type:'texte' },
+  { k:'opt', l:'Facultative (« si concerné »)', type:'case' },
+  { k:'reprise', l:'Reprendre les anciennes cases cochées', type:'case', si:x=>x.v==='auto' },
+]};
+const BL_MISSION = { type:'objet', champs:[
+  { k:'id', l:'Numéro', type:'texte', court:true, aide:'ex. 2.3' },
+  { k:'t', l:'Titre', type:'texte' },
+  { k:'pq', l:'Pourquoi (une phrase)', type:'long' },
+  { k:'obj', l:'Objectifs FORMAN liés (un par ligne)', type:'lignes' },
+  { k:'pre', l:'Missions à faire avant', type:'refs' },
+  { k:'pages', l:'Fiches pratiques', type:'pages' },
+  { k:'horsPorte', l:'Ne compte pas pour le point d’étape', type:'case' },
+  { k:'actions', l:'Cases à cocher', type:'liste', item:BL_ACTION, titre:blTitre('t'), nouveau:()=>({ id:'', t:'', v:'moi' }) },
+]};
+const BL_SCHEMAS = {
+  missions: { titre:'Parcours en missions', type:'objet', champs:[
+    { k:'phases', l:'Phases', type:'liste', titre:x=>'Phase '+(x.n||'?')+' — '+(x.t||''), nouveau:()=>({ id:'', n:'', t:'', statut:'', c:'gray', intro:'', missions:[] }), item:{ type:'objet', champs:[
+      { k:'id', l:'Identifiant', type:'texte', court:true, aide:'ex. p2' }, { k:'n', l:'Numéro', type:'nombre', court:true },
+      { k:'t', l:'Titre', type:'texte' }, { k:'statut', l:'Statut visé', type:'texte', court:true }, { k:'c', l:'Couleur', type:'choix', options:BL_COULEURS },
+      { k:'intro', l:'Introduction', type:'long' }, { k:'avenir', l:'À venir (affichée mais pas encore ouverte)', type:'case' },
+      { k:'ouvre', l:'S’ouvre quand ces points d’étape sont validés (un par ligne : porte1…)', type:'lignes' },
+      { k:'porte', l:'Point d’étape de fin de phase', type:'objet', facultatif:true, champs:[
+        { k:'id', l:'Identifiant', type:'texte', court:true }, { k:'t', l:'Titre', type:'texte' },
+        { k:'v', l:'Validé par', type:'choix', options:[['parrain','Le parrain'],['auto','Automatique (Kairos)']] },
+        { k:'k', l:'Règle Kairos', type:'choix', vide:'—', options:BL_KAIROS, si:x=>x.v==='auto' },
+        { k:'d', l:'Description', type:'long' }, { k:'pre', l:'Missions à faire avant', type:'refs' },
+        { k:'criteres', l:'Critères (un par ligne)', type:'lignes' } ] },
+      { k:'missions', l:'Missions', type:'liste', item:BL_MISSION, titre:blTitre('id','t'), nouveau:()=>({ id:'', t:'', pq:'', pre:[], pages:[], actions:[] }) } ] } } ] },
+  faq: { titre:'Questions fréquentes', type:'liste', titre:blTitre('q'), nouveau:()=>({ q:'', th:'', a:'<p></p>' }), item:{ type:'objet', champs:[
+    { k:'q', l:'Question', type:'texte' }, { k:'th', l:'Thème', type:'suggestions', suggestions:b=>[...new Set((b||[]).map(x=>x.th).filter(Boolean))] },
+    { k:'a', l:'Réponse', type:'html' }, { k:'src', l:'Réponse de', type:'texte', court:true } ] } },
+  faqPubliee: { titre:'FAQ publiée sur l’accueil', type:'case', l:'Afficher la FAQ sur l’accueil' },
+  objections: { titre:'Objections', type:'liste', titre:blTitre('o'), nouveau:()=>({ o:'', tag:'', r:[] }), item:{ type:'objet', champs:[
+    { k:'o', l:'Objection', type:'texte' }, { k:'tag', l:'Moment', type:'suggestions', suggestions:b=>[...new Set((b||[]).map(x=>x.tag).filter(Boolean))] },
+    { k:'r', l:'Réponses de la lignée (une par ligne)', type:'lignes' }, { k:'src', l:'Source', type:'texte', court:true },
+    { k:'id', l:'Identifiant', type:'texte', court:true, aide:'rempli tout seul si vide' } ] } },
+  fiches: { titre:'Rayons des Fiches pratiques', type:'liste', titre:x=>(x.i?x.i+' ':'')+(x.t||'(sans titre)')+' · '+((x.pages||[]).length)+' fiche(s)', nouveau:()=>({ i:'📄', t:'', pages:[] }), item:{ type:'objet', champs:[
+    { k:'i', l:'Icône', type:'texte', court:true }, { k:'t', l:'Nom du rayon', type:'texte' }, { k:'pages', l:'Fiches (dans l’ordre)', type:'pages' } ] } },
+  nav: { titre:'Bibliothèque du parcours (fil d’Ariane)', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', c:'gray', groupes:[] }), item:{ type:'objet', champs:[
+    { k:'t', l:'Titre de la phase', type:'texte' }, { k:'c', l:'Couleur', type:'choix', options:BL_COULEURS },
+    { k:'groupes', l:'Groupes', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', pages:[] }), item:{ type:'objet', champs:[
+      { k:'t', l:'Nom du groupe', type:'texte' }, { k:'pages', l:'Fiches', type:'pages' } ] } } ] } },
+  reflexes: { titre:'Réflexes de la lignée', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', d:'' }), item:{ type:'objet', champs:[
+    { k:'t', l:'Réflexe', type:'texte' }, { k:'d', l:'Explication', type:'long' } ] } },
+  rituels: { titre:'Rituels de la lignée', type:'liste', titre:blTitre('n'), nouveau:()=>({ n:'', t:'', q:'', d:'', r:{ dow:1, s:'09:00', e:'10:00' } }), item:{ type:'objet', champs:[
+    { k:'n', l:'Nom', type:'texte' }, { k:'t', l:'Quand (texte affiché)', type:'texte' }, { k:'q', l:'Étiquette (ex. Hebdo · Discord)', type:'texte' },
+    { k:'d', l:'Description', type:'long' },
+    { k:'r', l:'Récurrence (pour « Les 7 prochains jours »)', type:'objet', facultatif:true, champs:[
+      { k:'dow', l:'Jour', type:'choix', nombre:true, options:BL_JOURS }, { k:'s', l:'Début (HH:MM)', type:'texte', court:true }, { k:'e', l:'Fin (HH:MM)', type:'texte', court:true } ] } ] } },
+  ressources: { titre:'Ressources utiles (accueil)', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', k:'', d:'', u:'', r:'' }), item:{ type:'objet', champs:[
+    { k:'t', l:'Nom', type:'texte' }, { k:'k', l:'Type (Outil, Document…)', type:'texte', court:true }, { k:'d', l:'Description', type:'long' },
+    { k:'u', l:'Lien', type:'texte' }, { k:'r', l:'Recommandé par', type:'texte', court:true } ] } },
+  accueil: { titre:'Accueil', type:'objet', champs:[
+    { k:'intro', l:'Texte d’introduction', type:'long' },
+    { k:'valeurs', l:'Nos valeurs', type:'liste', titre:blTitre('t'), nouveau:()=>({ i:'', t:'', d:'' }), item:{ type:'objet', champs:[
+      { k:'i', l:'Icône', type:'texte', court:true }, { k:'t', l:'Valeur', type:'texte' }, { k:'d', l:'Explication (au survol)', type:'long' } ] } } ] },
+};
+let BL = null;   // { cle, val, schema }
+const blGet = (o, p) => p.reduce((x,k)=>x==null?undefined:x[k], o);
+function blSet(o, p, v){ const d = blGet(o, p.slice(0,-1)); if(d!=null){ if(v===undefined) delete d[p[p.length-1]]; else d[p[p.length-1]] = v; } }
+const blP = p => esc(JSON.stringify(p));
+const blRefsTxt = l => (l||[]).map(x=>Array.isArray(x) ? x.join(' | ') : x).join(', ');
+const blRefsLire = t => String(t||'').split(',').map(x=>x.trim()).filter(Boolean).map(x=>x.includes('|') ? x.split('|').map(y=>y.trim()).filter(Boolean) : x);
+function blChamp(f, val, p, parent){
+  if(f.si && !f.si(parent||{})) return '';
+  const lab = '<span class="bl-l">'+esc(f.l)+(f.aide?' <small>'+esc(f.aide)+'</small>':'')+'</span>';
+  const cls = 'bl-f'+(f.court?' court':'')+(['long','html','lignes','pages','liste','objet','refs'].includes(f.type)?' large':'');
+  const d = 'data-p="'+blP(p)+'" data-t="'+f.type+'"'+(f.nombre?' data-n="1"':'');
+  switch(f.type){
+    case 'texte': return '<label class="'+cls+'">'+lab+'<input '+d+' value="'+esc(val==null?'':val)+'"></label>';
+    case 'nombre': return '<label class="'+cls+'">'+lab+'<input type="number" '+d+' value="'+esc(val==null?'':val)+'"></label>';
+    case 'suggestions': { const id = 'bls'+Math.random().toString(36).slice(2,8);
+      return '<label class="'+cls+'">'+lab+'<input '+d+' list="'+id+'" value="'+esc(val==null?'':val)+'"><datalist id="'+id+'">'+f.suggestions(BL.val).map(s=>'<option value="'+esc(s)+'">').join('')+'</datalist></label>'; }
+    case 'long': return '<label class="'+cls+'">'+lab+'<textarea rows="3" '+d+'>'+esc(val==null?'':val)+'</textarea></label>';
+    case 'html': return '<label class="'+cls+'">'+lab+'<textarea rows="5" class="bl-html" '+d+'>'+esc(val==null?'':val)+'</textarea><div class="bl-ap nc">'+wysPropre(val||'')+'</div></label>';
+    case 'lignes': return '<label class="'+cls+'">'+lab+'<textarea rows="'+Math.max(2,(val||[]).length+1)+'" '+d+'>'+esc((val||[]).join('\n'))+'</textarea></label>';
+    case 'refs': return '<label class="'+cls+'">'+lab+' <small>numéros séparés par des virgules ; « a | b » = l’un ou l’autre (ex. 2.4, 2.6/post_ass | 2.6/post_iob)</small><input '+d+' value="'+esc(blRefsTxt(val))+'"></label>';
+    case 'case': return '<label class="bl-f bl-case"><input type="checkbox" '+d+(val?' checked':'')+'> '+esc(f.l)+'</label>';
+    case 'choix': return '<label class="'+cls+'">'+lab+'<select '+d+'>'+(f.vide!==undefined?'<option value="">'+esc(f.vide)+'</option>':'')
+      + f.options.map(([v,l])=>'<option value="'+esc(v)+'"'+(String(val)===String(v)?' selected':'')+'>'+esc(l)+'</option>').join('')
+      + (val!=null && val!=='' && !f.options.some(([v])=>String(v)===String(val)) ? '<option value="'+esc(val)+'" selected>'+esc(val)+'</option>' : '')+'</select></label>';
+    case 'pages': { const P = (CONTENU&&CONTENU.pages)||{}, l = val||[];
+      return '<div class="'+cls+'">'+lab+'<div class="bl-pages">'+l.map((s,i)=>'<span class="bl-pg'+(P[s]?'':' inconnue')+'" title="'+esc(s)+'">'+esc((P[s]&&P[s].t)||s)
+          + ' <button type="button" data-blpg="'+blP(p)+'" data-i="'+i+'" data-op="haut" title="Monter">↑</button><button type="button" data-blpg="'+blP(p)+'" data-i="'+i+'" data-op="sup" title="Retirer">✕</button></span>').join('')
+        + '<select data-blajout="'+blP(p)+'"><option value="">+ ajouter une fiche…</option>'+Object.keys(P).filter(s=>!l.includes(s)).sort((a,b)=>P[a].t.localeCompare(P[b].t,'fr')).map(s=>'<option value="'+esc(s)+'">'+esc((P[s].i?P[s].i+' ':'')+P[s].t)+'</option>').join('')+'</select></div></div>'; }
+    case 'objet': {
+      if(val==null && f.facultatif) return '<div class="'+cls+'">'+lab+' <button type="button" class="bl-b" data-blcree="'+blP(p)+'">+ Ajouter</button></div>';
+      return '<fieldset class="'+cls+' bl-obj"><legend>'+esc(f.l||'')+(f.facultatif?' <button type="button" class="bl-b" data-blretire="'+blP(p)+'">Retirer</button>':'')+'</legend>'+blObjet(f, val||{}, p)+'</fieldset>'; }
+    case 'liste': return '<div class="'+cls+'">'+(f.l?lab:'')+blListe(f, val||[], p)+'</div>';
+  }
+  return '';
+}
+const blObjet = (s, val, p) => '<div class="bl-champs">'+s.champs.map(f=>blChamp(f, val[f.k], p.concat(f.k), val)).join('')+'</div>';
+function blListe(s, l, p){
+  return '<div class="bl-liste">'+l.map((x,i)=>'<details class="bl-it"'+(BL.ouverts.has(JSON.stringify(p.concat(i)))?' open':'')+' data-blit="'+blP(p.concat(i))+'"><summary><span class="bl-n">'+(i+1)+'</span><span class="bl-tt">'+esc(s.titre ? s.titre(x||{}) : '')+'</span>'
+      + '<span class="bl-ops"><button type="button" data-blop="haut" data-bll="'+blP(p)+'" data-i="'+i+'" title="Monter">↑</button><button type="button" data-blop="bas" data-bll="'+blP(p)+'" data-i="'+i+'" title="Descendre">↓</button>'
+      + '<button type="button" data-blop="dup" data-bll="'+blP(p)+'" data-i="'+i+'" title="Dupliquer">⧉</button><button type="button" data-blop="sup" data-bll="'+blP(p)+'" data-i="'+i+'" title="Supprimer">✕</button></span></summary>'
+      + (s.item.type==='objet' ? blObjet(s.item, x||{}, p.concat(i)) : blChamp(s.item, x, p.concat(i)))+'</details>').join('')
+    + '<button type="button" class="bl-b bl-plus" data-blop="ajout" data-bll="'+blP(p)+'">+ Ajouter</button></div>';
+}
+function blSchemaDe(p){   // schéma de la liste au chemin p
+  let s = BL.schema;
+  for(const k of p){ if(s.type==='objet'){ s = s.champs.find(f=>f.k===k); } else if(s.type==='liste'){ s = s.item; } if(!s) return null; }
+  return s;
+}
+function blRendre(){
+  const z = cntEl('blEdit'); if(!z || !BL) return;
+  const y = window.scrollY;
+  z.innerHTML = BL.schema.type==='liste' ? blListe(BL.schema, BL.val, []) : BL.schema.type==='case' ? blChamp(BL.schema, BL.val, []).replace('data-p="[]"','data-p="[]" data-racine="1"') : blObjet(BL.schema, BL.val, []);
+  window.scrollTo(0, y);
+}
+function blOuvrir(cle, val){
+  BL = { cle, val: JSON.parse(JSON.stringify(val)), schema: BL_SCHEMAS[cle], ouverts: new Set() };
+  const vis = !!BL.schema;
+  cntEl('blVisuel').hidden = !vis;
+  cntEl('cntBlocEdit').hidden = vis;
+  cntEl('blBascule').hidden = !vis;
+  cntEl('blBascule').textContent = 'JSON (expert)';
+  if(vis){ cntEl('blTitre').textContent = BL.schema.titre || cle; blRendre(); }
+}
+// Contrôles avant enregistrement
+function blControles(){
+  const err = [], av = [];
+  if(BL.cle==='missions'){
+    const ids = new Set(), P = (CONTENU&&CONTENU.pages)||{};
+    (BL.val.phases||[]).forEach(ph=>(ph.missions||[]).forEach(m=>{
+      if(!m.id) err.push('Une mission de la phase '+(ph.n||'?')+' n’a pas de numéro.');
+      else if(ids.has(m.id)) err.push('Numéro de mission en double : '+m.id); ids.add(m.id);
+      const ai = new Set();
+      (m.actions||[]).forEach(a=>{ if(!a.id) err.push('Mission '+m.id+' : une case n’a pas d’identifiant.'); else if(ai.has(a.id)) err.push('Mission '+m.id+' : identifiant de case en double « '+a.id+' ».'); ai.add(a.id); ids.add(m.id+'/'+a.id);
+        if(a.v==='auto' && !a.auto && !a.k) av.push('Mission '+m.id+' : la case « '+(a.t||a.id)+' » est automatique sans règle — elle ne se cochera jamais.'); });
+      (m.pages||[]).forEach(s=>{ if(!P[s]) av.push('Mission '+m.id+' : fiche inconnue « '+s+' ».'); });
+    }));
+    const voir = (l, ou) => (l||[]).forEach(x=>Array.isArray(x) ? voir(x, ou) : (!ids.has(x) && av.push(ou+' : prérequis « '+x+' » introuvable.')));
+    (BL.val.phases||[]).forEach(ph=>{ (ph.missions||[]).forEach(m=>{ voir(m.pre, 'Mission '+m.id); (m.actions||[]).forEach(a=>voir(a.pre, 'Mission '+m.id+' / '+a.id)); }); if(ph.porte) voir(ph.porte.pre, 'Point d’étape '+ph.porte.id); });
+  }
+  if(BL.cle==='objections') (BL.val||[]).forEach(o=>{ if(!o.id && o.o) o.id = regSlug(o.o).slice(0,40); });
+  if(Array.isArray(BL.val) && BL.schema && BL.schema.type==='liste') BL.val.forEach((x,i)=>{ const t = BL.schema.titre ? BL.schema.titre(x||{}) : ''; if(t==='(sans titre)') av.push('Élément n° '+(i+1)+' sans titre.'); });
+  return { err, av };
+}
+async function blEnregistrer(){
+  if(!BL) return;
+  const { err, av } = blControles();
+  if(err.length){ cntMsg('À corriger avant d’enregistrer : '+err.join(' · '), true); return; }
+  if(av.length && !confirm('Points d’attention :\n\n• '+av.join('\n• ')+'\n\nEnregistrer quand même ?')) return;
+  const r = await SB.from('contenu_blocs').update({ valeur: BL.val, maj: new Date().toISOString() }).eq('cle', BL.cle);
+  if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
+  cntEl('cntBlocJson').value = JSON.stringify(BL.val, null, 2);
+  BL.sale = false;
+  cntMsg('« '+(BL.schema.titre||BL.cle)+' » enregistré. C’est en ligne pour tout le monde.');
+  await cntRecharger();
+}
+document.addEventListener('input', e=>{
+  const el = e.target.closest && e.target.closest('#blEdit [data-p]');
+  if(!el || !BL) return;
+  const p = JSON.parse(el.dataset.p), t = el.dataset.t;
+  let v = el.value;
+  if(t==='case') v = el.checked || undefined;
+  else if(t==='nombre') v = v==='' ? undefined : +v;
+  else if(t==='lignes') v = v.split('\n').map(x=>x.trim()).filter(Boolean);
+  else if(t==='refs') v = blRefsLire(v);
+  else if(t==='choix'){ v = v==='' ? undefined : (el.dataset.n ? +v : v); }
+  if(el.dataset.racine) BL.val = !!el.checked; else blSet(BL.val, p, v);
+  if(t==='html'){ const ap = el.parentElement.querySelector('.bl-ap'); if(ap) ap.innerHTML = wysPropre(el.value); }
+  let dt = el.closest('details.bl-it');
+  while(dt){ const ip = JSON.parse(dt.dataset.blit), sc = blSchemaDe(ip.slice(0,-1)), tt = dt.querySelector(':scope>summary .bl-tt');
+    if(sc && sc.titre && tt) tt.textContent = sc.titre(blGet(BL.val, ip)||{}); dt = dt.parentElement.closest('details.bl-it'); }
+  if(t==='choix') blRendre();      // un choix peut faire apparaître d'autres champs
+  BL.sale = true;
+});
+document.addEventListener('toggle', e=>{
+  const d = e.target; if(!d.matches || !d.matches('#blEdit details.bl-it') || !BL) return;
+  const k = JSON.stringify(JSON.parse(d.dataset.blit)); if(d.open) BL.ouverts.add(k); else BL.ouverts.delete(k);
+}, true);
+document.addEventListener('change', e=>{
+  const s = e.target.closest && e.target.closest('#blEdit select[data-blajout]');
+  if(!s || !s.value || !BL) return;
+  const p = JSON.parse(s.dataset.blajout); const l = blGet(BL.val, p) || []; l.push(s.value); blSet(BL.val, p, l); BL.sale = true; blRendre();
+});
+document.addEventListener('click', e=>{
+  if(!BL || !e.target.closest) return;
+  if(e.target.id==='blSave'){ blEnregistrer(); return; }
+  if(e.target.id==='blBascule'){
+    const vis = !cntEl('blVisuel').hidden;
+    if(vis){ cntEl('cntBlocJson').value = JSON.stringify(BL.val, null, 2); cntEl('blVisuel').hidden = true; cntEl('cntBlocEdit').hidden = false; e.target.textContent = '← Formulaire'; }
+    else { try{ BL.val = JSON.parse(cntEl('cntBlocJson').value); }catch(x){ cntMsg('JSON invalide : '+x.message, true); return; }
+      cntEl('blVisuel').hidden = false; cntEl('cntBlocEdit').hidden = true; e.target.textContent = 'JSON (expert)'; blRendre(); }
+    return;
+  }
+  const op = e.target.closest('#blEdit [data-blop]');
+  if(op){ e.preventDefault();
+    const p = JSON.parse(op.dataset.bll), i = +op.dataset.i, l = blGet(BL.val, p) || (p.length ? [] : BL.val), s = blSchemaDe(p);
+    if(!blGet(BL.val, p) && p.length) blSet(BL.val, p, l);
+    const k = op.dataset.blop;
+    if(k==='ajout'){ l.push(s && s.nouveau ? s.nouveau() : ''); BL.ouverts.add(JSON.stringify(p.concat(l.length-1))); }
+    if(k==='haut' && i>0) [l[i-1], l[i]] = [l[i], l[i-1]];
+    if(k==='bas' && i<l.length-1) [l[i+1], l[i]] = [l[i], l[i+1]];
+    if(k==='dup') l.splice(i+1, 0, JSON.parse(JSON.stringify(l[i])));
+    if(k==='sup'){ if(!confirm('Supprimer cet élément'+(s&&s.titre?' « '+s.titre(l[i]||{})+' »':'')+' ?')) return; l.splice(i, 1); }
+    BL.sale = true; blRendre(); return;
+  }
+  const pg = e.target.closest('#blEdit [data-blpg]');
+  if(pg){ const p = JSON.parse(pg.dataset.blpg), i = +pg.dataset.i, l = blGet(BL.val, p) || [];
+    if(pg.dataset.op==='sup') l.splice(i, 1); if(pg.dataset.op==='haut' && i>0) [l[i-1], l[i]] = [l[i], l[i-1]];
+    BL.sale = true; blRendre(); return; }
+  const cr = e.target.closest('#blEdit [data-blcree]');
+  if(cr){ const p = JSON.parse(cr.dataset.blcree); blSet(BL.val, p, {}); BL.sale = true; blRendre(); return; }
+  const rt = e.target.closest('#blEdit [data-blretire]');
+  if(rt){ e.preventDefault(); if(!confirm('Retirer ce bloc ?')) return; blSet(BL.val, JSON.parse(rt.dataset.blretire), undefined); BL.sale = true; blRendre(); }
+});
+
 // Édition du contenu éditorial (réservée aux administrateurs)
 let CNT_PAGES = [], CNT_SLUG = null, CNT_BLOC = null, CNT_SALE = false;
 const cntEl = id => document.getElementById(id);
@@ -9096,6 +9532,7 @@ async function cntOuvrir(slug){
       +' <button type="button" id="cntRestaurer" data-id="'+der.id+'">Restaurer</button>' : 'Aucune version archivée.';
   }
   cntListe();
+  try{ REG = await regLire(); regAfficher(slug); }catch(e){ const z = cntEl('cntReg'); if(z) z.innerHTML = '<summary>Réglages de la fiche (indisponibles)</summary>'; }
   cntEl('cntTitre').focus();
 }
 async function cntEnregistrer(){
@@ -9107,12 +9544,14 @@ async function cntEnregistrer(){
   const r = await SB.from('contenu_pages').update(maj).eq('slug', CNT_SLUG);
   btn.disabled = false;
   if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
+  try{ await regEnregistrer(CNT_SLUG); }
+  catch(e){ cntMsg('Page enregistrée, mais les réglages n’ont pas pu l’être : '+e.message, true); return; }
   CNT_SALE = false;
-  cntMsg('Enregistré. La page est à jour pour tout le monde.');
+  cntMsg('Enregistré. La page et ses réglages sont à jour pour tout le monde.');
   const p = CNT_PAGES.find(x=>x.slug===CNT_SLUG);
   if(p){ p.titre = maj.titre; p.icone = maj.icone; }
   cntListe();
-  await chargerContenu().then(()=>{ try{ buildContenu(); buildParcours(); buildSearchIndex(); }catch(e){} });
+  await cntRecharger();
 }
 async function cntRestaurer(id){
   if(!confirm('Remplacer la page par la version archivée ?')) return;
@@ -9125,13 +9564,15 @@ async function cntRestaurer(id){
   cntMsg('Version restaurée dans l’éditeur — enregistre pour la publier.');
 }
 async function cntOuvrirBloc(cle){
+  if(BL && BL.sale && !confirm('Des modifications du bloc ne sont pas enregistrées. Les abandonner ?')){ cntEl('cntBlocs').value = BL.cle; return; }
   CNT_BLOC = cle || null;
   const z = cntEl('cntBlocEdit');
-  if(!cle){ z.hidden = true; return; }
+  if(!cle){ z.hidden = true; BL = null; cntEl('blVisuel').hidden = true; cntEl('blBascule').hidden = true; return; }
   const r = await SB.from('contenu_blocs').select('valeur').eq('cle',cle).maybeSingle();
   if(r.error || !r.data){ cntMsg('Bloc illisible.', true); return; }
   z.hidden = false;
   cntEl('cntBlocJson').value = JSON.stringify(r.data.valeur, null, 2);
+  blOuvrir(cle, r.data.valeur);
   cntMsg('');
 }
 async function cntEnregistrerBloc(){
@@ -9142,7 +9583,8 @@ async function cntEnregistrerBloc(){
   const r = await SB.from('contenu_blocs').update({ valeur: val, maj: new Date().toISOString() }).eq('cle', CNT_BLOC);
   if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
   cntMsg('Bloc « '+CNT_BLOC+' » enregistré.');
-  await chargerContenu().then(()=>{ try{ buildContenu(); buildParcours(); buildSearchIndex(); }catch(e){} });
+  if(BL && BL.cle===CNT_BLOC){ BL.val = val; BL.sale = false; }
+  await cntRecharger();
 }
 document.addEventListener('input', e=>{
   if(e.target.closest && e.target.closest('#cntEdit')) CNT_SALE = true;

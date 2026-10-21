@@ -4135,3 +4135,138 @@ test.describe('Éditeur de contenu (TipTap, 21/10/2026)', () => {
     expect(r).toContain('<li>A</li>');
   });
 });
+
+test.describe('Réglages de la fiche (21/10/2026)', () => {
+  test('rayon, groupe, missions, résumé et accès : seuls les blocs modifiés changent', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const B = {
+        fiches: [{ t: 'Administratif', i: '🧾', pages: ['a', 'x'] }, { t: 'Produits', i: '💶', pages: ['b'] }],
+        fiches_resumes: { x: 'ancien résumé' },
+        fiches_acces: { socle: ['s'], phase: {} },
+        missions: { phases: [{ id: 'p1', n: 1, t: 'P1', missions: [{ id: '1.1', t: 'Un', pages: ['x'] }, { id: '1.2', t: 'Deux', pages: [] }] }, { id: 'p4', n: 4, avenir: true, missions: [] }] },
+        nav: [{ t: 'Phase 1 — Fondations', groupes: [{ t: 'Démarrer', pages: ['x'] }, { t: 'Admin', pages: [] }] }],
+      };
+      REG = B; regAfficher('x');
+      const e0 = regEtat(B, 'x');
+      const inchange = regAppliquer(B, 'x').ch.size;
+      document.getElementById('regRayon').value = '1';
+      document.getElementById('regGroupe').value = '0/1';
+      document.getElementById('regResume').value = 'Nouveau résumé';
+      document.querySelector('.regMis[value="1.1"]').checked = false;
+      document.querySelector('.regMis[value="1.2"]').checked = true;
+      document.querySelector('input[name="regAcces"][value="socle"]').checked = true;
+      const { N, ch } = regAppliquer(B, 'x');
+      return { e0, inchange, ch: [...ch].sort(), N, B };
+    });
+    expect(r.e0).toEqual({ resume: 'ancien résumé', rayon: '0', groupe: '0/0', missions: ['1.1'], socle: false, phase: '' });
+    expect(r.inchange).toBe(0);                                   // rien touché : aucun bloc réécrit
+    expect(r.ch).toEqual(['fiches', 'fiches_acces', 'fiches_resumes', 'missions', 'nav']);
+    expect(r.N.fiches[0].pages).toEqual(['a']);
+    expect(r.N.fiches[1].pages).toEqual(['b', 'x']);
+    expect(r.N.nav[0].groupes[1].pages).toEqual(['x']);
+    expect(r.N.missions.phases[0].missions[0].pages).toEqual([]);
+    expect(r.N.missions.phases[0].missions[1].pages).toEqual(['x']);
+    expect(r.N.fiches_resumes.x).toBe('Nouveau résumé');
+    expect(r.N.fiches_acces.socle).toEqual(['s', 'x']);
+    expect(r.B.fiches[0].pages).toEqual(['a', 'x']);              // l'original n'est pas modifié
+  });
+  test('adresse d’une nouvelle fiche : sans accents ni espaces', async ({ page }) => {
+    await ouvrir(page);
+    expect(await page.evaluate(() => regSlug('Girardin industriel : l’essentiel !'))).toBe('girardin-industriel-l-essentiel');
+  });
+});
+
+test.describe('Éditeurs visuels des blocs (21/10/2026)', () => {
+  const ouvrirBloc = async (page, cle, val) => {
+    await ouvrir(page);
+    await page.evaluate(([cle, val]) => {
+      const z = document.querySelector('.cnt-blocs'); document.body.prepend(z); z.style.cssText = 'position:relative;z-index:99999;background:#fff;padding:10px';
+      blOuvrir(cle, val);
+    }, [cle, val]);
+  };
+  test('parcours en missions : formulaire, saisie, ajout, déplacement, suppression', async ({ page }) => {
+    const M = { phases: [{ id: 'p1', n: 1, t: 'Fondations', c: 'blue', missions: [
+      { id: '1.1', t: 'Un', pre: [], pages: [], actions: [{ id: 'a', t: 'Case A', v: 'moi' }] },
+      { id: '1.2', t: 'Deux', pre: ['1.1'], pages: [], actions: [] }] }], autre: { garde: 1 } };
+    await ouvrirBloc(page, 'missions', M);
+    await expect(page.locator('#blVisuel')).toBeVisible();
+    await expect(page.locator('#blTitre')).toHaveText('Parcours en missions');
+    await expect(page.locator('#blBascule')).toBeVisible();
+    // titre de phase saisi
+    await page.locator('#blEdit details.bl-it').first().locator(':scope>summary').click();
+    const titre = page.locator('#blEdit input[data-p=\'["phases",0,"t"]\']');
+    await titre.fill('Les fondations');
+    expect(await page.evaluate(() => BL.val.phases[0].t)).toBe('Les fondations');
+    await expect(page.locator('#blEdit details.bl-it').first().locator(':scope>summary .bl-tt')).toHaveText('Phase 1 — Les fondations');
+    // prérequis « a | b »
+    const r = await page.evaluate(() => blRefsLire('2.4, 2.6/post_ass | 2.6/post_iob'));
+    expect(r).toEqual(['2.4', ['2.6/post_ass', '2.6/post_iob']]);
+    // ajouter une mission, monter, supprimer
+    await page.evaluate(() => {
+      document.querySelector('#blEdit [data-blop="ajout"][data-bll=\'["phases",0,"missions"]\']').click();
+    });
+    expect(await page.evaluate(() => BL.val.phases[0].missions.length)).toBe(3);
+    await page.evaluate(() => document.querySelector('#blEdit [data-blop="haut"][data-bll=\'["phases",0,"missions"]\'][data-i="1"]').click());
+    expect(await page.evaluate(() => BL.val.phases[0].missions.map(m => m.id))).toEqual(['1.2', '1.1', '']);
+    page.once('dialog', d => d.accept());
+    await page.evaluate(() => document.querySelector('#blEdit [data-blop="sup"][data-bll=\'["phases",0,"missions"]\'][data-i="2"]').click());
+    expect(await page.evaluate(() => BL.val.phases[0].missions.length)).toBe(2);
+    // ce qui n'est pas décrit est conservé, l'original n'est pas touché
+    expect(await page.evaluate(() => BL.val.autre)).toEqual({ garde: 1 });
+    expect(M.phases[0].t).toBe('Fondations');
+    expect(await page.evaluate(() => BL.sale)).toBe(true);
+  });
+  test('case automatique : le choix fait apparaître la règle', async ({ page }) => {
+    await ouvrirBloc(page, 'missions', { phases: [{ id: 'p1', n: 1, missions: [{ id: '1.1', t: 'Un', actions: [{ id: 'a', t: 'A', v: 'moi' }] }] }] });
+    await page.evaluate(() => { BL.ouverts.add('[0]'); BL.ouverts.add('["phases",0]'); BL.ouverts.add('["phases",0,"missions",0]'); BL.ouverts.add('["phases",0,"missions",0,"actions",0]'); blRendre(); });
+    const auto = '#blEdit select[data-p=\'["phases",0,"missions",0,"actions",0,"auto"]\']';
+    await expect(page.locator(auto)).toHaveCount(0);
+    await page.locator('#blEdit select[data-p=\'["phases",0,"missions",0,"actions",0,"v"]\']').selectOption('auto');
+    await expect(page.locator(auto)).toHaveCount(1);
+    await page.locator(auto).selectOption('dev_n1');
+    expect(await page.evaluate(() => BL.val.phases[0].missions[0].actions[0])).toMatchObject({ v: 'auto', auto: 'dev_n1' });
+  });
+  test('contrôles : doublons bloquants, prérequis introuvables et cases sans règle signalés', async ({ page }) => {
+    await ouvrirBloc(page, 'missions', { phases: [{ id: 'p1', n: 1, missions: [
+      { id: '1.1', t: 'Un', pre: ['9.9'], actions: [{ id: 'a', t: 'A', v: 'auto' }, { id: 'a', t: 'B', v: 'moi' }] },
+      { id: '1.1', t: 'Bis', actions: [] }] }] });
+    const c = await page.evaluate(() => blControles());
+    expect(c.err.join(' ')).toContain('Numéro de mission en double : 1.1');
+    expect(c.err.join(' ')).toContain('identifiant de case en double « a »');
+    expect(c.av.join(' ')).toContain('prérequis « 9.9 » introuvable');
+    expect(c.av.join(' ')).toContain('sans règle');
+  });
+  test('FAQ : réponse en HTML avec aperçu, bascule JSON aller-retour', async ({ page }) => {
+    await ouvrirBloc(page, 'faq', [{ q: 'Combien ?', th: 'Argent', a: '<p>Peu</p>' }]);
+    await page.locator('#blEdit details.bl-it summary').first().click();
+    await page.locator('#blEdit textarea[data-p=\'[0,"a"]\']').fill('<p><b>Beaucoup</b></p>');
+    await expect(page.locator('#blEdit .bl-ap b')).toHaveText('Beaucoup');
+    await page.locator('#blBascule').click();
+    await expect(page.locator('#cntBlocEdit')).toBeVisible();
+    await expect(page.locator('#blVisuel')).toBeHidden();
+    const j = JSON.parse(await page.locator('#cntBlocJson').inputValue());
+    expect(j[0].a).toBe('<p><b>Beaucoup</b></p>');
+    j[0].q = 'Combien ça coûte ?';
+    await page.locator('#cntBlocJson').fill(JSON.stringify(j));
+    await page.locator('#blBascule').click();
+    await expect(page.locator('#blVisuel')).toBeVisible();
+    expect(await page.evaluate(() => BL.val[0].q)).toBe('Combien ça coûte ?');
+  });
+  test('FAQ publiée (case seule) et bloc sans formulaire → JSON', async ({ page }) => {
+    await ouvrirBloc(page, 'faqPubliee', false);
+    await page.locator('#blEdit input[type=checkbox]').check();
+    expect(await page.evaluate(() => BL.val)).toBe(true);
+    await page.evaluate(() => blOuvrir('version', { n: 3 }));
+    await expect(page.locator('#blVisuel')).toBeHidden();
+    await expect(page.locator('#cntBlocEdit')).toBeVisible();
+  });
+  test('rayons : ajout d’une fiche depuis la liste', async ({ page }) => {
+    await ouvrirBloc(page, 'fiches', [{ i: '🧾', t: 'Admin', pages: [] }]);
+    const slug = await page.evaluate(() => { if(!CONTENU) CONTENU = {}; CONTENU.pages = CONTENU.pages || {}; CONTENU.pages['fiche-test'] = { t: 'Fiche test' }; blRendre(); return 'fiche-test'; });
+    await page.locator('#blEdit details.bl-it summary').first().click();
+    await page.locator('#blEdit select[data-blajout]').selectOption(slug);
+    expect(await page.evaluate(() => BL.val[0].pages)).toEqual([slug]);
+    await expect(page.locator('#blEdit .bl-pg')).toHaveCount(1);
+  });
+});
