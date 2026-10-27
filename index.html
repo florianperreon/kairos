@@ -6038,8 +6038,8 @@ const MM_PRODE = [['eva',  'VA + VAA VC',      '€', 'VA + VAA VC équipe'],
                   ['evaec','VA + VAA EC',      '€', 'VA + VAA EC équipe']];
 const MM_HAB   = [['mia','MIA / Assurance niveau II'],['miobsp','MIOBSP'],['alpsi','ALPSI (agent lié)'],['cif','CIF']];
 const MM_FC    = [['fmia','FC Assurance (MIA)'],['fiobsp','FC IOBSP'],['fimmo','FC Immobilier'],['falpsi','FC ALPSI / CIF']];
-// Formation continue → habilitation(s) dont elle dépend. FC Immobilier n'a pas d'habilitation suivie ici : toujours due.
-const MM_FC_HAB = { fmia:['mia'], fiobsp:['miobsp'], falpsi:['alpsi','cif'] };
+// Formation continue → habilitation(s) dont elle dépend (FC Immobilier relève de l'IOBSP, précision de Florian 27/10/2026)
+const MM_FC_HAB = { fmia:['mia'], fiobsp:['miobsp'], fimmo:['miobsp'], falpsi:['alpsi','cif'] };
 const MM_ETATS = [['','—'],['afaire','À faire'],['encours','En cours'],['ok','Validé']];
 const MM_OBJS  = [
   ['va','VA + VAA personnel','€','Volume d’affaires cumulé sur l’exercice (1er août → 31 juillet), validé et en cours'],

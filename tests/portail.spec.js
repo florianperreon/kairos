@@ -3091,7 +3091,7 @@ test.describe('Mail Manager — alléger la saisie', () => {
       const an = todayIso.slice(0, 4);
       MM = { semaine: MM_SEM, statut: 'brouillon', donnees: { hab: {
         mia:    { s: 'ok', d: '15/03/' + an },         // avant le 30/09 : FC Assurance due
-        miobsp: { s: 'ok', d: '15/10/' + an },         // après : FC IOBSP pas cette année
+        miobsp: { s: 'ok', d: '15/10/' + an },         // après : ni FC IOBSP ni FC Immobilier cette année
         alpsi:  { s: 'encours', d: '01/02/' + an },    // pas obtenue : pas due…
         cif:    { s: 'ok', d: '10/09/' + (an - 1) },   // …mais le CIF l'est : FC ALPSI / CIF due
         fiobsp: { s: 'afaire' } } } };
@@ -3110,14 +3110,15 @@ test.describe('Mail Manager — alléger la saisie', () => {
         note: document.getElementById('mmFCBox').textContent, meme: !!document.querySelector('[data-temoin]'),
         compte: document.querySelector('#mmHab .mm-sem').textContent }), 30));
     });
-    expect(r.avant).toEqual(['fmia', 'fimmo', 'falpsi']);
+    expect(r.avant).toEqual(['fmia', 'falpsi']);
     expect(r.txt, 'une FC non due n’apparaît pas dans l’export').not.toContain('FC IOBSP');
-    expect(r.l1).toEqual(['FC Assurance (MIA)', 'FC Immobilier', 'FC ALPSI / CIF']);
-    expect(r.l2).toEqual(['FC Assurance (MIA)', 'FC Immobilier']);
+    expect(r.l1).toEqual(['FC Assurance (MIA)', 'FC ALPSI / CIF']);
+    expect(r.l2).toEqual(['FC Assurance (MIA)']);
     expect(r.note).toContain('Pas à faire');
     expect(r.note).toContain('FC IOBSP');
+    expect(r.note).toContain('FC Immobilier (habilitation MIOBSP');
     expect(r.meme, 'la page n’est pas redessinée').toBe(true);
-    expect(r.compte).toBe('2 / 6 validées');
+    expect(r.compte).toBe('2 / 5 validées');
     expect(erreurs).toEqual([]);
   });
 
@@ -3146,9 +3147,9 @@ test.describe('Mail Manager — alléger la saisie', () => {
     });
     expect(r.onglets, '« Mes habilitations » vient après « Mes objectifs »').toEqual(['moi', 'mur', 'obj', 'hab']);
     expect(r.vue).toBe(true);
-    // MIA validée (sans date) : FC Assurance due ; FC Immobilier toujours due ; FC IOBSP et ALPSI / CIF non
-    expect(r.champs, '4 habilitations × 3 champs + examen AMF du CIF + 2 formations dues × 2 champs + séminaire Toulouse du/au').toBe(19);
-    expect(r.compte).toBe('1 / 6 validées');
+    // MIA validée (sans date) : FC Assurance due ; FC IOBSP, Immobilier (IOBSP) et ALPSI / CIF non
+    expect(r.champs, '4 habilitations × 3 champs + examen AMF du CIF + 1 formation due × 2 champs + séminaire Toulouse du/au').toBe(17);
+    expect(r.compte).toBe('1 / 5 validées');
     expect(r.url).toBe('mes-habilitations');
     expect(r.lectureSansChamp, 'une semaine passée s’affiche en lecture').toBe(true);
     expect(r.lectureNote).toBe(true);
