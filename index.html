@@ -1422,6 +1422,11 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .mm-txt{width:100%;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);padding:9px 10px;font:inherit;font-size:14px;resize:vertical;min-height:62px}
 .mm-lab{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin:12px 0 5px}
 .mm-note{font-size:12px;color:var(--ink-3);margin:5px 0 0}
+.mm-tbl input[type=date]{min-width:140px}
+.mm-old{display:block;font-size:11.5px;color:var(--encours-ink);margin-top:3px}
+.hab-2{display:flex;flex-direction:column;gap:6px}
+.hab-2 label{display:flex;flex-direction:column;gap:2px;margin:0}
+.hab-2 label span{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
 
 .mm-auto{margin:10px 0 0;padding:0;list-style:none}
 .mm-auto li{display:flex;gap:9px;padding:6px 0;border-top:1px dashed var(--line);font-size:13.5px}
@@ -6754,13 +6759,23 @@ function mmSynthese(d, a, ro, obj, ech){
 // formulaire de chaque semaine. Les données restent dans MM.donnees.hab, reportées de S-1.
 function mmHabTables(d, ro){
   const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
-  const cellDate = (k,champ) => ro ? esc(mmG(d,'hab.'+k+'.'+champ)||'—')
-    : '<input type="text" data-mm="hab.'+k+'.'+champ+'" value="'+esc(mmG(d,'hab.'+k+'.'+champ)||'')+'" placeholder="JJ/MM/AAAA">';
+  const cellDate = (k,champ) => {
+    const v = mmG(d,'hab.'+k+'.'+champ)||'';
+    if(ro) return esc(v||'—');
+    const iso = mmJjIso(v);
+    // une ancienne saisie libre qui ne se lit pas comme une date reste visible au lieu de disparaître
+    return '<input type="date" data-mm="hab.'+k+'.'+champ+'" value="'+esc(iso)+'">'
+      + (v && !iso ? '<small class="mm-old">Saisi : '+esc(v)+'</small>' : '');
+  };
+  // CIF : deux examens (CIF et AMF) dans la même case
+  const cellExam = k => k!=='cif' ? cellDate(k,'d')
+    : '<div class="hab-2"><label><span>Examen CIF</span>'+cellDate(k,'d')+'</label>'
+      + '<label><span>Examen AMF</span>'+cellDate(k,'amf')+'</label></div>';
   const ligne = (k,lib,orias) => '<tr><td>'+esc(lib)+'</td><td data-l="Statut">'
     + (ro ? esc(etat(mmG(d,'hab.'+k+'.s')))
           : '<select data-mm="hab.'+k+'.s">'+MM_ETATS.map(([v,l])=>'<option value="'+v+'"'
             +((mmG(d,'hab.'+k+'.s')||'')===v?' selected':'')+'>'+esc(l)+'</option>').join('')+'</select>')
-    + '</td><td data-l="'+(orias?'Date d\u2019examen':'Validée le')+'">'+cellDate(k,'d')+'</td>'
+    + '</td><td data-l="'+(orias?(k==='cif'?'Dates d\u2019examen':'Date d\u2019examen'):'Validée le')+'">'+(orias?cellExam(k):cellDate(k,'d'))+'</td>'
     + (orias ? '<td data-l="Date ORIAS">'+cellDate(k,'o')+'</td>' : '') + '</tr>';
   return '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Habilitation</th><th>Statut</th>'
     + '<th>Date d’examen</th><th>Date ORIAS</th></tr></thead><tbody>'
@@ -6777,6 +6792,22 @@ function mmHabTables(d, ro){
 // Séminaire Toulouse : une simple plage de dates (3 jours), ni statut ni ORIAS.
 const mmSemTls = d => { const du=mmG(d,'hab.tls.du')||'', au=mmG(d,'hab.tls.au')||'';
   return du||au ? (du&&au&&du!==au ? 'du '+du+' au '+au : (du||au)) : ''; };
+// JJ/MM/AAAA ⇄ AAAA-MM-JJ (valeur d'un <input type="date">)
+function mmJjIso(t){
+  t=(t||'').trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(t); if(!m) return '';
+  return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+}
+const mmIsoJj = iso => /^\d{4}-\d{2}-\d{2}$/.test(iso||'') ? iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4) : (iso||'');
+// Les dates d'une habilitation, pour la fiche publiée et l'export texte
+function mmHabDates(d, k, fc){
+  const g = c => mmG(d,'hab.'+k+'.'+c), r=[];
+  if(g('d')) r.push((fc?'':(k==='cif'?'examen CIF ':'examen '))+g('d'));
+  if(k==='cif' && g('amf')) r.push('examen AMF '+g('amf'));
+  if(g('o')) r.push('ORIAS '+g('o'));
+  return r;
+}
 // « JJ/MM/AAAA » + n jours, ou '' si la date ne se lit pas
 function mmJjPlus(t, n){
   const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((t||'').trim()); if(!m) return '';
@@ -7021,9 +7052,7 @@ function mmFiche(d, prive, sem, obj){
   const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
   const hab = MM_HAB.concat(MM_FC).filter(([k])=>mmG(d,'hab.'+k+'.s'))
     .map(([k,lib])=>{
-      const st=mmG(d,'hab.'+k+'.s'), dts=[], fc=MM_FC.some(x=>x[0]===k);
-      if(mmG(d,'hab.'+k+'.d')) dts.push((fc?'':'examen ')+mmG(d,'hab.'+k+'.d'));
-      if(mmG(d,'hab.'+k+'.o')) dts.push('ORIAS '+mmG(d,'hab.'+k+'.o'));
+      const st=mmG(d,'hab.'+k+'.s'), fc=MM_FC.some(x=>x[0]===k), dts=mmHabDates(d,k,fc);
       return '<i class="'+(st==='ok'?'ok':(st==='encours'?'att':'non'))+'"'
         + (dts.length?' title="'+esc(dts.join(' · '))+'"':'')+'>'+esc(lib)+'<b>'+esc(etat(st))+'</b>'
         + (dts.length?' <span class="mut">'+esc(dts.join(' · '))+'</span>':'')+'</i>'; });
@@ -7489,9 +7518,7 @@ function mmTexte(d, nom, sem){
   const estFC = k => MM_FC.some(x=>x[0]===k);
   MM_HAB.concat(MM_FC).forEach(([k,lib])=>{
     const s=mmG(d,'hab.'+k+'.s'); if(!s) return;
-    const dts=[];
-    if(mmG(d,'hab.'+k+'.d')) dts.push((estFC(k)?'':'examen ')+mmG(d,'hab.'+k+'.d'));
-    if(mmG(d,'hab.'+k+'.o')) dts.push('ORIAS '+mmG(d,'hab.'+k+'.o'));
+    const dts=mmHabDates(d,k,estFC(k));
     L.push('- '+lib+' : '+(MM_ETATS.find(x=>x[0]===s)||['',''])[1]+(dts.length?' ('+dts.join(' · ')+')':''));
   });
   if(mmSemTls(d)) L.push('- Séminaire Toulouse : '+mmSemTls(d));
@@ -8111,11 +8138,12 @@ function mmSaisie(t){
   if(t.dataset && t.dataset.mmprod && t.value==='__+'){ mmNouveauProduit(t.dataset.mm); return true; }
   if(t.dataset && t.dataset.mm && MM){
     MM.donnees=MM.donnees||{};
-    mmS(MM.donnees, t.dataset.mm, t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value));
+    mmS(MM.donnees, t.dataset.mm, t.value===''? '' : (t.type==='number'? mmN(t.value) : t.type==='date' ? mmIsoJj(t.value) : t.value));
+    if(t.type==='date'){ const o=t.parentNode && t.parentNode.querySelector('.mm-old'); if(o) o.remove(); }
     if(t.dataset.mm.indexOf('sous.')===0) mmSousTotaux();
     if(t.dataset.mm==='hab.tls.du'){
-      const au=document.querySelector('#v-mm input[data-mm="hab.tls.au"]'), fin=mmJjPlus(t.value,2);
-      if(au && fin && (!au.value || au.dataset.auto==='1')){ au.value=fin; au.dataset.auto='1'; mmS(MM.donnees,'hab.tls.au',fin); }
+      const au=document.querySelector('#v-mm input[data-mm="hab.tls.au"]'), fin=mmJjPlus(mmIsoJj(t.value),2);
+      if(au && fin && (!au.value || au.dataset.auto==='1')){ au.value=mmJjIso(fin); au.dataset.auto='1'; mmS(MM.donnees,'hab.tls.au',fin); }
     }
     if(t.dataset.mm==='hab.tls.au') delete t.dataset.auto;
     if(t.dataset.mm.indexOf('prod.')===0) mmProdMaj();

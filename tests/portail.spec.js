@@ -211,16 +211,32 @@ test.describe('Mail Manager', () => {
       const du = box.querySelector('input[data-mm="hab.tls.du"]');
       const au = box.querySelector('input[data-mm="hab.tls.au"]');
       const orias = box.querySelector('[data-mm^="hab.tls.o"], [data-mm="hab.tls.s"]');
-      du.value = '30/12/2026'; du.dispatchEvent(new Event('input', { bubbles: true }));
+      du.value = '2026-12-30'; du.dispatchEvent(new Event('input', { bubbles: true }));
+      // CIF : examen CIF, examen AMF et ORIAS ; toutes les dates passent par un sélecteur
+      const types = [...box.querySelectorAll('input[data-mm^="hab."]')].filter(i => /\.(d|o|amf|du|au)$/.test(i.dataset.mm)).map(i => i.type);
+      const cif = ['d', 'amf', 'o'].map(c => !!box.querySelector('input[type=date][data-mm="hab.cif.' + c + '"]'));
+      const amf = box.querySelector('input[data-mm="hab.cif.amf"]');
+      amf.value = '2026-11-05'; amf.dispatchEvent(new Event('input', { bubbles: true }));
+      MM.donnees.hab.cif.s = 'ok';
       const txt = mmTexte(MM.donnees, 'Moi', MM_SEM);
-      return { libs, au: au.value, data: MM.donnees.hab.tls, orias: !!orias, txt };
+      // une date saisie avant les sélecteurs (JJ/MM/AAAA) est relue ; une saisie libre reste visible
+      MM.donnees.hab.mia = { s: 'ok', d: '15/09/2026', o: 'en cours' }; buildMM();
+      const mia = box.querySelector('input[data-mm="hab.mia.d"]').value;
+      const vieux = box.querySelector('input[data-mm="hab.mia.o"]').parentNode.textContent;
+      return { libs, au: au.value, data: MM.donnees.hab.tls, orias: !!orias, txt, types: [...new Set(types)], cif, amf: MM.donnees.hab.cif.amf, mia, vieux };
     });
     expect(r.libs).toContain('ALPSI (agent lié)');
     expect(r.libs).toContain('CIF');
     expect(r.libs).not.toContain('ALPSI / CIF');
     expect(r.libs).toContain('Séminaire Toulouse');
     expect(r.orias, 'ni statut ni ORIAS pour le séminaire').toBe(false);
-    expect(r.au, 'la fin se remplit à J+2, en passant l’année').toBe('01/01/2027');
+    expect(r.au, 'la fin se remplit à J+2, en passant l’année').toBe('2027-01-01');
+    expect(r.types, 'toutes les dates sont des sélecteurs').toEqual(['date']);
+    expect(r.cif, 'CIF : examen CIF, examen AMF, ORIAS').toEqual([true, true, true]);
+    expect(r.amf, 'stockée au même format que les autres dates').toBe('05/11/2026');
+    expect(r.txt).toContain('examen AMF 05/11/2026');
+    expect(r.mia).toBe('2026-09-15');
+    expect(r.vieux).toContain('en cours');
     expect(r.data).toEqual({ du: '30/12/2026', au: '01/01/2027' });
     expect(r.txt).toContain('Séminaire Toulouse : du 30/12/2026 au 01/01/2027');
     expect(erreurs).toEqual([]);
@@ -3056,7 +3072,7 @@ test.describe('Mail Manager — alléger la saisie', () => {
     });
     expect(r.onglets, '« Mes habilitations » vient après « Mes objectifs »').toEqual(['moi', 'mur', 'obj', 'hab']);
     expect(r.vue).toBe(true);
-    expect(r.champs, '4 habilitations × 3 champs + 4 formations × 2 champs + séminaire Toulouse du/au').toBe(22);
+    expect(r.champs, '4 habilitations × 3 champs + examen AMF du CIF + 4 formations × 2 champs + séminaire Toulouse du/au').toBe(23);
     expect(r.compte).toBe('1 / 8 validées');
     expect(r.url).toBe('mes-habilitations');
     expect(r.lectureSansChamp, 'une semaine passée s’affiche en lecture').toBe(true);
