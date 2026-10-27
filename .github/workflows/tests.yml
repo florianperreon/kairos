@@ -41,6 +41,7 @@ jobs:
           python tests/nouveautes.py
           python tests/calendrier.py
           python tests/pagination.py
+          python tests/objectifs_attente.py
 
       - uses: actions/setup-node@v4
         with:

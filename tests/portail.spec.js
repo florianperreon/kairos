@@ -242,6 +242,42 @@ test.describe('Mail Manager', () => {
     expect(erreurs).toEqual([]);
   });
 
+  // 27/10/2026 : un parrain dont un filleul DIRECT a déclaré des objectifs voit l'action de les valider.
+  test('accueil : valider les objectifs en attente de mes filleuls directs', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const j = jours();
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE.map(v => v === '@@SAMEDI@@' ? j.samedi : v), dm: j.dm });
+    const r = await page.evaluate(() => {
+      BASE = 'https://reseau.test/#/auth/';
+      const act = () => document.querySelector('#homeActions .sact[data-act^="objatt:"]');
+      EXTRA = {}; buildActions();
+      const sans = !!act();
+      // un petit-filleul (pas direct) en attente ne compte pas
+      byId.set(40001, { id: 40001, name: 'Petit Filleul', parrain: 'Filleul Adherent' });
+      children.set(norm('Filleul Adherent'), [byId.get(40001)]);
+      EXTRA = { '30004': { oatt: 3 }, '40001': { oatt: 2 } };
+      buildActions();
+      const a = act();
+      const res = a && { href: a.getAttribute('href'), cible: a.getAttribute('target'), txt: a.textContent.replace(/\s+/g, ' ') };
+      a.addEventListener('click', e => e.preventDefault());   // pas de nouvel onglet pendant le test
+      a.click();
+      const coche = act().classList.contains('fait');
+      // un nouvel objectif déclaré relance l'action
+      EXTRA['30004'].oatt = 4; buildActions();
+      const relance = !act().classList.contains('fait');
+      return { sans, res, coche, relance };
+    });
+    expect(r.sans, 'aucune action sans objectif en attente').toBe(false);
+    expect(r.res.href).toBe('https://reseau.test/#/auth/notifications/objectifs');
+    expect(r.res.cible).toBe('_blank');
+    expect(r.res.txt).toContain('Valider les objectifs de Filleul Adherent');
+    expect(r.res.txt).toContain('3 objectifs en attente');
+    expect(r.res.txt).not.toContain('Petit Filleul');
+    expect(r.coche, 'cocher l’action la marque faite pour la semaine').toBe(true);
+    expect(r.relance, 'un nouvel objectif déclaré relance l’action').toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
   test('le formulaire, le mur, les objectifs et l’export texte se rendent', async ({ page }) => {
     const erreurs = await ouvrir(page);
     const j = jours();

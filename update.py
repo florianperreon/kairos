@@ -599,6 +599,22 @@ def _etat_objectif(status):
         return "att"
     return n or "att"
 
+def objectifs_en_attente(api, ids, workers=8):
+    """Nombre d'objectifs déclarés et EN ATTENTE de validation, par membre : {id: n}.
+    Un membre dont la lecture échoue est absent du résultat (l'appelant garde alors l'ancienne valeur)."""
+    def un(uid):
+        try:
+            return uid, sum(1 for o in _pages(api, "goal_finisheds", {"user": uid})
+                            if _etat_objectif(o.get("status")) == "att")
+        except Exception:
+            return uid, None
+    out = {}
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for uid, n in ex.map(un, list(ids)):
+            if n is not None:
+                out[uid] = n
+    return out
+
 def goals_par_niveau(api):
     """Nombre d'objectifs de PROMOTION par statut (mis en cache pour tout le passage)."""
     if not _GOALS_PAR_NIVEAU:
@@ -1216,6 +1232,24 @@ def run():
             x["jalons"] = jal
         else:
             x.pop("jalons", None)
+
+    # Objectifs de mes filleuls en attente de validation (27/10/2026) : le parrain les valide sur le réseau,
+    # le portail le lui rappelle dans les actions de la semaine. Seuls les adhérents de la lignée qui ont
+    # un parrain sont lus. extra[id]["oatt"] = nombre en attente (absent = aucun). Non bloquant : en
+    # panne, chaque membre garde la valeur du passage précédent.
+    try:
+        cibles = [i for i in lig_ids if i in adh_set and by_id.get(i) and by_id[i][5] not in (None, "", "Aucun")]
+        att = objectifs_en_attente(api, cibles)
+        for i, n in att.items():
+            x = extra.setdefault(i, {"bd": "", "v": 2})
+            if n:
+                x["oatt"] = n
+            else:
+                x.pop("oatt", None)
+        print(f"objectifs en attente : {sum(1 for n in att.values() if n)} membres sur {len(att)} lus "
+              f"({len(cibles) - len(att)} en échec)")
+    except Exception as e:
+        print(f"objectifs en attente indisponibles ({type(e).__name__}) — valeurs précédentes conservées")
 
     # ---------- Nouveautés : ce qui a été ajouté ou modifié depuis le passage précédent ----------
     nouv, modif, n_add, n_chg = nouveautes(

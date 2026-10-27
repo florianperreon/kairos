@@ -3667,6 +3667,24 @@ function buildActions(){
       href:'#annuaire', fait:semFait('filleuls'), go:'Voir' });
   }
 
+  // 6 a) Valider les objectifs déclarés par mes filleuls directs (27/10/2026). Le relevé (EXTRA[id].oatt)
+  //      est fait quatre fois par jour ; la clé porte la liste en attente : un nouvel objectif déclaré
+  //      relance l'action même si elle a été cochée cette semaine.
+  try{
+    const fa = filleulsObjAttente();
+    if(fa.length){
+      evaluable = true;
+      const n = fa.reduce((t,f)=>t+f.n,0);
+      const cle = 'objatt:' + fa.map(f=>f.id+'.'+f.n).join(',');
+      actions.push({ cle, manuel:true, ext:true,
+        t: 'Valider les objectifs de ' + (fa.length>1 ? 'mes ' + fa.length + ' filleuls' : fa[0].name),
+        urg: n + ' objectif' + (n>1?'s':'') + ' en attente',
+        d: fa.slice(0,3).map(f=>f.name+' ('+f.n+')').join(' · ') + (fa.length>3 ? ' · +' + (fa.length-3) : '')
+           + ' — à valider dans les notifications FORMAN',
+        href: BASE + 'notifications/objectifs', fait: semFait(cle), go:'Valider' });
+    }
+  }catch(e){ console.error(e); }
+
   // 6 bis) Parcours : points d'étape et prochaines missions (ex-encart « Mes prochaines missions »)
   try{
     const mi = miActionsAccueil();
@@ -3712,7 +3730,8 @@ function buildActions(){
     ? (reste === 1 ? 'Il te reste 1 action cette semaine.' : 'Il te reste ' + reste + ' actions cette semaine.')
     : '';
   liste.innerHTML = actions.map(a =>
-    '<a class="sact' + (a.fait?' fait':'') + (a.cls?' '+a.cls:'') + '" href="' + a.href + '" data-act="' + esc(a.cle) + '"'
+    '<a class="sact' + (a.fait?' fait':'') + (a.cls?' '+a.cls:'') + '" href="' + esc(a.href) + '" data-act="' + esc(a.cle) + '"'
+    + (a.ext?' target="_blank" rel="noopener"':'')
     + (a.manuel?' data-manuel="1"':'') + (a.ancre?' data-ancre="'+esc(a.ancre)+'"':'')
     + (a.mialler?' data-mialler="'+esc(a.mialler)+'"':'') + (a.mimis?' data-mimis="'+esc(a.mimis)+'"':'') + '>'
     + '<span class="ck">' + (a.fait?'✓':'') + '</span>'
@@ -6156,6 +6175,12 @@ const mmInvEnAttente = a => Math.max(0, (a&&a.fil||0) - (a&&a.filadh||0));
 function mmMesFilleuls(){
   const moi = MOI_ID ? byId.get(MOI_ID) : null;
   return moi ? (children.get(norm(moi.name))||[]) : [];
+}
+// Mes filleuls DIRECTS qui ont des objectifs déclarés en attente de validation : [{id, name, n}]
+function filleulsObjAttente(){
+  if(!BASE) return [];
+  return mmMesFilleuls().map(f=>({ id:f.id, name:f.name, n:+((EXTRA[f.id]||EXTRA[String(f.id)]||{}).oatt)||0 }))
+    .filter(f=>f.n>0).sort((a,b)=>b.n-a.n || a.name.localeCompare(b.name));
 }
 // toute ma descendance (filleuls, filleuls de filleuls…) — pour la pastille du coach
 function mmDescendants(){
