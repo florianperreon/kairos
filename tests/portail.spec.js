@@ -3083,6 +3083,44 @@ test.describe('Mail Manager — alléger la saisie', () => {
     await ctx.close();
   });
 
+  // Règle du 27/10/2026 : une formation continue n'est due que pour une habilitation obtenue avant le 30/09.
+  test('formations continues : seulement pour les habilitations obtenues avant le 30/09', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserMM(page);
+    const r = await page.evaluate(() => {
+      const an = todayIso.slice(0, 4);
+      MM = { semaine: MM_SEM, statut: 'brouillon', donnees: { hab: {
+        mia:    { s: 'ok', d: '15/03/' + an },         // avant le 30/09 : FC Assurance due
+        miobsp: { s: 'ok', d: '15/10/' + an },         // après : FC IOBSP pas cette année
+        alpsi:  { s: 'encours', d: '01/02/' + an },    // pas obtenue : pas due…
+        cif:    { s: 'ok', d: '10/09/' + (an - 1) },   // …mais le CIF l'est : FC ALPSI / CIF due
+        fiobsp: { s: 'afaire' } } } };
+      const dues = () => mmFCRequises(MM.donnees).map(x => x[0]);
+      const avant = dues();
+      const txt = mmTexte(MM.donnees, 'Moi', MM_SEM);
+      // en direct : le CIF repasse « en cours » → la ligne ALPSI / CIF disparaît sans redessiner la page
+      document.querySelectorAll('section.view').forEach(v => v.classList.remove('on'));
+      const vm = document.getElementById('v-mm'); vm.classList.add('on'); vm.hidden = false;
+      showMMSub('hab'); buildMM();
+      const lignes = () => [...document.querySelectorAll('#mmFCBox tbody tr td:first-child')].map(t => t.textContent);
+      const l1 = lignes();
+      const sel = document.querySelector('select[data-mm="hab.cif.s"]'); sel.dataset.temoin = '1';
+      sel.value = 'encours'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      return new Promise(ok => setTimeout(() => ok({ avant, txt, l1, l2: lignes(),
+        note: document.getElementById('mmFCBox').textContent, meme: !!document.querySelector('[data-temoin]'),
+        compte: document.querySelector('#mmHab .mm-sem').textContent }), 30));
+    });
+    expect(r.avant).toEqual(['fmia', 'fimmo', 'falpsi']);
+    expect(r.txt, 'une FC non due n’apparaît pas dans l’export').not.toContain('FC IOBSP');
+    expect(r.l1).toEqual(['FC Assurance (MIA)', 'FC Immobilier', 'FC ALPSI / CIF']);
+    expect(r.l2).toEqual(['FC Assurance (MIA)', 'FC Immobilier']);
+    expect(r.note).toContain('Pas à faire');
+    expect(r.note).toContain('FC IOBSP');
+    expect(r.meme, 'la page n’est pas redessinée').toBe(true);
+    expect(r.compte).toBe('2 / 6 validées');
+    expect(erreurs).toEqual([]);
+  });
+
   test('les habilitations ont leur page, après « Mes objectifs »', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poserMM(page);
@@ -3108,8 +3146,9 @@ test.describe('Mail Manager — alléger la saisie', () => {
     });
     expect(r.onglets, '« Mes habilitations » vient après « Mes objectifs »').toEqual(['moi', 'mur', 'obj', 'hab']);
     expect(r.vue).toBe(true);
-    expect(r.champs, '4 habilitations × 3 champs + examen AMF du CIF + 4 formations × 2 champs + séminaire Toulouse du/au').toBe(23);
-    expect(r.compte).toBe('1 / 8 validées');
+    // MIA validée (sans date) : FC Assurance due ; FC Immobilier toujours due ; FC IOBSP et ALPSI / CIF non
+    expect(r.champs, '4 habilitations × 3 champs + examen AMF du CIF + 2 formations dues × 2 champs + séminaire Toulouse du/au').toBe(19);
+    expect(r.compte).toBe('1 / 6 validées');
     expect(r.url).toBe('mes-habilitations');
     expect(r.lectureSansChamp, 'une semaine passée s’affiche en lecture').toBe(true);
     expect(r.lectureNote).toBe(true);

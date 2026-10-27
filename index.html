@@ -6038,6 +6038,8 @@ const MM_PRODE = [['eva',  'VA + VAA VC',      '€', 'VA + VAA VC équipe'],
                   ['evaec','VA + VAA EC',      '€', 'VA + VAA EC équipe']];
 const MM_HAB   = [['mia','MIA / Assurance niveau II'],['miobsp','MIOBSP'],['alpsi','ALPSI (agent lié)'],['cif','CIF']];
 const MM_FC    = [['fmia','FC Assurance (MIA)'],['fiobsp','FC IOBSP'],['fimmo','FC Immobilier'],['falpsi','FC ALPSI / CIF']];
+// Formation continue → habilitation(s) dont elle dépend. FC Immobilier n'a pas d'habilitation suivie ici : toujours due.
+const MM_FC_HAB = { fmia:['mia'], fiobsp:['miobsp'], falpsi:['alpsi','cif'] };
 const MM_ETATS = [['','—'],['afaire','À faire'],['encours','En cours'],['ok','Validé']];
 const MM_OBJS  = [
   ['va','VA + VAA personnel','€','Volume d’affaires cumulé sur l’exercice (1er août → 31 juillet), validé et en cours'],
@@ -6809,10 +6811,34 @@ function mmHabTables(d, ro){
     + '<div class="mm-wrap"><table class="mm-tbl mm-tls"><thead><tr><th>Séminaire</th><th>Du</th><th>Au</th></tr></thead><tbody>'
     + '<tr><td>Séminaire Toulouse</td><td data-l="Du">'+cellDate('tls','du')+'</td><td data-l="Au">'+cellDate('tls','au')+'</td></tr>'
     + '</tbody></table></div>'
-    + '<label class="mm-lab">Formations continues de l’année</label>'
-    + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Formation continue</th><th>Statut</th><th>Validée le</th></tr></thead><tbody>'
-    + MM_FC.map(([k,lib])=>ligne(k,lib,false)).join('') + '</tbody></table></div>'
+    + '<div id="mmFCBox">' + mmFCBloc(d, ligne) + '</div>'
     + (mmRappelFC(d) ? '<p class="mm-note">⚠︎ '+esc(mmRappelFC(d))+'</p>' : '');
+}
+// Une habilitation change de statut ou de date : la liste des formations dues suit, sans redessiner
+// la page (on garderait sinon le curseur dans un champ qui n'existe plus).
+function mmFCRedessiner(){
+  const box=document.getElementById('mmFCBox'); if(!box || !MM) return;
+  const d=mmMigre(MM.donnees||{}), tmp=document.createElement('div');
+  tmp.innerHTML = mmHabTables(d, false);
+  const neuf = tmp.querySelector('#mmFCBox'); if(neuf) box.innerHTML = neuf.innerHTML;
+  const n = document.querySelector('#mmHab .mm-sem b'); if(n) n.textContent = mmHabValidees(d)+' / '+mmHabTotal(d);
+}
+document.addEventListener('change', e=>{
+  const t=e.target;
+  if(t && t.dataset && /^hab\.(mia|miobsp|alpsi|cif)\.(s|d)$/.test(t.dataset.mm||'') && t.closest('#v-mm')) setTimeout(mmFCRedessiner, 0);   // après mmSaisie, qui range la valeur
+});
+// Formations continues : seules celles qui sont dues cette année ont une ligne ; les autres sont nommées
+// en dessous, avec la raison, pour qu'on ne les cherche pas.
+function mmFCBloc(d, ligne){
+  const an = todayIso.slice(0,4), dues = mmFCRequises(d, an), hors = MM_FC.filter(x=>!dues.includes(x));
+  const libH = k => (MM_FC_HAB[k]||[]).map(h=>(MM_HAB.find(x=>x[0]===h)||[,h])[1]).join(' ou ');
+  return '<label class="mm-lab">Formations continues '+an+' <span class="mut">— pour chaque habilitation obtenue avant le 30/09/'+an+'</span></label>'
+    + (dues.length
+        ? '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Formation continue</th><th>Statut</th><th>Validée le</th></tr></thead><tbody>'
+          + dues.map(([k,lib])=>ligne(k,lib,false)).join('') + '</tbody></table></div>'
+        : '<p class="mm-vide">Aucune formation continue à réaliser en '+an+'.</p>')
+    + (hors.length ? '<p class="mm-note mm-fch">Pas à faire en '+an+' : '
+        + hors.map(([k,lib])=>esc(lib)+' (habilitation '+esc(libH(k))+' non obtenue avant le 30/09)').join(' · ')+'</p>' : '');
 }
 // Séminaire Toulouse : une simple plage de dates (3 jours), ni statut ni ORIAS.
 const mmSemTls = d => { const du=mmG(d,'hab.tls.du')||'', au=mmG(d,'hab.tls.au')||'';
@@ -6839,12 +6865,26 @@ function mmJjPlus(t, n){
   const x=new Date(+m[3], +m[2]-1, +m[1]+n);
   return String(x.getDate()).padStart(2,'0')+'/'+String(x.getMonth()+1).padStart(2,'0')+'/'+x.getFullYear();
 }
-const mmHabValidees = d => MM_HAB.concat(MM_FC).filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
+// Règle du 27/10/2026 : une formation continue n'est à faire que pour une habilitation OBTENUE (statut
+// Validé) avant le 30/09 de l'année en cours. Date retenue : celle de l'examen ; sans date, on la
+// considère obtenue de longue date (la formation reste due).
+function mmFCDue(d, k, an){
+  const habs = MM_FC_HAB[k]; if(!habs) return true;
+  const limite = (an||todayIso.slice(0,4)) + '-09-30';
+  return habs.some(h=>{
+    if(mmG(d,'hab.'+h+'.s')!=='ok') return false;
+    const iso = mmJjIso(mmG(d,'hab.'+h+'.d')||'');
+    return !iso || iso < limite;
+  });
+}
+const mmFCRequises = (d, an) => MM_FC.filter(([k])=>mmFCDue(d, k, an));
+const mmHabTotal = d => MM_HAB.length + mmFCRequises(d).length;
+const mmHabValidees = d => MM_HAB.concat(mmFCRequises(d)).filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
 function mmHabPage(){
   if(!MM) return '';
   const d = mmMigre(MM.donnees||{});
   const cour = MM_SEM===mmSemCour(), ro = !cour;
-  const tot = MM_HAB.length + MM_FC.length, ok = mmHabValidees(d);
+  const tot = mmHabTotal(d), ok = mmHabValidees(d);
   return '<div class="panel"><div class="mm-head"><h2>Mes habilitations</h2>'
     + '<span class="mm-sem"><b>'+ok+' / '+tot+'</b> validées</span></div>'
     + '<p class="mm-sub">Habilitations et formations continues. Elles ne se saisissent plus chaque semaine : '
@@ -6934,7 +6974,7 @@ function mmCorps(d, prive, ro, sem){
       [resProd,                               'production'],
     ].filter(x=>!x[0]).map(x=>x[1]);
   // Les habilitations ont leur page : ici, un simple renvoi avec l'essentiel
-  const habTot = MM_HAB.length + MM_FC.length, habOk = mmHabValidees(d), rappel = mmRappelFC(d);
+  const habTot = mmHabTotal(d), habOk = mmHabValidees(d), rappel = mmRappelFC(d);
   if(!ro) h += '<div class="mm-habl'+(rappel?' alr':'')+'"><span><b>Habilitations</b> — '+habOk+' / '+habTot+' validées'
     + (rappel?' · ⚠︎ '+esc(rappel):'')+'</span>'
     + '<button type="button" data-mms="hab">Mes habilitations ›</button></div>';
@@ -6956,7 +6996,7 @@ function mmNoms(l){
 function mmRappelFC(d){
   const m=+todayIso.slice(5,7);
   if(m<10) return '';
-  const reste = MM_FC.filter(([k])=>{ const s=mmG(d,'hab.'+k+'.s'); return s && s!=='ok'; });
+  const reste = mmFCRequises(d).filter(([k])=>mmG(d,'hab.'+k+'.s')!=='ok');
   return reste.length ? reste.length+' formation'+(reste.length>1?'s':'')+' continue'+(reste.length>1?'s':'')+' encore à valider avant la fin de l’année.' : '';
 }
 
@@ -7075,7 +7115,7 @@ function mmFiche(d, prive, sem, obj){
 
   // habilitations
   const etat = v => (MM_ETATS.find(x=>x[0]===(v||''))||MM_ETATS[0])[1];
-  const hab = MM_HAB.concat(MM_FC).filter(([k])=>mmG(d,'hab.'+k+'.s'))
+  const hab = MM_HAB.concat(mmFCRequises(d)).filter(([k])=>mmG(d,'hab.'+k+'.s'))
     .map(([k,lib])=>{
       const st=mmG(d,'hab.'+k+'.s'), fc=MM_FC.some(x=>x[0]===k), dts=mmHabDates(d,k,fc);
       return '<i class="'+(st==='ok'?'ok':(st==='encours'?'att':'non'))+'"'
@@ -7541,7 +7581,7 @@ function mmTexte(d, nom, sem){
   });
   L.push(''); L.push('6 - Habilitations');
   const estFC = k => MM_FC.some(x=>x[0]===k);
-  MM_HAB.concat(MM_FC).forEach(([k,lib])=>{
+  MM_HAB.concat(mmFCRequises(d)).forEach(([k,lib])=>{
     const s=mmG(d,'hab.'+k+'.s'); if(!s) return;
     const dts=mmHabDates(d,k,estFC(k));
     L.push('- '+lib+' : '+(MM_ETATS.find(x=>x[0]===s)||['',''])[1]+(dts.length?' ('+dts.join(' · ')+')':''));
