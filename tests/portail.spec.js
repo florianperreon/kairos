@@ -2420,6 +2420,69 @@ test.describe('Semaines ISO, jours fériés, vacances scolaires', () => {
     expect(erreurs).toEqual([]);
   });
 
+  // 27/10/2026 : cliquer sur « zone B » n'ouvre que le choix de la zone — plus l'adresse ni la synchro.
+  test('le clic sur la zone scolaire n’ouvre que le choix de la zone', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      SBUSER = { email: 'moi@exemple.fr' }; accMaj();
+      document.body.insertAdjacentHTML('beforeend', zoneHtml('B'));
+      document.querySelector('.wk-zone[data-zone-open]').click();
+      const vis = id => { const e = document.getElementById(id); return !!e && e.offsetParent !== null; };
+      const avant = { zone: vis('accZone'), compte: vis('accOut'), connexion: vis('accIn'), ouvert: document.getElementById('acc').classList.contains('on') };
+      document.querySelector('#accZone [data-z="A"]').click();
+      return { avant, zone: zoneScolaire() };
+    });
+    await page.waitForTimeout(300);
+    const ferme = await page.evaluate(() => !document.getElementById('acc').classList.contains('on'));
+    expect(r.avant).toEqual({ zone: true, compte: false, connexion: false, ouvert: true });
+    expect(r.zone).toBe('A');
+    expect(ferme, 'la fenêtre se ferme une fois la zone choisie').toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('Mon profil : adresse, zone, thème, installation et statut FORMAN', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      SBUSER = { email: 'moi@exemple.fr' }; MOI_ID = 20028; BASE = 'https://reseau.test/#/auth/';
+      ZONE_CHOISIE = null; CAL_CFG = null;
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      showTab('profil'); curTab = 'profil';
+      const v = document.getElementById('v-profil');
+      const txt = v.textContent;
+      const lien = [...v.querySelectorAll('a')].map(a => a.href);
+      // menu : Mon profil juste au-dessus de Déconnexion ; plus de Thème ni d'Installer dans le menu
+      const bas = [...document.querySelectorAll('#side .side-bas > button')].filter(b => b.id !== 'sideToggle').map(b => b.dataset.v || b.id);
+      const zoneOn = () => [...v.querySelectorAll('.pf-zones [data-z].on')].map(b => b.dataset.z);
+      const z0 = zoneOn();
+      v.querySelector('.pf-zones [data-z="C"]').click();
+      const z1 = zoneOn();
+      v.querySelector('.pf-theme [data-th="dark"]').click();
+      const theme = document.documentElement.getAttribute('data-theme');
+      const thOn = [...v.querySelectorAll('.pf-theme [data-th].on')].map(b => b.dataset.th);
+      v.querySelector('.pf-theme [data-th="light"]').click();
+      const slug = TAB_SLUG.profil;
+      return { txt, lien, bas, z0, z1, theme, thOn, slug, visible: v.classList.contains('on'),
+               themeBtn: !!document.getElementById('themeBtn'), installBtn: !!document.getElementById('installBtn'),
+               inst: !!v.querySelector('#pfInstall').textContent.trim() };
+    });
+    expect(r.visible).toBe(true);
+    expect(r.slug).toBe('mon-profil');
+    expect(r.txt).toContain('moi@exemple.fr');
+    expect(r.txt).toContain('Mon statut FORMAN');
+    expect(r.lien).toContain('https://reseau.test/#/auth/adherents/profil/goals/20028');
+    expect(r.bas.slice(-2), 'Mon profil juste au-dessus de Déconnexion').toEqual(['profil', 'lockBtn']);
+    expect(r.themeBtn || r.installBtn, 'thème et installation ont quitté le menu').toBe(false);
+    expect(r.z0).toEqual(['B']);
+    expect(r.z1).toEqual(['C']);
+    expect(r.theme).toBe('dark');
+    expect(r.thOn).toEqual(['dark']);
+    expect(r.inst, 'la ligne Application dit toujours quelque chose').toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
   test('changer de zone dans Mon compte redessine les listes et part dans la synchronisation', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await preparer(page);
@@ -2430,7 +2493,7 @@ test.describe('Semaines ISO, jours fériés, vacances scolaires', () => {
       document.getElementById('reuPast').checked = true;
       buildSimple('reu', [s(1, '2027-02-24')], id => '#' + id, 'réunion');   // hiver : B en vacances, C non
       const avant = document.querySelectorAll('#reuList .wk-h.vac').length;
-      accOuvrir();
+      accOuvrir('zone');
       const boutons = [...document.querySelectorAll('#accZone [data-z]')].map(b => b.dataset.z + (b.classList.contains('on') ? '*' : ''));
       document.querySelector('#accZone [data-z="C"]').click();
       const apres = document.querySelectorAll('#reuList .wk-h.vac').length;
