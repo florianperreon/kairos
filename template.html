@@ -6398,14 +6398,15 @@ async function mmParticipe(v){
 // Un type de produit ajouté par quelqu'un devient disponible pour toute la lignée
 async function mmNouveauProduit(chemin){
   const nom = (prompt('Type de produit à ajouter (il sera proposé à toute la lignée) :')||'').trim();
-  if(!nom){ buildMM(); return; }
+  const enSous = chemin && chemin.indexOf('sous.')===0;
+  if(!nom){ if(!(enSous && mmSousRedessiner())) buildMM(); return; }
   if(MM_PRODUITS.indexOf(nom)<0){
     MM_PRODUITS.push(nom);
     try{ await SB.from('mail_manager_produits').insert({ nom:nom, ajoute_par:(SBUSER&&SBUSER.email)||null }); }
     catch(e){ /* déjà présent ou refusé : la liste locale suffit pour cette saisie */ }
   }
   if(MM && chemin){ MM.donnees=MM.donnees||{}; mmS(MM.donnees, chemin, nom); mmPlanSave(); }
-  buildMM();
+  if(!(enSous && mmSousRedessiner())) buildMM();
 }
 async function mmObjSauver(){
   if(!SB || !SBUSER || !MOI_ID) return;
@@ -6507,6 +6508,19 @@ function mmSous(d, ro){
   h += '</tbody></table></div>';
   if(!ro) h += '<button type="button" class="mm-b mm-add" data-mmsadd="1">+ Ajouter une souscription</button>';
   return h;
+}
+// Ajouter / retirer une souscription ne redessine QUE ce tableau : un buildMM() replierait les
+// encadrés remplis et ramènerait la page en haut, en pleine saisie d'une vente.
+// focus : index de la ligne dont on place le curseur sur le produit (la ligne qu'on vient d'ajouter).
+function mmSousRedessiner(focus){
+  const box=document.getElementById('mmSousBox');
+  if(!box || !MM) return false;
+  box.innerHTML = mmSous(MM.donnees||{}, false);
+  if(focus!=null){
+    const el=box.querySelector('[data-mm="sous.'+focus+'.t"]');
+    if(el){ try{ el.focus({preventScroll:true}); }catch(e){ el.focus(); } }
+  }
+  return true;
 }
 // Les totaux suivent la frappe, sans redessiner le formulaire (on perdrait le curseur)
 function mmSousTotaux(){
@@ -6738,7 +6752,7 @@ function mmCorps(d, prive, ro, sem){
   h += mmSec(1,'Mes rendez-vous','',
       mmCompteursTri(d, ro, prec, sem)
     + '<label class="mm-lab">Signatures / souscriptions ' + mut('— semaine écoulée') + '</label>'
-    + mmSous(d, ro)
+    + '<div id="mmSousBox">' + mmSous(d, ro) + '</div>'
     + '<label class="mm-lab">Faits marquants ' + mut('— semaine écoulée (S'+mmNo(vAddDays(sem,-7))+')') + '</label>'
     + (ro ? mmPara(d.pf||'—')
           : '<textarea class="mm-txt" data-mm="pf" rows="3" placeholder="Ce qui a compté cette semaine — initiales seulement, pas de nom de client.">'+esc(d.pf||'')+'</textarea>')
@@ -8000,12 +8014,12 @@ document.addEventListener('click', async e=>{
     MM.donnees=MM.donnees||{};
     if(!Array.isArray(MM.donnees.sous)) MM.donnees.sous=[];
     MM.donnees.sous.push({t:'', vi:'', vp:''});
-    mmSauver(false); buildMM(); return;
+    mmSauver(false); if(!mmSousRedessiner(MM.donnees.sous.length-1)) buildMM(); return;
   }
   const del=c.closest('[data-mmsdel]');
   if(del && MM && Array.isArray(MM.donnees.sous)){
     MM.donnees.sous.splice(+del.dataset.mmsdel, 1);
-    mmSauver(false); buildMM(); return;
+    mmSauver(false); if(!mmSousRedessiner()) buildMM(); return;
   }
   if(c.closest('#mmObjSave')){ mmObjSauver(); return; }
   if(c.closest('#mmOff')){

@@ -157,6 +157,46 @@ test.describe('Mail Manager', () => {
     expect(r.noms.dm).toEqual(['Filleul NonAdherent']);
   });
 
+  // Régression du 27/10/2026 : « + Ajouter une souscription » (et ×) appelaient buildMM(), qui
+  // repliait les encadrés remplis en pleine saisie d'une vente. Seul le tableau doit bouger.
+  test('ajouter / retirer une souscription ne replie pas le formulaire', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const j = jours();
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE.map(v => v === '@@SAMEDI@@' ? j.samedi : v), dm: j.dm });
+    const r = await page.evaluate(() => {
+      MM.donnees.p = { r1: 3, r2: 1 };
+      MM.donnees.sous = [{ t: 'Assurance Vie', vi: 12000, vp: 150 }];
+      MM.donnees.prod = { va: 42000, vaec: 12000, clients: 9 };
+      MM_TOUT = false; showMMSub('moi'); buildMM();
+      // Florian a tout déplié et marque l'élément : un redessin complet le remplacerait.
+      const secs = () => [...document.querySelectorAll('#mmMoi details.mm-sec')];
+      secs().forEach(d => d.open = true);
+      const temoin = secs()[0]; temoin.dataset.temoin = '1';
+      const lignes = () => document.querySelectorAll('#mmSousBox tbody tr:not(.tot) select').length;
+      document.querySelectorAll('section.view').forEach(v => v.classList.remove('on'));
+      const vm = document.getElementById('v-mm'); vm.classList.add('on'); vm.hidden = false;
+      document.querySelector('[data-mmsadd]').click();
+      const apresAjout = { lignes: lignes(), ouvertes: secs().every(d => d.open),
+        meme: !!document.querySelector('[data-temoin]'),
+        focus: document.activeElement && document.activeElement.dataset.mm };
+      document.querySelector('[data-mmsdel="0"]').click();
+      const apresSuppr = { lignes: lignes(), ouvertes: secs().every(d => d.open),
+        meme: !!document.querySelector('[data-temoin]'), reste: MM.donnees.sous.length,
+        total: document.getElementById('mmSousN').textContent };
+      return { apresAjout, apresSuppr };
+    });
+    expect(r.apresAjout.lignes, 'une ligne de plus').toBe(2);
+    expect(r.apresAjout.ouvertes, 'les encadrés restent ouverts après l’ajout').toBe(true);
+    expect(r.apresAjout.meme, 'le formulaire n’est pas redessiné').toBe(true);
+    expect(r.apresAjout.focus, 'le curseur va sur le produit de la nouvelle ligne').toBe('sous.1.t');
+    expect(r.apresSuppr.lignes).toBe(1);
+    expect(r.apresSuppr.reste).toBe(1);
+    expect(r.apresSuppr.ouvertes, 'les encadrés restent ouverts après la suppression').toBe(true);
+    expect(r.apresSuppr.meme).toBe(true);
+    expect(r.apresSuppr.total).toBe('1 souscription');
+    expect(erreurs).toEqual([]);
+  });
+
   test('le formulaire, le mur, les objectifs et l’export texte se rendent', async ({ page }) => {
     const erreurs = await ouvrir(page);
     const j = jours();
