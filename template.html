@@ -5952,7 +5952,7 @@ const MM_PROD  = [['va',   'VA + VAA VC',      '€', 'VA + VAA VC personnel'],
                   ['clients','Nombre de clients','', 'Nombre de clients']];
 const MM_PRODE = [['eva',  'VA + VAA VC',      '€', 'VA + VAA VC équipe'],
                   ['evaec','VA + VAA EC',      '€', 'VA + VAA EC équipe']];
-const MM_HAB   = [['mia','MIA / Assurance niveau II'],['miobsp','MIOBSP'],['alpsi','ALPSI / CIF']];
+const MM_HAB   = [['mia','MIA / Assurance niveau II'],['miobsp','MIOBSP'],['alpsi','ALPSI (agent lié)'],['cif','CIF']];
 const MM_FC    = [['fmia','FC Assurance (MIA)'],['fiobsp','FC IOBSP'],['fimmo','FC Immobilier'],['falpsi','FC ALPSI / CIF']];
 const MM_ETATS = [['','—'],['afaire','À faire'],['encours','En cours'],['ok','Validé']];
 const MM_OBJS  = [
@@ -6705,10 +6705,23 @@ function mmHabTables(d, ro){
   return '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Habilitation</th><th>Statut</th>'
     + '<th>Date d’examen</th><th>Date ORIAS</th></tr></thead><tbody>'
     + MM_HAB.map(([k,lib])=>ligne(k,lib,true)).join('') + '</tbody></table></div>'
+    + '<label class="mm-lab">Séminaire Toulouse <span class="mut">— 3 jours</span></label>'
+    + '<div class="mm-wrap"><table class="mm-tbl mm-tls"><thead><tr><th>Séminaire</th><th>Du</th><th>Au</th></tr></thead><tbody>'
+    + '<tr><td>Séminaire Toulouse</td><td data-l="Du">'+cellDate('tls','du')+'</td><td data-l="Au">'+cellDate('tls','au')+'</td></tr>'
+    + '</tbody></table></div>'
     + '<label class="mm-lab">Formations continues de l’année</label>'
     + '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Formation continue</th><th>Statut</th><th>Validée le</th></tr></thead><tbody>'
     + MM_FC.map(([k,lib])=>ligne(k,lib,false)).join('') + '</tbody></table></div>'
     + (mmRappelFC(d) ? '<p class="mm-note">⚠︎ '+esc(mmRappelFC(d))+'</p>' : '');
+}
+// Séminaire Toulouse : une simple plage de dates (3 jours), ni statut ni ORIAS.
+const mmSemTls = d => { const du=mmG(d,'hab.tls.du')||'', au=mmG(d,'hab.tls.au')||'';
+  return du||au ? (du&&au&&du!==au ? 'du '+du+' au '+au : (du||au)) : ''; };
+// « JJ/MM/AAAA » + n jours, ou '' si la date ne se lit pas
+function mmJjPlus(t, n){
+  const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((t||'').trim()); if(!m) return '';
+  const x=new Date(+m[3], +m[2]-1, +m[1]+n);
+  return String(x.getDate()).padStart(2,'0')+'/'+String(x.getMonth()+1).padStart(2,'0')+'/'+x.getFullYear();
 }
 const mmHabValidees = d => MM_HAB.concat(MM_FC).filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
 function mmHabPage(){
@@ -6954,6 +6967,7 @@ function mmFiche(d, prive, sem, obj){
       return '<i class="'+(st==='ok'?'ok':(st==='encours'?'att':'non'))+'"'
         + (dts.length?' title="'+esc(dts.join(' · '))+'"':'')+'>'+esc(lib)+'<b>'+esc(etat(st))+'</b>'
         + (dts.length?' <span class="mut">'+esc(dts.join(' · '))+'</span>':'')+'</i>'; });
+  if(mmSemTls(d)) hab.push('<i class="ok">Séminaire Toulouse<b>'+esc(mmSemTls(d))+'</b></i>');
   h += mmLigne('Habilitations', hab.length ? '<div class="kpi">'+hab.join('')+'</div>' : '');
 
   // FORMAN
@@ -7349,6 +7363,7 @@ function mmTexte(d, nom, sem){
     if(mmG(d,'hab.'+k+'.o')) dts.push('ORIAS '+mmG(d,'hab.'+k+'.o'));
     L.push('- '+lib+' : '+(MM_ETATS.find(x=>x[0]===s)||['',''])[1]+(dts.length?' ('+dts.join(' · ')+')':''));
   });
+  if(mmSemTls(d)) L.push('- Séminaire Toulouse : '+mmSemTls(d));
   L.push(''); L.push('7 - Objectifs FORMAN');
   L.push('- Niveau actuel : '+(a.statut||'—'));
   if(a.ftot) L.push('- Objectifs validés : '+a.fn+' / '+a.ftot+' (restants : '+Math.max(0,a.ftot-a.fn)+')');
@@ -7377,7 +7392,7 @@ let LIG_INV = false;       // arbre : afficher les invités (non adhérents)
 const LIG_SUBS = ['tab','parc','prog','vic','arb'];
 const LIG_SLUG = { tab:'tableau-de-bord', parc:'parcours', prog:'progression', vic:'victoires', arb:'arbre' };
 const SLUG_LIG = Object.fromEntries(Object.entries(LIG_SLUG).map(([k,v])=>[v,k]));
-const LIG_HAB = { mia:'MIA / Assurance niveau II', miobsp:'MIOBSP', alpsi:'ALPSI / CIF', orias:'ORIAS', immo:'Immobilier' };
+const LIG_HAB = { mia:'MIA / Assurance niveau II', miobsp:'MIOBSP', alpsi:'ALPSI (agent lié)', cif:'CIF', orias:'ORIAS', immo:'Immobilier' };
 
 async function chargerLig(){
   if(!SB || !SBUSER || !MOI_ID) return false;
@@ -7967,6 +7982,11 @@ function mmSaisie(t){
     MM.donnees=MM.donnees||{};
     mmS(MM.donnees, t.dataset.mm, t.value===''? '' : (t.type==='number'? mmN(t.value) : t.value));
     if(t.dataset.mm.indexOf('sous.')===0) mmSousTotaux();
+    if(t.dataset.mm==='hab.tls.du'){
+      const au=document.querySelector('#v-mm input[data-mm="hab.tls.au"]'), fin=mmJjPlus(t.value,2);
+      if(au && fin && (!au.value || au.dataset.auto==='1')){ au.value=fin; au.dataset.auto='1'; mmS(MM.donnees,'hab.tls.au',fin); }
+    }
+    if(t.dataset.mm==='hab.tls.au') delete t.dataset.auto;
     if(t.dataset.mm.indexOf('prod.')===0) mmProdMaj();
     if(/^(p|c|av)\./.test(t.dataset.mm)) mmRdvTotaux();
     mmPlanSave(); return true;

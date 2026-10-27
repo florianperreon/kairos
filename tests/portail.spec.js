@@ -197,6 +197,35 @@ test.describe('Mail Manager', () => {
     expect(erreurs).toEqual([]);
   });
 
+  // 27/10/2026 : ALPSI (agent lié) et CIF sur deux lignes ; Séminaire Toulouse = une plage de 3 jours, sans ORIAS.
+  test('mes habilitations : ALPSI et CIF séparés, séminaire Toulouse en plage de dates', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const j = jours();
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE.map(v => v === '@@SAMEDI@@' ? j.samedi : v), dm: j.dm });
+    const r = await page.evaluate(() => {
+      document.querySelectorAll('section.view').forEach(v => v.classList.remove('on'));
+      const vm = document.getElementById('v-mm'); vm.classList.add('on'); vm.hidden = false;
+      showMMSub('hab'); buildMM();
+      const box = document.getElementById('mmHab') || vm;
+      const libs = [...box.querySelectorAll('.mm-tbl tbody tr td:first-child')].map(t => t.textContent.trim());
+      const du = box.querySelector('input[data-mm="hab.tls.du"]');
+      const au = box.querySelector('input[data-mm="hab.tls.au"]');
+      const orias = box.querySelector('[data-mm^="hab.tls.o"], [data-mm="hab.tls.s"]');
+      du.value = '30/12/2026'; du.dispatchEvent(new Event('input', { bubbles: true }));
+      const txt = mmTexte(MM.donnees, 'Moi', MM_SEM);
+      return { libs, au: au.value, data: MM.donnees.hab.tls, orias: !!orias, txt };
+    });
+    expect(r.libs).toContain('ALPSI (agent lié)');
+    expect(r.libs).toContain('CIF');
+    expect(r.libs).not.toContain('ALPSI / CIF');
+    expect(r.libs).toContain('Séminaire Toulouse');
+    expect(r.orias, 'ni statut ni ORIAS pour le séminaire').toBe(false);
+    expect(r.au, 'la fin se remplit à J+2, en passant l’année').toBe('01/01/2027');
+    expect(r.data).toEqual({ du: '30/12/2026', au: '01/01/2027' });
+    expect(r.txt).toContain('Séminaire Toulouse : du 30/12/2026 au 01/01/2027');
+    expect(erreurs).toEqual([]);
+  });
+
   test('le formulaire, le mur, les objectifs et l’export texte se rendent', async ({ page }) => {
     const erreurs = await ouvrir(page);
     const j = jours();
@@ -2964,8 +2993,8 @@ test.describe('Mail Manager — alléger la saisie', () => {
     });
     expect(r.onglets, '« Mes habilitations » vient après « Mes objectifs »').toEqual(['moi', 'mur', 'obj', 'hab']);
     expect(r.vue).toBe(true);
-    expect(r.champs, '3 habilitations × 3 champs + 4 formations × 2 champs').toBe(17);
-    expect(r.compte).toBe('1 / 7 validées');
+    expect(r.champs, '4 habilitations × 3 champs + 4 formations × 2 champs + séminaire Toulouse du/au').toBe(22);
+    expect(r.compte).toBe('1 / 8 validées');
     expect(r.url).toBe('mes-habilitations');
     expect(r.lectureSansChamp, 'une semaine passée s’affiche en lecture').toBe(true);
     expect(r.lectureNote).toBe(true);
