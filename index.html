@@ -691,6 +691,7 @@ footer .heart{color:#E0245E}
 .valeurs .vl{font-family:"Sora";font-weight:700;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-right:4px}
 .valeur{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent);border-radius:20px;padding:4px 12px;font-weight:600;font-family:"Sora";font-size:13px;cursor:default}
 .valeur .ic{font-size:14px}
+.welcome .valeurs.wval{margin:12px 0 0}
 .phase.locked{opacity:.6;cursor:not-allowed;background:var(--surface-2)}
 .phase.locked .pn::before{content:"🔒 "}
 .phase.gold .pn{color:#B7791F}
@@ -4108,6 +4109,7 @@ const KAIROS_CHANGELOG = [
     ['f','Ma lignée : objectifs toujours chiffrés (« 0/13 » plutôt qu’un tiret) avec le nombre en attente de validation ; trait vert pour les personnes à jour.'],
     ['f','Accueil : chaque section peut être réduite à son titre, le choix suit d’un appareil à l’autre.'],
     ['f','Google Agenda : un seul bouton pour une séance sur plusieurs jours (événement répété chaque jour).'],
+    ['f','Accueil : « Nos valeurs » rejoignent l’encart de bienvenue.'],
     ['f','Menu : clic molette (ou Ctrl + clic) sur une entrée pour l’ouvrir dans un nouvel onglet.'],
     ['f','Accueil : encart « Victoires de la lignée » (3 derniers jours) avec 👏 ; jalons d’équipe retirés des « 7 prochains jours ».'],
     ['f','Jalons d’équipe : premier adhérent fêté, chaque palier fêté une seule fois, ajoutés au mur des victoires.'],
@@ -4330,6 +4332,12 @@ document.getElementById('lockBtn').addEventListener('click',async ()=>{
 /* ---------- Accueil ---------- */
 // Encart de bienvenue : réductible une fois lu. Le choix suit d'un appareil à l'autre (VU.acc, le plus récent l'emporte).
 const welcomeReduit = () => !!(VU.acc && VU.acc.r);
+// « Nos valeurs » : dans l'encart de bienvenue depuis le 31/10/2026 (masquées quand il est réduit)
+function valeursHtml(){
+  const v = CONTENU && CONTENU.accueil && CONTENU.accueil.valeurs;
+  if(!v || !v.length) return '';
+  return '<div class="valeurs wval"><span class="vl">Nos valeurs</span>'+v.map(x=>'<span class="valeur" title="'+esc(x.d||'')+'">'+(x.i?'<span class="ic">'+x.i+'</span>':'')+esc(x.t)+'</span>').join('')+'</div>';
+}
 function buildWelcome(){
   const wEl=document.getElementById('welcome');
   if(!wEl) return;
@@ -4338,7 +4346,7 @@ function buildWelcome(){
   const date = '<div class="wdate">'+fmtDLong(todayIso)+' <span class="wk-inline num">S'+noSemaine(todayIso)+'</span>'+(estFerie(todayIso)?' <span class="wk-tag fer">Férié · '+esc(estFerie(todayIso))+'</span>':'')+(vacancesDe(todayIso)?' <span class="wk-tag vac">'+esc(vacancesDe(todayIso).nom)+' '+zoneHtml(zoneScolaire())+'</span>':'')+'</div>';
   wEl.classList.toggle('reduit', red);
   wEl.innerHTML='<div class="wmark">👋</div><div class="wtxt"><h2>'+salut+(ACC_NOM_AFF?' '+esc(ACC_NOM_AFF):'')+(red?'':', bienvenue sur Kairos !')+'</h2>'+date
-    +(red?'':'<p>Kairos, c’est l’art de reconnaître le bon moment — et d’agir au moment juste. Bonne journée !</p>'+(CONTENU&&CONTENU.accueil&&CONTENU.accueil.intro?'<p class="wintro">'+esc(CONTENU.accueil.intro)+'</p>':''))+'</div>'
+    +(red?'':'<p>Kairos, c’est l’art de reconnaître le bon moment — et d’agir au moment juste. Bonne journée !</p>'+(CONTENU&&CONTENU.accueil&&CONTENU.accueil.intro?'<p class="wintro">'+esc(CONTENU.accueil.intro)+'</p>':'')+valeursHtml())+'</div>'
     +'<button type="button" class="wtog" data-wtog aria-expanded="'+(red?'false':'true')+'" title="'+(red?'Afficher le message de bienvenue':'Réduire le message de bienvenue')+'">'+(red?'Déplier ▾':'Réduire ▴')+'</button>';
 }
 document.addEventListener('click', e=>{
@@ -4443,7 +4451,8 @@ function buildContenu(){
   const C=CONTENU;
   if(C.accueil){
     const ve=document.getElementById('homeValeurs');
-    if(C.accueil.valeurs&&C.accueil.valeurs.length){ ve.innerHTML='<span class="vl">Nos valeurs</span>'+C.accueil.valeurs.map(v=>'<span class="valeur" title="'+esc(v.d||'')+'">'+(v.i?'<span class="ic">'+v.i+'</span>':'')+esc(v.t)+'</span>').join(''); ve.hidden=false; }
+    if(ve){ ve.hidden=true; ve.innerHTML=''; }
+    try{ buildWelcome(); }catch(e){}           // les valeurs vivent dans l'encart de bienvenue
     const pe=document.getElementById('homePrincipes');
     if(C.accueil.principes&&C.accueil.principes.length){ pe.innerHTML=C.accueil.principes.map(p=>'<div class="principe"><b>'+esc(p.t)+'</b><p>'+esc(p.d)+'</p></div>').join(''); pe.hidden=false; }
   }
