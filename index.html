@@ -3984,9 +3984,26 @@ function showTab(v){
     }catch(e){}
   }
 }
+// Menu : clic molette (ou Ctrl / Cmd + clic) = ouvrir l'onglet dans un nouvel onglet du navigateur
+// (31/10/2026). Les entrées du menu sont des boutons, pas des liens : on construit l'adresse nous-mêmes.
+const MENU_SEL = 'nav.tabs button[data-v], nav.botbar button[data-v], #plusCard button[data-v]';
+function menuNouvelOnglet(b){
+  const v = b.dataset.v;
+  const h = v===curTab ? location.hash || hashFor(v) : '#'+(TAB_SLUG[v]||v);
+  window.open(location.pathname + location.search + h, '_blank', 'noopener');
+}
+document.addEventListener('mousedown', e=>{          // pas de défilement automatique au clic molette
+  if(e.button===1 && e.target.closest && e.target.closest(MENU_SEL)) e.preventDefault();
+});
+document.addEventListener('auxclick', e=>{
+  if(e.button!==1) return;
+  const b = e.target.closest && e.target.closest(MENU_SEL); if(!b) return;
+  e.preventDefault(); menuNouvelOnglet(b);
+});
 document.addEventListener('click', e=>{
-  const b = e.target.closest && e.target.closest('nav.tabs button[data-v], nav.botbar button[data-v], #plusCard button[data-v]');
+  const b = e.target.closest && e.target.closest(MENU_SEL);
   if(!b) return;
+  if(e.ctrlKey || e.metaKey){ e.preventDefault(); menuNouvelOnglet(b); return; }
   showTab(b.dataset.v); curTab=b.dataset.v;
   fermerPlus();
   syncHash(true);
@@ -4091,6 +4108,7 @@ const KAIROS_CHANGELOG = [
     ['f','Ma lignée : objectifs toujours chiffrés (« 0/13 » plutôt qu’un tiret) avec le nombre en attente de validation ; trait vert pour les personnes à jour.'],
     ['f','Accueil : chaque section peut être réduite à son titre, le choix suit d’un appareil à l’autre.'],
     ['f','Google Agenda : un seul bouton pour une séance sur plusieurs jours (événement répété chaque jour).'],
+    ['f','Menu : clic molette (ou Ctrl + clic) sur une entrée pour l’ouvrir dans un nouvel onglet.'],
     ['f','Accueil : encart « Victoires de la lignée » (3 derniers jours) avec 👏 ; jalons d’équipe retirés des « 7 prochains jours ».'],
     ['f','Jalons d’équipe : premier adhérent fêté, chaque palier fêté une seule fois, ajoutés au mur des victoires.'],
     ['f','Admin : onglet Changelog Kairos.'],
