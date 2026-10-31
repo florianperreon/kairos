@@ -1459,6 +1459,7 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .lg-tbl th{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap;cursor:pointer}
 .lg-tbl td.num,.lg-tbl th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .lg-tbl tr.lg-rel td:first-child{box-shadow:inset 3px 0 0 var(--encours)}
+.lg-tbl tr.lg-okr td:first-child{box-shadow:inset 3px 0 0 var(--ok)}   /* à jour : trait vert (31/10/2026) */
 .lg-nw{white-space:nowrap}
 .lg-tbl td:first-child,.lg-tbl th:first-child{min-width:160px}
 @media(max-width:640px){
@@ -1468,8 +1469,6 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 .lg-mu{color:var(--ink-3)}
 .lg-br{color:var(--ink-3);margin-right:5px;font-weight:700}
 .lg-ne{display:inline-block;margin-left:4px;padding:0 6px;border-radius:99px;font-size:11px;font-weight:700;background:var(--surface-2);color:var(--ink-2)}
-.lg-tbl tr.lg-a0 td{border-top:2px solid var(--line-2)}
-.lg-tbl tr.lg-a0:first-child td{border-top:0}
 .lg-arbb{margin-left:6px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:2px 10px;font-size:12.5px;font-weight:600;cursor:pointer}
 .lg-arbb:hover{border-color:var(--accent);color:var(--accent)}
 .lg-tbl tr.lg-grp td{background:var(--surface-2);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);padding:6px 10px}
@@ -7876,7 +7875,7 @@ function ligTableau(){
                  : !r.participe ? '<span class="lg-mu">ne participe pas</span>'
                  : !r.mm ? '<span class="lg-mu">aucun</span>'
                  : (r.mmCour ? '<a href="#mail-manager?s=le-mur&v='+r.id+'" data-mmlig="'+r.id+'">✅ '+esc(mmLibC(r.mm))+'</a>' : esc(mmLibC(r.mm)));
-        return sep + '<tr class="'+(r.relance?'lg-rel':'')+(arbre?' lg-a'+Math.min(pf,4):'')+'"><td'+(pf?' style="padding-left:'+(10+pf*22)+'px"':'')+'>'
+        return sep + '<tr class="'+(r.relance?'lg-rel':'lg-okr')+(arbre?' lg-a'+Math.min(pf,4):'')+'"><td'+(pf?' style="padding-left:'+(10+pf*22)+'px"':'')+'>'
           + (pf ? '<span class="lg-br" aria-hidden="true">↳</span>' : '')
           + '<b>'+esc(r.nom)+'</b>'+(r.invite?' <span class="lg-mu">invité·e</span>':'')+(!r.connecte?' <span class="lg-mu">· pas sur Kairos</span>':'')
           + (arbre && r.nEnf ? ' <span class="lg-ne" title="filleuls affichés dessous">'+r.nEnf+' filleul'+(r.nEnf>1?'s':'')+'</span>' : '')+'<span class="lg-nv">'
