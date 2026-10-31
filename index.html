@@ -1467,6 +1467,8 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 }
 .lg-nv{display:block;font-size:11.5px;color:var(--ink-3);font-weight:500}
 .lg-mu{color:var(--ink-3)}
+.lp.lp-sub{margin-left:calc(var(--pf,1)*28px);border-left:3px solid var(--accent-soft)}
+@media (max-width:640px){ .lp.lp-sub{margin-left:calc(var(--pf,1)*12px)} }
 .lg-br{color:var(--ink-3);margin-right:5px;font-weight:700}
 .lg-ne{display:inline-block;margin-left:4px;padding:0 6px;border-radius:99px;font-size:11px;font-weight:700;background:var(--surface-2);color:var(--ink-2)}
 .lg-arbb{margin-left:6px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:2px 10px;font-size:12.5px;font-weight:600;cursor:pointer}
@@ -7996,12 +7998,12 @@ function ligParcours(){
   const co = base.filter(p=>p.connecte), sans = base.filter(p=>!p.connecte);
   if(!base.length) return h + '<p class="mm-vide" style="margin-top:14px">Pas encore d’adhérent dans ta descendance.</p></div>';
   if(co.length && !LIG.parcOk) h += '<p class="mi-bl" style="margin-top:12px">Les cases cochées n’ont pas pu être chargées : seules les validations du réseau s’affichent.</p>';
-  const l = co.map(p=>({ p, i: ligParcInfo(p) })).sort((x,y)=>
-      (!!y.i.attente - !!x.i.attente) || (!!y.i.prete - !!x.i.prete) || (x.p.niveau - y.p.niveau) || x.p.nom.localeCompare(y.p.nom,'fr'));
+  // 31/10/2026 : en arbre, comme le tableau de bord — chaque filleul sous son parrain, ordre alphabétique
+  const l = ligArbreOrdre(co.map(p=>({ id:p.membre_id, nom:p.nom, p, i: ligParcInfo(p) })));
   const aVal = l.filter(x=>x.i.attente).length;
   if(aVal) h += '<p class="mm-sub"><b>'+aVal+' point'+(aVal>1?'s':'')+' d’étape en attente de validation</b> — ils sont aussi en haut de la page d’accueil de la personne qui valide.</p>';
   h += '</div>';
-  h += l.map(({p, i})=>{
+  h += l.map(({p, i, prof, nEnf})=>{
     const prenom = String(p.nom||'').split(/\s+/)[0] || p.nom;
     const parrain = p.parrain_id===MOI_ID ? '' : ligNom(p.parrain_id);
     const st = ligStatut(p);
@@ -8010,8 +8012,9 @@ function ligParcours(){
     else if(i.prete) tags.push('<span class="lg-sig s-kairos">'+miPorteNom(i.prete.po.id)+' prêt, pas encore demandé</span>');
     if(i.revoir) tags.push('<span class="lg-sig s-kairos">'+miPorteNom(i.revoir.po.id)+' : « pas encore »</span>');
     const ouv = LIG_PARC_OUV.has(p.membre_id);
-    return '<details class="panel lp" data-lp="'+p.membre_id+'"'+(ouv?' open':'')+'><summary>'
-      + '<div class="lp-q"><b>'+esc(p.nom)+'</b>'+(st?'<span class="lg-st">'+esc(st)+'</span>':'')
+    return '<details class="panel lp'+(prof?' lp-sub':'')+'" data-lp="'+p.membre_id+'"'+(prof?' style="--pf:'+Math.min(prof,4)+'"':'')+(ouv?' open':'')+'><summary>'
+      + '<div class="lp-q">'+(prof?'<span class="lg-br" aria-hidden="true">↳</span>':'')+'<b>'+esc(p.nom)+'</b>'+(st?'<span class="lg-st">'+esc(st)+'</span>':'')
+      + (nEnf ? ' <span class="lg-ne" title="filleuls affichés dessous">'+nEnf+' filleul'+(nEnf>1?'s':'')+'</span>' : '')
       + '<span class="lg-nv">'+(p.niveau===1 ? 'filleul direct' : 'niveau '+p.niveau+(parrain?' · filleul de '+esc(parrain):''))+'</span></div>'
       + '<div class="lp-c"><span class="lp-lab">Où il en est</span>'
       + (i.cour ? '<b>Phase '+i.cour.n+' — '+esc(i.cour.t)+'</b> <span class="num">'+i.courProg.ok+'/'+i.courProg.tot+'</span>' : '—')
