@@ -3160,12 +3160,13 @@ test.describe('Mail Manager — alléger la saisie', () => {
 /* ------------------------------------------------------------------ */
 test.describe('Ajouter à Google Agenda', () => {
   // Chaque séance à venir (atelier, Parcours Découverte, réunion, formation, événement) porte un
-  // lien qui ouvre le formulaire de Google Agenda déjà rempli. Sur plusieurs jours : un événement
-  // par jour (décision du 22/09/2026), jamais une plage continue du premier au dernier jour.
+  // lien qui ouvre le formulaire de Google Agenda déjà rempli. Sur plusieurs jours : UN seul lien,
+  // événement du premier jour répété chaque jour jusqu'au dernier (recur=RRULE, décision du
+  // 31/10/2026, remplace « un lien par jour » du 22/09), jamais une plage continue.
   const lire = liens => liens.map(h => {
     const u = new URL(h); const p = u.searchParams;
     return { hote: u.host + u.pathname, action: p.get('action'), text: p.get('text'), dates: p.get('dates'),
-             ctz: p.get('ctz'), location: p.get('location'), details: p.get('details') };
+             ctz: p.get('ctz'), location: p.get('location'), details: p.get('details'), recur: p.get('recur') };
   });
   const poserSeances = page => page.evaluate(() => {
     document.getElementById('lock').style.display = 'none';
@@ -3204,32 +3205,33 @@ test.describe('Ajouter à Google Agenda', () => {
     expect(e.location).toBe('Salle Kairos, 3 rue de la Paix, 44000 Nantes');
     expect(e.details).toContain('Animé par : Diane P.');
     expect(e.details).toContain('https://exemple.invalid/a/1');
+    expect(e.recur).toBeNull();
     expect((await liensDe(page, 'un')).length).toBe(1);
     expect(erreurs).toEqual([]);
   });
 
-  test('sur plusieurs jours : un événement par jour, mêmes horaires chaque jour', async ({ page }) => {
+  test('sur plusieurs jours : un seul lien, répété chaque jour jusqu’au dernier jour', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poserSeances(page);
     const j = await page.evaluate(() => window.__g.j);
     const ev = lire(await liensDe(page, 'trois'));
-    expect(ev.map(e => e.dates)).toEqual([
-      c(j[8]) + 'T090000/' + c(j[8]) + 'T180000',
-      c(j[9]) + 'T090000/' + c(j[9]) + 'T180000',
-      c(j[10]) + 'T090000/' + c(j[10]) + 'T180000',
-    ]);
-    expect(ev.map(e => e.text)).toEqual(['Formation · 3 Jours (jour 1/3)', 'Formation · 3 Jours (jour 2/3)', 'Formation · 3 Jours (jour 3/3)']);
-    expect(ev[1].details).toContain('Jour 2 sur 3');
+    expect(ev.length).toBe(1);
+    expect(ev[0].dates).toBe(c(j[8]) + 'T090000/' + c(j[8]) + 'T180000');
+    expect(ev[0].recur).toBe('RRULE:FREQ=DAILY;INTERVAL=1;UNTIL=' + c(j[10]) + 'T235959Z');
+    expect(ev[0].text).toBe('Formation · 3 Jours');
+    expect(ev[0].details).toContain('Séance sur 3 jours');
     expect(erreurs).toEqual([]);
   });
 
-  test('une séance en cours : seuls les jours restants, en journée entière sans horaire', async ({ page }) => {
+  test('une séance en cours : la série démarre aujourd’hui, en journée entière sans horaire', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poserSeances(page);
     const j = await page.evaluate(() => window.__g.j);
     const ev = lire(await liensDe(page, 'encours'));
-    expect(ev.map(e => e.dates)).toEqual([c(j[0]) + '/' + c(j[1]), c(j[1]) + '/' + c(j[2])]);
-    expect(ev.map(e => e.text)).toEqual(['Événement · Séminaire (jour 2/3)', 'Événement · Séminaire (jour 3/3)']);
+    expect(ev.length).toBe(1);
+    expect(ev[0].dates).toBe(c(j[0]) + '/' + c(j[1]));
+    expect(ev[0].recur).toBe('RRULE:FREQ=DAILY;INTERVAL=1;UNTIL=' + c(j[1]));
+    expect(ev[0].text).toBe('Événement · Séminaire');
     expect(erreurs).toEqual([]);
   });
 
@@ -3254,25 +3256,8 @@ test.describe('Ajouter à Google Agenda', () => {
     });
     expect(n.cat).toBeGreaterThanOrEqual(1);
     expect(n.reu).toBe(1);
-    expect(n.for).toBe(3);
-    expect(n.evt).toBe(2);
-    expect(erreurs).toEqual([]);
-  });
-
-  test('sur téléphone, les liens par jour tiennent dans la largeur', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 800 });
-    const erreurs = await ouvrir(page);
-    await poserSeances(page);
-    const r = await page.evaluate(() => {
-      rafraichirListes(); showTab && showTab('for');
-      const el = document.querySelector('#forList .gcal-multi');
-      if (!el) return null;
-      const b = el.getBoundingClientRect();
-      return { droite: b.right, largeur: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth };
-    });
-    expect(r).not.toBeNull();
-    expect(r.droite).toBeLessThanOrEqual(r.largeur);
-    expect(r.scroll).toBeLessThanOrEqual(r.largeur);
+    expect(n.for).toBe(1);
+    expect(n.evt).toBe(1);
     expect(erreurs).toEqual([]);
   });
 });

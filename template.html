@@ -3251,9 +3251,10 @@ async function poserVu(tout_de_suite){
 /* ---------- Ajouter à Google Agenda ---------- */
 // Chaque séance à venir porte un lien « Google Agenda » : le formulaire de création de Google
 // s'ouvre déjà rempli (titre, horaires, lieu, lien de la fiche et de la visio). Rien ne passe par
-// Supabase ni par un compte : c'est un simple lien. Une séance sur PLUSIEURS JOURS donne UN
-// ÉVÉNEMENT PAR JOUR (un lien par jour, mêmes horaires chaque jour, « jour 2/3 » dans le titre),
-// jamais une plage continue du premier au dernier jour. Les jours déjà passés ne sont pas proposés.
+// Supabase ni par un compte : c'est un simple lien. Une séance sur PLUSIEURS JOURS garde UN SEUL
+// bouton : l'événement du premier jour (mêmes horaires) est créé avec une RÉCURRENCE quotidienne
+// « tous les jours jusqu'au <dernier jour> » (paramètre recur=RRULE), jamais une plage continue.
+// Si les premiers jours sont déjà passés, la série démarre au prochain jour à venir.
 const GCAL_TYPE = { a:'Atelier', r:'Réunion d’équipe', f:'Formation', e:'Événement' };
 function gcalHeures(hor){
   const m=String(hor||'').match(/(\d{1,2})\s*[:hH]\s*(\d{2})(?:\s*(?:-|–|à|a)\s*(\d{1,2})\s*[:hH]\s*(\d{2}))?/);
@@ -3278,32 +3279,40 @@ function gcalLieu(a){
   if(/^https?:\/\/[^\s]+$/i.test(lk)) return lk;
   return a.lieu||'';
 }
-function gcalUrl(a, jour, n, tot){
+function gcalUrl(a, jour, tot, dernier){
   const h=gcalHeures(a.hor), j=jour.replace(/-/g,'');
   // heure de fin avant l'heure de début (séance qui passe minuit) : la fin tombe le lendemain
   const dates = h ? j+'T'+h[0]+'00/'+(h[1]>h[0]?j:ajouterJours(jour,1).replace(/-/g,''))+'T'+h[1]+'00'
                   : j+'/'+ajouterJours(jour,1).replace(/-/g,'');         // sans horaire : journée entière
   const lk=String(a.link||'').trim();
   const det=[];
-  if(tot>1) det.push('Jour '+n+' sur '+tot+' — du '+fmtD(a.start)+' au '+fmtD(a.end)+(a.hor?' ('+a.hor+' chaque jour)':''));
+  if(tot>1) det.push('Séance sur '+tot+' jours — du '+fmtD(a.start)+' au '+fmtD(a.end)+(a.hor?' ('+a.hor+' chaque jour)':''));
   if(a.pilotes) det.push('Animé par : '+a.pilotes);
   if(/^https?:\/\/[^\s]+$/i.test(lk)) det.push('Visio : '+lk+(a.pw?' (mot de passe : '+a.pw+')':''));
   if(a.url&&a.url!=='#') det.push('Fiche de la séance : '+a.url);
   const q=new URLSearchParams({ action:'TEMPLATE',
-    text:(GCAL_TYPE[a.k]&&a.k!=='a'?GCAL_TYPE[a.k]+' · ':'')+a.title+(tot>1?' (jour '+n+'/'+tot+')':''),
+    text:(GCAL_TYPE[a.k]&&a.k!=='a'?GCAL_TYPE[a.k]+' · ':'')+a.title,
     dates, ctz:'Europe/Paris', details:det.join('\n'), location:gcalLieu(a) });
+  // plusieurs jours restants : « se répète tous les jours jusqu'au <dernier jour> »
+  // (UNTIL en UTC à 23:59:59 pour une séance horaire, en date simple pour une journée entière)
+  if(dernier && dernier>jour){
+    const u=dernier.replace(/-/g,'');
+    q.set('recur','RRULE:FREQ=DAILY;INTERVAL=1;UNTIL='+(h?u+'T235959Z':u));
+  }
   return 'https://calendar.google.com/calendar/render?'+q.toString();
 }
 function gcalHtml(a){
   if(!a||!a.start||isPast(a)) return '';
   const tous=gcalJours(a), tot=tous.length;
   if(!tot) return '';
-  if(tot===1) return '<a class="xtra act gcal" href="'+esc(gcalUrl(a,tous[0],1,1))+'" target="_blank" rel="noopener" title="Ajouter cette séance à mon Google Agenda">Google Agenda ↗</a>';
-  const liens=tous.map((iso,i)=>({iso,n:i+1})).filter(x=>x.iso>=todayIso)
-    .map(x=>'<a class="gcal-j" href="'+esc(gcalUrl(a,x.iso,x.n,tot))+'" target="_blank" rel="noopener" title="Ajouter le jour '+x.n+' sur '+tot+' ('+esc(fmtDLong(x.iso))+') à mon Google Agenda">'
-      +JOURS[new Date(x.iso+'T00:00:00').getDay()].slice(0,3)+'. '+(+x.iso.slice(8,10))+'</a>');
-  if(!liens.length) return '';
-  return '<span class="xtra gcal gcal-multi" title="Un événement par jour">Google Agenda : '+liens.join(' ')+'</span>';
+  if(tot===1) return '<a class="xtra act gcal" href="'+esc(gcalUrl(a,tous[0],1))+'" target="_blank" rel="noopener" title="Ajouter cette séance à mon Google Agenda">Google Agenda ↗</a>';
+  const restants=tous.filter(iso=>iso>=todayIso);
+  if(!restants.length) return '';
+  const dep=restants[0], der=restants[restants.length-1];
+  const tip=restants.length>1
+    ? 'Ajouter à mon Google Agenda : un événement répété chaque jour du '+fmtDLong(dep)+' au '+fmtDLong(der)
+    : 'Ajouter le dernier jour ('+fmtDLong(dep)+') à mon Google Agenda';
+  return '<a class="xtra act gcal" href="'+esc(gcalUrl(a,dep,tot,der))+'" target="_blank" rel="noopener" title="'+esc(tip)+'">Google Agenda ↗</a>';
 }
 
 function evExtras(a){
