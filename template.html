@@ -793,6 +793,11 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 .nc details{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:8px 0;background:var(--surface)}.nc summary{cursor:pointer;font-weight:600}.nc details.h1>summary{font-size:18px}.nc details.h2>summary{font-size:16.5px}.nc .dbody{padding-top:6px}
 .nc .tpl{position:relative;margin:10px 0}.nc .tpl pre{white-space:pre-wrap;word-break:break-word;background:var(--ground);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;margin:0}
 .nc .tpl .copy{position:absolute;right:8px;top:8px;font-size:12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:6px;padding:3px 8px;cursor:pointer}
+/* Le bouton Copier ne doit jamais recouvrir le texte (31/10/2026) : une marge à droite lui est réservée
+   sur ordinateur ; sur téléphone, il passe au-dessus du texte (bandeau en haut du modèle). */
+.nc .tpl pre{padding-right:92px}
+.nc .tpl .copy{z-index:1;white-space:nowrap}
+@media (max-width:640px){ .nc .tpl pre{padding-right:14px;padding-top:42px} }
 .nc figure{margin:10px 0}.nc img{max-width:100%;border-radius:8px;border:1px solid var(--line)}
 .nc .cols{display:flex;gap:20px;flex-wrap:wrap}.nc .col{flex:1;min-width:240px}
 .nc .tbl{overflow-x:auto;margin:10px 0}.nc table{width:auto;font-size:13.5px}.nc td,.nc th{border:1px solid var(--line);padding:6px 8px;vertical-align:top;text-align:left}.nc th{font-size:12.5px;text-transform:none;letter-spacing:0}
@@ -4104,6 +4109,7 @@ const KAIROS_CHANGELOG = [
     ['f','Ma lignée : objectifs toujours chiffrés (« 0/13 » plutôt qu’un tiret) avec le nombre en attente de validation ; trait vert pour les personnes à jour.'],
     ['f','Accueil : chaque section peut être réduite à son titre, le choix suit d’un appareil à l’autre.'],
     ['f','Google Agenda : un seul bouton pour une séance sur plusieurs jours (événement répété chaque jour).'],
+    ['b','Fiches pratiques : le bouton « Copier » ne recouvre plus le texte des modèles (ordinateur et téléphone).'],
     ['f','Fiches pratiques (Clefs de la com N2) : 11 nouvelles fiches — présenter une solution selon le profil, mails et accroches par profil, effet miroir, couples, concurrence Linxea, méthode de Cédric Payraudeau, PER, SCPI, FCPI, GFI, campagnes clients.'],
     ['f','Fiches mises à jour : R1 (plus de documents demandés en amont, recueil selon Cédric Payraudeau), R2, Girardin, profils HBDI (niveau 2), objections (+9), assurance vie, relances.'],
     ['f','Accueil : « Nos valeurs » rejoignent l’encart de bienvenue.'],
@@ -5174,7 +5180,7 @@ document.addEventListener('click',e=>{
   if(b){ const pre=b.parentElement.querySelector('pre'); const txt=pre.innerText;
     const ok=()=>{ b.textContent='Copié ✓'; setTimeout(()=>b.textContent='Copier',1500); };
     const fallback=()=>{ try{ const ta=document.createElement('textarea'); ta.value=txt; ta.setAttribute('readonly',''); ta.style.cssText='position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,txt.length); const r=document.execCommand('copy'); document.body.removeChild(ta); if(r) ok(); else throw 0; }
-      catch(_){ const sel=window.getSelection(); const range=document.createRange(); range.selectNodeContents(pre); sel.removeAllRanges(); sel.addRange(range); b.textContent='Texte sélectionné — Ctrl+C'; setTimeout(()=>b.textContent='Copier',2500); } };
+      catch(_){ const sel=window.getSelection(); const range=document.createRange(); range.selectNodeContents(pre); sel.removeAllRanges(); sel.addRange(range); b.textContent='Ctrl+C'; b.title='Texte sélectionné : Ctrl+C pour copier'; setTimeout(()=>b.textContent='Copier',2500); } };
     if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(ok,fallback); } else fallback();
   }
 });
