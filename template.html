@@ -198,6 +198,17 @@ section.view.on{display:block}
 .welcome.reduit .wtog{align-self:center}
 .welcome:not(.reduit) .wtog{position:absolute;top:12px;right:12px}
 .welcome:not(.reduit) .wtxt{padding-right:96px}
+/* Sections de l'accueil réductibles comme l'encart de bienvenue (31/10/2026) : le bouton est posé
+   par hpPoser() ; une section réduite ne garde que sa ligne de titre (.hp-t). */
+#v-home .panel.hp-pli{position:relative}
+#v-home .panel.hp-pli>.hp-t{padding-right:96px}
+.hp-tog{position:absolute;top:16px;right:16px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:3px 11px;font-size:12px;font-weight:600;color:var(--ink-2);cursor:pointer;white-space:nowrap;z-index:1}
+.hp-tog:hover{color:var(--ink);border-color:var(--ink-3)}
+#v-home .panel.hp-plie{padding-top:12px;padding-bottom:12px}
+#v-home .panel.hp-plie>:not(.hp-t):not(.hp-tog){display:none!important}
+#v-home .panel.hp-plie>.hp-t,#v-home .panel.hp-plie>.hp-t h2,#v-home .panel.hp-plie>h2.hp-t{margin-bottom:0}
+#v-home .panel.hp-plie>.hp-t{font-size:16px}
+#v-home .panel.hp-plie .hp-tog{top:50%;transform:translateY(-50%)}
 @media(max-width:640px){
   /* Téléphone : la main passe au-dessus du texte, qui reprend toute la largeur */
   .welcome{align-items:flex-start;gap:6px}
@@ -1990,7 +2001,7 @@ a.mml-r:hover{border-color:var(--accent)}
       <div class="panel" id="homeWeekPanel"><h2>Les 7 prochains jours <span class="badge-lig">Lignée</span> <span class="wk-inline num" id="homeWeekS"></span></h2><div class="wjal" id="homeJalons" hidden></div><div class="week" id="homeWeek"></div></div>
       <div class="principes" id="homePrincipes" hidden></div>
       <div class="panel" id="homeParcoursPanel" hidden><h2>Où en es-tu ? <span class="badge-lig">Ton parcours en 4 phases</span></h2><div class="phases" id="homePhases"></div><div class="etapes" id="homeEtapes"></div></div>
-      <div class="panel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
+      <div class="panel" id="homeLigneePanel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
       <div class="panel" id="homeRituelsPanel" hidden><h2>Les rituels de la lignée</h2><div class="rituels" id="homeRituels"></div></div>
       <div class="panel" id="homeFaqPanel" hidden><h2>Questions fréquentes <span class="badge-lig" id="faqCount"></span></h2><div class="faq-tools"><input type="search" id="faqQ" placeholder="Rechercher une question…"><span id="faqThemes"></span></div><div class="faq" id="faqList"></div></div>
       <div class="panel" id="homeResPanel" hidden><h2>Ressources utiles</h2><div class="res" id="homeRes"></div></div>
@@ -4185,6 +4196,46 @@ document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('[data-wtog]'); if(!b) return;
   VU.acc = { r: !welcomeReduit(), t: new Date().toISOString() };
   saveVu(); buildWelcome();
+});
+// Chaque section de l'accueil (sauf la bienvenue, qui a son propre bouton) peut être réduite à sa
+// ligne de titre. Le choix suit d'un appareil à l'autre (VU.hp = { s:{id:true}, t }, le plus récent
+// l'emporte). Les sections sont redessinées par leurs propres fonctions (innerHTML) : un observateur
+// repose le bouton dès qu'il disparaît, sans toucher aux fonctions de construction.
+const hpReduite = id => !!(VU.hp && VU.hp.s && VU.hp.s[id]);
+function hpTitre(p){
+  for(const c of p.children){
+    if(c.classList.contains('hp-tog')) continue;
+    if(c.tagName==='H2' || c.querySelector(':scope > h2')) return c;
+  }
+  return null;
+}
+function hpPoser(){
+  const home=document.getElementById('v-home'); if(!home) return;
+  home.querySelectorAll(':scope > .panel[id]:not(#welcome)').forEach(p=>{
+    const t=hpTitre(p);
+    let b=p.querySelector(':scope > .hp-tog');
+    if(!t){ if(b) b.remove(); p.classList.remove('hp-pli','hp-plie'); return; }
+    if(!t.classList.contains('hp-t')){ p.querySelectorAll(':scope > .hp-t').forEach(x=>x.classList.remove('hp-t')); t.classList.add('hp-t'); }
+    const red=hpReduite(p.id);
+    if(!b){ b=document.createElement('button'); b.type='button'; b.className='hp-tog'; b.dataset.hptog=p.id; p.appendChild(b); }
+    const lib=red?'Déplier ▾':'Réduire ▴';
+    if(b.textContent!==lib){ b.textContent=lib; b.title=red?'Afficher cette section':'Réduire cette section'; b.setAttribute('aria-expanded', red?'false':'true'); }
+    if(!p.classList.contains('hp-pli')) p.classList.add('hp-pli');
+    if(p.classList.contains('hp-plie')!==red) p.classList.toggle('hp-plie', red);
+  });
+}
+(function(){
+  const home=document.getElementById('v-home'); if(!home || !window.MutationObserver) return;
+  let prevu=false;
+  new MutationObserver(()=>{ if(prevu) return; prevu=true; queueMicrotask(()=>{ prevu=false; hpPoser(); }); })
+    .observe(home, { childList:true, subtree:true });   // pas d'appel direct ici : VU est déclaré plus bas
+})();
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-hptog]'); if(!b) return;
+  const id=b.dataset.hptog, s=Object.assign({}, (VU.hp&&VU.hp.s)||{});
+  if(s[id]) delete s[id]; else s[id]=true;
+  VU.hp = { s, t: new Date().toISOString() };
+  saveVu(); hpPoser();
 });
 function buildHome(){
   ACC_NOM_AFF = prenomUser();
@@ -8601,6 +8652,7 @@ async function syncPull(){
     if(!Array.isArray(VU.fiches) || set.size !== VU.fiches.length){ VU.fiches = [...set]; chg=true; }
   }
   if(v.acc && v.acc.t && v.acc.t > ((VU.acc||{}).t||'')){ VU.acc = v.acc; chg=true; try{ buildWelcome(); }catch(e){} }
+  if(v.hp && v.hp.t && v.hp.t > ((VU.hp||{}).t||'')){ VU.hp = v.hp; chg=true; try{ hpPoser(); }catch(e){} }
   // Zone scolaire : le choix fait sur un autre appareil est repris tant qu'aucun choix n'a été fait ici
   if(/^[ABC]$/.test(d.zone||'') && !ZONE_CHOISIE){ ZONE_CHOISIE=d.zone; try{ localStorage.setItem('kairos_zone', d.zone); }catch(e){} try{ calRafraichir(); }catch(e){} }
   if(chg){
