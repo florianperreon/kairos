@@ -1467,6 +1467,16 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 }
 .lg-nv{display:block;font-size:11.5px;color:var(--ink-3);font-weight:500}
 .lg-mu{color:var(--ink-3)}
+/* Admin → Changelog Kairos (31/10/2026) */
+.cl-j{margin-top:18px}
+.cl-j h3{font-size:13px;font-weight:800;color:var(--ink-2);letter-spacing:.02em;margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.cl-l{list-style:none;margin:0;padding:0}
+.cl-l li{display:flex;gap:10px;align-items:baseline;padding:4px 0;font-size:14px;line-height:1.45}
+.cl-t{flex:none;width:92px;text-align:center;padding:1px 0;border-radius:5px;font-size:11px;font-weight:800;letter-spacing:.03em}
+.cl-t.f{background:var(--accent-soft);color:var(--accent)}
+.cl-t.b{background:#E3F6EC;color:#0E7A4F}
+:root[data-theme="dark"] .cl-t.b{background:rgba(61,201,138,.15);color:var(--ok)}
+@media (max-width:640px){ .cl-l li{flex-direction:column;gap:2px} .cl-t{width:auto;padding:1px 7px} }
 .lp.lp-sub{margin-left:calc(var(--pf,1)*28px);border-left:3px solid var(--accent-soft)}
 @media (max-width:640px){ .lp.lp-sub{margin-left:calc(var(--pf,1)*12px)} }
 .lg-br{color:var(--ink-3);margin-right:5px;font-weight:700}
@@ -2223,7 +2233,17 @@ a.mml-r:hover{border-color:var(--accent)}
         <button data-s="stats">Statistiques</button>
         <button data-s="nouv">Nouveautés</button>
         <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
+        <button data-s="log">Changelog Kairos</button>
       </nav>
+
+      <div class="subview" id="sv-log">
+        <div class="panel cl-panel">
+          <h2>Changelog Kairos</h2>
+          <p class="mbr-sub">Les évolutions du portail en bref, les plus récentes en haut.</p>
+          <div class="mm-filtre" id="clFiltre"><button type="button" data-clf="" class="on">Tout</button><button type="button" data-clf="f">Fonctionnalités</button><button type="button" data-clf="b">Corrections</button></div>
+          <div id="clListe"></div>
+        </div>
+      </div>
 
       <div class="subview" id="sv-act">
         <div class="panel">
@@ -4036,8 +4056,8 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','act','dem','cnt','stats','nouv','jrn'];
-const ADMIN_SLUG={mbr:'membres',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal'};
+const ADMIN_SUBS=['mbr','act','dem','cnt','stats','nouv','jrn','log'];
+const ADMIN_SLUG={mbr:'membres',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',log:'changelog'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 function showAdminSub(s){
@@ -4046,7 +4066,96 @@ function showAdminSub(s){
   document.querySelectorAll('#adminSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
   if(s==='act'){ try{ if(ACT) buildActivite(); else chargerActivite(); }catch(e){ console.error(e); } }
+  if(s==='log'){ try{ buildChangelog(); }catch(e){ console.error(e); } }
 }
+
+/* ---------- Admin → Changelog Kairos (31/10/2026) ----------
+   Une ligne courte par évolution : f = fonctionnalité, b = correction de bug. À COMPLÉTER À CHAQUE
+   ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
+   d'après les notes et les commentaires datés du code. */
+const KAIROS_CHANGELOG = [
+  ['2026-10-31', [
+    ['f','Ma lignée : tableau de bord et parcours des filleuls en arbre (chaque filleul sous son parrain, ordre alphabétique) ; tri par colonne en option.'],
+    ['f','Ma lignée : objectifs toujours chiffrés (« 0/13 » plutôt qu’un tiret) avec le nombre en attente de validation ; trait vert pour les personnes à jour.'],
+    ['f','Accueil : chaque section peut être réduite à son titre, le choix suit d’un appareil à l’autre.'],
+    ['f','Google Agenda : un seul bouton pour une séance sur plusieurs jours (événement répété chaque jour).'],
+    ['f','Admin : onglet Changelog Kairos.'],
+    ['b','Adhésion récente d’un membre déjà sur Kairos reprise dès le lendemain (et non au passage mensuel).'],
+    ['b','Admin → Membres : « hier / il y a X jours » compté en jours du calendrier.'],
+  ]],
+  ['2026-10-27', [
+    ['f','Mon profil.'],
+    ['f','Actions de la semaine : objectifs de mes filleuls en attente de ma validation.'],
+    ['f','Formation continue demandée seulement pour une habilitation obtenue (FC Immobilier rattachée à l’IOBSP).'],
+  ]],
+  ['2026-10-21', [
+    ['f','Éditeur de contenu : réglages des fiches, blocs visuels, historique, brouillon automatique, alerte de conflit.'],
+    ['f','Fiches pratiques débloquées au fil du parcours, nouvelles fiches annoncées dans les actions.'],
+    ['f','Admin → Activité : usage par personne (fiches, onglets, simulateurs), export CSV.'],
+    ['f','Ma lignée : les invités déjà sur Kairos sont suivis ; les validations automatiques disent ce qui les a déclenchées.'],
+    ['b','Progressions individuelles de nouveau mises à jour (bloquées depuis le 24/09 par une adresse en double).'],
+  ]],
+  ['2026-10-20', [
+    ['f','Onglet Fiches pratiques : rangées par thème, recherche, favoris.'],
+  ]],
+  ['2026-10-18', [
+    ['f','Admin → Nouveautés : séances ajoutées ou modifiées (retiré de l’accueil).'],
+    ['f','Mission 2.9 validée automatiquement (Développement Équipe niveau 1) ; lien Itinéraire fiabilisé.'],
+    ['b','Séances manquantes sur l’historique long : plafond de pages relevé.'],
+  ]],
+  ['2026-09-28', [
+    ['f','Parcours en missions : phases, actions, points d’étape validés par le parrain.'],
+    ['f','Veille CGP en format brief, sans redites ; nouvelle carte d’alerte sur l’accueil.'],
+    ['b','Invités en DM comptés même quand le réseau ne les inscrit pas sur la séance ; pagination instable de l’API contournée.'],
+  ]],
+  ['2026-09-27', [
+    ['f','Mes alertes : lieu, type, mots-clés, pilotes — sur les séances publiées après la règle.'],
+    ['f','Ma lignée : tableau de bord, progression, victoires, arbre, parcours des filleuls.'],
+    ['f','Objectifs FORMAN détaillés : validés, en attente, à faire.'],
+    ['b','Formations en double dans le mail manager.'],
+  ]],
+  ['2026-09-24', [
+    ['f','Plusieurs adresses e-mail pour une même fiche.'],
+    ['f','Simulateurs : crédit immobilier revu, comparateur de prêts, export Excel.'],
+  ]],
+  ['2026-09-22', [
+    ['f','Simulateurs : options frais / rachat / second contrat, SCPI avec dividendes réinvestis, Girardin industriel.'],
+    ['f','Ajout d’une séance à Google Agenda en un clic.'],
+  ]],
+  ['2026-09-17', [
+    ['f','Mes sessions (inscriptions, enregistrements) ; semaines, vacances scolaires et jours fériés dans le calendrier.'],
+  ]],
+  ['2026-09-15', [
+    ['f','Ressources : simulateurs et courriers prêts à l’emploi (impression, PDF, Word).'],
+  ]],
+  ['2026-09-14', [
+    ['f','Mail manager hebdomadaire et « Le mur » ; journal des exécutions.'],
+    ['b','Accès à l’annuaire du réseau rétabli (identification désormais obligatoire).'],
+  ]],
+  ['2026-09-13', [
+    ['f','Comptes personnels et données en base ; veille CGP ; adresse partageable pour chaque onglet et filtre.'],
+    ['f','Contenu de la lignée : parcours, FAQ, rituels, valeurs, ressources.'],
+  ]],
+  ['2026-09-12', [
+    ['f','Lancement : ateliers, réunions, formations, événements, annuaire, lignée, calendrier, statistiques ; mise à jour quotidienne.'],
+  ]],
+];
+let CL_FILTRE = '';
+function buildChangelog(){
+  const el = document.getElementById('clListe'); if(!el) return;
+  document.querySelectorAll('#clFiltre [data-clf]').forEach(b=>b.classList.toggle('on', b.dataset.clf===CL_FILTRE));
+  const LIB = { f:'Nouveauté', b:'Correction' };
+  el.innerHTML = KAIROS_CHANGELOG.map(([d, items])=>{
+    const l = items.filter(([t])=>!CL_FILTRE || t===CL_FILTRE);
+    if(!l.length) return '';
+    return '<div class="cl-j"><h3>'+esc(fmtDLong(d))+'</h3><ul class="cl-l">'
+      + l.map(([t, x])=>'<li><span class="cl-t '+t+'">'+LIB[t]+'</span><span>'+esc(x)+'</span></li>').join('') + '</ul></div>';
+  }).join('') || '<p class="mbr-sub">Rien dans cette catégorie.</p>';
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-clf]'); if(!b) return;
+  CL_FILTRE = b.dataset.clf; buildChangelog();
+});
 document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('click',()=>{
   showAdminSub(b.dataset.s);
   syncHash(true);
