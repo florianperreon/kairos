@@ -8671,10 +8671,13 @@ async function initSync(){
 function fmtQuand(iso){
   if(!iso) return 'jamais';
   const d=new Date(iso), now=new Date();
-  const j=Math.floor((now - d)/86400000);
+  // écart en JOURS DU CALENDRIER (minuit à minuit), pas en tranches de 24 h : le 29 à 22h25 vu
+  // le 31 à 22h10 est « il y a 2 jours », pas « hier » (corrigé le 31/10/2026)
+  const minuit=x=>new Date(x.getFullYear(), x.getMonth(), x.getDate());
+  const j=Math.round((minuit(now) - minuit(d))/86400000);
   const h=String(d.getHours()).padStart(2,'0')+'h'+String(d.getMinutes()).padStart(2,'0');
-  if(j<=0 && d.getDate()===now.getDate()) return "aujourd'hui à "+h;
-  if(j<=1) return 'hier à '+h;
+  if(j<=0) return "aujourd'hui à "+h;
+  if(j===1) return 'hier à '+h;
   if(j<7) return 'il y a '+j+' jours';
   return fmtD(isoJour(d));
 }
