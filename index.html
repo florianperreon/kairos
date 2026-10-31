@@ -1541,6 +1541,9 @@ td>.lg-st:first-child{margin-left:0}
 .lg-bv:hover{border-color:var(--accent)}
 .lg-bv.on{background:var(--gold-soft);border-color:var(--gold);color:var(--gold-ink)}
 .lg-bv-ro{cursor:default}
+.lg-v.jal{background:var(--gold-soft)}
+.lg-v.jal .lg-vt{color:var(--gold-ink);font-weight:600}
+#homeVict .lg-vl{display:flex;flex-direction:column;gap:6px}
 .lg-haut{font-size:13px;color:var(--ink-2);margin:0 0 10px}
 .lg-chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2);margin-bottom:8px;cursor:pointer}
 .lg-arbre,.lg-arbre ul{list-style:none;margin:0;padding:0}
@@ -2020,10 +2023,11 @@ a.mml-r:hover{border-color:var(--accent)}
         <p class="acts-ok" id="homeActionsOk" hidden>Well done ; tu es à jour !</p>
       </div>
       <div class="panel" id="homeMMLig" hidden></div>
+      <div class="panel" id="homeVict" hidden></div>
       <div class="valeurs" id="homeValeurs" hidden></div>
       <div class="bdstrip" id="homeBd" hidden></div>
       <div class="bdstrip surv-strip" id="homeSurv" hidden></div>
-      <div class="panel" id="homeWeekPanel"><h2>Les 7 prochains jours <span class="badge-lig">Lignée</span> <span class="wk-inline num" id="homeWeekS"></span></h2><div class="wjal" id="homeJalons" hidden></div><div class="week" id="homeWeek"></div></div>
+      <div class="panel" id="homeWeekPanel"><h2>Les 7 prochains jours <span class="badge-lig">Lignée</span> <span class="wk-inline num" id="homeWeekS"></span></h2><div class="week" id="homeWeek"></div></div>
       <div class="principes" id="homePrincipes" hidden></div>
       <div class="panel" id="homeParcoursPanel" hidden><h2>Où en es-tu ? <span class="badge-lig">Ton parcours en 4 phases</span></h2><div class="phases" id="homePhases"></div><div class="etapes" id="homeEtapes"></div></div>
       <div class="panel" id="homeLigneePanel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
@@ -4087,6 +4091,8 @@ const KAIROS_CHANGELOG = [
     ['f','Ma lignée : objectifs toujours chiffrés (« 0/13 » plutôt qu’un tiret) avec le nombre en attente de validation ; trait vert pour les personnes à jour.'],
     ['f','Accueil : chaque section peut être réduite à son titre, le choix suit d’un appareil à l’autre.'],
     ['f','Google Agenda : un seul bouton pour une séance sur plusieurs jours (événement répété chaque jour).'],
+    ['f','Accueil : encart « Victoires de la lignée » (3 derniers jours) avec 👏 ; jalons d’équipe retirés des « 7 prochains jours ».'],
+    ['f','Jalons d’équipe : premier adhérent fêté, chaque palier fêté une seule fois, ajoutés au mur des victoires.'],
     ['f','Admin : onglet Changelog Kairos.'],
     ['f','Accueil → Mail manager de ma lignée : en arbre, niveau 1 par défaut, branches dépliables (choix gardé), tout déplier / replier, bilan de chaque branche.'],
     ['b','Adhésion récente d’un membre déjà sur Kairos reprise dès le lendemain (et non au passage mensuel).'],
@@ -4365,6 +4371,7 @@ document.addEventListener('click', e=>{
 function buildHome(){
   ACC_NOM_AFF = prenomUser();
   buildWelcome();
+  try{ buildVictAccueil(); }catch(e){}
   const in7 = new Date(TODAY); in7.setDate(in7.getDate()+7);
   const iso7 = isoJour(in7);
   const upcoming = A.filter(a=>a.start>=todayIso);
@@ -5916,7 +5923,7 @@ document.getElementById('modalDl').addEventListener('click',async ()=>{
 const ritOn=(r,d)=>{ if(!r||!r.dow) return false; const dow=d.getDay()===0?7:d.getDay(); if(dow!==r.dow) return false; if(r.nth){ const n=Math.ceil(d.getDate()/7); if(n!==r.nth) return false; } return true; };
 const hhmm=s=>(s||'').replace(/^0/,'').replace(':','h').replace(/h00$/,'h');
 function buildWeek(){
-  const el=document.getElementById('homeWeek'), jalEl=document.getElementById('homeJalons'); if(!el) return;
+  const el=document.getElementById('homeWeek'); if(!el) return;
   const pad=n=>String(n).padStart(2,'0');
   const isoOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
   const mmdd=d=>pad(d.getMonth()+1)+'-'+pad(d.getDate());
@@ -5947,10 +5954,6 @@ function buildWeek(){
   if(sEl){ const s1=noSemaine(todayIso), s2=noSemaine(ajouterJours(todayIso,7)); sEl.textContent='S'+s1+(s2!==s1?' → S'+s2:''); }
   el.innerHTML = days.length ? days.map(x=>'<div class="wday'+(x.i===0?' today':'')+'"><div class="wd">'+(x.i===0?'Aujourd’hui':x.i===1?'Demain':JOURS[x.d.getDay()].replace(/^./,c=>c.toUpperCase()))+'<small class="num">'+x.d.getDate()+' '+MOIS[x.d.getMonth()]+'</small></div><div class="witems">'+x.items.map(it=>it.h).join('')+'</div></div>').join('')
     : '<p style="color:var(--ink-2);margin:0">Rien de prévu dans la lignée sur les 7 prochains jours.</p>';
-  // Jalons d'équipe (paliers franchis récemment, calculés par la mise à jour quotidienne)
-  const jal=[]; M.forEach(m=>{ const x=EXTRA[m.id]; if(!x||!x.jalons||!LIGNEE_IDS.has(m.id)) return; x.jalons.forEach(j=>jal.push({m,d:j[0],n:j[1]})); });
-  jal.sort((p,q)=>q.d.localeCompare(p.d));
-  if(jalEl){ jalEl.hidden=!jal.length; jalEl.innerHTML=jal.slice(0,6).map(j=>'<div class="wit jal"><span class="ic">🏆</span><span class="wt">L’équipe de <span class="lig-open" data-id="'+j.m.id+'" style="text-decoration:underline;cursor:pointer">'+esc(j.m.name)+'</span> passe à '+j.n+' adhérents !'+(j.d===todayIso?' <span class="m">Aujourd’hui</span>':' <span class="m">le '+fmtD(j.d)+'</span>')+'</span></div>').join(''); }
 }
 
 /* ---------- Recherche globale (Ctrl K) ---------- */
@@ -7880,7 +7883,7 @@ async function chargerLig(){
             vict: v.error ? [] : (v.data||[]), bravos, parc, parcOk: !!(pc && !pc.error) };
   }catch(e){ return false; }
   document.querySelectorAll('[data-v="lig"]').forEach(x=>x.hidden=false);
-  if(window.__booted){ try{ buildLig(); }catch(e){} }
+  if(window.__booted){ try{ buildLig(); }catch(e){} try{ buildVictAccueil(); }catch(e){} }
   try{ routerQuandPret(); }catch(e){}
   return true;
 }
@@ -8297,21 +8300,64 @@ function ligProgression(){
 }
 
 /* --- victoires --- */
+// Jalons d'équipe (31/10/2026, règles Florian) : calculés chaque nuit par update.py (extra[id].jalons =
+// [[jour, taille]], 30 jours d'historique) — premier adhérent dans l'équipe, puis paliers 3, 5, 10, 15…,
+// chacun fêté une seule fois. Toute la lignée les voit. Ils rejoignent le mur des victoires (avec 👏)
+// et l'encart « Victoires de la lignée » de l'accueil, qui ne garde que les 3 derniers jours.
+function ligJalons(){
+  const out = [];
+  (M||[]).forEach(m=>{ const x = EXTRA[m.id]; if(!x || !x.jalons || !LIGNEE_IDS.has(m.id)) return;
+    x.jalons.forEach(j=>{ if(j && j[0] && j[0] <= todayIso) out.push({ membre_id:m.id, nom:m.name, cle:'equipe_'+j[1], jour:j[0], jal:true }); }); });
+  return out;
+}
+const VICT_ACC_JOURS = 3;
+function buildVictAccueil(){
+  const el = document.getElementById('homeVict'); if(!el) return;
+  const depuis = vAddDays(todayIso, -(VICT_ACC_JOURS-1));
+  const vict = (LIG && LIG.vict) ? LIG.vict.filter(v=>LIGNEE_IDS.has(v.membre_id) || v.membre_id===MOI_ID) : [];
+  const l = ligJalons().concat(vict).filter(v=>v.jour >= depuis && v.jour <= todayIso)
+    .sort((a,b)=>b.jour.localeCompare(a.jour) || (b.jal?1:0)-(a.jal?1:0) || a.nom.localeCompare(b.nom,'fr'));
+  el.hidden = !l.length;
+  if(!l.length){ el.innerHTML=''; return; }
+  const MAX = 8;
+  el.innerHTML = '<h2>Victoires de la lignée <span class="badge-lig">'+VICT_ACC_JOURS+' derniers jours</span></h2>'
+    + '<div class="lg-vl">' + l.slice(0, MAX).map(ligVictLigne).join('') + '</div>'
+    + (LIG ? '<a class="mml-tout" href="#ma-lignee?s=victoires">'+(l.length>MAX ? 'Voir les '+(l.length-MAX)+' autres sur le mur des victoires →' : 'Voir le mur des victoires →')+'</a>' : '');
+}
+// Une victoire (ou un jalon d'équipe), avec son 👏 — partagé par le mur et l'accueil
+function ligVictLigne(v){
+  const cle = ligVictCle(v), qui = (LIG && LIG.bravos[cle]) || [], moi = qui.includes(MOI_ID);
+  const noms = qui.map(ligNom).join(', ');
+  const qn = v.jal ? '<span class="lig-open" data-id="'+v.membre_id+'" style="cursor:pointer"><b>'+esc(v.nom)+'</b></span>' : '<b>'+esc(v.nom)+'</b>';
+  return '<div class="lg-v'+(v.jal?' jal':'')+'"><span class="lg-vi">'+ligVictIco(v.cle)+'</span>'
+    + '<span class="lg-vt">'+(v.jal && /^equipe_/.test(v.cle) && +v.cle.slice(7)!==1 ? 'L’équipe de '+qn : qn)+' '+esc(ligVictLib(v.cle))
+    + '<span class="lg-nv">'+(v.jour===todayIso ? 'aujourd’hui' : v.jour===vAddDays(todayIso,-1) ? 'hier' : fmtDJour(v.jour))+'</span></span>'
+    + (!LIG ? '' : v.membre_id===MOI_ID
+        ? (qui.length ? '<span class="lg-bv lg-bv-ro" title="'+esc(noms)+'">👏 '+qui.length+'</span>' : '')
+        : '<button type="button" class="lg-bv'+(moi?' on':'')+'" data-ligb="'+esc(cle)+'" title="'+esc(noms||'Sois le premier à féliciter')+'">👏'+(qui.length?' '+qui.length:'')+'</button>')
+    + '</div>';
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('#homeVict [data-ligb]'); if(!b) return;
+  ligBravo(b.dataset.ligb);
+});
 function ligVictLib(cle){
+  if(/^equipe_\d+$/.test(cle)){ const n = +cle.slice(7); return n===1 ? 'accueille le premier adhérent de son équipe !' : 'passe à '+n+' adhérents !'; }
   if(cle==='client1') return 'a signé son premier client';
   if(cle.indexOf('hab_')===0) return 'a obtenu son habilitation '+(LIG_HAB[cle.slice(4)]||cle.slice(4).toUpperCase());
   if(cle.indexOf('objectifs_')===0) return 'a validé tous ses objectifs '+cle.slice(10).toUpperCase();
   const l = etapeLib(cle);
   return 'a validé : '+l;
 }
-const ligVictIco = cle => cle==='client1' ? '🤝' : cle.indexOf('hab_')===0 ? '🎓' : cle.indexOf('objectifs_')===0 ? '🏆'
+const ligVictIco = cle => /^equipe_/.test(cle) ? (cle==='equipe_1' ? '🌱' : '🏆') : cle==='client1' ? '🤝' : cle.indexOf('hab_')===0 ? '🎓' : cle.indexOf('objectifs_')===0 ? '🏆'
   : ({ filleul_adherent:'🌱', invite_dm:'📣', trois_jours:'🚀', udp:'🎓' })[cle] || '✅';
 const ligVictCle = v => v.membre_id+':'+v.cle+':'+v.jour;
 function ligVictoires(){
   const mien = new Set(LIG.liste.map(p=>p.membre_id)); mien.add(MOI_ID);
-  const l = LIG.vict.filter(v => LIG_VF!=='lignee' || mien.has(v.membre_id));
+  const l = LIG.vict.concat(ligJalons()).filter(v => LIG_VF!=='lignee' || mien.has(v.membre_id))
+    .sort((a,b)=>b.jour.localeCompare(a.jour) || (b.jal?1:0)-(a.jal?1:0));
   let h = '<div class="panel"><div class="mm-head"><h2>Le mur des victoires</h2></div>'
-    + '<p class="mm-sub">Les étapes validées par le réseau et les jalons des mail managers des 90 derniers jours. Un 👏 fait toujours plaisir.</p>'
+    + '<p class="mm-sub">Les étapes validées par le réseau et les jalons des mail managers des 90 derniers jours, et les équipes qui grandissent (30 derniers jours). Un 👏 fait toujours plaisir.</p>'
     + '<div class="mm-filtre"><button type="button" data-ligv=""'+(LIG_VF?'':' class="on"')+'>Tout le monde</button>'
     + '<button type="button" data-ligv="lignee"'+(LIG_VF?' class="on"':'')+'>Moi et ma lignée</button></div>';
   if(!l.length) return h + '<p class="mm-vide" style="margin-top:14px">Pas encore de victoire sur la période.</p></div>';
@@ -8320,14 +8366,7 @@ function ligVictoires(){
   l.forEach(v=>{
     const m = v.jour.slice(0,7);
     if(m!==mois){ mois=m; const d=new Date(v.jour+'T00:00:00'); h += '<div class="lg-vm">'+esc(MOIS[d.getMonth()]+' '+d.getFullYear())+'</div>'; }
-    const cle = ligVictCle(v), qui = LIG.bravos[cle] || [], moi = qui.includes(MOI_ID);
-    const noms = qui.map(ligNom).join(', ');
-    h += '<div class="lg-v"><span class="lg-vi">'+ligVictIco(v.cle)+'</span>'
-      + '<span class="lg-vt"><b>'+esc(v.nom)+'</b> '+esc(ligVictLib(v.cle))+'<span class="lg-nv">'+fmtDJour(v.jour)+'</span></span>'
-      + (v.membre_id===MOI_ID
-          ? (qui.length ? '<span class="lg-bv lg-bv-ro" title="'+esc(noms)+'">👏 '+qui.length+'</span>' : '')
-          : '<button type="button" class="lg-bv'+(moi?' on':'')+'" data-ligb="'+esc(cle)+'" title="'+esc(noms||'Sois le premier à féliciter')+'">👏'+(qui.length?' '+qui.length:'')+'</button>')
-      + '</div>';
+    h += ligVictLigne(v);
   });
   return h + '</div></div>';
 }
@@ -8337,7 +8376,7 @@ async function ligBravo(cle){
   const deja = qui.includes(MOI_ID);
   // affichage immédiat, puis écriture ; on revient en arrière si le serveur refuse
   if(deja) qui.splice(qui.indexOf(MOI_ID),1); else qui.push(MOI_ID);
-  buildLig();
+  buildLig(); try{ buildVictAccueil(); }catch(e){}
   try{
     const r = deja
       ? await SB.from('victoires_bravos').delete().eq('cle', cle).eq('membre_id', MOI_ID)
@@ -8345,7 +8384,7 @@ async function ligBravo(cle){
     if(r.error) throw r.error;
   }catch(e){
     if(deja) qui.push(MOI_ID); else qui.splice(qui.indexOf(MOI_ID),1);
-    buildLig();
+    buildLig(); try{ buildVictAccueil(); }catch(e){}
   }
 }
 

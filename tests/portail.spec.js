@@ -2077,6 +2077,37 @@ test.describe('Ma lignée — tableau de bord, progression, victoires, arbre', (
     expect(erreurs).toEqual([]);
   });
 
+  test('victoires de la lignée : jalons d’équipe sur 3 jours à l’accueil, au mur avec 👏 (31/10/2026)', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserLig(page);
+    const r = await page.evaluate(() => {
+      M.length = 0;
+      M.push({ id: 101, name: 'Aline', nn: 'aline' }, { id: 106, name: 'Hors Lignee', nn: 'hors' }, { id: 20028, name: 'Moi Test', nn: 'moi' });
+      LIGNEE_IDS = new Set([101, 20028]);
+      EXTRA = { 101: { jalons: [[todayIso, 1], [vAddDays(todayIso, -10), 3]] }, 106: { jalons: [[todayIso, 5]] }, 20028: { jalons: [[vAddDays(todayIso, -1), 5]] } };
+      LIG.vict = [{ membre_id: 101, nom: 'Aline', cle: 'trois_jours', jour: vAddDays(todayIso, -2) }, { membre_id: 101, nom: 'Aline', cle: 'udp', jour: vAddDays(todayIso, -5) }];
+      buildVictAccueil();
+      const el = document.getElementById('homeVict');
+      const acc = [...el.querySelectorAll('.lg-vt')].map(x => x.textContent.replace(/\s+/g, ' ').trim());
+      const btn = el.querySelector('[data-ligb]').dataset.ligb;
+      LIG_SUB = 'vic'; LIG_VF = ''; showTab('lig'); buildLig();
+      const mur = [...document.querySelectorAll('#ligCorps .lg-v.jal .lg-vt')].map(x => x.textContent.replace(/\s+/g, ' ').trim());
+      const semaine = !!document.getElementById('homeJalons');
+      return { cache: el.hidden, acc, btn, mur, semaine };
+    });
+    expect(r.cache).toBe(false);
+    // 3 derniers jours seulement, toute la lignée (pas « Hors Lignee »), jalons d'abord le même jour
+    expect(r.acc).toEqual([
+      'Aline accueille le premier adhérent de son équipe !aujourd’hui',
+      'L’équipe de Moi Test passe à 5 adhérents !hier',
+      expect.stringContaining('Aline a validé'),
+    ]);
+    expect(r.btn).toContain('101:equipe_1:');
+    expect(r.mur.length).toBe(3);                       // le mur garde aussi le jalon d'il y a 10 jours
+    expect(r.semaine).toBe(false);                      // plus de jalons dans « 7 prochains jours »
+    expect(erreurs).toEqual([]);
+  });
+
   test('la progression range les R1 sur la semaine où ils ont eu lieu et somme la lignée', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poserLig(page);

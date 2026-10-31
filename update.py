@@ -1245,7 +1245,10 @@ def run():
     # extra[id]["team"] et, quand un palier est franchi à la hausse, on ajoute [date, taille] dans
     # extra[id]["jalons"] (30 derniers jours conservés côté données, affichés sur l'accueil).
     # Premier passage (pas d'ancienne valeur) : on enregistre la taille sans créer de jalon.
-    PALIERS = [3, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 500]
+    # 31/10/2026 (règle Florian) : le premier adhérent de l'équipe est fêté aussi (palier 1), et un palier
+    # n'est fêté QU'UNE FOIS par équipe — extra[id]["pal"] = plus haut palier déjà fêté (une équipe qui
+    # retombe à 4 puis remonte à 5 ne refête pas ses 5). « pal » absent : initialisé sans rien fêter.
+    PALIERS = [1, 3, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 500]
     keep_from = (today - datetime.timedelta(days=30)).isoformat()
     def team_size(m):
         seen, queue, n = {m[0]}, [norm(m[1])], 0
@@ -1268,10 +1271,13 @@ def run():
         n = team_size(u)
         prev = x.get("team")
         jal = [j for j in (x.get("jalons") or []) if j and j[0] >= keep_from]
-        if isinstance(prev, int) and n > prev:
-            crossed = [p for p in PALIERS if prev < p <= n]
-            if crossed:
-                jal.append([today_iso, n])
+        atteint = max([p for p in PALIERS if p <= n] or [0])
+        if not isinstance(x.get("pal"), int):
+            # première fois : ce qui était déjà atteint au passage précédent est réputé fêté
+            x["pal"] = max([p for p in PALIERS if isinstance(prev, int) and p <= prev] or [0])
+        if isinstance(prev, int) and n > prev and atteint > x["pal"]:
+            jal.append([today_iso, n])
+        x["pal"] = max(x["pal"], atteint)
         x["team"] = n
         if jal:
             x["jalons"] = jal
