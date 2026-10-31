@@ -26,6 +26,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+nav.tabs a[data-v],nav.botbar a[data-v],#plusCard a[data-v]{text-decoration:none;box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.55 "Inter",system-ui,sans-serif}
 h1,h2,h3{font-family:"Sora",system-ui,sans-serif;text-wrap:balance;margin:0}
 a{color:inherit}
@@ -58,12 +59,12 @@ nav.tabs.side{position:sticky;top:0;align-self:start;height:100vh;display:flex;f
   background:var(--surface);border-right:1px solid var(--line);padding:14px 12px 12px}
 .side-head{display:flex;align-items:center;gap:10px;padding:2px 6px 16px;min-height:44px}
 /* Le logo et KAIROS mènent à l'accueil (il n'y a plus d'entrée « Accueil » dans le menu) */
-button.go-home{border:0;background:none;font:inherit;color:inherit;cursor:pointer;text-align:left;width:auto}
-nav.tabs.side button.side-head[data-v]{display:flex;width:auto;align-self:flex-start;gap:10px;padding:2px 6px 16px;margin:0;border-radius:8px;font:inherit;color:var(--ink)}
-nav.tabs.side button.side-head[data-v]:hover,nav.tabs.side button.side-head[data-v].on{background:none;color:var(--ink)}
-#app.replie nav.tabs.side button.side-head[data-v]{align-self:center;justify-content:center;padding:2px 0 16px;gap:0}
-button.go-home:hover .brand{color:var(--accent)}
-button.go-home:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.go-home{border:0;background:none;font:inherit;color:inherit;cursor:pointer;text-align:left;width:auto}
+nav.tabs.side a.side-head[data-v]{display:flex;width:auto;align-self:flex-start;gap:10px;padding:2px 6px 16px;margin:0;border-radius:8px;font:inherit;color:var(--ink)}
+nav.tabs.side a.side-head[data-v]:hover,nav.tabs.side a.side-head[data-v].on{background:none;color:var(--ink)}
+#app.replie nav.tabs.side a.side-head[data-v]{align-self:center;justify-content:center;padding:2px 0 16px;gap:0}
+.go-home:hover .brand{color:var(--accent)}
+.go-home:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
 .top-home{display:contents}
 .side-head .mark{margin:0;flex:none}
 .side-head .mark span{border-width:0 9px 17px 9px}
@@ -73,11 +74,11 @@ button.go-home:focus-visible{outline:2px solid var(--accent);outline-offset:2px;
 .side-nav::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:3px}
 nav.tabs.side .grp{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);padding:14px 10px 5px}
 nav.tabs.side .grp:first-child{padding-top:2px}
-nav.tabs.side button[data-v]{position:relative;display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:0;background:none;border-radius:9px;padding:9px 10px;font-family:"Sora";font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer;transition:background .12s,color .12s}
-nav.tabs.side button[data-v] .i{flex:none;width:20px;text-align:center;font-size:15px}
-nav.tabs.side button[data-v] .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-nav.tabs.side button[data-v]:hover{background:var(--surface-2);color:var(--ink)}
-nav.tabs.side button[data-v].on{background:var(--accent-soft);color:var(--accent)}
+nav.tabs.side a[data-v]{position:relative;display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:0;background:none;border-radius:9px;padding:9px 10px;font-family:"Sora";font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer;transition:background .12s,color .12s}
+nav.tabs.side a[data-v] .i{flex:none;width:20px;text-align:center;font-size:15px}
+nav.tabs.side a[data-v] .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+nav.tabs.side a[data-v]:hover{background:var(--surface-2);color:var(--ink)}
+nav.tabs.side a[data-v].on{background:var(--accent-soft);color:var(--accent)}
 .side-bas{padding-top:10px;margin-top:8px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
 .side-toggle{border:0;background:none;color:var(--ink-3);font-size:12px;font-weight:600;padding:8px 10px;border-radius:8px;text-align:left;cursor:pointer}
 .side-toggle:hover{background:var(--surface-2);color:var(--ink-2)}
@@ -86,7 +87,7 @@ nav.tabs.side button[data-v].on{background:var(--accent-soft);color:var(--accent
 #app.replie .side-head{justify-content:center;padding:2px 0 16px}
 #app.replie .side-head .brand{display:none}
 #app.replie nav.tabs.side .l{display:none}
-#app.replie nav.tabs.side button[data-v]{justify-content:center;padding:10px 0;gap:0}
+#app.replie nav.tabs.side a[data-v]{justify-content:center;padding:10px 0;gap:0}
 #app.replie nav.tabs.side .grp{height:1px;padding:0;margin:11px 6px 7px;background:var(--line);overflow:hidden;color:transparent}
 #app.replie .side-toggle{text-align:center;padding:8px 0}
 
@@ -106,11 +107,11 @@ header.top .mark,header.top .brand{display:none}
 .icon-btn:hover{color:var(--ink);border-color:var(--ink-3)}
 /* Icônes */
 .i svg{width:19px;height:19px;display:block}
-nav.tabs.side button .i,.side-act .i,.side-toggle .i{color:var(--ink-3)}
-nav.tabs.side button[data-v]:hover .i,.side-act:hover .i{color:var(--ink-2)}
-nav.tabs.side button[data-v].on .i{color:var(--accent)}
-nav.botbar button .i svg{width:21px;height:21px;margin:0 auto}
-#plusCard button .i svg{width:18px;height:18px}
+nav.tabs.side a .i,.side-act .i,.side-toggle .i{color:var(--ink-3)}
+nav.tabs.side a[data-v]:hover .i,.side-act:hover .i{color:var(--ink-2)}
+nav.tabs.side a[data-v].on .i{color:var(--accent)}
+nav.botbar :is(a,button) .i svg{width:21px;height:21px;margin:0 auto}
+#plusCard :is(a,button) .i svg{width:18px;height:18px}
 /* Actions de compte, en bas du menu */
 .side-act{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:0;background:none;border-radius:9px;padding:8px 10px;font-family:"Sora";font-weight:600;font-size:13.5px;color:var(--ink-2);cursor:pointer;transition:background .12s,color .12s}
 .side-act .i{flex:none;width:20px}
@@ -145,16 +146,16 @@ nav.botbar{display:none}
   .search-big{flex:1;min-width:0;margin-left:auto;padding:7px 10px;font-size:12.5px}
   .search-big .kbd{display:none}
   nav.botbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
-  nav.botbar button{flex:1;border:0;background:none;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer;min-width:0}
-  nav.botbar button .i{font-size:18px;line-height:1}
-  nav.botbar button .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-  nav.botbar button.on{color:var(--accent)}
+  nav.botbar :is(a,button){flex:1;border:0;background:none;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;font-family:inherit;font-size:10.5px;font-weight:600;cursor:pointer;min-width:0}
+  nav.botbar :is(a,button) .i{font-size:18px;line-height:1}
+  nav.botbar :is(a,button) .l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  nav.botbar :is(a,button).on{color:var(--accent)}
   #plusMenu{position:fixed;inset:0;z-index:61;background:rgba(8,10,14,.45)}
   .plus-card{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:16px 16px 0 0;padding:10px 10px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.25)}
   .plus-t{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:8px 12px}
-  .plus-card button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--ink);padding:12px;border-radius:10px;font-family:"Sora";font-weight:600;font-size:15px;cursor:pointer;text-align:left}
-  .plus-card button.on{background:var(--accent-soft);color:var(--accent)}
-  .plus-card button .i{font-size:17px;width:22px;text-align:center}
+  .plus-card :is(a,button){display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--ink);padding:12px;border-radius:10px;font-family:"Sora";font-weight:600;font-size:15px;cursor:pointer;text-align:left}
+  .plus-card :is(a,button).on{background:var(--accent-soft);color:var(--accent)}
+  .plus-card :is(a,button) .i{font-size:17px;width:22px;text-align:center}
 }
 main{padding-top:4px}
 @media(max-width:860px){main{padding-top:20px}}
@@ -1972,32 +1973,32 @@ a.mml-r:hover{border-color:var(--accent)}
 
 <div id="app">
   <nav class="tabs side" id="side" aria-label="Navigation principale">
-    <button type="button" class="side-head go-home" data-v="home" title="Accueil" aria-label="Accueil">
+    <a href="#accueil" class="side-head go-home" data-v="home" title="Accueil" aria-label="Accueil">
       <div class="mark"><span class="t1"></span><span class="t2"></span><span class="t3"></span></div>
       <div class="brand">KAIROS</div>
-    </button>
+    </a>
     <div class="side-nav">
       <div class="grp">Mon espace</div>
-      <button data-v="surv" hidden title="Mes sessions" data-l="Mes sessions"><span class="i" data-i="surv"></span><span class="l">Mes sessions</span></button>
-      <button data-v="mm" hidden title="Mail Manager"><span class="i" data-i="mm"></span><span class="l">Mail Manager</span></button>
-      <button data-v="lig" hidden title="Ma lignée"><span class="i" data-i="lig"></span><span class="l">Ma lignée</span></button>
+      <a href="#mes-sessions" data-v="surv" hidden title="Mes sessions" data-l="Mes sessions"><span class="i" data-i="surv"></span><span class="l">Mes sessions</span></a>
+      <a href="#mail-manager" data-v="mm" hidden title="Mail Manager"><span class="i" data-i="mm"></span><span class="l">Mail Manager</span></a>
+      <a href="#ma-lignee" data-v="lig" hidden title="Ma lignée"><span class="i" data-i="lig"></span><span class="l">Ma lignée</span></a>
       <div class="grp">Le réseau</div>
-      <button data-v="cat" title="Ateliers"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></button>
-      <button data-v="pd" id="pdTabBtn" title="Parcours Découverte"><span class="i" data-i="pd"></span><span class="l">Parcours</span></button>
-      <button data-v="reu" title="Réunions d'équipe"><span class="i" data-i="reu"></span><span class="l">Réunions d'équipe</span></button>
-      <button data-v="for" title="Formations"><span class="i" data-i="for"></span><span class="l">Formations</span></button>
-      <button data-v="evt" title="Événements"><span class="i" data-i="evt"></span><span class="l">Événements</span></button>
-      <button data-v="ann" title="Annuaire"><span class="i" data-i="ann"></span><span class="l">Annuaire</span></button>
+      <a href="#ateliers" data-v="cat" title="Ateliers"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></a>
+      <a href="#parcours-decouverte" data-v="pd" id="pdTabBtn" title="Parcours Découverte"><span class="i" data-i="pd"></span><span class="l">Parcours</span></a>
+      <a href="#reunions-d-equipe" data-v="reu" title="Réunions d'équipe"><span class="i" data-i="reu"></span><span class="l">Réunions d'équipe</span></a>
+      <a href="#formations" data-v="for" title="Formations"><span class="i" data-i="for"></span><span class="l">Formations</span></a>
+      <a href="#evenements" data-v="evt" title="Événements"><span class="i" data-i="evt"></span><span class="l">Événements</span></a>
+      <a href="#annuaire" data-v="ann" title="Annuaire"><span class="i" data-i="ann"></span><span class="l">Annuaire</span></a>
       <div class="grp">S'informer &amp; outils</div>
-      <button data-v="fiches" title="Fiches pratiques"><span class="i" data-i="fiches"></span><span class="l">Fiches pratiques</span></button>
-      <button data-v="veille" hidden title="Veille"><span class="i" data-i="veille"></span><span class="l">Veille</span></button>
-      <button data-v="res" title="Ressources"><span class="i" data-i="res"></span><span class="l">Ressources</span></button>
+      <a href="#fiches-pratiques" data-v="fiches" title="Fiches pratiques"><span class="i" data-i="fiches"></span><span class="l">Fiches pratiques</span></a>
+      <a href="#veille" data-v="veille" hidden title="Veille"><span class="i" data-i="veille"></span><span class="l">Veille</span></a>
+      <a href="#ressources" data-v="res" title="Ressources"><span class="i" data-i="res"></span><span class="l">Ressources</span></a>
     </div>
     <div class="side-bas">
-      <button data-v="fb" hidden title="Améliorer Kairos"><span class="i" data-i="fb"></span><span class="l">Améliorer Kairos</span></button>
-      <button data-v="admin" hidden title="Admin"><span class="i" data-i="admin"></span><span class="l">Admin</span></button>
+      <a href="#ameliorer-kairos" data-v="fb" hidden title="Améliorer Kairos"><span class="i" data-i="fb"></span><span class="l">Améliorer Kairos</span></a>
+      <a href="#admin" data-v="admin" hidden title="Admin"><span class="i" data-i="admin"></span><span class="l">Admin</span></a>
       <button type="button" class="side-act acc-off" id="accBtn" title="Retrouver ma progression sur tous mes appareils" hidden><span class="i" data-i="cloud"></span><span class="l">Connexion</span></button>
-      <button data-v="profil" title="Mon profil"><span class="i" data-i="profil"></span><span class="l">Mon profil</span></button>
+      <a href="#mon-profil" data-v="profil" title="Mon profil"><span class="i" data-i="profil"></span><span class="l">Mon profil</span></a>
       <button type="button" class="side-act" id="lockBtn" title="Fermer ma session"><span class="i" data-i="logout"></span><span class="l">Déconnexion</span></button>
       <button type="button" id="sideToggle" class="side-toggle" title="Replier le menu">‹ Replier</button>
     </div>
@@ -2407,10 +2408,10 @@ a.mml-r:hover{border-color:var(--accent)}
   </div>
   </div>
   <nav class="botbar" aria-label="Navigation">
-    <button data-v="home"><span class="i" data-i="home"></span><span class="l">Accueil</span></button>
-    <button data-v="pd"><span class="i" data-i="pd"></span><span class="l">Parcours</span></button>
-    <button data-v="surv" hidden data-l="Sessions"><span class="i" data-i="surv"></span><span class="l">Sessions</span></button>
-    <button data-v="cat"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></button>
+    <a href="#accueil" data-v="home"><span class="i" data-i="home"></span><span class="l">Accueil</span></a>
+    <a href="#parcours-decouverte" data-v="pd"><span class="i" data-i="pd"></span><span class="l">Parcours</span></a>
+    <a href="#mes-sessions" data-v="surv" hidden data-l="Sessions"><span class="i" data-i="surv"></span><span class="l">Sessions</span></a>
+    <a href="#ateliers" data-v="cat"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></a>
     <button type="button" id="plusBtn"><span class="i" data-i="plus"></span><span class="l">Plus</span></button>
   </nav>
   <div id="plusMenu" hidden><div class="plus-card" id="plusCard"></div></div>
@@ -2964,7 +2965,7 @@ function buildAlertes(){
     }
   }
   // pastille : barre du bas (« Accueil ») et logo de la barre latérale
-  document.querySelectorAll('nav.botbar button[data-v="home"] .l, #side .go-home .brand').forEach(l=>{
+  document.querySelectorAll('nav.botbar [data-v="home"] .l, #side .go-home .brand').forEach(l=>{
     let b = l.querySelector('.alr-pt');
     if(!n){ if(b) b.remove(); return; }
     if(!b){ b = document.createElement('span'); b.className = 'alr-pt'; l.appendChild(b); }
@@ -3966,7 +3967,7 @@ function boot(){
 
 /* ---------- Navigation / thème / verrou ---------- */
 function showTab(v){
-  document.querySelectorAll('nav.tabs button, nav.botbar button, #plusCard button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
+  document.querySelectorAll('nav.tabs [data-v], nav.botbar [data-v], #plusCard [data-v]').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
   if(v === 'mm'){ try{ buildMM(); }catch(e){} }
   if(v === 'lig'){ try{ buildLig(); }catch(e){ console.error(e); } }
@@ -3985,26 +3986,20 @@ function showTab(v){
     }catch(e){}
   }
 }
-// Menu : clic molette (ou Ctrl / Cmd + clic) = ouvrir l'onglet dans un nouvel onglet du navigateur
-// (31/10/2026). Les entrées du menu sont des boutons, pas des liens : on construit l'adresse nous-mêmes.
-const MENU_SEL = 'nav.tabs button[data-v], nav.botbar button[data-v], #plusCard button[data-v]';
-function menuNouvelOnglet(b){
-  const v = b.dataset.v;
-  const h = v===curTab ? location.hash || hashFor(v) : '#'+(TAB_SLUG[v]||v);
-  window.open(location.pathname + location.search + h, '_blank', 'noopener');
-}
-document.addEventListener('mousedown', e=>{          // pas de défilement automatique au clic molette
-  if(e.button===1 && e.target.closest && e.target.closest(MENU_SEL)) e.preventDefault();
-});
-document.addEventListener('auxclick', e=>{
-  if(e.button!==1) return;
-  const b = e.target.closest && e.target.closest(MENU_SEL); if(!b) return;
-  e.preventDefault(); menuNouvelOnglet(b);
-});
+// Menu (31/10/2026) : chaque entrée est un vrai lien <a href="#onglet">. Clic gauche simple = navigation
+// interne (sans recharger) ; clic molette, Ctrl/Cmd/Maj + clic et clic droit (« Ouvrir dans un nouvel
+// onglet / une nouvelle fenêtre », « Copier le lien ») sont laissés au navigateur. L'adresse est remise
+// à jour juste avant usage pour emporter les filtres de l'onglet (hashFor).
+const MENU_SEL = 'nav.tabs [data-v], nav.botbar [data-v], #plusCard [data-v]';
+['pointerdown','contextmenu','focusin','mouseover'].forEach(ev=>document.addEventListener(ev, e=>{
+  const a = e.target.closest && e.target.closest(MENU_SEL); if(!a || a.tagName!=='A') return;
+  try{ const h = hashFor(a.dataset.v); if(a.getAttribute('href')!==h) a.setAttribute('href', h); }catch(_){}
+}, true));
 document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest(MENU_SEL);
   if(!b) return;
-  if(e.ctrlKey || e.metaKey){ e.preventDefault(); menuNouvelOnglet(b); return; }
+  if(e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;   // nouvel onglet / fenêtre : le navigateur
+  e.preventDefault();
   showTab(b.dataset.v); curTab=b.dataset.v;
   fermerPlus();
   syncHash(true);
@@ -4065,12 +4060,12 @@ function ouvrirPlus(){
   const m=document.getElementById('plusMenu'), c=document.getElementById('plusCard');
   if(!m||!c) return;
   const dans=['home','pd','surv','cat','profil'];
-  c.innerHTML = '<div class="plus-t">Aller à…</div>' + [...document.querySelectorAll('#side button[data-v]')]
+  c.innerHTML = '<div class="plus-t">Aller à…</div>' + [...document.querySelectorAll('#side [data-v]')]
     .filter(b=>!b.hidden && !dans.includes(b.dataset.v))
-    .map(b=>'<button data-v="'+b.dataset.v+'"'+(b.dataset.v===curTab?' class="on"':'')+'>'
-      +'<span class="i">'+b.querySelector('.i').innerHTML+'</span>'+b.querySelector('.l').innerHTML+'</button>').join('')
+    .map(b=>'<a href="#'+(TAB_SLUG[b.dataset.v]||b.dataset.v)+'" data-v="'+b.dataset.v+'"'+(b.dataset.v===curTab?' class="on"':'')+'>'
+      +'<span class="i">'+b.querySelector('.i').innerHTML+'</span>'+b.querySelector('.l').innerHTML+'</a>').join('')
     + '<div class="plus-t">Mon compte</div>'
-    + '<button data-v="profil"'+(curTab==='profil'?' class="on"':'')+'><span class="i">'+document.querySelector('#side button[data-v="profil"] .i').innerHTML+'</span>Mon profil</button>'
+    + '<a href="#mon-profil" data-v="profil"'+(curTab==='profil'?' class="on"':'')+'><span class="i">'+document.querySelector('#side [data-v="profil"] .i').innerHTML+'</span>Mon profil</a>'
     + [...document.querySelectorAll('.side-bas .side-act')]
     .filter(b=>!b.hidden)
     .map(b=>'<button type="button" data-act="'+b.id+'">'
@@ -4110,7 +4105,7 @@ const KAIROS_CHANGELOG = [
     ['f','Accueil : chaque section peut être réduite à son titre, le choix suit d’un appareil à l’autre.'],
     ['f','Google Agenda : un seul bouton pour une séance sur plusieurs jours (événement répété chaque jour).'],
     ['f','Accueil : « Nos valeurs » rejoignent l’encart de bienvenue.'],
-    ['f','Menu : clic molette (ou Ctrl + clic) sur une entrée pour l’ouvrir dans un nouvel onglet.'],
+    ['f','Menu : chaque entrée est un vrai lien — clic molette, Ctrl + clic, clic droit (nouvel onglet, nouvelle fenêtre, copier le lien).'],
     ['f','Accueil : encart « Victoires de la lignée » (3 derniers jours) avec 👏 ; jalons d’équipe retirés des « 7 prochains jours ».'],
     ['f','Jalons d’équipe : premier adhérent fêté, chaque palier fêté une seule fois, ajoutés au mur des victoires.'],
     ['f','Admin : onglet Changelog Kairos.'],
@@ -4295,7 +4290,7 @@ function routerQuandPret(){
   const m = HASH_INITIAL.match(/^#([a-z-]+)(?:\?(.*))?$/);
   const tab = m ? tabFromSlug(m[1]) : null;
   if(!tab){ HASH_APPLIQUE = true; return; }
-  const btn = document.querySelector('nav.tabs button[data-v="'+tab+'"]');
+  const btn = document.querySelector('nav.tabs [data-v="'+tab+'"]');
   if(!btn || btn.hidden) return;          // pas encore prêt : on retentera au prochain chargement
   HASH_APPLIQUE = true;
   routeHash();
@@ -4305,7 +4300,7 @@ function routeHash(){
   if(h.startsWith('#p/')){ const slug=decodeURIComponent(h.slice(3)); if(CONTENU&&CONTENU.pages&&CONTENU.pages[slug]) showPage(slug); return; }
   if(h==='#faq-apercu'){ buildFaq(true); return; }
   const m=h.match(/^#([a-z-]+)(?:\?(.*))?$/); const tab=m?tabFromSlug(m[1]):null;
-  if(tab){ const btn=document.querySelector('nav.tabs button[data-v="'+tab+'"]'); if(btn&&btn.hidden) return;
+  if(tab){ const btn=document.querySelector('nav.tabs [data-v="'+tab+'"]'); if(btn&&btn.hidden) return;
     showTab(tab); curTab=tab;
     const p=new URLSearchParams(m[2]||'');
     if(tab==='admin'&&!p.has('s')&&SLUG_ADMIN[m[1]]) p.set('s', m[1]);
@@ -6074,7 +6069,7 @@ function vBkHtml(b){
     + '</div>';
 }
 function buildVeille(){
-  const btn = document.querySelector('nav.tabs button[data-v="veille"]');
+  const btn = document.querySelector('nav.tabs [data-v="veille"]');
   if(!VEILLE || !VEILLE.editions){ if(btn) btn.hidden = true; return; }
   if(btn) btn.hidden = false;
   const eds = (VEILLE.editions||[]).slice().sort((a,b)=>(b.du||'').localeCompare(a.du||''));
@@ -8659,7 +8654,7 @@ const retNav = () => {
   return n+(os?' · '+os:'');
 };
 function retContexte(){
-  const onglet = (document.querySelector('nav.tabs button[data-v="'+curTab+'"] .l')||{}).textContent || curTab;
+  const onglet = (document.querySelector('nav.tabs [data-v="'+curTab+'"] .l')||{}).textContent || curTab;
   return {
     onglet: String(onglet).replace(/\s+\d+$/,'').trim(),
     url: location.hash || '#accueil',
@@ -9026,7 +9021,7 @@ function masquerAdmin(btn){
   return false;
 }
 async function buildMembres(){
-  const btn=document.querySelector('nav.tabs button[data-v="admin"]');
+  const btn=document.querySelector('nav.tabs [data-v="admin"]');
   const body=document.getElementById('mbrBody');
   if(!SB||!SBUSER||!body) return masquerAdmin(btn);
   // Le rôle est demandé explicitement : membres_connectes() ne renvoie pas d'erreur à un membre

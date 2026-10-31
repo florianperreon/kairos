@@ -76,11 +76,11 @@ test.describe('Démarrage', () => {
     const r = await page.evaluate(() => TABS.map(t => ({
       t,
       section: !!document.getElementById('v-' + t),
-      bouton: !!document.querySelector('nav.tabs button[data-v="' + t + '"]'),
+      bouton: !!document.querySelector('nav.tabs [data-v="' + t + '"]'),
       slug: TAB_SLUG[t],
       // le nom complet de l'onglet est son title ; .l peut être abrégé (Parcours / Parcours Découverte)
-      nom: (document.querySelector('nav.tabs button[data-v="' + t + '"]') || {}).title
-        || (document.querySelector('nav.tabs button[data-v="' + t + '"] .l') || {}).textContent || '',
+      nom: (document.querySelector('nav.tabs [data-v="' + t + '"]') || {}).title
+        || (document.querySelector('nav.tabs [data-v="' + t + '"] .l') || {}).textContent || '',
     })));
     for (const o of r) {
       expect(o.section, 'section manquante pour ' + o.t).toBe(true);
@@ -2203,7 +2203,7 @@ test.describe('Navigation — le logo mène à l’accueil', () => {
       showTab('cat'); curTab = 'cat';
     });
     const r = await page.evaluate(() => ({
-      entrees: [...document.querySelectorAll('#side .side-nav button[data-v]')].map(b => b.dataset.v),
+      entrees: [...document.querySelectorAll('#side .side-nav [data-v]')].map(b => b.dataset.v),
       groupes: [...document.querySelectorAll('#side .grp')].map(g => g.textContent),
     }));
     expect(r.entrees).not.toContain('home');
@@ -2304,7 +2304,7 @@ test.describe('Menu Admin', () => {
                             in() { return this; }, gte() { return this; }, limit() { return this; },
                             then(r) { return Promise.resolve({ data: [], error: null }).then(r); } }) };
       try { await buildMembres(); } catch (e) {}
-      return !document.querySelector('nav.tabs button[data-v="admin"]').hidden;
+      return !document.querySelector('nav.tabs [data-v="admin"]').hidden;
     }, admin);
   }
   test('un membre simple ne voit pas le menu Admin', async ({ page }) => {
@@ -2586,7 +2586,7 @@ test.describe('Semaines ISO, jours fériés, vacances scolaires', () => {
       const txt = v.textContent;
       const lien = [...v.querySelectorAll('a')].map(a => a.href);
       // menu : Mon profil juste au-dessus de Déconnexion ; plus de Thème ni d'Installer dans le menu
-      const bas = [...document.querySelectorAll('#side .side-bas > button')].filter(b => b.id !== 'sideToggle').map(b => b.dataset.v || b.id);
+      const bas = [...document.querySelectorAll('#side .side-bas > :is(a,button)')].filter(b => b.id !== 'sideToggle').map(b => b.dataset.v || b.id);
       const zoneOn = () => [...v.querySelectorAll('.pf-zones [data-z].on')].map(b => b.dataset.z);
       const z0 = zoneOn();
       v.querySelector('.pf-zones [data-z="C"]').click();
@@ -2903,7 +2903,7 @@ test.describe('Mes sessions — inscriptions et enregistrements', () => {
     await preparer(page);
     const r = await page.evaluate(() => {
       majOngletSurv();
-      const b = document.querySelector('nav.tabs button[data-v="surv"]');
+      const b = document.querySelector('nav.tabs [data-v="surv"]');
       showSurvSub('ins');
       const hashIns = hashFor('surv');
       showSurvSub('gardes');
@@ -2917,7 +2917,7 @@ test.describe('Mes sessions — inscriptions et enregistrements', () => {
       HASH_INITIAL = location.hash; HASH_APPLIQUE = false;
       routeHash();
       return { titre: b.title, libelle: b.querySelector('.l').textContent,
-               bas: document.querySelector('nav.botbar button[data-v="surv"] .l').textContent,
+               bas: document.querySelector('nav.botbar [data-v="surv"] .l').textContent,
                slug: TAB_SLUG.surv, alias: SLUG_TAB.enregistre,
                hashIns, hashGardes, revenu, raccourci,
                vue: (document.querySelector('section.view.on') || {}).id };
@@ -3444,7 +3444,7 @@ test.describe('Mes alertes', () => {
       const premier = [...home.children].find(c => !c.hidden);
       const cartes = () => [...document.querySelectorAll('#homeAlertes .alr-it')].map(c => c.dataset.alrcle);
       const avant = cartes();
-      const pastille = (document.querySelector('nav.botbar button[data-v="home"] .alr-pt') || {}).textContent;
+      const pastille = (document.querySelector('nav.botbar [data-v="home"] .alr-pt') || {}).textContent;
       window.__req = [];
       document.querySelector('#homeAlertes [data-alrvu="a:2"]').click();
       await new Promise(r => setTimeout(r, 30));
@@ -3456,7 +3456,7 @@ test.describe('Mes alertes', () => {
                ecrit: ecrit && ecrit.ops.map(o => o[0]), nEcrits: ecrit && ecrit.ops[0][1][0].length,
                maj: maj && maj.ops.map(o => o[0]),
                fin: document.getElementById('homeAlertes').hidden,
-               pastilleFin: !!document.querySelector('nav.botbar button[data-v="home"] .alr-pt') };
+               pastilleFin: !!document.querySelector('nav.botbar [data-v="home"] .alr-pt') };
     });
     expect(r.ecrit).toEqual(['upsert']);
     expect(r.nEcrits).toBe(3);
