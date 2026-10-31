@@ -1671,6 +1671,14 @@ a.mml-r:hover{border-color:var(--accent)}
 .mml-r .st.pub{color:var(--gold-ink);font-weight:600}
 .mml-r .go{flex:none;color:var(--accent);font-weight:700;font-size:13.5px}
 .mml-r .go.off{color:var(--ink-3);font-weight:500}
+.mml-outils{margin:0 0 8px}
+.mml-w{display:flex;align-items:center;gap:6px;margin-left:calc(var(--d,0)*24px)}
+.mml-w>.mml-r{flex:1 1 auto;min-width:0}
+.mml-tg{flex:none;width:26px;height:26px;border:1px solid var(--line);background:var(--surface);border-radius:7px;cursor:pointer;color:var(--ink-2);font-size:12px;padding:0;line-height:1}
+.mml-tg:hover{border-color:var(--accent);color:var(--accent)}
+.mml-tg.vide{border:0;background:none;cursor:default}
+.mml-r .mml-b{display:inline-block;margin-left:8px;padding:0 7px;border-radius:99px;font-size:11px;font-weight:700;background:var(--surface);color:var(--ink-2)}
+@media (max-width:640px){ .mml-w{margin-left:calc(var(--d,0)*12px)} .mml-r .mml-b{margin-left:0;display:table;margin-top:2px} }
 .mml-tout{display:inline-block;margin-top:10px;font-weight:700;color:var(--accent);text-decoration:none}
 .mml-tout:hover{text-decoration:underline}
 .mm-filtre{display:inline-flex;gap:4px;margin-top:10px;background:var(--surface-2);border-radius:99px;padding:3px}
@@ -4080,6 +4088,7 @@ const KAIROS_CHANGELOG = [
     ['f','Accueil : chaque section peut être réduite à son titre, le choix suit d’un appareil à l’autre.'],
     ['f','Google Agenda : un seul bouton pour une séance sur plusieurs jours (événement répété chaque jour).'],
     ['f','Admin : onglet Changelog Kairos.'],
+    ['f','Accueil → Mail manager de ma lignée : en arbre, niveau 1 par défaut, branches dépliables (choix gardé), tout déplier / replier, bilan de chaque branche.'],
     ['b','Adhésion récente d’un membre déjà sur Kairos reprise dès le lendemain (et non au passage mensuel).'],
     ['b','Admin → Membres : « hier / il y a X jours » compté en jours du calendrier.'],
   ]],
@@ -6566,29 +6575,79 @@ function buildMMLignee(){
   const sc = mmSemCour();
   const pub = liste.filter(p=>p.statut==='publie').length;
   const retard = todayIso > sc ? liste.length - pub : 0;
-  const tri = mmLigTri(liste);
   let h = '<div class="mml-h"><h2>Mail manager de ma lignée</h2>'
     + '<span class="mml-n">'+pub+'/'+liste.length+' publié'+(pub>1?'s':'')+'</span></div>'
     + '<p class="mml-sem">'+esc(mmLib(sc))+'</p>';
   if(retard) h += '<p class="mml-alerte">'+retard+' personne'+(retard>1?'s':'')+' de ta lignée n\u2019'
     + (retard>1?'ont':'a')+' pas encore publié.</p>';
-  h += '<div class="mml-l">' + tri.slice(0, MML_MAX).map(p=>{
+  // 31/10/2026 : en arbre. Par défaut seul le niveau 1 est visible ; chaque branche se déplie avec
+  // ▸ / ▾ et affiche son bilan (filleuls, publiés). Les branches ouvertes sont une préférence suivie
+  // d'un appareil à l'autre (VU.mml = { s:{id:true}, t }). « Tout déplier / Tout replier » en tête.
+  const A_ = mmlArbre(liste);
+  const ouv = id => !!(VU.mml && VU.mml.s && VU.mml.s[id]);
+  const avecEnf = [...A_.enf.keys()];
+  if(avecEnf.length){
+    const toutOuv = avecEnf.every(ouv);
+    h += '<div class="mml-outils"><button type="button" class="mm-plier" data-mmltout="'+(toutOuv?'0':'1')+'">'
+      + (toutOuv ? 'Tout replier' : 'Tout déplier') + '</button></div>';
+  }
+  const ligne = (p, d) => {
+    const id = p.membre_id, enf = A_.enf.get(id) || [], o = ouv(id);
     const lisible = p.statut==='publie';
     const ic = lisible ? '✅' : (p.statut==='brouillon' ? '✏️' : '⭕');
     const st = lisible ? 'publié '+(p.publie_le?fmtQuand(p.publie_le):'')
              : (p.statut==='brouillon' ? 'brouillon en cours' : 'pas encore');
+    const b = enf.length ? A_.bilan(id) : null;
     const corps = '<span class="ic">'+ic+'</span>'
-      + '<span class="nm">'+esc(p.nom)+'<span class="nv">'+esc(mmNiveauLib(p.niveau))+'</span></span>'
+      + '<span class="nm">'+esc(p.nom)+'<span class="nv">'+esc(mmNiveauLib(p.niveau))+'</span>'
+      + (b ? '<span class="mml-b" title="sa branche : '+b.n+' personne'+(b.n>1?'s':'')+' en dessous">'+b.n+' en dessous · '+b.pub+'/'+b.n+' publié'+(b.pub>1?'s':'')+'</span>' : '')+'</span>'
       + '<span class="st'+(lisible?' pub':'')+'">'+esc(st.trim())+(p.serie>1?' · 🔥 '+p.serie+' sem.':'')+'</span>';
-    return lisible
-      ? '<a class="mml-r" href="#mail-manager?s=le-mur&v='+p.membre_id+'" data-mmlig="'+p.membre_id+'">'+corps+'<span class="go">Voir →</span></a>'
+    const row = lisible
+      ? '<a class="mml-r" href="#mail-manager?s=le-mur&v='+id+'" data-mmlig="'+id+'">'+corps+'<span class="go">Voir →</span></a>'
       : '<div class="mml-r">'+corps+'<span class="go off">—</span></div>';
-  }).join('') + '</div>';
-  const reste = liste.length - Math.min(MML_MAX, liste.length);
-  h += '<a class="mml-tout" href="#mail-manager?s=le-mur&f=ma-lignee" data-mmlig="0">'
-    + (reste ? 'Voir les '+reste+' autre'+(reste>1?'s':'')+' sur le mur →' : 'Voir toute ma lignée sur le mur →') + '</a>';
+    const tg = enf.length
+      ? '<button type="button" class="mml-tg" data-mmltg="'+id+'" aria-expanded="'+o+'" title="'+(o?'Replier':'Afficher')+' les '+enf.length+' filleul'+(enf.length>1?'s':'')+' de '+esc(p.nom)+'">'+(o?'▾':'▸')+'</button>'
+      : (avecEnf.length ? '<span class="mml-tg vide"></span>' : '');
+    return '<div class="mml-w" style="--d:'+Math.min(d,6)+'">'+tg+row+'</div>' + (o ? enf.map(c=>ligne(c, d+1)).join('') : '');
+  };
+  h += '<div class="mml-l">' + A_.rac.map(p=>ligne(p, 0)).join('') + '</div>';
+  h += '<a class="mml-tout" href="#mail-manager?s=le-mur&f=ma-lignee" data-mmlig="0">Voir toute ma lignée sur le mur →</a>';
   el.innerHTML = h;
 }
+// Arbre de la descendance connectée : chacun sous son parrain (ou son plus proche ascendant présent,
+// via LIG.liste quand il est chargé), ordre alphabétique prénom nom à chaque niveau.
+function mmlArbre(liste){
+  const vis = new Map(liste.map(p=>[p.membre_id, p]));
+  const par = new Map(liste.map(p=>[p.membre_id, p.parrain_id]));
+  if(typeof LIG!=='undefined' && LIG && LIG.liste) LIG.liste.forEach(p=>{ if(!par.has(p.membre_id)) par.set(p.membre_id, p.parrain_id); });
+  const pere = id => { let x = par.get(id), g = 0; while(x!=null && x!==MOI_ID && !vis.has(x) && g++<60) x = par.get(x); return vis.has(x) ? x : null; };
+  const enf = new Map(), rac = [];
+  liste.forEach(p=>{ const f = pere(p.membre_id); if(f==null) rac.push(p); else { if(!enf.has(f)) enf.set(f, []); enf.get(f).push(p); } });
+  const cmp = (a,b)=>(a.nom||'').localeCompare(b.nom||'', 'fr', { sensitivity:'base' });
+  rac.sort(cmp); enf.forEach(l=>l.sort(cmp));
+  const memo = new Map();
+  const bilan = id => {
+    if(memo.has(id)) return memo.get(id);
+    memo.set(id, { n:0, pub:0 });
+    const r = { n:0, pub:0 };
+    (enf.get(id)||[]).forEach(c=>{ const s = bilan(c.membre_id); r.n += 1 + s.n; r.pub += (c.statut==='publie'?1:0) + s.pub; });
+    memo.set(id, r); return r;
+  };
+  return { rac, enf, bilan };
+}
+document.addEventListener('click', e=>{
+  const t = e.target.closest && e.target.closest('[data-mmltg],[data-mmltout]'); if(!t) return;
+  e.preventDefault();
+  let s = Object.assign({}, (VU.mml && VU.mml.s) || {});
+  if(t.dataset.mmltout!=null){
+    s = {};
+    if(t.dataset.mmltout==='1') mmlArbre(MM_LIG||[]).enf.forEach((_, id)=>{ s[id] = true; });
+  } else {
+    const id = t.dataset.mmltg; if(s[id]) delete s[id]; else s[id] = true;
+  }
+  VU.mml = { s, t: new Date().toISOString() };
+  saveVu(); buildMMLignee();
+});
 // Depuis l'accueil, le mur doit s'ouvrir sur la semaine EN COURS, même si l'onglet était resté
 // sur une semaine passée : on recharge d'abord, puis on laisse le routeur faire le reste.
 document.addEventListener('click', async e=>{
@@ -8812,6 +8871,7 @@ async function syncPull(){
     if(!Array.isArray(VU.fiches) || set.size !== VU.fiches.length){ VU.fiches = [...set]; chg=true; }
   }
   if(v.acc && v.acc.t && v.acc.t > ((VU.acc||{}).t||'')){ VU.acc = v.acc; chg=true; try{ buildWelcome(); }catch(e){} }
+  if(v.mml && v.mml.t && v.mml.t > ((VU.mml||{}).t||'')){ VU.mml = v.mml; chg=true; try{ buildMMLignee(); }catch(e){} }
   if(v.hp && v.hp.t && v.hp.t > ((VU.hp||{}).t||'')){ VU.hp = v.hp; chg=true; try{ hpPoser(); }catch(e){} }
   // Zone scolaire : le choix fait sur un autre appareil est repris tant qu'aucun choix n'a été fait ici
   if(/^[ABC]$/.test(d.zone||'') && !ZONE_CHOISIE){ ZONE_CHOISIE=d.zone; try{ localStorage.setItem('kairos_zone', d.zone); }catch(e){} try{ calRafraichir(); }catch(e){} }

@@ -1325,29 +1325,34 @@ test.describe('Mail Manager — encart « ma lignée » sur l’accueil', () => 
     { membre_id: 40007, nom: 'Gael Niveau3',   niveau: 3, parrain_id: 40004, statut: 'rien',      publie_le: null, serie: 0 },
   ];
 
-  test('l’encart liste la descendance, non-publiés de niveau 1 en tête, 5 lignes au plus', async ({ page }) => {
+  test('l’encart est un arbre : niveau 1 par défaut, branches dépliables gardées en préférence (31/10/2026)', async ({ page }) => {
     const erreurs = await ouvrir(page);
     await poser(page, { atelier: ATELIER_SEMAINE_PASSEE, dm: '2099-01-01' });
     const r = await page.evaluate((L) => {
+      VU.mml = undefined;
       MM_LIG = L; buildMMLignee();
       const el = document.getElementById('homeMMLig');
-      const lignes = [...el.querySelectorAll('.mml-r')];
-      return {
-        cache: el.hidden,
-        compteur: el.querySelector('.mml-n').textContent,
-        noms: lignes.map(x => x.querySelector('.nm').firstChild.textContent),
-        liens: lignes.map(x => x.getAttribute('href')),
-        tout: el.querySelector('.mml-tout').textContent,
-        toutHref: el.querySelector('.mml-tout').getAttribute('href'),
-      };
+      const noms = () => [...el.querySelectorAll('.mml-r')].map(x => x.querySelector('.nm').firstChild.textContent);
+      const bilan = [...el.querySelectorAll('.mml-r')][1].querySelector('.mml-b').textContent;
+      const n1 = noms();
+      el.querySelector('[data-mmltg="40002"]').click();
+      const bruno = noms(), pref = Object.keys(VU.mml.s);
+      el.querySelector('[data-mmltout="1"]').click();
+      const tout = noms(), lib = el.querySelector('[data-mmltout]').textContent;
+      el.querySelector('[data-mmltout="0"]').click();
+      return { cache: el.hidden, compteur: el.querySelector('.mml-n').textContent, n1, bilan, bruno, pref, tout, lib, apres: noms(),
+               tout_: el.querySelector('.mml-tout').getAttribute('href') };
     }, LIG);
     expect(r.cache).toBe(false);
     expect(r.compteur).toBe('2/7 publiés');
-    // niveau 1 non publiés (brouillon avant rien), puis niveaux suivants, puis les publiés
-    expect(r.noms).toEqual(['Chloe Brouillon', 'Bruno Rien', 'Denis Niveau2', 'Fanny Niveau3', 'Gael Niveau3']);
-    expect(r.liens.every(h => h === null)).toBe(true);   // rien de publié parmi eux : pas de lien
-    expect(r.tout).toContain('2 autres');
-    expect(r.toutHref).toBe('#mail-manager?s=le-mur&f=ma-lignee');
+    expect(r.n1).toEqual(['Aline Publiee', 'Bruno Rien', 'Chloe Brouillon']);       // niveau 1, ordre alphabétique
+    expect(r.bilan).toBe('4 en dessous · 1/4 publié');
+    expect(r.bruno).toEqual(['Aline Publiee', 'Bruno Rien', 'Denis Niveau2', 'Emma Niveau2', 'Chloe Brouillon']);
+    expect(r.pref).toEqual(['40002']);
+    expect(r.tout).toEqual(['Aline Publiee', 'Bruno Rien', 'Denis Niveau2', 'Fanny Niveau3', 'Gael Niveau3', 'Emma Niveau2', 'Chloe Brouillon']);
+    expect(r.lib).toBe('Tout replier');
+    expect(r.apres.length).toBe(3);
+    expect(r.tout_).toBe('#mail-manager?s=le-mur&f=ma-lignee');
     expect(erreurs).toEqual([]);
   });
 
