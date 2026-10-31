@@ -1466,6 +1466,12 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 }
 .lg-nv{display:block;font-size:11.5px;color:var(--ink-3);font-weight:500}
 .lg-mu{color:var(--ink-3)}
+.lg-br{color:var(--ink-3);margin-right:5px;font-weight:700}
+.lg-ne{display:inline-block;margin-left:4px;padding:0 6px;border-radius:99px;font-size:11px;font-weight:700;background:var(--surface-2);color:var(--ink-2)}
+.lg-tbl tr.lg-a0 td{border-top:2px solid var(--line-2)}
+.lg-tbl tr.lg-a0:first-child td{border-top:0}
+.lg-arbb{margin-left:6px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:2px 10px;font-size:12.5px;font-weight:600;cursor:pointer}
+.lg-arbb:hover{border-color:var(--accent);color:var(--accent)}
 .lg-tbl tr.lg-grp td{background:var(--surface-2);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);padding:6px 10px}
 .lg-up{color:var(--ok);font-weight:700}
 .lg-dn{color:var(--bad);font-weight:700}
@@ -7666,7 +7672,7 @@ function mmTexte(d, nom, sem){
    ========================================================================== */
 let LIG = null;            // { liste, mm:{id:[lignes]}, moi:[lignes], vict:[], bravos:{cle:[membre_id]} }
 let LIG_SUB = 'tab';
-let LIG_TRI = { col:'relance', dir:'desc' };
+let LIG_TRI = { col:'arbre', dir:'asc' };   // 31/10/2026 : arbre par défaut ; un clic sur une colonne trie en liste
 let LIG_PORTEE = '';       // '' = toute la descendance, 'directs' = filleuls directs
 let LIG_QUI = 'moi';       // progression : 'moi' | 'lignee'
 let LIG_N = 12;            // progression : nombre de semaines
@@ -7718,10 +7724,25 @@ function ligNom(id){
   const m = byId.get(id); return m ? m.name : '#'+id;
 }
 const ligStatut = p => String((p && p.parcours && p.parcours.statut) || '').replace('ROLE_','');
+// Objectifs de PROMOTION du statut actuel : validés / total, plus ceux en attente de validation.
+// 31/10/2026 : aucun objectif validé = « 0/total » (barre vide), plus un tiret ; le total vient du
+// catalogue du réseau (DATA.cfg.objectifs) quand la progression ne le donne pas encore.
 function ligObjectifs(p){
   const st = ligStatut(p); if(!st) return null;
-  const e = p.parcours && p.parcours.etapes && p.parcours.etapes['objectifs_'+st.toLowerCase()];
-  return e && e.tot ? { n: Math.min(e.n||0, e.tot), tot: e.tot } : null;
+  const et = (p.parcours && p.parcours.etapes) || {};
+  const e = et['objectifs_'+st.toLowerCase()] || et['objectifs_role_'+st.toLowerCase()];
+  const cat = ((DATA && DATA.cfg && DATA.cfg.objectifs) || []).filter(c=>String(c[1]).toUpperCase()===st && c[2]==='P');
+  const ids = new Set(cat.map(c=>+c[0]));
+  const meil = new Map();
+  ((p.parcours && Array.isArray(p.parcours.objectifs)) ? p.parcours.objectifs : []).forEach(([id, x])=>{
+    id = +id; if(!ids.has(id)) return;
+    const av = meil.get(id); if(!av || (FO_RANG[x]||0) > (FO_RANG[av]||0)) meil.set(id, x);
+  });
+  const etats = [...meil.values()];
+  const tot = (e && e.tot) || cat.length;
+  if(!tot) return null;
+  const n = Math.min(e ? (e.n||0) : etats.filter(x=>x==='ok').length, tot);
+  return { n, tot, att: etats.filter(x=>x==='att').length };
 }
 // dernière séance suivie et prochaine séance réservée, pour un ensemble d'identifiants — un seul passage
 function ligSeances(ids){
@@ -7783,6 +7804,23 @@ function ligTrier(l){
     return c ? c*k : (a.niveau-b.niveau) || a.nom.localeCompare(b.nom,'fr');
   });
 }
+// Ordre en arbre : chaque personne sous son parrain (ou, s'il n'est pas affiché — invité pas sur
+// Kairos —, sous son plus proche ascendant affiché), frères et sœurs par ordre alphabétique prénom nom.
+function ligArbreOrdre(l){
+  const vis = new Map(l.map(r=>[r.id, r]));
+  const par = new Map(LIG.liste.map(p=>[p.membre_id, p.parrain_id]));
+  const pere = id => { let x = par.get(id), g = 0; while(x!=null && x!==MOI_ID && !vis.has(x) && g++<60) x = par.get(x); return vis.has(x) ? x : null; };
+  const enf = new Map(), rac = [];
+  l.forEach(r=>{ const p = pere(r.id); if(p==null) rac.push(r); else { if(!enf.has(p)) enf.set(p, []); enf.get(p).push(r); } });
+  const cmp = (a,b)=>a.nom.localeCompare(b.nom, 'fr', { sensitivity:'base' });
+  const out = [], vus = new Set();
+  const visiter = (r, d)=>{ if(vus.has(r.id)) return; vus.add(r.id);
+    const f = (enf.get(r.id)||[]).sort(cmp);
+    out.push(Object.assign({}, r, { prof:d, nEnf:f.length })); f.forEach(c=>visiter(c, d+1)); };
+  rac.sort(cmp).forEach(r=>visiter(r, 0));
+  l.forEach(r=>{ if(!vus.has(r.id)) out.push(Object.assign({}, r, { prof:0, nEnf:0 })); });
+  return out;
+}
 const ST_ORDRE = ['', 'NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
 
 /* --- rendu --- */
@@ -7801,7 +7839,8 @@ function buildLig(){
 function ligTableau(){
   const tout = LIG.liste.filter(p=>ADH.has(p.membre_id));
   const invites = LIG.liste.filter(p=>!ADH.has(p.membre_id) && !p.connecte).length;
-  const l = ligTrier(ligLignes());
+  const arbre = LIG_TRI.col==='arbre';
+  const l = arbre ? ligArbreOrdre(ligLignes()) : ligTrier(ligLignes());
   const cour = mmSemCour();
   const aRelancer = l.filter(r=>r.relance>0).length;
   let h = '<div class="panel"><div class="mm-head"><h2>Tableau de bord de ma lignée</h2></div>'
@@ -7816,22 +7855,31 @@ function ligTableau(){
   }
   const th = (c, t, cl) => '<th class="sortable'+(cl?' '+cl:'')+(LIG_TRI.col===c?' '+LIG_TRI.dir:'')+'" data-ligt="'+c+'">'+t+'</th>';
   const nK = l.filter(r=>r.connecte).length;
-  h += '<p class="mm-sub" style="margin-top:8px">En tête : les '+nK+' personne'+(nK>1?'s':'')+' sur Kairos ; ensuite les '+(l.length-nK)+' adhérent'+(l.length-nK>1?'s':'')+' FORMAN pas encore sur Kairos.</p>';
+  const LIBT = { nom:'personne', relance:'à relancer', statut:'statut', obj:'objectifs', seance:'dernière séance', adh:'adhésion', mm:'mail manager', r1:'R1', av:'RDV d’avance', va:'VA' };
+  h += arbre
+    ? '<p class="mm-sub" style="margin-top:8px">En arbre : chaque filleul sous son parrain, par ordre alphabétique. Clique sur une colonne pour trier la liste.'
+      + (l.length-nK ? ' '+(l.length-nK)+' adhérent'+(l.length-nK>1?'s':'')+' pas encore sur Kairos.' : '')+'</p>'
+    : '<p class="mm-sub" style="margin-top:8px">Liste triée par '+esc(LIBT[LIG_TRI.col]||LIG_TRI.col)+' (les personnes sur Kairos d’abord). '
+      + '<button type="button" class="lg-arbb" data-ligt="arbre">🌳 Revenir à l’arbre</button></p>';
   h += '</div><div class="tbl-wrap lg-tw"><table class="lg-tbl"><thead><tr>'
     + th('nom','Personne') + th('relance','À relancer') + th('statut','Statut') + th('obj','Objectifs')
     + th('seance','Dernière séance') + th('adh','Adhésion') + th('mm','Mail manager')
     + th('r1','R1 · 4 sem.','num') + th('av','RDV d’avance','num') + th('va','VA + VAA VC','num')
     + '</tr></thead><tbody>'
     + l.map((r, i) => {
-        const sep = (i===0 || l[i-1].connecte !== r.connecte)
-          ? '<tr class="lg-grp"><td colspan="10">'+(r.connecte ? 'Sur Kairos' : 'Adhérents FORMAN pas encore sur Kairos')+'</td></tr>' : '';
-        const obj = r.obj ? '<span class="lg-jauge" title="'+r.obj.n+' objectifs validés sur '+r.obj.tot+'"><i style="width:'+Math.round(r.obj.n*100/r.obj.tot)+'%"></i></span> '+r.obj.n+'/'+r.obj.tot : '<span class="lg-mu">—</span>';
+        const sep = '';
+        const obj = r.obj ? '<span class="lg-jauge" title="'+r.obj.n+' objectifs '+esc(r.statut)+' validés sur '+r.obj.tot+'"><i style="width:'+Math.round(r.obj.n*100/r.obj.tot)+'%"></i></span> '+r.obj.n+'/'+r.obj.tot
+                  + (r.obj.att ? '<span class="lg-nv">'+r.obj.att+' en attente</span>' : '') : '<span class="lg-mu">—</span>';
+        const pf = arbre ? (r.prof||0) : 0;
         const tend = r.r1t==null ? '' : (r.r1t>0 ? ' <span class="lg-up" title="en hausse sur les 4 semaines précédentes">↗</span>' : r.r1t<0 ? ' <span class="lg-dn" title="en baisse sur les 4 semaines précédentes">↘</span>' : ' <span class="lg-mu" title="stable">→</span>');
         const mm = !r.connecte ? '<span class="lg-mu">pas sur Kairos</span>'
                  : !r.participe ? '<span class="lg-mu">ne participe pas</span>'
                  : !r.mm ? '<span class="lg-mu">aucun</span>'
                  : (r.mmCour ? '<a href="#mail-manager?s=le-mur&v='+r.id+'" data-mmlig="'+r.id+'">✅ '+esc(mmLibC(r.mm))+'</a>' : esc(mmLibC(r.mm)));
-        return sep + '<tr'+(r.relance?' class="lg-rel"':'')+'><td><b>'+esc(r.nom)+'</b>'+(r.invite?' <span class="lg-mu">invité·e</span>':'')+'<span class="lg-nv">'
+        return sep + '<tr class="'+(r.relance?'lg-rel':'')+(arbre?' lg-a'+Math.min(pf,4):'')+'"><td'+(pf?' style="padding-left:'+(10+pf*22)+'px"':'')+'>'
+          + (pf ? '<span class="lg-br" aria-hidden="true">↳</span>' : '')
+          + '<b>'+esc(r.nom)+'</b>'+(r.invite?' <span class="lg-mu">invité·e</span>':'')+(!r.connecte?' <span class="lg-mu">· pas sur Kairos</span>':'')
+          + (arbre && r.nEnf ? ' <span class="lg-ne" title="filleuls affichés dessous">'+r.nEnf+' filleul'+(r.nEnf>1?'s':'')+'</span>' : '')+'<span class="lg-nv">'
           + (r.niveau===1 ? 'filleul direct' : 'niveau '+r.niveau+(r.parrain?' · filleul de '+esc(r.parrain):'')) + '</span></td>'
           + '<td>'+(r.sig.length ? r.sig.map(([k,t])=>'<span class="lg-sig s-'+k+'">'+esc(t)+'</span>').join('') : '<span class="lg-okk">à jour</span>')+'</td>'
           + '<td>'+(r.statut ? '<span class="lg-st">'+esc(r.statut)+'</span>' : '<span class="lg-mu">—</span>')+'</td>'
@@ -8177,6 +8225,7 @@ document.addEventListener('click', e=>{
   const t = e.target.closest ? e.target : null; if(!t || !t.closest('#v-lig')) return;
   const sb = t.closest('#ligSub button'); if(sb){ showLigSub(sb.dataset.s); syncHash(true); window.scrollTo({top:0}); return; }
   const th = t.closest('[data-ligt]');
+  if(th && th.dataset.ligt==='arbre'){ LIG_TRI = { col:'arbre', dir:'asc' }; buildLig(); syncHash(false); return; }
   if(th){ const c=th.dataset.ligt; LIG_TRI = { col:c, dir: LIG_TRI.col===c && LIG_TRI.dir==='desc' ? 'asc' : (c==='nom'||c==='niveau' ? (LIG_TRI.col===c?'desc':'asc') : 'desc') }; buildLig(); syncHash(false); return; }
   const pp = t.closest('[data-ligp]'); if(pp){ LIG_PORTEE = pp.dataset.ligp; buildLig(); syncHash(false); return; }
   const q = t.closest('[data-ligq]'); if(q){ LIG_QUI = q.dataset.ligq; buildLig(); syncHash(false); return; }
@@ -8191,7 +8240,7 @@ function ligTabState(p){
   if(LIG_SUB!=='tab') p.set('s', LIG_SLUG[LIG_SUB]);
   if(LIG_SUB==='tab'){
     if(LIG_PORTEE) p.set('portee', LIG_PORTEE);
-    if(LIG_TRI.col!=='relance' || LIG_TRI.dir!=='desc') p.set('tri', LIG_TRI.col+'.'+LIG_TRI.dir);
+    if(LIG_TRI.col!=='arbre') p.set('tri', LIG_TRI.col+'.'+LIG_TRI.dir);
   }
   if(LIG_SUB==='prog'){ if(LIG_QUI!=='moi') p.set('qui', LIG_QUI); if(LIG_N!==12) p.set('n', LIG_N); }
   if(LIG_SUB==='vic' && LIG_VF) p.set('f', 'ma-lignee');
@@ -8200,8 +8249,8 @@ function ligApplyState(p){
   const s = p.get('s')||'';
   LIG_SUB = SLUG_LIG[s] || (LIG_SUBS.includes(s)?s:'tab');
   LIG_PORTEE = p.get('portee')==='directs' ? 'directs' : '';
-  const [c,d] = (p.get('tri')||'relance.desc').split('.');
-  LIG_TRI = { col:c||'relance', dir: d==='asc'?'asc':'desc' };
+  const [c,d] = (p.get('tri')||'arbre.asc').split('.');
+  LIG_TRI = c && c!=='arbre' ? { col:c, dir: d==='asc'?'asc':'desc' } : { col:'arbre', dir:'asc' };
   LIG_QUI = p.get('qui')==='lignee' ? 'lignee' : 'moi';
   LIG_N = +(p.get('n')||12)===26 ? 26 : 12;
   LIG_VF = p.get('f')==='ma-lignee' ? 'lignee' : '';

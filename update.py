@@ -569,6 +569,24 @@ def _premiere(dates):
 
 _GOALS_PAR_NIVEAU = {}
 _GOALS = []
+# Fiches détaillées (/api/users/{id}) déjà lues pendant le passage : parcours_membre les réutilise
+_FICHES = {}
+_CIBLES = None
+
+def cibles_parcours():
+    """Membres rapprochés d'un compte Kairos (fonction parcours), lus une fois par passage. [] si indisponible."""
+    global _CIBLES
+    if _CIBLES is None:
+        _CIBLES = []
+        if KAIROS_TOKEN:
+            try:
+                r = requests.get(KAIROS_BASE.replace("/donnees", "/parcours"),
+                                 headers={"x-kairos-token": KAIROS_TOKEN}, timeout=120)
+                if r.ok:
+                    _CIBLES = r.json().get("membres", []) or []
+            except Exception as e:
+                print(f"liste des membres à synchroniser indisponible ({e})")
+    return _CIBLES
 
 def goals_catalogue(api):
     """Catalogue des objectifs du réseau (mis en cache pour tout le passage)."""
@@ -633,7 +651,7 @@ def parcours_membre(api, uid, membres, adh_ids):
     Chaque étape porte la date de la première séance DÉJÀ PASSÉE (d)
     et, le cas échéant, la date de la prochaine séance à venir (f)."""
     aujourdhui = datetime.datetime.now(PARIS).date().isoformat()
-    u = get(f"{api}/api/users/{uid}") or {}
+    u = _FICHES.pop(uid, None) or get(f"{api}/api/users/{uid}") or {}
     ateliers = _pages(api, "workshops", {"guests.id": uid})
     formations = _pages(api, "formations", {"guests.id": uid})
     evenements = _pages(api, "events", {"guests.id": uid})
@@ -790,12 +808,7 @@ def sync_parcours(api, membres, adh_ids):
         print("KAIROS_TOKEN absent : progression individuelle ignorée")
         return
     url_p = KAIROS_BASE.replace("/donnees", "/parcours")
-    try:
-        r = requests.get(url_p, headers={"x-kairos-token": KAIROS_TOKEN}, timeout=120)
-        cibles = r.json().get("membres", []) if r.ok else []
-    except Exception as e:
-        print(f"liste des membres à synchroniser indisponible ({e})")
-        return
+    cibles = cibles_parcours()
     # Une personne peut avoir plusieurs adresses rapprochées de la même fiche : sans dédoublonnage, l'upsert
     # reçoit deux fois le même membre_id et Postgres refuse TOUT le lot (« cannot affect row a second time ») —
     # constaté le 21/10/2026 : aucune progression mise à jour depuis le 24/09/2026.
@@ -1137,6 +1150,38 @@ def run():
             statuts[i] = st
         else:
             statuts.pop(i, None)
+
+    # 31/10/2026 : l'annuaire incrémental ne relit que les inscrits récents, si bien qu'une adhésion
+    # réglée par un membre plus ancien n'apparaissait qu'au passage mensuel (Anais, adhésion du 28/10).
+    # Les personnes sur Kairos ont de toute façon leur fiche détaillée relue chaque jour pour leur
+    # parcours : on la lit ici une seule fois (gardée dans _FICHES pour parcours_membre) et on en
+    # reprend la cotisation et le statut.
+    if not annuaire_complet:
+        a_relire = [i for i in dict.fromkeys(c.get("membre_id") for c in cibles_parcours())
+                    if isinstance(i, int) and i not in lues]
+        if a_relire:
+            with ThreadPoolExecutor(max_workers=8) as ex:
+                futs = {ex.submit(get, f"{api}/api/users/{i}"): i for i in a_relire}
+                for fu in as_completed(futs):
+                    i = futs[fu]
+                    try:
+                        d = fu.result()
+                    except Exception:
+                        d = None
+                    if not isinstance(d, dict) or d.get("id") not in (None, i):
+                        continue
+                    _FICHES[i] = d
+                    ap = d.get("adhesionPaidAt")
+                    if ap:
+                        adh_dates[i] = pdate(ap)
+                    else:
+                        adh_dates.pop(i, None)
+                    st = statut_de(d.get("roles"))
+                    if st and st != "GUEST":
+                        statuts[i] = st
+                    else:
+                        statuts.pop(i, None)
+            print(f"comptes Kairos : {len(_FICHES)} fiches relues sur {len(a_relire)} (cotisation et statut repris)")
 
     if annuaire_complet:
         membres = [lues[i] for i in sorted(lues)]

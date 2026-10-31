@@ -2018,13 +2018,57 @@ test.describe('Ma lignée — tableau de bord, progression, victoires, arbre', (
     expect(r.noms).toEqual(['Chloe', 'Aline', 'Bea', 'Sous Invite']);
     expect(r.aline.sig).toEqual(['adh']);                     // adhésion à renouveler sous 30 jours
     expect(r.aline.r1).toBe(5);                               // 2 + 3 sur les 4 dernières semaines
-    expect(r.aline.obj).toEqual({ n: 3, tot: 12 });
+    expect(r.aline.obj).toEqual({ n: 3, tot: 12, att: 0 });
     expect(r.aline.mmCour).toBe(true);
     expect(r.bea).toEqual(['seance', 'kairos']);              // vue il y a 90 jours, pas sur Kairos
     expect(r.chloe).toEqual(['seance']);                      // son mail manager de la semaine est publié
     expect(r.directs).toEqual(['Aline', 'Bea']);
-    expect(r.lignes).toBe(6);                                 // 4 personnes + 2 intertitres (sur Kairos / pas encore)
+    expect(r.lignes).toBe(4);                                 // 4 personnes (plus d'intertitres depuis le 31/10/2026)
     expect(r.note).toContain('1 membre invité');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('arbre par défaut : chaque filleul sous son parrain, ordre alphabétique ; un clic sur une colonne trie (31/10/2026)', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserLig(page);
+    const r = await page.evaluate(() => {
+      LIG_TRI = { col: 'arbre', dir: 'asc' };
+      showTab('lig'); buildLig();
+      const lire = () => [...document.querySelectorAll('#ligCorps .lg-tbl tbody tr')].map(tr =>
+        (tr.querySelector('.lg-br') ? '↳' : '') + tr.querySelector('td b').textContent);
+      const arbre = lire(), url = tabState('lig').toString();
+      document.querySelector('#ligCorps th[data-ligt="nom"]').click();
+      const liste = { noms: lire(), tri: LIG_TRI, retour: !!document.querySelector('#ligCorps .lg-arbb') };
+      document.querySelector('#ligCorps .lg-arbb').click();
+      return { arbre, url, liste, apres: LIG_TRI.col, defaut: (ligApplyState(new URLSearchParams('')), LIG_TRI) };
+    });
+    // Sous Invite : son parrain (invité, pas sur Kairos) n'est pas affiché → remonte au premier niveau
+    expect(r.arbre).toEqual(['Aline', '↳Chloe', 'Bea', 'Sous Invite']);
+    expect(r.url).toBe('');
+    expect(r.liste.tri).toEqual({ col: 'nom', dir: 'asc' });
+    expect(r.liste.noms).toEqual(['Aline', 'Chloe', 'Bea', 'Sous Invite']);   // sur Kairos d'abord
+    expect(r.liste.retour).toBe(true);
+    expect(r.apres).toBe('arbre');
+    expect(r.defaut).toEqual({ col: 'arbre', dir: 'asc' });
+    expect(erreurs).toEqual([]);
+  });
+
+  test('objectifs : 0/total quand aucun n’est validé, et ceux en attente (31/10/2026)', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserLig(page);
+    const r = await page.evaluate(() => {
+      DATA.cfg = { objectifs: [[10,'neoman','P','a'],[11,'neoman','P','b'],[12,'neoman','P','c'],[30,'beman','P','x'],[31,'beman','P','y'],[40,'beman','M','m']] };
+      const c = LIG.liste.find(p => p.membre_id === 103);
+      c.parcours = { statut: 'ROLE_NEOMAN', etapes: {}, objectifs: [[10,'att',null],[11,'att',null],[30,'att',null]] };
+      const b = { statut: 'ROLE_BEMAN', etapes: { objectifs_neoman: { n: 3, tot: 3, ok: true } }, objectifs: [[10,'ok','2026-10-01']] };
+      LIG_TRI = { col: 'arbre', dir: 'asc' }; showTab('lig'); buildLig();
+      const tr = [...document.querySelectorAll('#ligCorps .lg-tbl tbody tr')].find(x => x.querySelector('td b').textContent === 'Chloe');
+      return { chloe: ligObjectifs(c), beman: ligObjectifs({ parcours: b }), cell: tr.children[3].textContent };
+    });
+    expect(r.chloe).toEqual({ n: 0, tot: 3, att: 2 });       // 30 est un objectif BEMAN : pas compté
+    expect(r.beman).toEqual({ n: 0, tot: 2, att: 0 });       // statut BEMAN : objectifs de promotion BEMAN seulement
+    expect(r.cell).toContain('0/3');
+    expect(r.cell).toContain('2 en attente');
     expect(erreurs).toEqual([]);
   });
 
