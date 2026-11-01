@@ -4068,7 +4068,7 @@ test.describe('Parcours en missions', () => {
           mis: { '1.5/mail': '2026-10-01T10:00:00Z' }, ffav: { 'esp': '2026-10-01T10:00:00Z', 'x': '!2026-10-02T10:00:00Z' }, portes: {},
           mm: [{ s: vAddDays(sem, -7), st: 'publie' }, { s: sem, st: 'publie' }], mm_participe: true, mm_objectifs: true,
           enregistrements: 3, regles: 2, regles_actives: 1, alertes: 4, retours: 1,
-          usage: [{ j: auj, t: 'fiche', c: 'esp', n: 2, d: new Date().toISOString() }, { j: auj, t: 'onglet', c: 'fiches', n: 1, d: new Date().toISOString() }] },
+          usage: [{ j: auj, t: 'fiche', c: 'esp', n: 2, d: new Date().toISOString() }, { j: auj, t: 'onglet', c: 'fiches', n: 1, d: new Date().toISOString() }, { j: auj, t: 'simu', c: 'assurance-vie', n: 1, d: new Date().toISOString() }, { j: auj, t: 'simu', c: 'courrier:attestation-hebergement', n: 1, d: new Date().toISOString() }] },
         { membre_id: 30002, nom: 'Bob Dormeur', emails: ['b@x.invalid'], premier: '2026-08-01T10:00:00Z', dernier_acces: '2026-08-02T10:00:00Z',
           jours: [], parcours: null, mis: {}, ffav: {}, portes: {}, mm: [], enregistrements: 0, regles: 0, regles_actives: 0, alertes: 0, retours: 0, usage: [] },
       ];
@@ -4078,14 +4078,18 @@ test.describe('Parcours en missions', () => {
       const ordre = noms();
       document.querySelector('.act-tbl tr.act-l').click();
       const det = document.querySelector('.act-det');
+      const liens = [...det.querySelectorAll('.act-u a.act-lien')].map(a => a.getAttribute('href') + ' ' + a.textContent);
       const a = ACT[0]._c;
       document.getElementById('actF').value = 'inactifs'; document.getElementById('actF').dispatchEvent(new Event('input'));
       return { ordre, inactifs: noms(), det: !!det && det.textContent.includes('Phase 1'), serie: a.serie, mmPub: a.mmPub, favs: a.favs.length,
-               lu: a.fiches.length, j30: a.j30, p1: a.phases[0], vue: document.getElementById('actVue').textContent };
+               liens, lu: a.fiches.length, j30: a.j30, p1: a.phases[0], vue: document.getElementById('actVue').textContent };
     });
     expect(r.ordre).toEqual(['Alice Active', 'Bob Dormeur']);   // tri par dernier accès décroissant
     expect(r.inactifs).toEqual(['Bob Dormeur']);
     expect(r.det).toBe(true);
+    // « Dernières ouvertures » : chaque entrée est un lien vers ce qui a été ouvert (01/11/2026)
+    expect(r.liens).toEqual(expect.arrayContaining([expect.stringMatching(/^#p\/esp 📄 /), '#fiches-pratiques 🗂 Fiches pratiques',
+      expect.stringMatching(/^#ressources\?outil=assurance-vie 🧮 /), expect.stringMatching(/^#ressources\?s=courriers&modele=attestation-hebergement ✉️ Attestation/)]));
     expect(r.serie).toBe(2);
     expect(r.mmPub).toBe(2);
     expect(r.favs).toBe(1);

@@ -1069,6 +1069,7 @@ p.mi-ai{margin:4px 0 8px}
 .act-mi.faite{color:#1d7f49}.act-mi.bloquee{color:var(--ink-3)}
 .act-bars{display:flex;align-items:flex-end;gap:4px;height:52px}.act-bars i{display:block;width:14px;background:var(--accent);border-radius:3px 3px 0 0;opacity:.85}
 .act-mml{display:flex;flex-wrap:wrap;gap:4px}.act-mm{font-size:11px;border:1px solid var(--line-2);border-radius:6px;padding:1px 5px;color:var(--ink-3)}.act-mm.ok{background:rgba(34,160,90,.15);color:#1d7f49;border-color:transparent}
+.act-lien{color:var(--accent);text-decoration:none}.act-lien:hover{text-decoration:underline}
 .act-u{font-size:12.5px;padding:2px 0}.act-u span{color:var(--ink-3);display:inline-block;width:78px}.act-u em{color:var(--ink-3);font-style:normal}
 .ff-lock{background:var(--surface-2);border-style:dashed}
 .ff-lock .ff-tx b{color:var(--ink-2)}.ff-lock .ff-d{color:var(--ink-3)}.ff-lock:hover{border-color:var(--line-2);box-shadow:none}
@@ -4306,6 +4307,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['f','Admin → Activité : les fiches, onglets et simulateurs des « Dernières ouvertures » (et des tops) sont cliquables.'],
     ['b','Lien partagé vers une fiche pratique : la fiche s’ouvre sur l’onglet Fiches pratiques (et non plus sur l’accueil), et y revient quand on la ferme.'],
     ['b','Bulle « Un souci ? Une idée ? » réduite à son icône (le texte apparaît au survol) et remontée quand une fiche est ouverte : elle ne cache plus le lien vers la fiche suivante.'],
     ['f','Admin → MCP : question transmise par l’IA, réponse renvoyée par Kairos (bouton Voir) et avis des membres sur les réponses (outil « donner un avis »).'],
@@ -5534,7 +5536,20 @@ async function chargerActivite(){
   buildActivite();
 }
 const actLibUsage = u => u.t==='fiche' ? ((CONTENU&&CONTENU.pages&&CONTENU.pages[u.c]) ? '📄 '+CONTENU.pages[u.c].t : '📄 '+u.c)
-  : u.t==='onglet' ? '🗂 '+((document.querySelector('#side [data-v="'+u.c+'"]')||{}).title || u.c) : '🧮 '+u.c;
+  : u.t==='onglet' ? '🗂 '+((document.querySelector('#side [data-v="'+u.c+'"]')||{}).title || u.c) : actLibSimu(u.c);
+function actLibSimu(c){ c = String(c||'');
+  try{ if(c.startsWith('courrier:')){ const d = RS_DOCS.find(x=>x.slug===c.slice(9)); return '✉️ '+(d ? d.t : c.slice(9)); }
+    const o = RS_SIMS.find(x=>x.slug===c||x.id===c); return '🧮 '+(o ? o.t : c); }catch(e){ return '🧮 '+c; } }
+// Lien vers ce qui a été ouvert : la fiche (panneau), l'onglet, ou le simulateur / courrier dans Ressources.
+function actLienUsage(u){
+  let h = '';
+  if(u.t==='fiche') h = (CONTENU&&CONTENU.pages&&CONTENU.pages[u.c]) ? '#p/'+encodeURIComponent(u.c) : '';
+  else if(u.t==='onglet') h = TAB_SLUG[u.c] || (TABS.includes(u.c) ? u.c : '') ? '#'+(TAB_SLUG[u.c]||u.c) : '';
+  else if(u.t==='simu'){ const c = String(u.c||'');
+    h = c.startsWith('courrier:') ? '#ressources?s=courriers&modele='+encodeURIComponent(c.slice(9)) : '#ressources?outil='+encodeURIComponent(c); }
+  const lib = esc(actLibUsage(u));
+  return h ? '<a class="act-lien" href="'+h+'">'+lib+'</a>' : lib;
+}
 function actFiltre(){
   const q = norm((document.getElementById('actQ')||{}).value||'').trim();
   const f = (document.getElementById('actF')||{}).value || '';
@@ -5572,8 +5587,8 @@ function buildActivite(){
     + tuile(tous.filter(c=>c.j30).length, 'actifs sur 30 jours')
     + tuile(pubSem+(partic?' / '+partic:''), 'Mail Manager publiés (semaine du '+fmtD(sem)+')')
     + tuile(Object.keys(parPh).sort().map(k=>'P'+k+' : '+parPh[k]).join(' · ') || '—', 'personnes par phase en cours')
-    + '</div><div class="act-tops"><div><h3>Fiches les plus lues</h3>'+(top('fiche').map(x=>'<div class="act-top">'+esc(actLibUsage({t:'fiche',c:x.c}))+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
-    + '</div><div><h3>Onglets les plus utilisés</h3>'+(top('onglet').map(x=>'<div class="act-top">'+esc(actLibUsage({t:'onglet',c:x.c}))+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
+    + '</div><div class="act-tops"><div><h3>Fiches les plus lues</h3>'+(top('fiche').map(x=>'<div class="act-top">'+actLienUsage({t:'fiche',c:x.c})+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
+    + '</div><div><h3>Onglets les plus utilisés</h3>'+(top('onglet').map(x=>'<div class="act-top">'+actLienUsage({t:'onglet',c:x.c})+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
     + '</div></div>';
   // tableau
   const col = ACT_COLS.find(c=>c[0]===ACT_TRI.col) || ACT_COLS[1];
@@ -5600,7 +5615,7 @@ function actDetail(r){
   const conn = sems.map(s=>{ let n=0; for(let d=0; d<7; d++) if(jours.has(vAddDays(s,d))) n++; return '<i title="semaine du '+fmtD(s)+' : '+n+' jour(s)" style="height:'+(4+n*6)+'px"></i>'; }).join('');
   const mm = (r.mm||[]).slice(-12).map(x=>'<span class="act-mm '+(x.st==='publie'?'ok':'')+'" title="'+esc((x.st==='publie'?'publié':'brouillon')+' — semaine du '+fmtD(x.s))+'">'+fmtD(x.s).slice(0,5)+'</span>').join('');
   const portes = c.portes.map(p=>'<div>'+esc(miPorteNom(p.k))+' : '+esc(p.statut)+(p.demande_le?' · demandé le '+fmtD(actJour(p.demande_le)):'')+(p.traite_le?' · traité le '+fmtD(actJour(p.traite_le)):'')+'</div>').join('');
-  const usage = (r.usage||[]).slice(0,15).map(u=>'<div class="act-u"><span>'+esc(fmtD(actJour(u.d)))+'</span>'+esc(actLibUsage(u))+(u.n>1?' <em>×'+u.n+'</em>':'')+'</div>').join('');
+  const usage = (r.usage||[]).slice(0,15).map(u=>'<div class="act-u"><span>'+esc(fmtD(actJour(u.d)))+'</span>'+actLienUsage(u)+(u.n>1?' <em>×'+u.n+'</em>':'')+'</div>').join('');
   return '<div class="act-grid"><div><h4>Parcours</h4>'+(parc||'<p class="mbr-sub">—</p>')+(portes?'<h4>Points d’étape</h4>'+portes:'')+'</div>'
     + '<div><h4>Connexions (12 semaines)</h4><div class="act-bars">'+conn+'</div>'
     + '<p class="mbr-sub">'+c.j7+' j sur 7 · '+c.j30+' j sur 30 · '+c.j90+' j sur 90 — inscrit le '+fmtD(actJour(r.premier))+'</p>'
