@@ -4250,6 +4250,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['b','Mes habilitations : ALPSI (agent lié) ou CIF, l’une des deux suffit — le compteur et la jauge Passage Manager attendent 3 habilitations (MIA, MIOBSP, ALPSI ou CIF).'],
     ['f','Fiche pratique ouverte : fil d’Ariane « Fiches pratiques › rayon » cliquable, panneau élargissable à la souris (double-clic : largeur par défaut) et mode plein écran, retenus sur l’appareil ; la rangée des fiches voisines en haut est retirée, précédente/suivante suivent le rayon.'],
     ['f','Fiche Exceltis refondue : toute la gamme (Rendement, Patrimoine indice / Taux / à coupons, Sérénité, Protect), historique au 28/10/2026, discours client et vigilance.'],
     ['f','Admin → Contenu : sous-onglet « Suggestions » pour tous les admins — commenter une fiche ou un bloc (un passage précis ou le contenu entier), proposer une idée libre, en discuter en fil ; l’édition du contenu est réservée au propriétaire.'],
@@ -7283,6 +7284,7 @@ function mmHabTables(d, ro){
   return '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>Habilitation</th><th>Statut</th>'
     + '<th>Date d’examen</th><th>Date ORIAS</th></tr></thead><tbody>'
     + MM_HAB.map(([k,lib])=>ligne(k,lib,true)).join('') + '</tbody></table></div>'
+    + '<p class="mm-note mm-ou">ALPSI (agent lié) ou CIF : l’une des deux suffit.</p>'
     + '<label class="mm-lab">Séminaire Toulouse <span class="mut">— 3 jours</span></label>'
     + '<div class="mm-wrap"><table class="mm-tbl mm-tls"><thead><tr><th>Séminaire</th><th>Du</th><th>Au</th></tr></thead><tbody>'
     + '<tr><td>Séminaire Toulouse</td><td data-l="Du">'+cellDate('tls','du')+'</td><td data-l="Au">'+cellDate('tls','au')+'</td></tr>'
@@ -7354,8 +7356,14 @@ function mmFCDue(d, k, an){
   });
 }
 const mmFCRequises = (d, an) => MM_FC.filter(([k])=>mmFCDue(d, k, an));
-const mmHabTotal = d => MM_HAB.length + mmFCRequises(d).length;
-const mmHabValidees = d => MM_HAB.concat(mmFCRequises(d)).filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
+// Règle du 01/11/2026 : ALPSI (agent lié) et CIF sont interchangeables — l'une des deux suffit. On compte donc
+// 3 habilitations à obtenir : MIA, MIOBSP, et ALPSI ou CIF (une seule comptée si les deux sont validées).
+const MM_HAB_OU = ['alpsi','cif'];
+const MM_HAB_REQ = MM_HAB.length - MM_HAB_OU.length + 1;
+const mmHabObtenues = d => { const ok=k=>mmG(d,'hab.'+k+'.s')==='ok';
+  return MM_HAB.filter(([k])=>!MM_HAB_OU.includes(k) && ok(k)).length + (MM_HAB_OU.some(ok)?1:0); };
+const mmHabTotal = d => MM_HAB_REQ + mmFCRequises(d).length;
+const mmHabValidees = d => mmHabObtenues(d) + mmFCRequises(d).filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
 function mmHabPage(){
   if(!MM) return '';
   const d = mmMigre(MM.donnees||{});
@@ -7972,11 +7980,11 @@ function mmObjectifs(){
   const va = (rempli('eva') || rempli('evaec'))
            ? mmN(mmG(d,'prod.eva')) + mmN(mmG(d,'prod.evaec'))      // l'équipe fait foi
            : mmN(mmG(d,'prod.va'))  + mmN(mmG(d,'prod.vaec'));      // pas encore d'équipe déclarée
-  const habOk=MM_HAB.filter(([k])=>mmG(d,'hab.'+k+'.s')==='ok').length;
+  const habOk=mmHabObtenues(d);
   h += '<div class="panel"><h2>Passage Manager</h2>'
      + '<p class="mm-sub">500 k€ de volume d’affaires et toutes les habilitations.</p>'
      + mmJauge('Volume d’affaires d’équipe (4 niveaux, personnel compris)', va, 500000, '€')
-     + mmJauge('Habilitations obtenues', habOk, MM_HAB.length, '')
+     + mmJauge('Habilitations obtenues (MIA, MIOBSP, ALPSI ou CIF)', habOk, MM_HAB_REQ, '')
      + (a.ftot ? mmJauge('Objectifs FORMAN '+(a.statut||''), a.fn, a.ftot, '') : '')
      + '</div>';
   return h;
