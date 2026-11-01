@@ -2087,7 +2087,7 @@ body.ps-open #fbBtn{bottom:64px}
 .rs-paper{background:#fff;color:#1b1b1b;border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);padding:34px 38px;font:13.5px/1.55 Georgia,"Times New Roman",serif;max-width:720px}
 .rs-paper p{margin:0 0 10px}
 .rs-paper .exp{margin-bottom:14px}
-.rs-paper .dest{margin:0 0 18px 55%}
+.rs-paper .dest{margin:0 0 18px;text-align:right}
 .rs-paper .dt{text-align:right;margin-bottom:18px}
 .rs-paper .obj{font-weight:700}
 .rs-paper .sig{margin:0 0 0 55%}
@@ -2108,7 +2108,7 @@ body.ps-open #fbBtn{bottom:64px}
   .rs-kpis{grid-template-columns:1fr 1fr}
   .rs-kpi .v{font-size:18px}
   .rs-paper{padding:20px 18px;font-size:13px}
-  .rs-paper .dest,.rs-paper .sig{margin-left:30%}
+  .rs-paper .sig{margin-left:30%}
   .rs-head .rs-acts{width:100%}
 }
 #resSim,#resDoc{scroll-margin-top:12px}
@@ -4307,6 +4307,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['f','Ressources → Courriers : le bloc de l’établissement destinataire est aligné à droite, comme « Fait à … », à l’écran et dans le fichier Word.'],
     ['f','Admin → Activité : les fiches, onglets et simulateurs des « Dernières ouvertures » (et des tops) sont cliquables.'],
     ['b','Lien partagé vers une fiche pratique : la fiche s’ouvre sur l’onglet Fiches pratiques (et non plus sur l’accueil), et y revient quand on la ferme.'],
     ['b','Bulle « Un souci ? Une idée ? » réduite à son icône (le texte apparaît au survol) et remontée quand une fiche est ouverte : elle ne cache plus le lien vers la fiche suivante.'],
@@ -13061,8 +13062,8 @@ const rsXml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&g
 function rsDocxXml(P){
   const run = (t,b,hl) => '<w:r><w:rPr>'+(b?'<w:b/>':'')+(hl?'<w:highlight w:val="yellow"/>':'')+'</w:rPr><w:t xml:space="preserve">'+rsXml(t)+'</w:t></w:r>';
   const body = P.map(p=>{
-    const ind = (p.c==='dest'||p.c==='sig') ? '<w:ind w:left="5100"/>' : '';
-    const jc = p.c==='dt' ? 'right' : p.c==='titre' ? 'center' : p.c==='p' ? 'both' : 'left';
+    const ind = p.c==='sig' ? '<w:ind w:left="5100"/>' : '';
+    const jc = (p.c==='dt'||p.c==='dest') ? 'right' : p.c==='titre' ? 'center' : p.c==='p' ? 'both' : 'left';
     const after = p.gap ? 360 : (['exp','dest','sig','obj'].includes(p.c) ? 0 : 160);
     const before = p.c==='sig' && P.find(q=>q.c==='sig')===p ? 360 : p.c==='pj' ? 1000 : p.c==='mention' ? 360 : 0;
     const sz = p.c==='mention' ? '<w:rPr><w:sz w:val="17"/></w:rPr>' : '';

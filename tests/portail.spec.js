@@ -1726,6 +1726,28 @@ test.describe('Ressources — simulateurs et courriers', () => {
     expect(erreurs).toEqual([]);
   });
 
+  test('courriers : l’établissement destinataire est aligné à droite comme « Fait à », à l’écran et dans le Word', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    await entrer(page);
+    const r = await page.evaluate(() => {
+      showResSub('doc');
+      return RS_DOCS.map(t => { rsOuvrirDoc(t.id);
+        const d = document.querySelector('#rsPaper .dest'), f = document.querySelector('#rsPaper .dt');
+        return { id: t.id, dest: d ? getComputedStyle(d).textAlign : null, dt: f ? getComputedStyle(f).textAlign : null,
+          bordD: d ? Math.round(d.getBoundingClientRect().right) : null, bordF: f ? Math.round(f.getBoundingClientRect().right) : null }; });
+    });
+    for (const x of r.filter(x => x.dest)) {
+      expect(x.dest, x.id).toBe('right');
+      expect(x.dt, x.id).toBe('right');
+      expect(Math.abs(x.bordD - x.bordF), x.id + ' : bords droits différents').toBeLessThanOrEqual(1);
+    }
+    const xml = await page.evaluate(() => rsDocxXml([{ t: 'Banque X', c: 'dest' }, { t: 'Fait à Nantes', c: 'dt' }]));
+    expect((xml.match(/<w:jc w:val="right"\/>/g) || []).length).toBe(2);
+    expect(xml).not.toContain('w:left="5100"');
+    expect(erreurs).toEqual([]);
+  });
+
   test('les hypothèses d’un simulateur passent dans l’adresse, jamais les champs d’un courrier', async ({ page }) => {
     await ouvrir(page);
     const vue = await entrer(page, '#ressources?outil=per&rdt=4');
