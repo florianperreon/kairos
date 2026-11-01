@@ -2097,12 +2097,10 @@ a.mml-r:hover{border-color:var(--accent)}
       <a href="#mes-sessions" data-v="surv" hidden title="Mes sessions" data-l="Mes sessions"><span class="i" data-i="surv"></span><span class="l">Mes sessions</span></a>
       <a href="#mail-manager" data-v="mm" hidden title="Mail Manager"><span class="i" data-i="mm"></span><span class="l">Mail Manager</span></a>
       <a href="#ma-lignee" data-v="lig" hidden title="Ma lignée"><span class="i" data-i="lig"></span><span class="l">Ma lignée</span></a>
-      <div class="grp">Le réseau</div>
+      <div class="grp">Forman</div>
       <a href="#ateliers" data-v="cat" title="Ateliers"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></a>
       <a href="#parcours-decouverte" data-v="pd" id="pdTabBtn" title="Parcours Découverte"><span class="i" data-i="pd"></span><span class="l">Parcours</span></a>
-      <a href="#reunions-d-equipe" data-v="reu" title="Réunions d'équipe"><span class="i" data-i="reu"></span><span class="l">Réunions d'équipe</span></a>
-      <a href="#formations" data-v="for" title="Formations"><span class="i" data-i="for"></span><span class="l">Formations</span></a>
-      <a href="#evenements" data-v="evt" title="Événements"><span class="i" data-i="evt"></span><span class="l">Événements</span></a>
+      <a href="#reunions-d-equipe" data-v="reu" data-autres="" title="Autres événements : réunions d’équipe, formations, événements"><span class="i" data-i="evt"></span><span class="l">Autres événements</span></a>
       <a href="#annuaire" data-v="ann" title="Annuaire"><span class="i" data-i="ann"></span><span class="l">Annuaire</span></a>
       <div class="grp">S'informer &amp; outils</div>
       <a href="#fiches-pratiques" data-v="fiches" title="Fiches pratiques"><span class="i" data-i="fiches"></span><span class="l">Fiches pratiques</span></a>
@@ -2267,6 +2265,7 @@ a.mml-r:hover{border-color:var(--accent)}
 
     
     <section class="view" id="v-reu">
+      <nav class="subtabs aut-sub" aria-label="Autres événements"><button type="button" data-aut="reu" class="on">Réunions d’équipe</button><button type="button" data-aut="for">Formations</button><button type="button" data-aut="evt">Événements</button></nav>
       <div class="filters">
         <input type="search" id="reuQ" placeholder="Rechercher une réunion, un animateur…">
         <select id="reuLieu"><option value="">Tous lieux</option></select>
@@ -2285,6 +2284,7 @@ a.mml-r:hover{border-color:var(--accent)}
     </section>
 
     <section class="view" id="v-for">
+      <nav class="subtabs aut-sub" aria-label="Autres événements"><button type="button" data-aut="reu">Réunions d’équipe</button><button type="button" data-aut="for" class="on">Formations</button><button type="button" data-aut="evt">Événements</button></nav>
       <div class="filters">
         <input type="search" id="forQ" placeholder="Rechercher une formation…">
         <select id="forLieu"><option value="">Tous lieux</option></select>
@@ -2303,6 +2303,7 @@ a.mml-r:hover{border-color:var(--accent)}
     </section>
 
     <section class="view" id="v-evt">
+      <nav class="subtabs aut-sub" aria-label="Autres événements"><button type="button" data-aut="reu">Réunions d’équipe</button><button type="button" data-aut="for">Formations</button><button type="button" data-aut="evt" class="on">Événements</button></nav>
       <div class="filters">
         <input type="search" id="evtQ" placeholder="Rechercher un événement…">
         <select id="evtLieu"><option value="">Tous lieux</option></select>
@@ -4115,8 +4116,20 @@ function boot(){
 }
 
 /* ---------- Navigation / thème / verrou ---------- */
+/* « Autres événements » (01/11/2026) : Réunions d'équipe, Formations et Événements sous une seule entrée du
+   menu, en sous-onglets (cartouches) en haut de page. Chacun garde son onglet et son adresse
+   (#reunions-d-equipe, #formations, #evenements) ; l'entrée du menu rouvre le dernier consulté. */
+const AUTRES = ['reu','for','evt'];
+let AUT_DER = 'reu'; try{ const x=localStorage.getItem('kairos_aut'); if(AUTRES.includes(x)) AUT_DER=x; }catch(e){}
+const menuV = el => el.hasAttribute('data-autres') ? AUT_DER : el.dataset.v;
+const menuOn = (el, v) => el.dataset.v===v || (el.hasAttribute('data-autres') && AUTRES.includes(v));
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-aut]'); if(!b) return;
+  showTab(b.dataset.aut); curTab=b.dataset.aut; syncHash(true);
+});
 function showTab(v){
-  document.querySelectorAll('nav.tabs [data-v], nav.botbar [data-v], #plusCard [data-v]').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
+  if(AUTRES.includes(v) && AUT_DER!==v){ AUT_DER=v; try{ localStorage.setItem('kairos_aut', v); }catch(e){} }
+  document.querySelectorAll('nav.tabs [data-v], nav.botbar [data-v], #plusCard [data-v]').forEach(x=>x.classList.toggle('on',menuOn(x,v)));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
   if(v === 'mm'){ try{ buildMM(); }catch(e){} }
   if(v === 'lig'){ try{ buildLig(); }catch(e){ console.error(e); } }
@@ -4142,14 +4155,15 @@ function showTab(v){
 const MENU_SEL = 'nav.tabs [data-v], nav.botbar [data-v], #plusCard [data-v]';
 ['pointerdown','contextmenu','focusin','mouseover'].forEach(ev=>document.addEventListener(ev, e=>{
   const a = e.target.closest && e.target.closest(MENU_SEL); if(!a || a.tagName!=='A') return;
-  try{ const h = hashFor(a.dataset.v); if(a.getAttribute('href')!==h) a.setAttribute('href', h); }catch(_){}
+  try{ const h = hashFor(menuV(a)); if(a.getAttribute('href')!==h) a.setAttribute('href', h); }catch(_){}
 }, true));
 document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest(MENU_SEL);
   if(!b) return;
   if(e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;   // nouvel onglet / fenêtre : le navigateur
   e.preventDefault();
-  showTab(b.dataset.v); curTab=b.dataset.v;
+  const v = menuV(b);
+  showTab(v); curTab=v;
   fermerPlus();
   syncHash(true);
   window.scrollTo({top:0});
@@ -4211,7 +4225,7 @@ function ouvrirPlus(){
   const dans=['home','pd','surv','cat','profil'];
   c.innerHTML = '<div class="plus-t">Aller à…</div>' + [...document.querySelectorAll('#side [data-v]')]
     .filter(b=>!b.hidden && !dans.includes(b.dataset.v))
-    .map(b=>'<a href="#'+(TAB_SLUG[b.dataset.v]||b.dataset.v)+'" data-v="'+b.dataset.v+'"'+(b.dataset.v===curTab?' class="on"':'')+'>'
+    .map(b=>'<a href="#'+(TAB_SLUG[menuV(b)]||menuV(b))+'" data-v="'+b.dataset.v+'"'+(b.hasAttribute('data-autres')?' data-autres=""':'')+(menuOn(b,curTab)?' class="on"':'')+'>'
       +'<span class="i">'+b.querySelector('.i').innerHTML+'</span>'+b.querySelector('.l').innerHTML+'</a>').join('')
     + '<div class="plus-t">Mon compte</div>'
     + '<a href="#mon-profil" data-v="profil"'+(curTab==='profil'?' class="on"':'')+'><span class="i">'+document.querySelector('#side [data-v="profil"] .i').innerHTML+'</span>Mon profil</a>'
@@ -4250,6 +4264,9 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['f','Menu Forman simplifié : Ateliers, Parcours, Autres événements, Annuaire. « Autres événements » regroupe Réunions d’équipe, Formations et Événements en sous-onglets en haut de page (le dernier consulté est rouvert ; les adresses restent les mêmes).'],
+    ['f','Menu : la rubrique « Le réseau » s’appelle désormais « Forman ». Mission 3.6 « Devenir autonome en R2 sur mes modules » : case SCPI ajoutée.'],
+    ['f','Mail manager et mur : R-signature retiré ; R0, R1, R2, RX et invités DM / AD / 3 Jours affichés sur la semaine écoulée, avec entre parenthèses le cumul depuis le début de l’exercice ; « D’avance à date » devient « Semaines suivantes » (hors semaine en cours).'],
     ['b','Mes habilitations : ALPSI (agent lié) ou CIF, l’une des deux suffit — le compteur et la jauge Passage Manager attendent 3 habilitations (MIA, MIOBSP, ALPSI ou CIF).'],
     ['f','Fiche pratique ouverte : fil d’Ariane « Fiches pratiques › rayon » cliquable, panneau élargissable à la souris (double-clic : largeur par défaut) et mode plein écran, retenus sur l’appareil ; la rangée des fiches voisines en haut est retirée, précédente/suivante suivent le rayon.'],
     ['f','Fiche Exceltis refondue : toute la gamme (Rendement, Patrimoine indice / Taux / à coupons, Sérénité, Protect), historique au 28/10/2026, discours client et vigilance.'],
@@ -6453,7 +6470,8 @@ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !locat
    saisit que ce qu'elle seule connaît. Une ligne par personne et par semaine (clé = lundi ISO). */
 
 // EDM / DM ne se saisit plus : les invités présents en DM / AD / 3 Jours sont relevés dans le réseau.
-const MM_CPT   = [['r0','R0'],['r1','R1'],['r2','R2'],['r2b','R-signature'],['r3','R3'],['rx','RX']];
+// 01/11/2026 : « R-signature » (r2b) retiré — plus saisi ni affiché ; les anciennes valeurs restent dans les données.
+const MM_CPT   = [['r0','R0'],['r1','R1'],['r2','R2'],['r3','R3'],['rx','RX']];
 const MM_AV    = [['r0','R0'],['r1','R1'],['r2','R2'],['r3','R3'],['rx','RX']];
 // Production. Le 4e libellé sert là où les deux listes sont fusionnées (fiche de lecture, export
 // texte) : « VA + VAA VC » ne veut rien dire tout seul une fois le personnel et l'équipe mélangés.
@@ -6483,7 +6501,7 @@ const MM_OBJS  = [
 const MM_NIVEAUX = ['NEOMAN','BEMAN','ADMAN','MAN','DEVMAN','DXMAN','XMAN'];
 
 let MM=null, MM_PREC=null, MM_PRIVE='', MM_REG=null, MM_OBJ=null;
-let MM_MUR=[], MM_LIGNES=[], MM_SEM='', MM_SUB='moi', MM_LU=null, MM_T=null, MM_ETAT='';
+let MM_EXO=[], MM_MUR=[], MM_LIGNES=[], MM_SEM='', MM_SUB='moi', MM_LU=null, MM_T=null, MM_ETAT='';
 // « Tout déplier » : préférence de la personne, gardée sur son appareil. Par défaut les sections
 // déjà remplies sont repliées et disent leur contenu dans leur intitulé.
 let MM_TOUT=false; try{ MM_TOUT = localStorage.getItem('kairos_mm_deplie')==='1'; }catch(e){}
@@ -6509,6 +6527,22 @@ function mmBornes(lundi){
 const mmLib  = lundi => 'S'+mmNo(lundi)+' · '+mmBornes(lundi);
 const mmLibC = lundi => 'S'+mmNo(lundi);
 // Exercice du réseau : 1er août → 31 juillet
+// Compteurs R0… depuis le début de l'exercice (01/11/2026). La semaine écoulée d'un mail manager de la
+// semaine S couvre S-7 → S-1 : elle compte dans l'exercice qui contient S-1. On additionne les semaines
+// publiées (les miennes même en brouillon) de l'exercice jusqu'à S-1, plus la fiche affichée elle-même
+// (`d`, qui peut ne pas être encore enregistrée).
+function mmDebutExo(sem){ const j=vAddDays(sem,-1), y=+j.slice(0,4), m=+j.slice(5,7); return (m>=8?y:y-1)+'-08-01'; }
+function mmExoP(id, sem, d){
+  const deb=mmDebutExo(sem), t={};
+  MM_CPT.forEach(([k])=>{ t[k]=mmN(mmG(d||{},'p.'+k)); });
+  if(id==null) return t;
+  (MM_EXO||[]).forEach(r=>{
+    if(+r.membre_id!==+id || !(r.semaine>deb) || !(r.semaine<sem)) return;
+    if(r.statut!=='publie' && +id!==+MOI_ID) return;
+    MM_CPT.forEach(([k])=>{ t[k]+=mmN((r.p||{})[k]); });
+  });
+  return t;
+}
 function mmEcheances(){
   const y=+todayIso.slice(0,4), m=+todayIso.slice(5,7);
   return { dec:y+'-12-31', pmr:(m>=8?y+1:y)+'-07-31', debut:(m>=8?y:y-1)+'-08-01' };
@@ -6764,10 +6798,12 @@ async function chargerMM(){
 async function chargerMMMur(){
   if(!SB || !SBUSER) return false;
   try{
-    const [m,l] = await Promise.all([
+    const [m,l,x] = await Promise.all([
       SB.rpc('mm_mur',{p_semaine:MM_SEM}),
-      SB.from('mail_manager').select('membre_id,donnees,statut,publie_le').eq('semaine',MM_SEM)
+      SB.from('mail_manager').select('membre_id,donnees,statut,publie_le').eq('semaine',MM_SEM),
+      SB.from('mail_manager').select('membre_id,semaine,statut,p:donnees->p').gt('semaine',mmDebutExo(MM_SEM)).lte('semaine',MM_SEM)
     ]);
+    MM_EXO = (x && !x.error && x.data) || [];
     if(m.error) throw m.error;
     MM_MUR = (m.data||[]).slice().sort((a,b)=>{
       const pa=a.publie_le||'', pb=b.publie_le||'';
@@ -7008,7 +7044,7 @@ function mmChamp(p, val, ro, opt){
 const MM_RDV_LIGNES = [
   ['p',  'Écoulée',  sem=>'S'+mmNo(vAddDays(sem,-7)), 'mmRdvTotP', true],
   ['c',  'En cours', sem=>'S'+mmNo(sem),              'mmRdvTotC', false],
-  ['av', 'D’avance', ()=>'à date',                    'mmRdvTotA', true],
+  ['av', 'Semaines suivantes', sem=>'dès S'+mmNo(vAddDays(sem,7)), 'mmRdvTotA', true],   // 01/11/2026 : hors semaine en cours
 ];
 function mmCompteursTri(d, ro, prec, sem){
   const cell = (base,k) => {
@@ -7400,7 +7436,7 @@ function mmCorps(d, prive, ro, sem){
   const resRdv = [
     mmResumeCpt(d,'p',MM_CPT) ? 'Écoulée : '+mmResumeCpt(d,'p',MM_CPT) : '',
     mmResumeCpt(d,'c',MM_CPT) ? 'En cours : '+mmResumeCpt(d,'c',MM_CPT) : '',
-    tot ? 'D’avance : <b>'+tot+'</b>' : '',
+    tot ? 'Semaines suivantes : <b>'+tot+'</b>' : '',
     sousTot ? '<b>'+mmEur(sousTot)+'</b> signé' : ''].filter(Boolean).join(' — ');
   h += mmSec(1,'Mes rendez-vous','',
       mmCompteursTri(d, ro, prec, sem)
@@ -7500,14 +7536,18 @@ function mmDates(items){
   if(!items || !items.length) return '';
   return '<ul class="li">'+items.map(s=>'<li><span class="d">'+esc(fmtD(s.d))+'</span><span>'+esc(s.t)+'</span></li>').join('')+'</ul>';
 }
-function mmFiche(d, prive, sem, obj){
+function mmFiche(d, prive, sem, obj, id){
   d = mmMigre(d); const a = d.auto||{}; obj = obj||{};
+  const exo = mmExoP(id, sem, d);
   const ech = mmEcheances();
   let h = '<div class="mm-f">';
 
   // semaine écoulée
   const sous = Array.isArray(d.sous)?d.sous:[];
-  let bloc = mmKpi(d,'p',MM_CPT);
+  // 01/11/2026 : chaque compteur de la semaine écoulée, avec entre parenthèses le cumul de l'exercice
+  const pOn = MM_CPT.filter(([k])=>mmN(mmG(d,'p.'+k)) || exo[k]);
+  let bloc = pOn.length ? '<div class="kpi">'+pOn.map(([k,lib])=>'<i title="Semaine écoulée (depuis le début de l’exercice)">'+esc(lib)
+      +'<b>'+mmN(mmG(d,'p.'+k))+'</b> <span class="mut">('+exo[k]+')</span></i>').join('')+'</div>' : '';
   if(sous.length){
     const ti=sous.reduce((n,x)=>n+mmN(x.vi),0), tp=sous.reduce((n,x)=>n+mmN(x.vp),0);
     bloc += '<p class="mut" style="margin-top:5px">'+sous.map(x=>esc(x.t||'produit non précisé')+' '+mmEur(x.vi)
@@ -7517,7 +7557,10 @@ function mmFiche(d, prive, sem, obj){
   const invSem = (n,noms) => MM_INV.filter(([k])=>(n||{})[k]).map(([k,lib])=>
       '<i'+((noms||{})[k]&&noms[k].length?' title="'+esc(noms[k].join(' · '))+'"':'')
     + '>'+esc(lib)+'<b>'+n[k]+'</b></i>').join('');
-  const invP = invSem(a.invP, a.invPN);
+  const invP = MM_INV.filter(([k])=>(a.invP||{})[k] || (a.inv||{})[k]).map(([k,lib])=>{
+      const n=(a.invP||{})[k]||0, e=(a.inv||{})[k]||0, noms=((a.invPN||{})[k]||[]);
+      return '<i title="'+esc('Semaine écoulée (depuis le début de l’exercice)'+(noms.length?' — '+noms.join(' · '):''))+'">'
+        +esc(lib)+'<b>'+n+'</b> <span class="mut">('+e+')</span></i>'; }).join('');
   if(invP) bloc += '<div class="kpi" style="margin-top:5px">'+invP+'</div>';
   h += mmLigne('Semaine S'+mmNo(vAddDays(sem,-7)), bloc || '<span class="mut">Rien de déclaré.</span>');
   h += mmLigne('Sessions suivies', mmDates(a.sp));
@@ -7670,7 +7713,7 @@ function buildMM(){
        + '<button type="button" id="mmOn">Finalement, je veux le faire</button></div></div>';
   } else {
     h += '<div class="panel">' + (cour ? mmCorps(MM.donnees, MM_PRIVE, false, MM_SEM)
-                                          : mmFiche(MM.donnees, MM_PRIVE, MM_SEM, MM_OBJ))
+                                          : mmFiche(MM.donnees, MM_PRIVE, MM_SEM, MM_OBJ, MOI_ID))
        + '<div class="mm-bar'+(cour?' fix':'')+'">'
        + (cour ? '<button type="button" class="mm-b pri" id="mmPub">'+(MM.statut==='publie'?'Republier':'Publier mon mail manager')+'</button>' : '')
        + '<button type="button" class="mm-b" data-mmcopy="moi">Copier en texte</button>'
@@ -7738,25 +7781,30 @@ function mmMur(){
     // Colonnes arrêtées le 17/09/2026 : l'activité de la semaine écoulée (compteurs « p. »), la
     // production personnelle de l'exercice, puis les invités relevés depuis le début d'exercice.
     // « inv.* » ne se lit pas dans les données saisies mais dans le bloc automatique (d.auto.inv).
-    const cols = [['R0','p.r0'],['R1','p.r1'],['R2','p.r2'],['RX','p.rx'],['R-signature','p.r2b'],
+    // 01/11/2026 : R-signature retiré ; R0… RX et invités = semaine écoulée, et entre parenthèses
+    // le cumul depuis le début de l'exercice.
+    const cols = [['R0','p.r0'],['R1','p.r1'],['R2','p.r2'],['RX','p.rx'],
                   ['VA + VAA VC <small>perso</small>','prod.va','€'],['VA + VAA EC <small>perso</small>','prod.vaec','€'],
                   ['DM','inv.dm'],['AD','inv.ad'],['3 Jours','inv.jr']];
-    const valeur = (d,a,cle) => cle.startsWith('inv.') ? ((a.inv||{})[cle.slice(4)]||0) : mmN(mmG(d,cle));
-    const somme = {};
+    const valeur = (d,a,cle,id) => cle.startsWith('inv.') ? [((a.invP||{})[cle.slice(4)]||0), ((a.inv||{})[cle.slice(4)]||0)]
+      : cle.startsWith('p.') ? [mmN(mmG(d,cle)), mmExoP(id, MM_SEM, d)[cle.slice(2)]] : [mmN(mmG(d,cle)), null];
+    const aff = (v,e,u) => u==='€' ? mmEur(v) : v+(e==null?'':' <span class="mut">('+e+')</span>');
+    const somme = {}, sommeE = {};
     let lignes = pubs.map(l=>{
-      const d=l.donnees||{}, a=d.auto||{};
+      const d=mmMigre(l.donnees||{}), a=d.auto||{};
       return '<tr><td><button type="button" class="mm-lien" data-mmv="'+l.membre_id+'"'
         + ' title="Ouvrir le mail manager de '+esc(nom(l.membre_id))+'">'+esc(nom(l.membre_id))+'</button></td>'
-        + cols.map(([lib,cle,u],i)=>{ const v=valeur(d,a,cle); somme[i]=(somme[i]||0)+v;
-            return '<td class="num">'+(u==='€'?mmEur(v):v)+'</td>'; }).join('')
+        + cols.map(([lib,cle,u],i)=>{ const [v,e]=valeur(d,a,cle,l.membre_id); somme[i]=(somme[i]||0)+v;
+            if(e!=null) sommeE[i]=(sommeE[i]||0)+e;
+            return '<td class="num">'+aff(v,e,u)+'</td>'; }).join('')
         + '</tr>';
     }).join('');
     lignes += '<tr class="tot"><td>Total ('+pubs.length+')</td>'
-      + cols.map(([lib,cle,u],i)=>'<td class="num">'+(u==='€'?mmEur(somme[i]||0):(somme[i]||0))+'</td>').join('')
+      + cols.map(([lib,cle,u],i)=>'<td class="num">'+aff(somme[i]||0, i in sommeE ? sommeE[i] : null, u)+'</td>').join('')
       + '</tr>';
     h += '<div class="panel"><h2>La lignée en un coup d’œil</h2>'
        + '<p class="mm-sub">Les mail managers publiés de la semaine '+esc(mmLibC(MM_SEM))
-       + ' — R0 à R-signature sur la semaine écoulée, production et invités sur l’exercice en cours. '
+       + ' — R0 à RX et invités : semaine écoulée, et entre parenthèses depuis le début de l’exercice ; production sur l’exercice en cours. '
        + 'Clique sur un prénom pour ouvrir son mail manager.</p>'
        + '<div class="mm-wrap mm-wx"><table class="mm-tbl mm-mw"><thead><tr><th>Personne</th>'
        + cols.map(c=>'<th class="num">'+c[0]+'</th>').join('') + '</tr></thead>'
@@ -7778,7 +7826,7 @@ function mmLecture(){
     + '<span class="mm-sem"><b>S'+mmNo(MM_SEM)+'</b> · '+esc(mmBornes(MM_SEM))+'</span>'
     + mmEtatPuce(l.ligne) + (p.serie>1?'<span class="mm-p-sr">'+p.serie+' semaines d’affilée 🔥</span>':'')
     + (ident?'<span class="who">'+esc(ident)+'</span>':'') + '</div>'
-    + mmFiche(d, l.prive, MM_SEM, l.obj)
+    + mmFiche(d, l.prive, MM_SEM, l.obj, l.id)
     + '<div class="mm-bar"><button type="button" class="mm-b" data-mmcopy="lu">Copier en texte</button></div></div>';
 }
 
@@ -7991,8 +8039,8 @@ function mmObjectifs(){
 }
 
 /* --- export texte --- */
-function mmTexte(d, nom, sem){
-  d=mmMigre(d); const a=d.auto||{}, o=MM_OBJ||{}, ech=mmEcheances();
+function mmTexte(d, nom, sem, id){
+  d=mmMigre(d); const exo=mmExoP(id, sem, d); const a=d.auto||{}, o=MM_OBJ||{}, ech=mmEcheances();
   const L=[], ligne=(k,v)=>L.push(k+' : '+v);
   L.push('Mail Manager S'+mmNo(sem)+' — '+mmBornes(sem));
   if(nom) L.push(nom);
@@ -8006,7 +8054,8 @@ function mmTexte(d, nom, sem){
   // Un champ de texte libre : son intitulé, puis le texte tel qu'il a été saisi, ligne par ligne.
   const libre=(t,v)=>{ const x=String(v==null?'':v).trim(); if(!x) return;
     L.push(t+' :'); x.split(/\r?\n/).forEach(l=>L.push(l)); };
-  bloc('1 - Semaine passée (S'+mmNo(vAddDays(sem,-7))+')','p',MM_CPT);
+  L.push(''); L.push('1 - Semaine passée (S'+mmNo(vAddDays(sem,-7))+') — entre parenthèses : depuis le début de l’exercice');
+  MM_CPT.forEach(([k,lib])=>L.push('- '+lib+' : '+mmN(mmG(d,'p.'+k))+' ('+exo[k]+')'));
   const sous = Array.isArray(d.sous)?d.sous:[];
   if(sous.length){
     L.push('Souscriptions :');
@@ -8018,7 +8067,8 @@ function mmTexte(d, nom, sem){
   }
   const invL = (n,noms) => MM_INV.filter(([k])=>(n||{})[k]).map(([k,lib])=>
       '- '+lib+' : '+n[k]+(((noms||{})[k]||[]).length?' ('+noms[k].join(' · ')+')':''));
-  const iP = invL(a.invP, a.invPN);
+  const iP = MM_INV.filter(([k])=>(a.invP||{})[k] || (a.inv||{})[k]).map(([k,lib])=>
+      '- '+lib+' : '+((a.invP||{})[k]||0)+' ('+((a.inv||{})[k]||0)+')'+(((a.invPN||{})[k]||[]).length?' — '+a.invPN[k].join(' · '):''));
   if(iP.length){ L.push('Invités en séance :'); iP.forEach(x=>L.push(x)); }
   if((a.sp||[]).length){ L.push('Sessions suivies :'); a.sp.forEach(s=>L.push('- '+fmtD(s.d)+' : '+s.t)); }
   if((a.sh||[]).length){
@@ -8814,7 +8864,7 @@ document.addEventListener('click', async e=>{
     const lu = cp.dataset.mmcopy==='lu' && MM_LU;
     const src = lu ? (MM_LU.ligne?MM_LU.ligne.donnees:{}) : (MM?MM.donnees:{});
     const nom = lu ? MM_LU.nom : ((MM&&MM.donnees&&MM.donnees.auto&&MM.donnees.auto.nom)||'');
-    openModal('mail-manager-S'+mmNo(MM_SEM)+'.txt', mmTexte(src, nom, MM_SEM));
+    openModal('mail-manager-S'+mmNo(MM_SEM)+'.txt', mmTexte(src, nom, MM_SEM, lu ? MM_LU.id : MOI_ID));
     return;
   }
   const add=c.closest('[data-mmsadd]');

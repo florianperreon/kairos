@@ -43,7 +43,7 @@ else:
     for t in onglets:
         if f'id="v-{t}"' not in src:
             soucis.append(f"onglet « {t} » : la section id=\"v-{t}\" est absente")
-        if f'data-v="{t}"' not in src:
+        if f'data-v="{t}"' not in src and f'data-aut="{t}"' not in src:   # sous-onglet « Autres événements » (01/11/2026)
             soucis.append(f"onglet « {t} » : aucune entrée de menu")
         if t not in slugs:
             soucis.append(f"onglet « {t} » : aucune adresse (TAB_SLUG)")

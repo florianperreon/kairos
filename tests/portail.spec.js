@@ -76,11 +76,12 @@ test.describe('Démarrage', () => {
     const r = await page.evaluate(() => TABS.map(t => ({
       t,
       section: !!document.getElementById('v-' + t),
-      bouton: !!document.querySelector('nav.tabs [data-v="' + t + '"]'),
+      // 01/11/2026 : Réunions d'équipe, Formations et Événements sont des sous-onglets de « Autres événements »
+      bouton: !!document.querySelector('nav.tabs [data-v="' + t + '"]:not([data-autres]), [data-aut="' + t + '"]'),
       slug: TAB_SLUG[t],
       // le nom complet de l'onglet est son title ; .l peut être abrégé (Parcours / Parcours Découverte)
-      nom: (document.querySelector('nav.tabs [data-v="' + t + '"]') || {}).title
-        || (document.querySelector('nav.tabs [data-v="' + t + '"] .l') || {}).textContent || '',
+      nom: (document.querySelector('nav.tabs [data-v="' + t + '"]:not([data-autres])') || {}).title
+        || (document.querySelector('[data-aut="' + t + '"]') || {}).textContent || '',
     })));
     for (const o of r) {
       expect(o.section, 'section manquante pour ' + o.t).toBe(true);
@@ -1102,7 +1103,7 @@ test.describe('Mail Manager — invités relevés et lecture du mur', () => {
   test('EDM / DM ne se saisit plus à la main', async ({ page }) => {
     await ouvrir(page);
     const champs = await page.evaluate(() => MM_CPT.map(c => c[1]));
-    expect(champs).toEqual(['R0', 'R1', 'R2', 'R-signature', 'R3', 'RX']);   // « R2 bis » renommé le 17/09/2026
+    expect(champs).toEqual(['R0', 'R1', 'R2', 'R3', 'RX']);   // « R-signature » retiré le 01/11/2026
     expect(champs, 'le compteur manuel a disparu').not.toContain('EDM / DM');
   });
 
@@ -1414,10 +1415,17 @@ test.describe('Mail Manager — encart « ma lignée » sur l’accueil', () => 
         { membre_id: 40003, nom: 'Carla Brouillon', participe: true, statut: 'brouillon', serie: 1 },
       ];
       // « p.* » = la semaine écoulée, « prod.* » = l'exercice, « auto.inv » = les invités relevés
-      const ligne = (id, p, prod, inv) => ({ membre_id: id, statut: 'publie',
-        donnees: { p, prod, auto: { inv, statut: 'BEMAN', filadh: 7 } } });
+      const ligne = (id, p, prod, inv, invP) => ({ membre_id: id, statut: 'publie',
+        donnees: { p, prod, auto: { inv, invP, statut: 'BEMAN', filadh: 7 } } });
+      // les semaines précédentes de l'exercice : seules les publiées comptent, et pas l'exercice d'avant
+      MM_EXO = [
+        { membre_id: 40001, semaine: vAddDays(MM_SEM, -7), statut: 'publie', p: { r0: 10, r1: 1, rx: 2 } },
+        { membre_id: 40001, semaine: vAddDays(MM_SEM, -14), statut: 'brouillon', p: { r0: 100 } },
+        { membre_id: 40001, semaine: '2000-01-03', statut: 'publie', p: { r0: 1000 } },
+        { membre_id: 40001, semaine: MM_SEM, statut: 'publie', p: { r0: 4 } },   // la fiche elle-même : une seule fois
+      ];
       MM_LIGNES = [
-        ligne(40001, { r0: 4, r1: 3, r2: 2, r2b: 1, r3: 9, rx: 5 }, { va: 12000, vaec: 3000 }, { dm: 2, ad: 1, jr: 0 }),
+        ligne(40001, { r0: 4, r1: 3, r2: 2, r2b: 1, r3: 9, rx: 5 }, { va: 12000, vaec: 3000 }, { dm: 2, ad: 1, jr: 0 }, { dm: 1 }),
         ligne(40002, { r0: 1, r1: 1, r2: 0, r2b: 2, r3: 4, rx: 0 }, { va: 500, vaec: 0 }, { dm: 0, ad: 3, jr: 4 }),
         { membre_id: 40003, statut: 'brouillon', donnees: { p: { r0: 99 } } },   // pas publié : hors tableau
       ];
@@ -1435,12 +1443,12 @@ test.describe('Mail Manager — encart « ma lignée » sur l’accueil', () => 
         brouillon: t.textContent.includes('Carla'),
       };
     });
-    expect(r.entetes).toEqual(['Personne', 'R0', 'R1', 'R2', 'RX', 'R-signature',
+    expect(r.entetes).toEqual(['Personne', 'R0', 'R1', 'R2', 'RX',
       'VA + VAA VC perso', 'VA + VAA EC perso', 'DM', 'AD', '3 Jours']);
-    // RX avant R-signature, comme demandé ; R3 n'est pas au mur
-    expect(r.aline).toEqual(['Aline Publiee', '4', '3', '2', '5', '1', '12 000 €', '3 000 €', '2', '1', '0']);
-    expect(r.bruno).toEqual(['Bruno Publie', '1', '1', '0', '0', '2', '500 €', '0 €', '0', '3', '4']);
-    expect(r.total).toEqual(['Total (2)', '5', '4', '2', '5', '3', '12 500 €', '3 000 €', '2', '4', '4']);
+    // R-signature retiré le 01/11/2026 ; R3 n'est pas au mur. Semaine écoulée (depuis le début de l'exercice)
+    expect(r.aline).toEqual(['Aline Publiee', '4 (14)', '3 (4)', '2 (2)', '5 (7)', '12 000 €', '3 000 €', '1 (2)', '0 (1)', '0 (0)']);
+    expect(r.bruno).toEqual(['Bruno Publie', '1 (1)', '1 (1)', '0 (0)', '0 (0)', '500 €', '0 €', '0 (0)', '0 (3)', '0 (4)']);
+    expect(r.total).toEqual(['Total (2)', '5 (15)', '4 (5)', '2 (2)', '5 (7)', '12 500 €', '3 000 €', '1 (2)', '0 (4)', '0 (4)']);
     expect(r.nLignes, 'deux publiés plus la ligne de total').toBe(3);
     expect(r.brouillon, 'un brouillon n’entre pas dans le tableau').toBe(false);
     expect(r.lien).toBe(true);
@@ -2207,7 +2215,7 @@ test.describe('Navigation — le logo mène à l’accueil', () => {
       groupes: [...document.querySelectorAll('#side .grp')].map(g => g.textContent),
     }));
     expect(r.entrees).not.toContain('home');
-    expect(r.groupes).toEqual(['Mon espace', 'Le réseau', 'S\'informer & outils']);
+    expect(r.groupes).toEqual(['Mon espace', 'Forman', 'S\'informer & outils']);
     await page.click('#side .go-home');
     expect(await page.evaluate(() => document.getElementById('v-home').classList.contains('on'))).toBe(true);
     expect(page.url()).toContain('#accueil');
@@ -3039,18 +3047,17 @@ test.describe('Mail Manager — alléger la saisie', () => {
                memeChamp: document.querySelector('#mmMoi .mm-rdv input[data-mm="c.r1"]') === champ };
     });
     const [nP, nC] = await page.evaluate(() => [mmNo(vAddDays(MM_SEM, -7)), mmNo(MM_SEM)]);
-    expect(r.entetes).toEqual(['Période', 'R0', 'R1', 'R2', 'R-signature', 'R3', 'RX', 'Total']);
-    expect(r.lignes.map(l => l.lib)).toEqual([`ÉcouléeS${nP}`, `En coursS${nC}`, 'D’avanceà date']);
-    expect(r.lignes[0].champs).toEqual(['p.r0', 'p.r1', 'p.r2', 'p.r2b', 'p.r3', 'p.rx', '11']);
-    expect(r.lignes[1].champs).toEqual(['c.r0', 'c.r1', 'c.r2', 'c.r2b', 'c.r3', 'c.rx', '2']);
-    // « R-signature » n'existe pas en RDV d'avance : la case reste vide plutôt que fausse
-    expect(r.lignes[2].champs).toEqual(['av.r0', 'av.r1', 'av.r2', '—', 'av.r3', 'av.rx', '6']);
+    expect(r.entetes).toEqual(['Période', 'R0', 'R1', 'R2', 'R3', 'RX', 'Total']);
+    expect(r.lignes.map(l => l.lib)).toEqual([`ÉcouléeS${nP}`, `En coursS${nC}`, `Semaines suivantesdès S${nC + 1 > 52 ? 1 : nC + 1}`]);
+    expect(r.lignes[0].champs).toEqual(['p.r0', 'p.r1', 'p.r2', 'p.r3', 'p.rx', '10']);
+    expect(r.lignes[1].champs).toEqual(['c.r0', 'c.r1', 'c.r2', 'c.r3', 'c.rx', '2']);
+    expect(r.lignes[2].champs).toEqual(['av.r0', 'av.r1', 'av.r2', 'av.r3', 'av.rx', '6']);
     // l'écart n'a de sens que là où il y a un précédent : l'écoulée et l'avance
-    expect(r.lignes[0].dlt).toEqual(['+1', '-1', '+1', '+1']);
+    expect(r.lignes[0].dlt).toEqual(['+1', '-1', '+1']);
     expect(r.lignes[1].dlt, 'la semaine en cours n’a pas de précédent').toEqual([]);
     expect(r.lignes[2].dlt, 'av.r1 : 3 contre 1 · av.r2 : 3 contre 0').toEqual(['+2', '+3']);
-    expect(r.avant).toEqual(['11', '2', '6']);
-    expect(r.apres, 'seul le total de la ligne saisie bouge').toEqual(['11', '7', '6']);
+    expect(r.avant).toEqual(['10', '2', '6']);
+    expect(r.apres, 'seul le total de la ligne saisie bouge').toEqual(['10', '7', '6']);
     expect(r.memeChamp, 'le tableau n’est pas redessiné : le curseur reste dans le champ').toBe(true);
     expect(erreurs).toEqual([]);
   });
@@ -3072,8 +3079,8 @@ test.describe('Mail Manager — alléger la saisie', () => {
       return new Function('return (' + src + ')()')();
     }, lireSections.toString());
     expect(plein.map(x => x.ouvert), 'une section remplie se replie').toEqual([false, false]);
-    expect(plein[0].res).toBe('Écoulée : R0 4 · R1 3 · R2 2 · R-signature 1 · RX 1'
-      + ' — En cours : R0 2 — D’avance : 6 — 24 500 € signé');
+    expect(plein[0].res).toBe('Écoulée : R0 4 · R1 3 · R2 2 · RX 1'
+      + ' — En cours : R0 2 — Semaines suivantes : 6 — 24 500 € signé');
     expect(plein[1].res).toBe('VA VC 24 500 € · VA EC 8 200 €');
     expect(erreurs).toEqual([]);
   });
@@ -3198,7 +3205,7 @@ test.describe('Mail Manager — alléger la saisie', () => {
     expect(r.note).toContain('FC IOBSP');
     expect(r.note).toContain('FC Immobilier (habilitation MIOBSP');
     expect(r.meme, 'la page n’est pas redessinée').toBe(true);
-    expect(r.compte).toBe('2 / 5 validées');
+    expect(r.compte).toBe('2 / 4 validées');
     expect(erreurs).toEqual([]);
   });
 
@@ -3229,7 +3236,7 @@ test.describe('Mail Manager — alléger la saisie', () => {
     expect(r.vue).toBe(true);
     // MIA validée (sans date) : FC Assurance due ; FC IOBSP, Immobilier (IOBSP) et ALPSI / CIF non
     expect(r.champs, '4 habilitations × 3 champs + examen AMF du CIF + 1 formation due × 2 champs + séminaire Toulouse du/au').toBe(17);
-    expect(r.compte).toBe('1 / 5 validées');
+    expect(r.compte).toBe('1 / 4 validées');
     expect(r.url).toBe('mes-habilitations');
     expect(r.lectureSansChamp, 'une semaine passée s’affiche en lecture').toBe(true);
     expect(r.lectureNote).toBe(true);
@@ -5110,6 +5117,79 @@ test.describe('Panneau de fiche (01/11/2026)', () => {
     await page.setViewportSize({ width: 390, height: 800 });
     expect(await page.isVisible('#psheet .ps-resize')).toBe(false);
     expect(await page.isVisible('#psFull')).toBe(false);
+    expect(erreurs).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Habilitations : ALPSI ou CIF (01/11/2026)', () => {
+  test('l’une des deux suffit, les deux ne comptent qu’une fois', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const d = s => ({ hab: Object.fromEntries(Object.entries(s).map(([k, v]) => [k, { s: v }])) });
+      return {
+        rien: mmHabObtenues(d({})), req: MM_HAB_REQ,
+        cif: mmHabObtenues(d({ mia: 'ok', miobsp: 'ok', cif: 'ok' })),
+        alpsi: mmHabObtenues(d({ mia: 'ok', miobsp: 'ok', alpsi: 'ok' })),
+        deux: mmHabObtenues(d({ mia: 'ok', miobsp: 'ok', alpsi: 'ok', cif: 'ok' })),
+        encours: mmHabObtenues(d({ mia: 'ok', alpsi: 'encours' })),
+      };
+    });
+    expect(r).toEqual({ rien: 0, req: 3, cif: 3, alpsi: 3, deux: 3, encours: 1 });
+    expect(erreurs).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Mail manager : semaine écoulée et exercice (01/11/2026)', () => {
+  test('la fiche et le texte donnent la semaine, et entre parenthèses le cumul de l’exercice', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      MOI_ID = 501; MM_SEM = mmSemCour();
+      MM_EXO = [{ membre_id: 501, semaine: vAddDays(MM_SEM, -7), statut: 'brouillon', p: { r0: 6, r2b: 9 } },   // les miennes, même en brouillon
+                { membre_id: 777, semaine: vAddDays(MM_SEM, -7), statut: 'publie', p: { r0: 50 } }];
+      const d = { p: { r0: 2, r1: 1, r2b: 3 }, auto: { invP: { dm: 1 }, inv: { dm: 2, ad: 1 }, invPN: { dm: ['Léa'] } } };
+      const div = document.createElement('div'); div.innerHTML = mmFiche(d, '', MM_SEM, {}, 501);
+      const kpi = [...div.querySelectorAll('.kpi i')].map(i => i.textContent.replace(/\s+/g, ' ').trim());
+      return { kpi, txt: mmTexte(d, 'Moi', MM_SEM, 501) };
+    });
+    expect(r.kpi).toEqual(expect.arrayContaining(['R02 (8)', 'R11 (1)', 'Découverte Métier1 (2)', 'Atelier Démarrage0 (1)']));
+    expect(r.kpi.join(' ')).not.toContain('R-signature');
+    expect(r.txt).toContain('- R0 : 2 (8)');
+    expect(r.txt).toContain('- Découverte Métier : 1 (2) — Léa');
+    expect(r.txt).not.toContain('R-signature');
+    expect(erreurs).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Menu Forman : Autres événements (01/11/2026)', () => {
+  test('une entrée, trois sous-onglets, le dernier consulté rouvert, adresses inchangées', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    await page.evaluate(() => { document.getElementById('lock').style.display = 'none'; document.getElementById('app').style.display = 'grid'; window.__booted = true; localStorage.removeItem('kairos_aut'); AUT_DER = 'reu'; });
+    const menu = await page.evaluate(() => [...document.querySelectorAll('#side .side-nav > *')].map(x => x.textContent.trim()).filter(Boolean));
+    expect(menu.slice(menu.indexOf('Forman'), menu.indexOf('Forman') + 5)).toEqual(['Forman', 'Ateliers', 'Parcours', 'Autres événements', 'Annuaire']);
+    await page.click('#side [data-autres]');
+    expect(await page.evaluate(() => [curTab, location.hash.split('?')[0]])).toEqual(['reu', '#reunions-d-equipe']);
+    expect(await page.textContent('#v-reu .aut-sub .on')).toBe('Réunions d’équipe');
+    await page.click('#v-reu .aut-sub [data-aut="for"]');
+    const r = await page.evaluate(() => ({ tab: curTab, hash: location.hash.split('?')[0], vue: document.querySelector('section.view.on').id,
+      on: document.querySelector('#side [data-autres]').classList.contains('on'), sub: document.querySelector('#v-for .aut-sub .on').textContent }));
+    expect(r).toEqual({ tab: 'for', hash: '#formations', vue: 'v-for', on: true, sub: 'Formations' });
+    // ailleurs puis retour par le menu : on retombe sur Formations, et c'est retenu
+    await page.click('#side [data-v="cat"]');
+    expect(await page.evaluate(() => document.querySelector('#side [data-autres]').classList.contains('on'))).toBe(false);
+    await page.click('#side [data-autres]');
+    expect(await page.evaluate(() => [curTab, localStorage.getItem('kairos_aut')])).toEqual(['for', 'for']);
+    // téléphone : le menu « Plus » propose l'entrée unique
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.click('#plusBtn');
+    const plus = await page.evaluate(() => [...document.querySelectorAll('#plusCard a')].map(a => a.textContent.trim()));
+    expect(plus).toContain('Autres événements');
+    expect(plus).not.toContain('Formations');
+    await page.click('#plusCard [data-autres]');
+    expect(await page.evaluate(() => curTab)).toBe('for');
     expect(erreurs).toEqual([]);
   });
 });
