@@ -5039,6 +5039,28 @@ test.describe('Admin → Contenu → Suggestions (01/11/2026)', () => {
 
 /* ------------------------------------------------------------------ */
 test.describe('Panneau de fiche (01/11/2026)', () => {
+  test('lien partagé vers une fiche : l’onglet Fiches pratiques en fond, pas l’accueil', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      CONTENU = Object.assign(CONTENU || {}, { pages: { 'x-un': { t: 'Fiche un', i: '🧾', n: 1, h: '<p>Un.</p>' } }, fiches: [{ t: 'Outils', i: '🛠️', pages: ['x-un'] }] });
+      localStorage.removeItem('kairos_ps');
+      const b = document.querySelector('nav.tabs [data-v="fiches"]'); if (b) b.hidden = false;
+      showTab('home'); curTab = 'home';
+      history.replaceState(null, '', '#p/x-un'); HASH_INITIAL = '#p/x-un'; PS_FOND_FAIT = false;
+      routeHash();
+      const arrivee = { tab: curTab, ouvert: document.getElementById('psheet').classList.contains('on') };
+      closePage();
+      const apres = { tab: curTab, hash: location.hash };
+      // une fiche ouverte ensuite depuis un autre onglet garde cet onglet en fond
+      showTab('home'); curTab = 'home'; history.replaceState(null, '', '#p/x-un'); routeHash();
+      return { arrivee, apres, ensuite: curTab };
+    });
+    expect(r.arrivee).toEqual({ tab: 'fiches', ouvert: true });
+    expect(r.apres).toEqual({ tab: 'fiches', hash: '#fiches-pratiques' });
+    expect(r.ensuite).toBe('home');
+    expect(erreurs).toEqual([]);
+  });
   test('la bulle « Un souci ? Une idée ? » ne cache pas le lien vers la fiche suivante', async ({ page }) => {
     await page.setViewportSize({ width: 1300, height: 900 });
     await ouvrir(page);
