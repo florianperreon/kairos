@@ -5039,6 +5039,20 @@ test.describe('Admin → Contenu → Suggestions (01/11/2026)', () => {
 
 /* ------------------------------------------------------------------ */
 test.describe('Panneau de fiche (01/11/2026)', () => {
+  test('la bulle « Un souci ? Une idée ? » ne cache pas le lien vers la fiche suivante', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      CONTENU = Object.assign(CONTENU || {}, { pages: { 'x-un': { t: 'Fiche un', i: '🧾', n: 1, h: '<p>Un.</p>' }, 'x-deux': { t: 'Organisation Drive', i: '🧾', n: 2, h: '<p>Deux.</p>' } },
+        fiches: [{ t: 'Outils', i: '🛠️', pages: ['x-un', 'x-deux'] }] });
+      localStorage.removeItem('kairos_ps');
+      const fb = document.getElementById('fbBtn'); fb.hidden = false;
+      showPage('x-un');
+      const a = document.querySelector('.ps-foot span:last-child a').getBoundingClientRect(), b = fb.getBoundingClientRect();
+      return { chevauche: !(b.bottom <= a.top || b.top >= a.bottom || b.right <= a.left || b.left >= a.right) };
+    });
+    expect(r.chevauche).toBe(false);
+  });
   const contenu = () => {
     CONTENU = Object.assign(CONTENU || {}, {
       pages: {

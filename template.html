@@ -1918,8 +1918,12 @@ a.mml-r:hover{border-color:var(--accent)}
 }
 
 /* ---------- Retours : signaler un bug, proposer une amélioration ---------- */
-#fbBtn{position:fixed;right:18px;bottom:18px;z-index:70;display:flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px 15px 9px 12px;font-family:"Sora";font-weight:700;font-size:13px;cursor:pointer;box-shadow:var(--shadow)}
+#fbBtn{position:fixed;right:18px;bottom:18px;z-index:70;display:flex;align-items:center;gap:0;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px 10px;transition:gap .18s,padding .18s;font-family:"Sora";font-weight:700;font-size:13px;cursor:pointer;box-shadow:var(--shadow)}
 #fbBtn:hover{border-color:var(--accent);color:var(--accent)}
+body.ps-open #fbBtn{bottom:64px}
+#fbBtn .l{max-width:0;overflow:hidden;white-space:nowrap;transition:max-width .2s ease}
+#fbBtn:hover,#fbBtn:focus-visible{gap:8px;padding:9px 15px 9px 12px}
+#fbBtn:hover .l,#fbBtn:focus-visible .l{max-width:200px}
 #fbBtn .i{display:flex;color:var(--ink-3)}
 #fbBtn:hover .i{color:var(--accent)}
 #retBox{position:fixed;inset:0;z-index:80;background:rgba(23,26,43,.42);display:flex;align-items:center;justify-content:center;padding:18px}
@@ -4302,6 +4306,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['b','Bulle « Un souci ? Une idée ? » réduite à son icône (le texte apparaît au survol) et remontée quand une fiche est ouverte : elle ne cache plus le lien vers la fiche suivante.'],
     ['f','Admin → MCP : question transmise par l’IA, réponse renvoyée par Kairos (bouton Voir) et avis des membres sur les réponses (outil « donner un avis »).'],
     ['f','MCP Kairos : relie Kairos à Claude ou ChatGPT (agenda, fiches, parcours, mail manager, lignée, veille ; remplir et publier son mail manager, objectifs, sessions ☆, cases du parcours, retours). Écran de consentement, Mon profil → Mes IA connectées, Admin → MCP (historique d’utilisation par membre).'],
     ['b','Fiche pratique : sélectionner du texte ou tirer le bord du panneau en relâchant la souris en dehors ne ferme plus la fiche.'],
