@@ -1748,6 +1748,46 @@ test.describe('Ressources — simulateurs et courriers', () => {
     expect(erreurs).toEqual([]);
   });
 
+  // 01/11/2026 : vrai PDF (jsPDF), sans l'adresse de la page ni la date que le navigateur imprime en marge.
+  // Les bibliothèques sont servies depuis node_modules : le test ne dépend pas du réseau.
+  const bibliosPdf = async (page) => {
+    await page.route('**/jspdf.umd.min.js', r => r.fulfill({ path: require.resolve('jspdf/dist/jspdf.umd.min.js'), contentType: 'text/javascript' }));
+    await page.route('**/html2canvas.min.js', r => r.fulfill({ path: require.resolve('html2canvas/dist/html2canvas.min.js'), contentType: 'text/javascript' }));
+  };
+  test('PDF d’un courrier : un vrai fichier, en texte, sans en-tête ni pied de page du navigateur', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    await bibliosPdf(page);
+    await entrer(page);
+    await page.evaluate(() => { showResSub('doc'); rsOuvrirDoc('heb');
+      const def = rsDef('heb'); Object.assign(rsVals(def), { prenom: 'Jeanne', nom: 'Martin', adr: '3 rue des Lilas', cpv: '44000 Nantes' }); rsApercu(); });
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#rsPdfD')]);
+    if (!page.url().startsWith('file:')) expect(dl.suggestedFilename()).toBe('Attestation d\'hébergement - Martin.pdf');
+    const buf = fs.readFileSync(await dl.path());
+    expect(buf.slice(0, 5).toString()).toBe('%PDF-');
+    const txt = (await require('pdf-parse')(buf)).text;
+    expect(txt).toContain('Jeanne MARTIN');
+    expect(txt).toContain('Fait à Nantes');
+    expect(txt).not.toMatch(/file:|https?:|index\.html|mykairos/);
+    expect(await page.textContent('#rsPdfD')).toBe('📄 PDF');
+    expect(erreurs).toEqual([]);
+  });
+  test('PDF d’une simulation : un vrai fichier A4, sans passer par la fenêtre d’impression', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    await bibliosPdf(page);
+    await entrer(page);
+    await page.evaluate(() => { showResSub('sim'); rsOuvrirSim('av'); window.__imprime = 0; window.print = () => window.__imprime++; });
+    const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 20000 }), page.click('#rsPdf')]);
+    const buf = fs.readFileSync(await dl.path());
+    expect(buf.slice(0, 5).toString()).toBe('%PDF-');
+    const info = await require('pdf-parse')(buf);
+    expect(info.numpages).toBeGreaterThanOrEqual(1);
+    expect(info.text).not.toMatch(/file:|https?:|mykairos/);
+    expect(await page.evaluate(() => document.querySelectorAll('iframe[aria-hidden]:not(#rsFrame)').length)).toBe(0);
+    expect(erreurs).toEqual([]);
+  });
+
   test('les hypothèses d’un simulateur passent dans l’adresse, jamais les champs d’un courrier', async ({ page }) => {
     await ouvrir(page);
     const vue = await entrer(page, '#ressources?outil=per&rdt=4');

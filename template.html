@@ -2211,7 +2211,7 @@ body.ps-open #fbBtn{bottom:64px}
     <section class="view" id="v-res">
       <div class="panel rs-intro">
         <h2>Ressources</h2>
-        <p>Les simulateurs et les courriers prêts à l’emploi pour tes rendez-vous. Remplis, ajuste en direct, puis imprime, enregistre en PDF ou télécharge en Word.</p>
+        <p>Les simulateurs et les courriers prêts à l’emploi pour tes rendez-vous. Remplis, ajuste en direct, puis imprime, télécharge en PDF ou en Word.</p>
         <span class="rs-priv">🔒 Tout se calcule sur ton appareil : aucune donnée client n’est enregistrée ni envoyée.</span>
       </div>
       <nav class="subtabs" id="resSub">
@@ -4307,6 +4307,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['f','Ressources : nouveau bouton « 📄 PDF » qui crée un vrai fichier PDF, sans l’adresse de la page, la date ni le titre que le navigateur ajoute en marge à l’impression (courriers en texte, simulations en pages A4).'],
     ['f','Ressources → Courriers : le bloc de l’établissement destinataire est aligné à droite, comme « Fait à … », à l’écran et dans le fichier Word.'],
     ['f','Admin → Activité : les fiches, onglets et simulateurs des « Dernières ouvertures » (et des tops) sont cliquables.'],
     ['b','Lien partagé vers une fiche pratique : la fiche s’ouvre sur l’onglet Fiches pratiques (et non plus sur l’accueil), et y revient quand on la ferme.'],
@@ -12947,7 +12948,8 @@ function rsRenderSim(){
     +(def.custom?'':'<button type="button" class="rs-btn" id="rsLien">🔗 Copier le lien</button>')
     +(def.cmpCols?'<button type="button" class="rs-btn" id="rsCmpAdd">＋ Ajouter au comparateur</button>':'')
     +'<button type="button" class="rs-btn" id="rsXlsx">⬇ Excel</button>'
-    +'<button type="button" class="rs-btn pri" id="rsPrint">🖨️ Imprimer / PDF</button></div></div>'
+    +'<button type="button" class="rs-btn" id="rsPrint">🖨️ Imprimer</button>'
+    +'<button type="button" class="rs-btn pri" id="rsPdf">📄 PDF</button></div></div>'
     +'<div id="rsOut"></div></div></div>';
   rsCalculer();
 }
@@ -12984,7 +12986,8 @@ function rsRenderDoc(){
     +'<div class="panel"><div class="rs-head"><h2>'+def.ic+' '+esc(def.t)+'</h2><div class="rs-acts">'
     +'<button type="button" class="rs-btn" id="rsVider">↺ Vider</button>'
     +'<button type="button" class="rs-btn" id="rsDocx">⬇ Word</button>'
-    +'<button type="button" class="rs-btn pri" id="rsPrintD">🖨️ Imprimer / PDF</button></div></div>'
+    +'<button type="button" class="rs-btn" id="rsPrintD">🖨️ Imprimer</button>'
+    +'<button type="button" class="rs-btn pri" id="rsPdfD">📄 PDF</button></div></div>'
     +'<p class="rs-miss" id="rsMiss"></p><div class="rs-paper" id="rsPaper"></div></div></div>';
   rsApercu();
 }
@@ -13008,17 +13011,133 @@ function rsApercu(){
 }
 
 /* ------------------------ Impression / PDF / Word --------------------- */
-function rsImprimer(titre, corps){
-  const css = ':root{--ground:#F4F5FB;--surface:#fff;--surface-2:#ECEEF7;--ink:#171A2B;--ink-2:#61667F;--ink-3:#8B90A8;--line:#E2E4F0;--line-2:#D0D3E6;--accent:#4338CA;--accent-soft:#E8E7FB;--gold:#22C58B;--encours:#E8A33D;--encours-ink:#8A5A00;--ok:#149467;--bad:#D64545}'
+function rsCssImpression(){
+  return ':root{--ground:#F4F5FB;--surface:#fff;--surface-2:#ECEEF7;--ink:#171A2B;--ink-2:#61667F;--ink-3:#8B90A8;--line:#E2E4F0;--line-2:#D0D3E6;--accent:#4338CA;--accent-soft:#E8E7FB;--gold:#22C58B;--encours:#E8A33D;--encours-ink:#8A5A00;--ok:#149467;--bad:#D64545}'
     +'body{font:12px/1.5 Inter,Arial,sans-serif;color:#171A2B;margin:0}h1{font:700 18px Arial,sans-serif;margin:0 0 4px}.sub{color:#61667F;margin:0 0 14px}'
     +'@page{size:A4;margin:16mm}svg text{fill:#61667F;font-size:11px}'
     +document.getElementById('rsCss').textContent
     +'.rs-kpi .v,.rs-grp-t,.rs-det>summary,h1{font-family:Inter,Arial,sans-serif}.rs-paper{border:0;box-shadow:none;padding:0;max-width:none;font-size:12pt}.rs-paper mark{background:none;color:inherit}.rs-kpi{break-inside:avoid}.rs-chart svg{min-width:0}details.rs-det>*{display:block}.rs-det>summary::before{content:""}';
+}
+function rsImprimer(titre, corps){
+  const css = rsCssImpression();
   let f=document.getElementById('rsFrame');
   if(!f){ f=document.createElement('iframe'); f.id='rsFrame'; f.setAttribute('aria-hidden','true'); f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden'; document.body.appendChild(f); }
   const d=f.contentWindow.document;
   d.open(); d.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>'+esc(titre)+'</title><style>'+css+'</style></head><body>'+corps+'</body></html>'); d.close();
   setTimeout(()=>{ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){} }, 150);
+}
+/* ------------------------ Vrai export PDF (sans en-tête ni pied de page du navigateur) ----------
+   L'impression du navigateur ajoute l'adresse de la page, la date et le titre en marge : le bouton PDF
+   fabrique donc le fichier lui-même (jsPDF, chargé à la demande). Les courriers sont écrits en texte
+   (sélectionnable, comme le Word) ; les simulations sont photographiées (html2canvas) puis découpées
+   en pages A4, en coupant entre deux lignes de tableau ou deux blocs plutôt qu'au milieu. */
+const RS_LIB_PDF = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+const RS_LIB_H2C = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+const RS_LIBS = {};
+function rsLib(url, pret){
+  if(pret()) return Promise.resolve();
+  return RS_LIBS[url] || (RS_LIBS[url] = new Promise((ok, ko)=>{ const el=document.createElement('script'); el.src=url; el.crossOrigin='anonymous';
+    el.onload=()=>ok(); el.onerror=()=>{ delete RS_LIBS[url]; el.remove(); ko(new Error('CHARGEMENT '+url)); }; document.head.appendChild(el); }));
+}
+const rsJsPdf = () => rsLib(RS_LIB_PDF, ()=>!!(window.jspdf&&window.jspdf.jsPDF)).then(()=>window.jspdf.jsPDF);
+// Caractères hors de l'encodage des polices PDF standard (WinAnsi) : remplacés par un équivalent sûr
+const rsPdfTxt = t => String(t||'').replace(/\x01([^\x02]*)\x02/g, '[$1]').replace(/[   ]/g, ' ').replace(/[‐‑]/g, '-').replace(/−/g, '-')
+  .replace(/[^\x00-\xFFŒœŠšŸŽžƒˆ˜–—‘’‚“”„†‡•…‰‹›€™]/g, '');
+function rsTelecharger(blob, nom){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nom;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+function rsPdfBouton(btn, travail){
+  if(!btn || btn.disabled) return;
+  const lib=btn.textContent; btn.disabled=true; btn.textContent='⏳ PDF…';
+  return Promise.resolve().then(travail).catch(e=>{ console.warn('PDF', e);
+    alert('Le PDF n’a pas pu être créé (connexion ?). La fenêtre d’impression va s’ouvrir : choisis « Enregistrer au format PDF » et décoche « En-têtes et pieds de page ».');
+    return 'repli'; })
+    .finally(()=>{ btn.disabled=false; btn.textContent=lib; });
+}
+// Courrier : même découpage que le Word (rsLettre), mis en page en texte sur A4
+function rsPdfLettreDoc(JsPDF, P, titre){
+  const doc = new JsPDF({ unit:'mm', format:'a4', compress:true });
+  doc.setProperties({ title:titre, subject:'', author:'', keywords:'', creator:'' });
+  const W=210, H=297, L=25, R=20, T=22, B=20, larg=W-L-R, pt=0.3528;
+  let y=T;
+  const saut = h => { if(y+h > H-B){ doc.addPage(); y=T; } };
+  P.forEach((p, i)=>{
+    const c=p.c, txt=rsPdfTxt(p.t);
+    const taille = c==='mention' ? 9 : c==='pj' ? 10.5 : 11.5;
+    const ligne = taille*pt*1.45;
+    doc.setFont('times', (p.b||c==='obj') ? 'bold' : 'normal'); doc.setFontSize(taille);
+    doc.setTextColor(c==='mention' ? 85 : 27);
+    if(c==='sig' && p.x==='first') y += 8;
+    if(c==='pj') y += 16;
+    if(c==='mention'){ y += 6; saut(ligne+3); doc.setDrawColor(210); doc.setLineWidth(0.2); doc.line(L, y, W-R, y); y += 3.5; }
+    const x0 = c==='sig' ? L+larg*0.55 : L, lw = c==='sig' ? larg*0.45 : larg;
+    const lignes = doc.splitTextToSize(txt || ' ', lw);
+    let k=0;
+    while(k < lignes.length){
+      saut(ligne);
+      const place = Math.max(1, Math.floor((H-B-y)/ligne));
+      const bloc = lignes.slice(k, k+place);
+      bloc.forEach((l, j)=>{
+        const yy = y + taille*pt*0.8 + j*ligne;
+        const derniere = (k+j === lignes.length-1);
+        if(c==='dest' || c==='dt') doc.text(l, W-R, yy, { align:'right' });
+        else if(c==='titre') doc.text(l, W/2, yy, { align:'center' });
+        else if(c==='p' && !derniere) doc.text(l, x0, yy, { align:'justify', maxWidth:lw });
+        else doc.text(l, x0, yy);
+      });
+      y += bloc.length*ligne; k += bloc.length;
+    }
+    const apres = p.gap && c!=='p' ? 5.6 : (['exp','dest','sig','obj'].includes(c) ? 0 : 2.8);
+    y += apres;
+  });
+  return doc;
+}
+function rsPdfLettre(def){
+  const titre = rsNomFichier(def), P = def.build(rsVals(def));
+  return rsJsPdf().then(JsPDF=>{ const doc = rsPdfLettreDoc(JsPDF, P, titre); rsTelecharger(doc.output('blob'), titre+'.pdf'); });
+}
+// Simulation : on rend le même contenu que l'impression dans un cadre hors écran à la largeur d'une page A4
+function rsPdfSim(){
+  const def=rsDef(RS_SIM), titre=rsNomFichier(def), corps=rsCorpsSim(def);
+  const Lmm=14, pageMm=210-2*Lmm, hautMm=297-2*Lmm, largPx=760;
+  return Promise.all([rsJsPdf(), rsLib(RS_LIB_H2C, ()=>!!window.html2canvas)]).then(([JsPDF])=>new Promise((ok, ko)=>{
+    const f=document.createElement('iframe'); f.setAttribute('aria-hidden','true');
+    f.style.cssText='position:fixed;left:-12000px;top:0;width:'+largPx+'px;height:1200px;border:0';
+    document.body.appendChild(f);
+    const d=f.contentWindow.document;
+    d.open(); d.write('<!doctype html><html lang="fr"><head><meta charset="utf-8"><style>'+rsCssImpression()+'body{background:#fff;padding:0;margin:0}</style></head><body>'+corps+'</body></html>'); d.close();
+    setTimeout(()=>{
+      const body=d.body;
+      // un tableau plus large que la page : on élargit le cadre, la page sera réduite d'autant
+      const largReel = Math.max(largPx, Math.ceil(d.documentElement.scrollWidth), ...[...body.querySelectorAll('table')].map(t=>Math.ceil(t.scrollWidth)));
+      if(largReel > largPx){ f.style.width=largReel+'px'; body.querySelectorAll('.rs-tbl-wrap,.tbl-wrap,.rs-scroll').forEach(w=>{ w.style.overflow='visible'; }); }
+      const larg = Math.max(largReel, Math.ceil(d.documentElement.scrollWidth));
+      const hautPx=Math.ceil(body.scrollHeight);
+      f.style.height=hautPx+'px';
+      // coupures possibles : haut et bas de chaque ligne de tableau ou bloc
+      const base=body.getBoundingClientRect().top, cuts=new Set();
+      body.querySelectorAll('tr,h1,.sub,.rs-grp-t,.rs-kpi,.rs-kpis,.rs-chart,.rs-det,p,table,.rs-cmp').forEach(el=>{ const r=el.getBoundingClientRect(); cuts.add(Math.round(r.top-base)); cuts.add(Math.round(r.bottom-base)); });
+      const liste=[...cuts].filter(v=>v>0).sort((a,b)=>a-b);
+      window.html2canvas(body, { scale:2, backgroundColor:'#ffffff', windowWidth:larg, width:larg, height:hautPx, logging:false }).then(cv=>{
+        const pxParMm = larg/pageMm, pagePx = Math.floor(hautMm*pxParMm), echelle = cv.width/larg;
+        const doc = new JsPDF({ unit:'mm', format:'a4', compress:true });
+        doc.setProperties({ title:titre, subject:'', author:'', keywords:'', creator:'' });
+        let debut=0, n=0;
+        while(debut < hautPx-2){
+          let fin = Math.min(hautPx, debut+pagePx);
+          if(fin < hautPx){ const c = liste.filter(v=>v>debut+pagePx*0.4 && v<=fin).pop(); if(c) fin=c; }
+          const part=document.createElement('canvas'); part.width=cv.width; part.height=Math.ceil((fin-debut)*echelle);
+          const g=part.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,part.width,part.height);
+          g.drawImage(cv, 0, Math.floor(debut*echelle), cv.width, part.height, 0, 0, cv.width, part.height);
+          if(n++) doc.addPage();
+          doc.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', Lmm, Lmm, pageMm, (fin-debut)/pxParMm);
+          debut = fin;
+        }
+        f.remove(); rsTelecharger(doc.output('blob'), titre+'.pdf'); ok();
+      }).catch(e=>{ f.remove(); ko(e); });
+    }, 120);
+  }));
 }
 function rsHypotheses(def){
   const v=rsVals(def);
@@ -13029,16 +13148,17 @@ function rsHypotheses(def){
   if(def.custom) RS_PARC.forEach(b=>hyp.push([b.nom, 'acheté '+RS_E(b.achat)+' en '+b.an+', estimé '+RS_E(b.valeur)+', loyer '+RS_E(b.loyer)+' / mois']));
   return hyp;
 }
-function rsImprimerSim(){
-  const def=rsDef(RS_SIM), hyp=rsHypotheses(def);
+function rsCorpsSim(def){
+  const hyp=rsHypotheses(def);
   const r=rsResultat(def);
   if(r.table) r.tables=(r.tables||[]).concat([Object.assign({t:'Détail année par année'}, r.table)]), delete r.table;
   delete r.tableM;   // 300 lignes : pas à l'impression
   const corps='<h1>'+esc(def.t)+(rsVals(def).nom?' — '+esc(rsVals(def).nom):'')+'</h1><p class="sub">Simulation du '+fmtDLong(isoJour(new Date()))+'</p>'
     +'<div class="rs-grp-t">Hypothèses</div>'+rsTableHtml({h:['Paramètre','Valeur'], rows:hyp})
     +'<div class="rs-grp-t" style="margin-top:14px">Résultats</div>'+rsResultHtml(r)+rsCmpHtml(def, false);
-  rsImprimer(def.t, corps);
+  return corps;
 }
+function rsImprimerSim(){ const def=rsDef(RS_SIM); rsImprimer(def.t, rsCorpsSim(def)); }
 const rsNomFichier = def => { const v=rsVals(def); return (def.t+(v.nom?' - '+v.nom:'')).replace(/’/g,"'").replace(/[\\/:*?"<>|]/g,' ').replace(/\s+/g,' ').trim(); };
 
 // Fichier .docx minimal (Office Open XML), écrit sans bibliothèque : archive ZIP non compressée
@@ -13282,6 +13402,8 @@ document.getElementById('v-res').addEventListener('click', e=>{
     try{ navigator.clipboard.writeText(url).then(ok, ok); }catch(_){ ok(); }
   }
   else if(t.id==='rsPrint') rsImprimerSim();
+  else if(t.id==='rsPdf') rsPdfBouton(t, rsPdfSim).then(x=>{ if(x==='repli') rsImprimerSim(); });
+  else if(t.id==='rsPdfD') rsPdfBouton(t, ()=>rsPdfLettre(def)).then(x=>{ if(x==='repli') rsImprimer(rsNomFichier(def), '<div class="rs-paper">'+rsLettreHtml(def.build(rsVals(def)))+'</div>'); });
   else if(t.id==='rsXlsx') rsExcel(def);
   else if(t.id==='rsPrintD'){
     rsImprimer(rsNomFichier(def), '<div class="rs-paper">'+rsLettreHtml(def.build(rsVals(def)))+'</div>');

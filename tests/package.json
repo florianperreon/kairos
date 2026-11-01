@@ -2,6 +2,13 @@
   "name": "kairos-tests",
   "private": true,
   "description": "Tests du portail Kairos — lancés par la GitHub Action « Tests du portail »",
-  "scripts": { "test": "playwright test" },
-  "devDependencies": { "@playwright/test": "^1.47.0" }
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0",
+    "jspdf": "2.5.1",
+    "html2canvas": "1.4.1",
+    "pdf-parse": "1.1.1"
+  }
 }
