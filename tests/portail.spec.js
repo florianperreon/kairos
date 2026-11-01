@@ -5240,7 +5240,7 @@ test.describe('MCP Kairos (01/11/2026)', () => {
     });
     expect(r.avant.titre).toBe('Relier Kairos à Claude');
     expect(r.avant.btns).toEqual(['Refuser', 'Autoriser']);
-    expect(r.avant.note).toContain('historique de tes actions MCP');
+    expect(r.avant.note).toContain('les réponses que Kairos lui a renvoyées');
     expect(r.appels).toEqual(['det:abc123', 'ok:abc123', 'det:zzz']);
     expect(r.hash).toBe('#retour-ia');
     expect(r.inconnu.err).toContain('IA non reconnue');
@@ -5292,11 +5292,12 @@ test.describe('MCP Kairos (01/11/2026)', () => {
     const r = await page.evaluate(async () => {
       const maint = new Date().toISOString();
       const J = [
-        { id: 1, cree_le: maint, user_id: 'u1', nom: 'Justine H.', ia: 'Claude', outil: 'chercher_sessions', params: { texte: 'Clés de la com', type: 'atelier' }, ecriture: false, statut: 'ok', nb: 3 },
+        { id: 1, cree_le: maint, user_id: 'u1', nom: 'Justine H.', ia: 'Claude', outil: 'chercher_sessions', params: { texte: 'Clés de la com', type: 'atelier' }, ecriture: false, statut: 'ok', nb: 3, question: 'Prochaines dates de Clés de la com ?', reponse_taille: 1500 },
+        { id: 4, cree_le: maint, user_id: 'u1', nom: 'Justine H.', ia: 'Claude', outil: 'donner_avis', params: { avis: 'incomplet' }, ecriture: false, statut: 'ok', avis_sur: 1, resume: 'avis « incomplet » : il manque la date de Lyon' },
         { id: 2, cree_le: maint, user_id: 'u1', nom: 'Justine H.', ia: 'Claude', outil: 'publier_mail_manager', params: { confirmation: true }, ecriture: true, resume: 'a publié son mail manager S45', statut: 'ok' },
         { id: 3, cree_le: maint, user_id: 'u2', nom: 'Rémi A.', ia: 'ChatGPT', outil: 'chercher_fiches', params: { texte: 'SCPI' }, ecriture: false, statut: 'erreur', message: 'boum' },
       ];
-      const q = { select() { return q; }, gte() { return q; }, order() { return q; }, limit: async () => ({ data: J, error: null }), eq() { return q; }, maybeSingle: async () => ({ data: { actif: true } }) };
+      const q = { select(c) { q.c = c; return q; }, gte() { return q; }, order() { return q; }, limit: async () => ({ data: J, error: null }), eq() { return q; }, maybeSingle: async () => (q.c === 'reponse' ? { data: { reponse: '{"sessions": ["Clés de la com N2 — 12/11"]}' } } : { data: { actif: true } }) };
       SB = { rpc: async (n) => n === 'mcp_admin_membres' ? { data: [
           { user_id: 'u1', nom: 'Justine H.', ias: 'Claude', connecte_le: maint, derniere: maint, appels_7j: 2, appels_30j: 2, ecritures_30j: 1, erreurs_30j: 0, bloque: false },
           { user_id: 'u2', nom: 'Rémi A.', ias: 'ChatGPT', connecte_le: maint, derniere: maint, appels_7j: 1, appels_30j: 1, ecritures_30j: 0, erreurs_30j: 1, bloque: true }] } : { data: null },
@@ -5308,19 +5309,26 @@ test.describe('MCP Kairos (01/11/2026)', () => {
       const kpi = [...el.querySelectorAll('.mcp-kpi b')].map(b => b.textContent);
       const mots = [...el.querySelectorAll('.mcp-mots')].map(m => m.textContent);
       const lignes = () => el.querySelectorAll('.panel:last-child tbody tr').length;
-      const tous = lignes();
+      const tous = el.querySelectorAll('.panel:last-child tbody tr:not(.mcp-rep)').length;
+      const q1 = el.querySelector('.mcp-q').textContent;
+      const avis = el.querySelector('.mcp-avis.neg').textContent;
+      el.querySelector('[data-mcprep="1"]').click(); await new Promise(ok => setTimeout(ok, 30));
+      const rep = document.getElementById('mcpRep1'); const repTxt = rep.hidden ? '' : rep.textContent;
       el.querySelector('[data-mcpu="u1"]').click();
-      const justine = lignes();
+      const justine = el.querySelectorAll('.panel:last-child tbody tr:not(.mcp-rep)').length;
       const sel = el.querySelector('[data-mcpf="type"]'); sel.value = 'ecriture'; sel.dispatchEvent(new Event('change', { bubbles: true }));
       const ecr = [...el.querySelectorAll('.panel:last-child tbody tr td[data-l="Détail"]')].map(t => t.textContent);
       const bloque = [...el.querySelectorAll('[data-mcpbloq]')].map(b => b.textContent);
-      return { onglet, kpi, mots, tous, justine, ecr, bloque, slug: tabState('admin').get('s') };
+      return { onglet, kpi, mots, tous, justine, ecr, bloque, q1, avis, repTxt, slug: tabState('admin').get('s') };
     });
     expect(r.onglet).toBe(true);
-    expect(r.kpi).toEqual(['2', '2', '3', '3', '1', '1']);
+    expect(r.kpi).toEqual(['2', '2', '4', '4', '1', '1', '1']);
     expect(r.mots.join(' ')).toContain('clés de la com');
-    expect(r.tous).toBe(3);
-    expect(r.justine).toBe(2);
+    expect(r.tous).toBe(4);
+    expect(r.justine).toBe(3);
+    expect(r.q1).toBe('« Prochaines dates de Clés de la com ? »');
+    expect(r.avis).toBe('avis : incomplet');
+    expect(r.repTxt).toContain('Clés de la com N2');
     expect(r.ecr).toEqual(['a publié son mail manager S45']);
     expect(r.bloque).toEqual(['Suspendre', 'Suspendu — rétablir']);
     expect(r.slug).toBe('mcp');

@@ -1996,6 +1996,10 @@ a.mml-r:hover{border-color:var(--accent)}
 .mcp-tbl td.ok{color:var(--ok,#1f8a4c)} .mcp-tbl td.refus{color:#b7791f} .mcp-tbl td.erreur{color:#c0392b;font-weight:700}
 .mcp-tbl .mcp-p{font-size:12px;color:var(--ink-3);word-break:break-word;max-width:420px}
 .mcp-tbl button.mcp-lien{border:0;background:none;color:var(--accent);cursor:pointer;font-weight:700;padding:0}
+.mcp-q{font-style:italic;color:var(--ink-2);font-size:12.5px;margin-bottom:2px}
+.mcp-avis{display:inline-block;margin-left:6px;font-size:11px;font-weight:800;padding:1px 6px;border-radius:5px;background:var(--surface-2)}
+.mcp-avis.neg{background:#fde2e1;color:#a4282a}
+.mcp-rep pre{white-space:pre-wrap;max-height:380px;overflow:auto;font-size:12px;background:var(--surface-2);padding:10px;border-radius:8px;margin:0}
 .mcp-ecr{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:5px;background:var(--surface-2);margin-left:4px}
 .mcp-mots{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
 .mcp-mots span{background:var(--surface-2);border-radius:99px;padding:2px 10px;font-size:12.5px}
@@ -4298,6 +4302,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['f','Admin → MCP : question transmise par l’IA, réponse renvoyée par Kairos (bouton Voir) et avis des membres sur les réponses (outil « donner un avis »).'],
     ['f','MCP Kairos : relie Kairos à Claude ou ChatGPT (agenda, fiches, parcours, mail manager, lignée, veille ; remplir et publier son mail manager, objectifs, sessions ☆, cases du parcours, retours). Écran de consentement, Mon profil → Mes IA connectées, Admin → MCP (historique d’utilisation par membre).'],
     ['b','Fiche pratique : sélectionner du texte ou tirer le bord du panneau en relâchant la souris en dehors ne ferme plus la fiche.'],
     ['f','Fiches pratiques : le filtre « Ma phase en cours » est retiré.'],
@@ -11438,7 +11443,7 @@ async function oauthOuvrir(autorise){
     + '<li><b>lire</b> ce que tu vois dans Kairos : agenda des sessions, fiches pratiques, FAQ et objections, ta progression, tes actions de la semaine, ton mail manager et le mur, ta lignée, la veille ;</li>'
     + '<li><b>agir</b> à ta demande : remplir et publier ton mail manager, réviser tes objectifs, enregistrer des sessions ☆, cocher des cases manuelles du parcours, déposer un retour.</li></ul>'
     + '<p class="oa-note">Jamais de coordonnées d’autres membres. Les réponses partent chez le fournisseur de ' + esc(ia) + '. '
-    + 'Les administrateurs de Kairos voient l’historique de tes actions MCP (outils utilisés et paramètres), jamais tes conversations. '
+    + 'Pour améliorer Kairos, les administrateurs voient tes demandes à Kairos (la question transmise par ton IA, les outils utilisés) et les réponses que Kairos lui a renvoyées — pas le texte final rédigé par ton IA ; conservation 90 jours. '
     + 'Tu peux couper l’accès à tout moment dans Mon profil → Mes IA connectées.</p>'
     + '<div class="oa-btns"><button type="button" class="oa-non" data-oa="refuser">Refuser</button><button type="button" class="oa-ok" data-oa="autoriser">Autoriser</button></div>');
   return true;
@@ -11549,7 +11554,7 @@ const MCP_OUTIL_LIB = { chercher_sessions:'Chercher des sessions', detail_sessio
   lire_fiche:'Lire une fiche', faq_objections:'FAQ / objections', liens_utiles:'Liens utiles', veille:'Veille', mes_actions:'Mes actions', ma_progression:'Ma progression',
   mon_mail_manager:'Mon mail manager', mur_mail_manager:'Mur du mail manager', ma_lignee:'Ma lignée', enregistrer_session:'Enregistrer une session',
   cocher_parcours:'Cocher le parcours', deposer_retour:'Déposer un retour', suggerer_contenu:'Suggérer un contenu', remplir_mail_manager:'Remplir le mail manager',
-  publier_mail_manager:'Publier le mail manager', modifier_objectifs:'Modifier les objectifs' };
+  publier_mail_manager:'Publier le mail manager', modifier_objectifs:'Modifier les objectifs', donner_avis:'Avis du membre' };
 async function buildMcpAdmin(){
   const el = document.getElementById('mcpAdmin'); if(!el || !SB) return;
   if(!MCP_ADM.ok) el.innerHTML = '<div class="panel"><p class="mm-sub">Chargement…</p></div>';
@@ -11557,7 +11562,7 @@ async function buildMcpAdmin(){
     const depuis = new Date(Date.now() - 90*86400000).toISOString();
     const [m, j, g] = await Promise.all([
       SB.rpc('mcp_admin_membres'),
-      SB.from('mcp_journal').select('id,cree_le,user_id,nom,ia,client_nom,outil,params,ecriture,resume,statut,message,nb,duree_ms').gte('cree_le', depuis).order('cree_le', { ascending:false }).limit(2000),
+      SB.from('mcp_journal').select('id,cree_le,user_id,nom,ia,client_nom,outil,params,ecriture,resume,statut,message,nb,duree_ms,question,reponse_taille,avis_sur').gte('cree_le', depuis).order('cree_le', { ascending:false }).limit(2000),
       SB.from('mcp_reglages').select('actif').eq('id', 1).maybeSingle(),
     ]);
     if(m.error || j.error) throw (m.error || j.error);
@@ -11578,13 +11583,16 @@ function mcpAdminRendre(){
   const ecr = J.filter(x=>x.ecriture && new Date(x.cree_le) > t30).length, err = J.filter(x=>x.statut==='erreur' && new Date(x.cree_le) > t30).length;
   const parOutil = {}; J.forEach(x=>{ parOutil[x.outil] = (parOutil[x.outil]||0) + 1; });
   const top = Object.entries(parOutil).sort((a,b)=>b[1]-a[1]).slice(0, 8);
+  const AVN = ['incomplet','faux','introuvable'], avisPar = {};
+  J.filter(x=>x.outil==='donner_avis').forEach(x=>{ if(x.avis_sur){ (avisPar[x.avis_sur] = avisPar[x.avis_sur] || []).push(x); } });
+  const nAvisNeg = J.filter(x=>x.outil==='donner_avis' && AVN.includes((x.params||{}).avis) && new Date(x.cree_le) > t30).length;
   const mots = {}; J.forEach(x=>{ const v = x.params && (x.params.texte || x.params.atelier); if(v && typeof v==='string'){ const k = v.trim().toLowerCase(); mots[k] = (mots[k]||0) + 1; } });
   const topMots = Object.entries(mots).sort((a,b)=>b[1]-a[1]).slice(0, 20);
   const nomDe = id => (MCP_ADM.membres.find(m=>m.user_id===id)||{}).nom || '';
   let h = '<div class="panel"><h2>MCP Kairos</h2>'
-    + '<p class="mm-sub">Les IA (Claude, ChatGPT) reliées à Kairos par les membres : qui les utilise, pour quoi faire. Outils et paramètres seulement — jamais les conversations. 90 derniers jours.</p>'
+    + '<p class="mm-sub">Les IA (Claude, ChatGPT) reliées à Kairos par les membres : qui les utilise, pour quoi faire. Questions transmises par les IA, outils, paramètres et réponses renvoyées par Kairos (pas le texte final rédigé par l’IA). 90 derniers jours.</p>'
     + '<div class="mcp-kpi"><div><b>'+MCP_ADM.membres.filter(m=>m.ias).length+'</b><span>membres reliés</span></div><div><b>'+actifs+'</b><span>actifs sur 30 j</span></div>'
-    + '<div><b>'+n7+'</b><span>appels sur 7 j</span></div><div><b>'+n30+'</b><span>appels sur 30 j</span></div><div><b>'+ecr+'</b><span>écritures sur 30 j</span></div><div><b>'+err+'</b><span>erreurs sur 30 j</span></div></div>'
+    + '<div><b>'+n7+'</b><span>appels sur 7 j</span></div><div><b>'+n30+'</b><span>appels sur 30 j</span></div><div><b>'+ecr+'</b><span>écritures sur 30 j</span></div><div><b>'+err+'</b><span>erreurs sur 30 j</span></div><div><b>'+nAvisNeg+'</b><span>avis négatifs sur 30 j</span></div></div>'
     + '<div class="pf-row"><div class="pf-lab"><b>MCP actif pour tous</b><span>Couper bloque immédiatement toutes les IA, pour tout le monde.</span></div>'
     + '<button type="button" class="mm-b" id="mcpGlobal">'+(MCP_ADM.actif ? 'Actif — couper' : 'Coupé — réactiver')+'</button></div>'
     + (top.length ? '<label class="mm-lab">Outils les plus utilisés</label><div class="mcp-mots">'+top.map(([o,n])=>'<span>'+esc(MCP_OUTIL_LIB[o]||o)+' · '+n+'</span>').join('')+'</div>' : '')
@@ -11605,23 +11613,36 @@ function mcpAdminRendre(){
   const outils = [...new Set(J.map(x=>x.outil))].map(o=>[o, MCP_OUTIL_LIB[o]||o]);
   const ias = [...new Set(J.map(x=>x.ia).filter(Boolean))].map(i=>[i,i]);
   const L = J.filter(x=>(!f.user||x.user_id===f.user) && (!f.outil||x.outil===f.outil) && (!f.ia||x.ia===f.ia) && (!f.statut||x.statut===f.statut)
-    && (!f.type || (f.type==='ecriture') === !!x.ecriture));
+    && (!f.type || (f.type==='avis' ? (x.outil==='donner_avis' || !!avisPar[x.id]) : f.type==='question' ? !!x.question : (f.type==='ecriture') === !!x.ecriture)));
   h += '<div class="panel"><h2>Historique des appels</h2><div class="mcp-filtres">'
     + '<select data-mcpf="user">'+opts(users, f.user, 'Tous les membres')+'</select>'
     + '<select data-mcpf="outil">'+opts(outils, f.outil, 'Tous les outils')+'</select>'
-    + '<select data-mcpf="type">'+opts([['lecture','Lectures'],['ecriture','Écritures']], f.type, 'Lectures et écritures')+'</select>'
+    + '<select data-mcpf="type">'+opts([['lecture','Lectures'],['ecriture','Écritures'],['question','Avec la question du membre'],['avis','Avec un avis']], f.type, 'Tous les appels')+'</select>'
     + '<select data-mcpf="ia">'+opts(ias, f.ia, 'Toutes les IA')+'</select>'
     + '<select data-mcpf="statut">'+opts([['ok','Succès'],['refus','Refus'],['erreur','Erreurs']], f.statut, 'Tous les résultats')+'</select>'
     + '<span class="pf-mut">'+L.length+' appel'+(L.length>1?'s':'')+'</span></div>'
-    + (L.length ? '<div class="mm-wrap"><table class="mm-tbl mcp-tbl"><thead><tr><th>Quand</th><th>Membre</th><th>IA</th><th>Action</th><th>Détail</th><th>Résultat</th></tr></thead><tbody>'
+    + (L.length ? '<div class="mm-wrap"><table class="mm-tbl mcp-tbl"><thead><tr><th>Quand</th><th>Membre</th><th>IA</th><th>Question / action</th><th>Détail</th><th>Résultat</th><th>Réponse</th></tr></thead><tbody>'
       + L.slice(0, 300).map(x=>'<tr><td data-l="Quand">'+esc(fmtQuand(x.cree_le))+'</td><td data-l="Membre">'+esc(x.nom||nomDe(x.user_id)||'')+'</td><td data-l="IA">'+esc(x.ia||'')+'</td>'
-        + '<td data-l="Action">'+esc(MCP_OUTIL_LIB[x.outil]||x.outil)+(x.ecriture?'<span class="mcp-ecr">écriture</span>':'')+'</td>'
+        + '<td data-l="Question / action">'+(x.question?'<div class="mcp-q">« '+esc(x.question)+' »</div>':'')+esc(MCP_OUTIL_LIB[x.outil]||x.outil)+(x.ecriture?'<span class="mcp-ecr">écriture</span>':'')+'</td>'
         + '<td data-l="Détail"><div class="mcp-p">'+esc(x.resume || mcpParams(x.params) || '—')+'</div></td>'
-        + '<td data-l="Résultat" class="'+esc(x.statut)+'">'+(x.statut==='ok' ? '✓'+(x.nb!=null?' '+x.nb:'') : esc((x.statut==='refus'?'refus':'erreur')+(x.message?' — '+String(x.message).slice(0,140):'')))+'</td></tr>').join('')
+        + '<td data-l="Résultat" class="'+esc(x.statut)+'">'+(x.statut==='ok' ? '✓'+(x.nb!=null?' '+x.nb:'') : esc((x.statut==='refus'?'refus':'erreur')+(x.message?' — '+String(x.message).slice(0,140):'')))
+          + (avisPar[x.id]||[]).map(a=>'<span class="mcp-avis'+(AVN.includes((a.params||{}).avis)?' neg':'')+'" title="'+esc(a.resume||'')+'">avis : '+esc((a.params||{}).avis||'')+'</span>').join('')+'</td>'
+        + '<td data-l="Réponse">'+(x.reponse_taille?'<button type="button" class="mcp-lien" data-mcprep="'+x.id+'">Voir</button> <span class="pf-mut">'+(x.reponse_taille>1000?Math.round(x.reponse_taille/1000)+' k':x.reponse_taille)+' car.</span>':'—')+'</td></tr>'
+        + '<tr class="mcp-rep" id="mcpRep'+x.id+'" hidden><td colspan="7"><pre></pre></td></tr>').join('')
       + '</tbody></table></div>' + (L.length>300?'<p class="pf-mut">300 premiers appels affichés — affine les filtres.</p>':'')
       : '<p class="mm-vide">Aucun appel ne correspond.</p>') + '</div>';
   el.innerHTML = h;
 }
+document.addEventListener('click', async e=>{
+  const b = e.target.closest && e.target.closest('#mcpAdmin [data-mcprep]'); if(!b) return;
+  const tr = document.getElementById('mcpRep'+b.dataset.mcprep); if(!tr) return;
+  if(!tr.hidden){ tr.hidden = true; b.textContent = 'Voir'; return; }
+  const pre = tr.querySelector('pre');
+  if(!pre.dataset.ok){ pre.textContent = 'Chargement…';
+    try{ const r = await SB.from('mcp_journal').select('reponse').eq('id', +b.dataset.mcprep).maybeSingle(); if(r.error) throw r.error;
+      pre.textContent = (r.data && r.data.reponse) || '(vide)'; pre.dataset.ok = '1'; }catch(err){ pre.textContent = 'Réponse indisponible.'; } }
+  tr.hidden = false; b.textContent = 'Masquer';
+});
 document.addEventListener('change', e=>{
   const s = e.target.closest && e.target.closest('#mcpAdmin [data-mcpf]'); if(!s) return;
   MCP_ADM.f[s.dataset.mcpf] = s.value; mcpAdminRendre();
