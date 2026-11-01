@@ -4264,6 +4264,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['f','Fiches pratiques : le filtre « Ma phase en cours » est retiré.'],
     ['f','Menu Forman simplifié : Ateliers, Parcours, Autres événements, Annuaire. « Autres événements » regroupe Réunions d’équipe, Formations et Événements en sous-onglets en haut de page (le dernier consulté est rouvert ; les adresses restent les mêmes).'],
     ['f','Menu : la rubrique « Le réseau » s’appelle désormais « Forman ». Mission 3.6 « Devenir autonome en R2 sur mes modules » : case SCPI ajoutée.'],
     ['f','Mail manager et mur : R-signature retiré ; R0, R1, R2, RX et invités DM / AD / 3 Jours affichés sur la semaine écoulée, avec entre parenthèses le cumul depuis le début de l’exercice ; « D’avance à date » devient « Semaines suivantes » (hors semaine en cours).'],
@@ -5698,15 +5699,14 @@ function buildFiches(){
   if(!el || !CONTENU || !CONTENU.pages) return;
   const R = fichesRayons(), filtre = (document.getElementById('fichesR')||{}).value || '';
   const q = norm((document.getElementById('fichesQ')||{}).value || '').trim();
-  const favs = Object.keys(CONTENU.pages).filter(ffavOn), phase = fichesPhase();
+  const favs = Object.keys(CONTENU.pages).filter(ffavOn);
   const chips = [['', 'Toutes']].concat(R.map((r,i)=>['r'+i, (r.i?r.i+' ':'')+r.t]));
-  if(phase.length) chips.push(['phase', '🧭 Ma phase en cours']);
+  // 01/11/2026 : filtre « Ma phase en cours » retiré à la demande de Florian (une ancienne adresse ?r=phase affiche Toutes)
   chips.push(['fav', '★ Mes favoris'+(favs.length?' ('+favs.length+')':'')]);
   chipsEl.innerHTML = chips.map(([k,l])=>'<button type="button" data-ff="'+k+'"'+(k===filtre?' class="on"':'')+'>'+esc(l)+'</button>').join('');
   const rayonDe = {}; R.forEach(r=>r.pages.forEach(s=>{ rayonDe[s] = (r.i?r.i+' ':'')+r.t; }));
   let sections;
   if(filtre==='fav') sections = [{ t:'★ Mes favoris', pages:favs, vide:'Aucun favori pour l’instant : clique sur l’étoile ☆ d’une fiche pour la retrouver ici.' }];
-  else if(filtre==='phase') sections = [{ t:'🧭 Les fiches de ma phase en cours', pages:phase }];
   else if(/^r\d+$/.test(filtre) && R[+filtre.slice(1)]) { const r = R[+filtre.slice(1)]; sections = [{ t:(r.i?r.i+' ':'')+r.t, pages:r.pages }]; }
   else sections = R.map(r=>({ t:(r.i?r.i+' ':'')+r.t, pages:r.pages }));
   fichesMarquerVues();
