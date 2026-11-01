@@ -1970,6 +1970,36 @@ a.mml-r:hover{border-color:var(--accent)}
 .ret-vide{color:var(--ink-3);font-style:italic;font-size:13.5px;margin-top:12px}
 @media (max-width:860px){ #fbBtn{bottom:70px;padding:9px 13px} #fbBtn .l{display:none} }
 @media (max-width:640px){ .ret-l{grid-template-columns:1fr} .ret-v{grid-row:auto;flex-direction:row;gap:7px;justify-content:flex-start;margin-bottom:8px;width:max-content} .ret-adm{grid-column:1} }
+
+/* ---------- MCP Kairos (01/11/2026) : consentement, Mon profil, Admin → MCP ---------- */
+#oauthBox{position:fixed;inset:0;z-index:300;background:rgba(15,20,26,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+#oauthBox .oa-card{background:var(--surface);color:var(--ink);border-radius:16px;box-shadow:var(--shadow);max-width:520px;width:100%;padding:22px 22px 18px;max-height:92vh;overflow:auto}
+#oauthBox h2{font-family:"Sora";font-size:20px;margin:0 0 6px}
+#oauthBox .oa-ia{display:flex;align-items:center;gap:10px;margin:10px 0 12px;padding:10px 12px;border-radius:10px;background:var(--surface-2)}
+#oauthBox .oa-ia b{font-size:15px}
+#oauthBox .oa-ia small{display:block;color:var(--ink-3);font-size:12px;word-break:break-all}
+#oauthBox ul{margin:6px 0 10px;padding-left:20px;font-size:14px;line-height:1.5}
+#oauthBox .oa-note{font-size:12.5px;color:var(--ink-3);margin:8px 0}
+#oauthBox .oa-err{background:var(--encours);color:#fff;border-radius:10px;padding:10px 12px;font-size:14px;margin:10px 0}
+#oauthBox .oa-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+#oauthBox .oa-btns button{border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:14px}
+#oauthBox .oa-ok{background:var(--accent);color:var(--accent-ink,#fff)}
+#oauthBox .oa-non{background:var(--surface-2);color:var(--ink)}
+.mcp-adr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.mcp-adr code{background:var(--surface-2);border-radius:8px;padding:6px 9px;font-size:12.5px;word-break:break-all}
+.mcp-kpi{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+.mcp-kpi div{background:var(--surface-2);border-radius:10px;padding:8px 12px;min-width:110px}
+.mcp-kpi b{display:block;font-size:20px;font-family:"Sora"}
+.mcp-kpi span{font-size:12px;color:var(--ink-3)}
+.mcp-filtres{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.mcp-filtres select,.mcp-filtres input{padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:13px}
+.mcp-tbl td.ok{color:var(--ok,#1f8a4c)} .mcp-tbl td.refus{color:#b7791f} .mcp-tbl td.erreur{color:#c0392b;font-weight:700}
+.mcp-tbl .mcp-p{font-size:12px;color:var(--ink-3);word-break:break-word;max-width:420px}
+.mcp-tbl button.mcp-lien{border:0;background:none;color:var(--accent);cursor:pointer;font-weight:700;padding:0}
+.mcp-ecr{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:5px;background:var(--surface-2);margin-left:4px}
+.mcp-mots{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.mcp-mots span{background:var(--surface-2);border-radius:99px;padding:2px 10px;font-size:12.5px}
+@media(max-width:700px){.mcp-tbl .mcp-p{max-width:none}}
 </style>
 <style id="rsCss">
 /* ---------- Ressources : simulateurs et courriers (15/09/2026) ---------- */
@@ -2363,9 +2393,11 @@ a.mml-r:hover{border-color:var(--accent)}
         <button data-s="stats">Statistiques</button>
         <button data-s="nouv">Nouveautés</button>
         <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
+        <button data-s="mcp">MCP</button>
         <button data-s="log">Changelog Kairos</button>
       </nav>
 
+      <div class="subview" id="sv-mcp"><div id="mcpAdmin"></div></div>
       <div class="subview" id="sv-log">
         <div class="panel cl-panel">
           <h2>Changelog Kairos</h2>
@@ -3931,6 +3963,7 @@ function buildActions(){
     if(fait) actions.push(act); else actions.unshift(act);
   }
 
+  MCP_ACT = actions; try{ mcpPlanifier(); }catch(e){}
   // Rien d'évaluable : on n'affiche pas le bloc, plutôt que d'annoncer « tu es à jour »
   // sans avoir rien pu vérifier.
   if(!evaluable){ panel.hidden = true; return; }
@@ -4244,8 +4277,8 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','act','dem','cnt','stats','nouv','jrn','log'];
-const ADMIN_SLUG={mbr:'membres',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',log:'changelog'};
+const ADMIN_SUBS=['mbr','act','dem','cnt','stats','nouv','jrn','mcp','log'];
+const ADMIN_SLUG={mbr:'membres',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 function showAdminSub(s){
@@ -4255,6 +4288,7 @@ function showAdminSub(s){
   document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
   if(s==='act'){ try{ if(ACT) buildActivite(); else chargerActivite(); }catch(e){ console.error(e); } }
   if(s==='log'){ try{ buildChangelog(); }catch(e){ console.error(e); } }
+  if(s==='mcp'){ try{ buildMcpAdmin(); }catch(e){ console.error(e); } }
   if(s==='cnt'){ try{ showCntSub(CNT_SUB); }catch(e){ console.error(e); } }
 }
 
@@ -4264,6 +4298,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['f','MCP Kairos : relie Kairos à Claude ou ChatGPT (agenda, fiches, parcours, mail manager, lignée, veille ; remplir et publier son mail manager, objectifs, sessions ☆, cases du parcours, retours). Écran de consentement, Mon profil → Mes IA connectées, Admin → MCP (historique d’utilisation par membre).'],
     ['b','Fiche pratique : sélectionner du texte ou tirer le bord du panneau en relâchant la souris en dehors ne ferme plus la fiche.'],
     ['f','Fiches pratiques : le filtre « Ma phase en cours » est retiré.'],
     ['f','Menu Forman simplifié : Ateliers, Parcours, Autres événements, Annuaire. « Autres événements » regroupe Réunions d’équipe, Formations et Événements en sous-onglets en haut de page (le dernier consulté est rouvert ; les adresses restent les mêmes).'],
@@ -7983,10 +8018,12 @@ function buildProfil(){
     + (lienFo?'<a class="mm-b pf-lien" href="'+esc(lienFo)+'" target="_blank" rel="noopener">Mon profil FORMAN ↗</a>':'')+'</div>';
   try{ h += formanObjectifs({ profil:true, titre:titreFo }); }
   catch(e){ h += '<div class="panel">'+titreFo+'<p class="mm-sub">Statut indisponible pour le moment.</p></div>'; }
+  h += mcpProfilHtml();
   el.innerHTML = h;
   poserIcones(el);
   accZoneRendre();
   profilPrefs();
+  mcpProfilCharger();
 }
 document.addEventListener('click', e=>{
   const t=e.target.closest ? e.target : null; if(!t) return;
@@ -9741,6 +9778,14 @@ async function syncPull(){
 async function syncPush(){
   if(!SB||!SBUSER) return;
   clearTimeout(SYNC_T); SYNC_T=null;
+  // 01/11/2026 : fusion avant envoi — une case cochée depuis un autre appareil ou par une IA (MCP) entre-temps
+  // n'est pas écrasée par l'état local de cet onglet (l'horodatage le plus récent l'emporte, comme au chargement).
+  try{
+    const s = await SB.from('etat').select('donnees').maybeSingle();
+    const mi = (s.data && s.data.donnees && s.data.donnees.mis) || {}; let chg = false;
+    for(const k in mi){ if(k==='_mig') continue; if(typeof mi[k]==='string' && (!MIS[k] || misTs(mi[k]) > misTs(MIS[k]))){ MIS[k] = mi[k]; chg = true; } }
+    if(chg){ try{ localStorage.setItem('kairos_mis', JSON.stringify(MIS)); }catch(_){} try{ majParcours(); }catch(_){} }
+  }catch(e){}
   try{
     const r = await SB.from('etat').upsert({ user_id:SBUSER.id, donnees:etatLocal(), maj:new Date().toISOString() }, { onConflict:'user_id' });
     if(r.error) throw r.error;
@@ -11335,6 +11380,272 @@ async function chargerVeille(){
     return true;
   }catch(err){ return false; }
 }
+
+/* ---------- MCP Kairos (01/11/2026) ----------
+   Le serveur MCP (Edge Function « mcp ») répond aux IA (Claude, ChatGPT) avec le jeton OAuth du membre.
+   Le portail fournit : (1) l'écran de consentement (Supabase Auth, Authorization Path « / » →
+   ?authorization_id=…) ; (2) un instantané de ce qu'il calcule lui-même (actions de la semaine,
+   progression du parcours, fiches verrouillées, bloc automatique du mail manager), table mcp_instantanes,
+   pour que l'IA réponde exactement comme Kairos sans réécrire sa logique ; (3) Mon profil → Mes IA connectées ;
+   (4) Admin → MCP (historique d'utilisation par membre, interrupteurs). */
+const MCP_URL = SB_URL + '/functions/v1/mcp';
+const mcpIaDe = u => /https:\/\/(www\.)?(claude\.ai|claude\.com)\//i.test(u||'') ? 'Claude'
+  : (/https:\/\/(www\.)?(chatgpt\.com|chat\.openai\.com)\//i.test(u||'') ? 'ChatGPT' : '');
+(()=>{ try{
+  const q = new URLSearchParams(location.search), id = q.get('authorization_id');
+  if(id){ sessionStorage.setItem('kairos_oauth', id); q.delete('authorization_id');
+    history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
+}catch(e){} })();
+function oauthBoite(html){
+  let b = document.getElementById('oauthBox');
+  if(!b){ b = document.createElement('div'); b.id = 'oauthBox'; b.setAttribute('role','dialog'); b.setAttribute('aria-modal','true'); document.body.appendChild(b); }
+  b.innerHTML = '<div class="oa-card">' + html + '</div>';
+  return b;
+}
+const oauthFermer = () => { const b = document.getElementById('oauthBox'); if(b) b.remove(); try{ sessionStorage.removeItem('kairos_oauth'); }catch(e){} };
+async function oauthOuvrir(autorise){
+  let id = ''; try{ id = sessionStorage.getItem('kairos_oauth') || ''; }catch(e){}
+  if(!id || !SB || !SBUSER) return false;
+  oauthBoite('<h2>Relier Kairos à ton IA</h2><p class="oa-note">Chargement de la demande…</p>');
+  let det = null;
+  try{
+    if(!SB.auth.oauth || !SB.auth.oauth.getAuthorizationDetails) throw new Error('module OAuth absent');
+    const r = await SB.auth.oauth.getAuthorizationDetails(id);
+    if(r.error) throw r.error;
+    det = r.data || {};
+  }catch(e){
+    oauthBoite('<h2>Relier Kairos à ton IA</h2><div class="oa-err">Cette demande d’autorisation est expirée ou invalide. Recommence l’ajout de Kairos depuis ton IA.</div>'
+      + '<div class="oa-btns"><button type="button" class="oa-non" data-oa="fermer">Fermer</button></div>');
+    try{ sessionStorage.removeItem('kairos_oauth'); }catch(_){}
+    return true;
+  }
+  if(!det.authorization_id && det.redirect_url){ try{ sessionStorage.removeItem('kairos_oauth'); }catch(_){} location.href = det.redirect_url; return true; }
+  const cli = det.client || {}, uri = det.redirect_uri || cli.redirect_uri || (cli.redirect_uris||[])[0] || '';
+  const nomCli = cli.name || cli.client_name || 'Application';
+  const ia = mcpIaDe(uri);
+  let etat = { autorise:autorise, actif:true, bloque:false };
+  try{ const r = await SB.rpc('mcp_etat'); if(!r.error && r.data) etat = r.data; }catch(e){}
+  const tete = '<h2>Relier Kairos à ' + esc(ia || nomCli) + '</h2>'
+    + '<div class="oa-ia"><div><b>' + esc(nomCli) + '</b><small>retour vers ' + esc(uri || 'adresse inconnue') + '</small></div></div>';
+  const refus = (m) => oauthBoite(tete + '<div class="oa-err">' + m + '</div>'
+    + '<div class="oa-btns"><button type="button" class="oa-non" data-oa="refuser">Refuser et fermer</button></div>');
+  if(!autorise || !etat.autorise) return refus('Ton compte n’a pas encore accès à Kairos : un administrateur doit d’abord le valider.'), true;
+  if(!etat.actif) return refus('Le MCP Kairos est momentanément coupé par les administrateurs.'), true;
+  if(etat.bloque) return refus('L’accès MCP de ton compte est suspendu par un administrateur.'), true;
+  if(!ia) return refus('<b>IA non reconnue.</b> Kairos n’accepte que Claude et ChatGPT. Si tu n’es pas à l’origine de cette demande, refuse-la.'), true;
+  oauthBoite(tete
+    + '<p>' + esc(ia) + ' pourra, en ton nom :</p><ul>'
+    + '<li><b>lire</b> ce que tu vois dans Kairos : agenda des sessions, fiches pratiques, FAQ et objections, ta progression, tes actions de la semaine, ton mail manager et le mur, ta lignée, la veille ;</li>'
+    + '<li><b>agir</b> à ta demande : remplir et publier ton mail manager, réviser tes objectifs, enregistrer des sessions ☆, cocher des cases manuelles du parcours, déposer un retour.</li></ul>'
+    + '<p class="oa-note">Jamais de coordonnées d’autres membres. Les réponses partent chez le fournisseur de ' + esc(ia) + '. '
+    + 'Les administrateurs de Kairos voient l’historique de tes actions MCP (outils utilisés et paramètres), jamais tes conversations. '
+    + 'Tu peux couper l’accès à tout moment dans Mon profil → Mes IA connectées.</p>'
+    + '<div class="oa-btns"><button type="button" class="oa-non" data-oa="refuser">Refuser</button><button type="button" class="oa-ok" data-oa="autoriser">Autoriser</button></div>');
+  return true;
+}
+document.addEventListener('click', async e=>{
+  const b = e.target.closest && e.target.closest('#oauthBox [data-oa]'); if(!b) return;
+  const act = b.dataset.oa; let id = ''; try{ id = sessionStorage.getItem('kairos_oauth') || ''; }catch(_){}
+  if(act === 'fermer' || !id){ oauthFermer(); return; }
+  b.disabled = true;
+  try{
+    const r = act === 'autoriser' ? await SB.auth.oauth.approveAuthorization(id) : await SB.auth.oauth.denyAuthorization(id);
+    if(r.error) throw r.error;
+    try{ sessionStorage.removeItem('kairos_oauth'); }catch(_){}
+    if(act === 'autoriser') mcpInstantane(true);
+    const u = r.data && (r.data.redirect_url || r.data.redirect_to);
+    if(u){ oauthBoite('<h2>' + (act === 'autoriser' ? 'C’est fait ✓' : 'Demande refusée') + '</h2><p class="oa-note">Retour à ton IA…</p>'); setTimeout(()=>{ location.href = u; }, act === 'autoriser' ? 600 : 0); }
+    else oauthFermer();
+  }catch(err){
+    b.disabled = false;
+    oauthBoite('<h2>Relier Kairos à ton IA</h2><div class="oa-err">La demande n’a pas pu aboutir (' + esc(err.message || String(err)) + '). Recommence depuis ton IA.</div>'
+      + '<div class="oa-btns"><button type="button" class="oa-non" data-oa="fermer">Fermer</button></div>');
+  }
+});
+
+// --- Instantané pour le MCP : ce que le portail calcule, relu par le serveur MCP ---
+let MCP_ACT = [], MCP_T = null, MCP_DERNIER = '', MCP_DERNIER_T = 0;
+const mcpTexte = h => String(h||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
+function mcpProgression(){
+  const cases = {}, phases = [];
+  misPhases().forEach(ph=>{
+    const ouverte = !ph.avenir && miPhaseOuverte(ph), prog = miPhaseProg(ph);
+    phases.push({ n:ph.n, t:ph.t, ouverte, avancement: prog.ok+'/'+prog.tot,
+      missions:(ph.missions||[]).map(m=>{
+        const etat = miEtat(ph, m), bl = miBlocage(ph, m);
+        return { id:m.id, t:m.t, etat: MI_ETAT_LIB[etat]||etat, ...(bl?{ en_attente:bl }:{}),
+          cases:(m.actions||[]).map(a=>{
+            const e = miAction(m, a), cle = m.id+'/'+a.id, coch = miCochable(ph, m, a);
+            cases[cle] = { t:a.t, mission:m.id+' '+m.t, v:a.v, fait:!!e.ok, cochable:!!coch, ...(bl?{ blocage:bl }:{}) };
+            return { cle, t:a.t, fait:!!e.ok, ...(e.d?{ le:e.d }:{}), mode: a.v==='moi' ? 'manuelle' : 'automatique', ...(a.v==='moi'?{ cochable:!!coch }:{}) };
+          }) };
+      }) });
+  });
+  const cour = phases.find(p=>p.n === (misPhases().find(x=>x.id===miPhaseDefaut())||{}).n);
+  const proch = miProchaines(3).map(x=>({ phase:x.ph.n, mission:x.m.id+' '+x.m.t, etat:MI_ETAT_LIB[x.e]||x.e,
+    reste:(x.m.actions||[]).filter(a=>!miAction(x.m,a).ok).map(a=>({ cle:x.m.id+'/'+a.id, t:a.t, mode:a.v==='moi'?'manuelle':'automatique' })) }));
+  return { progression:{ phase_en_cours: cour||null, prochaines: proch, resume: phases.map(p=>({ n:p.n, t:p.t, ouverte:p.ouverte, avancement:p.avancement })), phases }, cases };
+}
+function mcpDonnees(){
+  const d = { v:1, statut: monStatut() };
+  d.actions = (MCP_ACT||[]).map(a=>({ t:mcpTexte(a.t), ...(a.d?{ detail:mcpTexte(a.d) }:{}), ...(a.urg?{ urgence:mcpTexte(a.urg) }:{}), fait:!!a.fait,
+    ...(a.href?{ lien: /^https?:/.test(a.href) ? a.href : 'https://mykairos.fr/'+a.href }:{}) }));
+  try{ if(misData()){ const pr = mcpProgression(); d.progression = pr.progression; d.cases = pr.cases; } }catch(e){}
+  try{
+    const v = {};
+    Object.keys((CONTENU&&CONTENU.pages)||{}).forEach(s=>{ const a = ficheAcces(s); if(!a.ok) v[s] = a.raison || 'fiche verrouillée'; });
+    d.fiches_verrouillees = v;
+  }catch(e){}
+  try{ if(MOI_ID){ const sem = mmSemCour(), au = mmAuto(sem); d.mm_auto = { sem, auto:au };
+    if(au && au.ftot) d.objectifs_forman = { statut:au.statut, valides:au.fn, total:au.ftot, en_cours_de_validation:au.fattN||[], a_faire:au.fafN||[] }; } }catch(e){}
+  return d;
+}
+async function mcpInstantane(force){
+  if(!SB || !SBUSER || !window.__booted) return;
+  let d; try{ d = mcpDonnees(); }catch(e){ return; }
+  const cle = JSON.stringify(d);
+  if(!force && cle === MCP_DERNIER && Date.now() - MCP_DERNIER_T < 6*3600*1000) return;
+  try{
+    const r = await SB.from('mcp_instantanes').upsert({ user_id:SBUSER.id, donnees:d, maj:new Date().toISOString() }, { onConflict:'user_id' });
+    if(!r.error){ MCP_DERNIER = cle; MCP_DERNIER_T = Date.now(); }
+  }catch(e){}
+}
+const mcpPlanifier = () => { clearTimeout(MCP_T); MCP_T = setTimeout(()=>mcpInstantane(false), 4000); };
+
+// --- Mon profil → Mes IA connectées ---
+function mcpProfilHtml(){
+  if(!SB || !SBUSER) return '';
+  return '<div class="panel pf-sec" id="pfMcp"><h2>Mes IA connectées</h2>'
+    + '<p class="mm-sub">Relie Kairos à Claude ou ChatGPT : ton IA consulte l’agenda, les fiches, ton parcours, ton mail manager… et peut agir à ta demande. '
+    + 'Mode d’emploi : fiche pratique <a href="#p/relier-kairos-a-mon-ia">Relier Kairos à mon IA</a>.</p>'
+    + '<div class="mcp-adr"><code id="pfMcpUrl">'+esc(MCP_URL)+'</code><button type="button" class="mm-b" id="pfMcpCopier">Copier l’adresse</button></div>'
+    + '<div id="pfMcpListe"><p class="pf-mut">Chargement…</p></div></div>';
+}
+async function mcpProfilCharger(){
+  const el = document.getElementById('pfMcpListe'); if(!el || !SB) return;
+  let l = [];
+  try{ const r = await SB.rpc('mcp_mes_connexions'); if(r.error) throw r.error; l = r.data || []; }
+  catch(e){ el.innerHTML = '<p class="pf-mut">Liste indisponible pour le moment.</p>'; return; }
+  el.innerHTML = l.length ? '<div class="mm-wrap"><table class="mm-tbl"><thead><tr><th>IA</th><th>Autorisée le</th><th>Dernière utilisation</th><th class="num">Appels</th><th></th></tr></thead><tbody>'
+      + l.map(c=>'<tr><td data-l="IA"><b>'+esc(c.ia||c.client_nom||'IA')+'</b>'+(c.client_nom&&c.client_nom!==c.ia?' <span class="pf-mut">'+esc(c.client_nom)+'</span>':'')+'</td>'
+        + '<td data-l="Autorisée le">'+esc(c.accorde_le?fmtQuand(c.accorde_le):'—')+'</td><td data-l="Dernière utilisation">'+esc(c.derniere?fmtQuand(c.derniere):'jamais')+'</td>'
+        + '<td class="num" data-l="Appels">'+(c.appels||0)+'</td><td><button type="button" class="mm-b" data-mcprev="'+esc(c.client_id)+'">Couper l’accès</button></td></tr>').join('')
+      + '</tbody></table></div>'
+    : '<p class="pf-mut">Aucune IA reliée pour l’instant.</p>';
+}
+document.addEventListener('click', async e=>{
+  const c = e.target.closest && e.target.closest('#pfMcpCopier');
+  if(c){ try{ await navigator.clipboard.writeText(MCP_URL); c.textContent='Copiée ✓'; }catch(_){ c.textContent='Sélectionne et copie'; } setTimeout(()=>{ c.textContent='Copier l’adresse'; }, 2000); return; }
+  const r = e.target.closest && e.target.closest('[data-mcprev]'); if(!r) return;
+  if(!(await edModal('Couper l’accès de cette IA à Kairos ? Elle ne pourra plus rien lire ni faire, jusqu’à ce que tu la relies à nouveau.', [], null, 'Couper l’accès'))) return;
+  r.disabled = true;
+  try{ const x = await SB.rpc('mcp_revoquer', { p_client: r.dataset.mcprev }); if(x.error) throw x.error; }catch(err){ r.disabled = false; return; }
+  mcpProfilCharger();
+});
+
+// --- Admin → MCP : historique d'utilisation par membre ---
+let MCP_ADM = { membres:[], journal:[], actif:true, f:{ user:'', outil:'', ia:'', statut:'', type:'' } };
+const MCP_OUTIL_LIB = { chercher_sessions:'Chercher des sessions', detail_session:'Détail d’une session', mes_sessions:'Mes sessions', chercher_fiches:'Chercher des fiches',
+  lire_fiche:'Lire une fiche', faq_objections:'FAQ / objections', liens_utiles:'Liens utiles', veille:'Veille', mes_actions:'Mes actions', ma_progression:'Ma progression',
+  mon_mail_manager:'Mon mail manager', mur_mail_manager:'Mur du mail manager', ma_lignee:'Ma lignée', enregistrer_session:'Enregistrer une session',
+  cocher_parcours:'Cocher le parcours', deposer_retour:'Déposer un retour', suggerer_contenu:'Suggérer un contenu', remplir_mail_manager:'Remplir le mail manager',
+  publier_mail_manager:'Publier le mail manager', modifier_objectifs:'Modifier les objectifs' };
+async function buildMcpAdmin(){
+  const el = document.getElementById('mcpAdmin'); if(!el || !SB) return;
+  if(!MCP_ADM.ok) el.innerHTML = '<div class="panel"><p class="mm-sub">Chargement…</p></div>';
+  try{
+    const depuis = new Date(Date.now() - 90*86400000).toISOString();
+    const [m, j, g] = await Promise.all([
+      SB.rpc('mcp_admin_membres'),
+      SB.from('mcp_journal').select('id,cree_le,user_id,nom,ia,client_nom,outil,params,ecriture,resume,statut,message,nb,duree_ms').gte('cree_le', depuis).order('cree_le', { ascending:false }).limit(2000),
+      SB.from('mcp_reglages').select('actif').eq('id', 1).maybeSingle(),
+    ]);
+    if(m.error || j.error) throw (m.error || j.error);
+    MCP_ADM.membres = m.data || []; MCP_ADM.journal = j.data || []; MCP_ADM.actif = !(g.data && g.data.actif === false); MCP_ADM.ok = true;
+  }catch(e){ el.innerHTML = '<div class="panel"><p class="mm-sub">Historique MCP indisponible : '+esc(e.message||String(e))+'</p></div>'; return; }
+  mcpAdminRendre();
+}
+function mcpParams(p){
+  if(!p || typeof p !== 'object') return '';
+  return Object.entries(p).filter(([k,v])=>v!==null && v!=='' && !(typeof v==='object' && !Object.keys(v).length))
+    .map(([k,v])=>k+' : '+(typeof v==='object' ? JSON.stringify(v) : String(v))).join(' · ').slice(0, 300);
+}
+function mcpAdminRendre(){
+  const el = document.getElementById('mcpAdmin'); if(!el) return;
+  const J = MCP_ADM.journal, f = MCP_ADM.f, t7 = Date.now() - 7*86400000, t30 = Date.now() - 30*86400000;
+  const n7 = J.filter(x=>new Date(x.cree_le) > t7).length, n30 = J.filter(x=>new Date(x.cree_le) > t30).length;
+  const actifs = new Set(J.filter(x=>new Date(x.cree_le) > t30).map(x=>x.user_id)).size;
+  const ecr = J.filter(x=>x.ecriture && new Date(x.cree_le) > t30).length, err = J.filter(x=>x.statut==='erreur' && new Date(x.cree_le) > t30).length;
+  const parOutil = {}; J.forEach(x=>{ parOutil[x.outil] = (parOutil[x.outil]||0) + 1; });
+  const top = Object.entries(parOutil).sort((a,b)=>b[1]-a[1]).slice(0, 8);
+  const mots = {}; J.forEach(x=>{ const v = x.params && (x.params.texte || x.params.atelier); if(v && typeof v==='string'){ const k = v.trim().toLowerCase(); mots[k] = (mots[k]||0) + 1; } });
+  const topMots = Object.entries(mots).sort((a,b)=>b[1]-a[1]).slice(0, 20);
+  const nomDe = id => (MCP_ADM.membres.find(m=>m.user_id===id)||{}).nom || '';
+  let h = '<div class="panel"><h2>MCP Kairos</h2>'
+    + '<p class="mm-sub">Les IA (Claude, ChatGPT) reliées à Kairos par les membres : qui les utilise, pour quoi faire. Outils et paramètres seulement — jamais les conversations. 90 derniers jours.</p>'
+    + '<div class="mcp-kpi"><div><b>'+MCP_ADM.membres.filter(m=>m.ias).length+'</b><span>membres reliés</span></div><div><b>'+actifs+'</b><span>actifs sur 30 j</span></div>'
+    + '<div><b>'+n7+'</b><span>appels sur 7 j</span></div><div><b>'+n30+'</b><span>appels sur 30 j</span></div><div><b>'+ecr+'</b><span>écritures sur 30 j</span></div><div><b>'+err+'</b><span>erreurs sur 30 j</span></div></div>'
+    + '<div class="pf-row"><div class="pf-lab"><b>MCP actif pour tous</b><span>Couper bloque immédiatement toutes les IA, pour tout le monde.</span></div>'
+    + '<button type="button" class="mm-b" id="mcpGlobal">'+(MCP_ADM.actif ? 'Actif — couper' : 'Coupé — réactiver')+'</button></div>'
+    + (top.length ? '<label class="mm-lab">Outils les plus utilisés</label><div class="mcp-mots">'+top.map(([o,n])=>'<span>'+esc(MCP_OUTIL_LIB[o]||o)+' · '+n+'</span>').join('')+'</div>' : '')
+    + (topMots.length ? '<label class="mm-lab">Mots les plus cherchés <span class="mut">— fiches ou sessions demandées aux IA</span></label><div class="mcp-mots">'+topMots.map(([m,n])=>'<span>'+esc(m)+(n>1?' · '+n:'')+'</span>').join('')+'</div>' : '')
+    + '</div>';
+  // membres
+  h += '<div class="panel"><h2>Par membre</h2>' + (MCP_ADM.membres.length
+    ? '<div class="mm-wrap"><table class="mm-tbl mcp-tbl"><thead><tr><th>Membre</th><th>IA</th><th>Relié le</th><th>Dernière utilisation</th><th class="num">7 j</th><th class="num">30 j</th><th class="num">Écritures</th><th class="num">Erreurs</th><th>Accès</th></tr></thead><tbody>'
+      + MCP_ADM.membres.map(m=>'<tr><td data-l="Membre"><button type="button" class="mcp-lien" data-mcpu="'+esc(m.user_id)+'" title="Voir son historique">'+esc(m.nom||m.email||'')+'</button></td>'
+        + '<td data-l="IA">'+esc(m.ias||'—')+'</td><td data-l="Relié le">'+esc(m.connecte_le?fmtQuand(m.connecte_le):'—')+'</td><td data-l="Dernière utilisation">'+esc(m.derniere?fmtQuand(m.derniere):'jamais')+'</td>'
+        + '<td class="num" data-l="7 j">'+(m.appels_7j||0)+'</td><td class="num" data-l="30 j">'+(m.appels_30j||0)+'</td><td class="num" data-l="Écritures">'+(m.ecritures_30j||0)+'</td><td class="num" data-l="Erreurs">'+(m.erreurs_30j||0)+'</td>'
+        + '<td data-l="Accès"><button type="button" class="mm-b" data-mcpbloq="'+esc(m.user_id)+'" data-b="'+(m.bloque?'0':'1')+'">'+(m.bloque?'Suspendu — rétablir':'Suspendre')+'</button></td></tr>').join('')
+      + '</tbody></table></div>'
+    : '<p class="mm-vide">Personne n’a encore relié d’IA à Kairos.</p>') + '</div>';
+  // flux
+  const opts = (vals, cur, lib) => '<option value="">'+lib+'</option>'+vals.map(([v,l])=>'<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(l)+'</option>').join('');
+  const users = [...new Set(J.map(x=>x.user_id))].map(u=>[u, nomDe(u) || (J.find(x=>x.user_id===u)||{}).nom || u]).sort((a,b)=>String(a[1]).localeCompare(String(b[1]),'fr'));
+  const outils = [...new Set(J.map(x=>x.outil))].map(o=>[o, MCP_OUTIL_LIB[o]||o]);
+  const ias = [...new Set(J.map(x=>x.ia).filter(Boolean))].map(i=>[i,i]);
+  const L = J.filter(x=>(!f.user||x.user_id===f.user) && (!f.outil||x.outil===f.outil) && (!f.ia||x.ia===f.ia) && (!f.statut||x.statut===f.statut)
+    && (!f.type || (f.type==='ecriture') === !!x.ecriture));
+  h += '<div class="panel"><h2>Historique des appels</h2><div class="mcp-filtres">'
+    + '<select data-mcpf="user">'+opts(users, f.user, 'Tous les membres')+'</select>'
+    + '<select data-mcpf="outil">'+opts(outils, f.outil, 'Tous les outils')+'</select>'
+    + '<select data-mcpf="type">'+opts([['lecture','Lectures'],['ecriture','Écritures']], f.type, 'Lectures et écritures')+'</select>'
+    + '<select data-mcpf="ia">'+opts(ias, f.ia, 'Toutes les IA')+'</select>'
+    + '<select data-mcpf="statut">'+opts([['ok','Succès'],['refus','Refus'],['erreur','Erreurs']], f.statut, 'Tous les résultats')+'</select>'
+    + '<span class="pf-mut">'+L.length+' appel'+(L.length>1?'s':'')+'</span></div>'
+    + (L.length ? '<div class="mm-wrap"><table class="mm-tbl mcp-tbl"><thead><tr><th>Quand</th><th>Membre</th><th>IA</th><th>Action</th><th>Détail</th><th>Résultat</th></tr></thead><tbody>'
+      + L.slice(0, 300).map(x=>'<tr><td data-l="Quand">'+esc(fmtQuand(x.cree_le))+'</td><td data-l="Membre">'+esc(x.nom||nomDe(x.user_id)||'')+'</td><td data-l="IA">'+esc(x.ia||'')+'</td>'
+        + '<td data-l="Action">'+esc(MCP_OUTIL_LIB[x.outil]||x.outil)+(x.ecriture?'<span class="mcp-ecr">écriture</span>':'')+'</td>'
+        + '<td data-l="Détail"><div class="mcp-p">'+esc(x.resume || mcpParams(x.params) || '—')+'</div></td>'
+        + '<td data-l="Résultat" class="'+esc(x.statut)+'">'+(x.statut==='ok' ? '✓'+(x.nb!=null?' '+x.nb:'') : esc((x.statut==='refus'?'refus':'erreur')+(x.message?' — '+String(x.message).slice(0,140):'')))+'</td></tr>').join('')
+      + '</tbody></table></div>' + (L.length>300?'<p class="pf-mut">300 premiers appels affichés — affine les filtres.</p>':'')
+      : '<p class="mm-vide">Aucun appel ne correspond.</p>') + '</div>';
+  el.innerHTML = h;
+}
+document.addEventListener('change', e=>{
+  const s = e.target.closest && e.target.closest('#mcpAdmin [data-mcpf]'); if(!s) return;
+  MCP_ADM.f[s.dataset.mcpf] = s.value; mcpAdminRendre();
+});
+document.addEventListener('click', async e=>{
+  const u = e.target.closest && e.target.closest('#mcpAdmin [data-mcpu]');
+  if(u){ MCP_ADM.f = { user:u.dataset.mcpu, outil:'', ia:'', statut:'', type:'' }; mcpAdminRendre();
+    const t = document.querySelector('#mcpAdmin .panel:last-child'); if(t) t.scrollIntoView({ behavior:'smooth', block:'start' }); return; }
+  const g = e.target.closest && e.target.closest('#mcpGlobal');
+  if(g){
+    const couper = MCP_ADM.actif;
+    if(couper && !(await edModal('Couper le MCP Kairos pour tout le monde ? Toutes les IA reliées perdent l’accès jusqu’à la réactivation.', [], null, 'Couper'))) return;
+    g.disabled = true; try{ const r = await SB.rpc('mcp_admin_activer', { p_actif: !couper }); if(r.error) throw r.error; }catch(err){ g.disabled = false; return; }
+    buildMcpAdmin(); return;
+  }
+  const b = e.target.closest && e.target.closest('#mcpAdmin [data-mcpbloq]');
+  if(b){
+    const bloquer = b.dataset.b === '1';
+    if(bloquer && !(await edModal('Suspendre l’accès MCP de ce membre ? Ses IA reliées ne pourront plus rien lire ni faire.', [], null, 'Suspendre'))) return;
+    b.disabled = true; try{ const r = await SB.rpc('mcp_admin_bloquer', { p_user: b.dataset.mcpbloq, p_bloque: bloquer }); if(r.error) throw r.error; }catch(err){ b.disabled = false; return; }
+    buildMcpAdmin();
+  }
+});
+
 function lockErr(m){ const e=document.getElementById('lockErr'); if(e) e.textContent=m||''; }
 // Démarrage : tout passe par le compte Google
 async function demarrer(){
@@ -11345,7 +11656,7 @@ async function demarrer(){
   if(err) history.replaceState(null,'',location.pathname+location.hash);
   if(connecte){
     if(w) w.textContent='Ouverture de ton espace…';
-    if(await silentUnlock()) return;
+    if(await silentUnlock()){ oauthOuvrir(true); return; }
     const el=document.getElementById('lockErr');
     if(el) el.innerHTML='<b>Accès en attente de validation</b><br>Ton compte <b>'+esc((SBUSER&&SBUSER.email)||'')
       +'</b> est bien enregistré, mais il doit encore être rapproché de ta fiche par un administrateur. '
@@ -11359,6 +11670,9 @@ async function demarrer(){
   if(info) info.hidden = !SB || connecte;
   if(!SB) lockErr('Le portail n’a pas pu joindre le serveur — vérifie ta connexion et recharge la page.');
   else if(err) lockErr(accMsg(err));
+  if(connecte) oauthOuvrir(false);
+  else { let oa=''; try{ oa=sessionStorage.getItem('kairos_oauth')||''; }catch(_){}
+    if(oa && SB && !err) lockErr('Connecte-toi pour autoriser ton IA à accéder à Kairos.'); }
 }
 document.addEventListener('click', async e=>{
   if(e.target.closest && e.target.closest('#lockOut')){

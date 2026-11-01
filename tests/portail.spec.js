@@ -5206,3 +5206,160 @@ test.describe('Menu Forman : Autres événements (01/11/2026)', () => {
     expect(erreurs).toEqual([]);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('MCP Kairos (01/11/2026)', () => {
+  test('consentement : l’identifiant est repris de l’adresse, Claude autorisé, une IA inconnue refusée', async ({ page }) => {
+    const erreurs = [];
+    page.on('pageerror', e => erreurs.push(e.message));
+    await page.goto(PAGE + '?authorization_id=abc123#accueil'); await page.waitForTimeout(400);
+    const debut = await page.evaluate(() => ({ id: sessionStorage.getItem('kairos_oauth'), search: location.search, hash: location.hash }));
+    expect(debut).toEqual({ id: 'abc123', search: '', hash: '#accueil' });
+    const r = await page.evaluate(async () => {
+      const appels = [];
+      const det = { authorization_id: 'abc123', client: { name: 'Claude' }, redirect_uri: 'https://claude.ai/api/mcp/auth_callback', scope: 'email' };
+      SB = { auth: { oauth: {
+          getAuthorizationDetails: async (id) => { appels.push('det:' + id); return { data: det, error: null }; },
+          approveAuthorization: async (id) => { appels.push('ok:' + id); return { data: { redirect_url: '#retour-ia' }, error: null }; },
+          denyAuthorization: async (id) => { appels.push('non:' + id); return { data: { redirect_url: '#refus' }, error: null }; } } },
+        rpc: async (n) => n === 'mcp_etat' ? { data: { autorise: true, actif: true, bloque: false } } : { data: null },
+        from: () => ({ upsert: async () => ({ error: null }) }) };
+      SBUSER = { id: 'u1', email: 'x' };
+      await oauthOuvrir(true);
+      const b = document.getElementById('oauthBox');
+      const avant = { titre: b.querySelector('h2').textContent, btns: [...b.querySelectorAll('button')].map(x => x.textContent), note: b.querySelector('.oa-note').textContent };
+      b.querySelector('[data-oa="autoriser"]').click();
+      await new Promise(ok => setTimeout(ok, 800));
+      // IA non reconnue
+      sessionStorage.setItem('kairos_oauth', 'zzz');
+      det.authorization_id = 'zzz'; det.client = { name: 'Kairos officiel' }; det.redirect_uri = 'https://pirate.example/cb';
+      await oauthOuvrir(true);
+      const b2 = document.getElementById('oauthBox');
+      const inconnu = { err: b2.querySelector('.oa-err').textContent, btns: [...b2.querySelectorAll('button')].map(x => x.textContent) };
+      return { avant, appels, hash: location.hash, reste: sessionStorage.getItem('kairos_oauth'), inconnu };
+    });
+    expect(r.avant.titre).toBe('Relier Kairos à Claude');
+    expect(r.avant.btns).toEqual(['Refuser', 'Autoriser']);
+    expect(r.avant.note).toContain('historique de tes actions MCP');
+    expect(r.appels).toEqual(['det:abc123', 'ok:abc123', 'det:zzz']);
+    expect(r.hash).toBe('#retour-ia');
+    expect(r.inconnu.err).toContain('IA non reconnue');
+    expect(r.inconnu.btns, 'pas de bouton Autoriser pour une IA inconnue').toEqual(['Refuser et fermer']);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('consentement : compte non autorisé ou MCP coupé → refus seulement', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      const det = { authorization_id: 'a1', client: { name: 'ChatGPT' }, redirect_uri: 'https://chatgpt.com/connector_platform_oauth_redirect' };
+      let etat = { autorise: true, actif: false, bloque: false };
+      SB = { auth: { oauth: { getAuthorizationDetails: async () => ({ data: det, error: null }) } }, rpc: async () => ({ data: etat }) };
+      SBUSER = { id: 'u1' };
+      sessionStorage.setItem('kairos_oauth', 'a1'); await oauthOuvrir(true);
+      const coupe = document.querySelector('#oauthBox .oa-err').textContent;
+      sessionStorage.setItem('kairos_oauth', 'a1'); await oauthOuvrir(false);
+      const nonAut = document.querySelector('#oauthBox .oa-err').textContent;
+      return { coupe, nonAut, ok: !!document.querySelector('#oauthBox [data-oa="autoriser"]') };
+    });
+    expect(r.coupe).toContain('coupé');
+    expect(r.nonAut).toContain('pas encore accès');
+    expect(r.ok).toBe(false);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('instantané : actions, fiches verrouillées et progression envoyées, sans doublon', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      const envois = [];
+      SB = { from: (t) => ({ upsert: async (o) => { envois.push([t, o]); return { error: null }; } }) };
+      SBUSER = { id: 'u1' }; window.__booted = true;
+      MCP_ACT = [{ t: 'Remplir mon mail manager', d: 'S45 <b>lundi</b>', fait: false, href: '#mail-manager', urg: 'à faire' }];
+      await mcpInstantane(false); await mcpInstantane(false);
+      const d = envois[0] && envois[0][1].donnees;
+      return { n: envois.length, table: envois[0] && envois[0][0], user: envois[0] && envois[0][1].user_id, act: d && d.actions, verr: d && typeof d.fiches_verrouillees };
+    });
+    expect(r.n, 'un second envoi identique est évité').toBe(1);
+    expect(r.table).toBe('mcp_instantanes');
+    expect(r.user).toBe('u1');
+    expect(r.act).toEqual([{ t: 'Remplir mon mail manager', detail: 'S45 lundi', urgence: 'à faire', fait: false, lien: 'https://mykairos.fr/#mail-manager' }]);
+    expect(r.verr).toBe('object');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('Admin → MCP : sous-onglet, membres, mots cherchés, filtres de l’historique', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      const maint = new Date().toISOString();
+      const J = [
+        { id: 1, cree_le: maint, user_id: 'u1', nom: 'Justine H.', ia: 'Claude', outil: 'chercher_sessions', params: { texte: 'Clés de la com', type: 'atelier' }, ecriture: false, statut: 'ok', nb: 3 },
+        { id: 2, cree_le: maint, user_id: 'u1', nom: 'Justine H.', ia: 'Claude', outil: 'publier_mail_manager', params: { confirmation: true }, ecriture: true, resume: 'a publié son mail manager S45', statut: 'ok' },
+        { id: 3, cree_le: maint, user_id: 'u2', nom: 'Rémi A.', ia: 'ChatGPT', outil: 'chercher_fiches', params: { texte: 'SCPI' }, ecriture: false, statut: 'erreur', message: 'boum' },
+      ];
+      const q = { select() { return q; }, gte() { return q; }, order() { return q; }, limit: async () => ({ data: J, error: null }), eq() { return q; }, maybeSingle: async () => ({ data: { actif: true } }) };
+      SB = { rpc: async (n) => n === 'mcp_admin_membres' ? { data: [
+          { user_id: 'u1', nom: 'Justine H.', ias: 'Claude', connecte_le: maint, derniere: maint, appels_7j: 2, appels_30j: 2, ecritures_30j: 1, erreurs_30j: 0, bloque: false },
+          { user_id: 'u2', nom: 'Rémi A.', ias: 'ChatGPT', connecte_le: maint, derniere: maint, appels_7j: 1, appels_30j: 1, ecritures_30j: 0, erreurs_30j: 1, bloque: true }] } : { data: null },
+        from: () => q };
+      SBUSER = { id: 'u0' };
+      const onglet = !!document.querySelector('#adminSub [data-s="mcp"]');
+      showAdminSub('mcp'); await new Promise(ok => setTimeout(ok, 50));
+      const el = document.getElementById('mcpAdmin');
+      const kpi = [...el.querySelectorAll('.mcp-kpi b')].map(b => b.textContent);
+      const mots = [...el.querySelectorAll('.mcp-mots')].map(m => m.textContent);
+      const lignes = () => el.querySelectorAll('.panel:last-child tbody tr').length;
+      const tous = lignes();
+      el.querySelector('[data-mcpu="u1"]').click();
+      const justine = lignes();
+      const sel = el.querySelector('[data-mcpf="type"]'); sel.value = 'ecriture'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+      const ecr = [...el.querySelectorAll('.panel:last-child tbody tr td[data-l="Détail"]')].map(t => t.textContent);
+      const bloque = [...el.querySelectorAll('[data-mcpbloq]')].map(b => b.textContent);
+      return { onglet, kpi, mots, tous, justine, ecr, bloque, slug: tabState('admin').get('s') };
+    });
+    expect(r.onglet).toBe(true);
+    expect(r.kpi).toEqual(['2', '2', '3', '3', '1', '1']);
+    expect(r.mots.join(' ')).toContain('clés de la com');
+    expect(r.tous).toBe(3);
+    expect(r.justine).toBe(2);
+    expect(r.ecr).toEqual(['a publié son mail manager S45']);
+    expect(r.bloque).toEqual(['Suspendre', 'Suspendu — rétablir']);
+    expect(r.slug).toBe('mcp');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('Mon profil : adresse du MCP et IA connectées, coupure', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      const appels = [];
+      SB = { rpc: async (n, a) => { appels.push(n + (a ? ':' + JSON.stringify(a) : ''));
+        return n === 'mcp_mes_connexions' ? { data: [{ client_id: 'c1', client_nom: 'Claude', ia: 'Claude', accorde_le: new Date().toISOString(), derniere: null, appels: 0 }] } : { data: 1, error: null }; } };
+      SBUSER = { id: 'u1', email: 'x' };
+      buildProfil(); await new Promise(ok => setTimeout(ok, 50));
+      const adr = document.getElementById('pfMcpUrl').textContent;
+      const ligne = document.querySelector('#pfMcpListe tbody tr').textContent;
+      window.edModal = async () => ({});
+      document.querySelector('[data-mcprev="c1"]').click(); await new Promise(ok => setTimeout(ok, 50));
+      return { adr, ligne, appels };
+    });
+    expect(r.adr).toBe('https://xslusoecharxelwmbyal.supabase.co/functions/v1/mcp');
+    expect(r.ligne).toContain('Claude');
+    expect(r.appels).toContain('mcp_revoquer:{"p_client":"c1"}');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('synchronisation : une case cochée ailleurs (IA) n’est pas écrasée par l’envoi local', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      let envoye = null;
+      MIS = { '1.1/a': '2026-10-01T10:00:00.000Z' };
+      SB = { from: () => ({ select: () => ({ maybeSingle: async () => ({ data: { donnees: { mis: { '3.6/scpi': '2026-11-01T15:00:00.000Z', '1.1/a': '!2026-09-01T10:00:00.000Z' } } } }) }),
+        upsert: async (o) => { envoye = o; return { error: null }; } }) };
+      SBUSER = { id: 'u1' };
+      await syncPush();
+      return envoye && envoye.donnees.mis;
+    });
+    expect(r['3.6/scpi'], 'la case cochée par l’IA est gardée').toBe('2026-11-01T15:00:00.000Z');
+    expect(r['1.1/a'], 'le plus récent l’emporte').toBe('2026-10-01T10:00:00.000Z');
+    expect(erreurs).toEqual([]);
+  });
+});
