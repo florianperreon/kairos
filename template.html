@@ -1153,6 +1153,102 @@ p.mi-ai{margin:4px 0 8px}
 .cnt-blocs .acc-btn{width:auto;padding:9px 16px;margin-top:10px}
 .cnt-msg{font-size:13px;color:var(--gold-ink);margin-top:12px;min-height:1em}
 .cnt-msg.err{color:#e05252}
+/* Admin → Contenu → Suggestions (01/11/2026) */
+.sg-sub{margin:0 0 12px}
+.cs-view{display:none}.cs-view.on{display:block}
+.sg-wrap{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:900px){.sg-wrap{grid-template-columns:minmax(0,1fr)}}
+.sg-col{min-width:0}
+.sg-tete{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.sg-tete input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font-size:14px;font-family:inherit}
+.sg-tete .mm-b{padding:8px 11px;font-size:12.5px;white-space:nowrap}
+.sg-filtre{font-size:13px;color:var(--ink-2);display:flex;gap:6px;align-items:center;cursor:pointer;margin:0 0 8px}
+.sg-cat{max-height:70vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.sg-gh{padding:9px 10px 5px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);background:var(--surface-2);border-bottom:1px solid var(--line)}
+.sg-gt{padding:8px 10px 3px;font-size:12px;font-weight:700;color:var(--ink-2)}
+.sg-it{display:flex;gap:8px;align-items:center;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 10px;font-size:13.5px;cursor:pointer;font-family:inherit}
+.sg-it:hover{background:var(--surface-2)}
+.sg-it.on{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.sg-it .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sg-it.nl .t{font-weight:700}
+.sg-n{display:inline-block;min-width:18px;padding:0 5px;border-radius:99px;background:var(--surface-2);color:var(--ink-2);font-size:11px;font-weight:800;line-height:18px;text-align:center}
+.sg-it.on .sg-n{background:var(--surface)}
+.sg-pt{width:8px;height:8px;border-radius:50%;background:var(--encours);flex:0 0 auto}
+.sg-det{min-width:0}
+.sg-accueil{border:1px dashed var(--line-2);border-radius:10px;padding:16px 18px;color:var(--ink-2);font-size:14px}
+.sg-accueil p{margin:0 0 6px}
+.sg-det-h{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;margin-bottom:4px}
+.sg-det-h h3{margin:0;font-size:17px;min-width:0;overflow-wrap:anywhere}
+.sg-det-h .mm-b{padding:7px 12px;font-size:12.5px}
+.sg-aide{font-size:12.5px;color:var(--ink-3);margin:2px 0 10px}
+.sg-corps{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media(min-width:1280px){.sg-corps.deux{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}}
+.sg-ap-w{border:1px solid var(--line);border-radius:10px;background:var(--surface);max-height:72vh;overflow:auto;padding:12px 16px;align-self:start}
+.sg-ap{font-size:14px;line-height:1.55;overflow-wrap:anywhere}
+.sg-ap h3{font-size:16px;margin:14px 0 6px}.sg-ap h4{font-size:14.5px;margin:12px 0 4px}
+.sg-ap ul{margin:4px 0 8px;padding-left:20px}
+.sg-ap a{cursor:text}
+.sg-ap .sg-q{border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:8px}
+.sg-ap small{color:var(--ink-3)}
+.sg-ap dt{font-weight:700;margin-top:6px}.sg-ap dd{margin:0 0 4px;color:var(--ink-2)}
+.sg-ap .sg-kv{font-size:13px;color:var(--ink-2)}.sg-ap .sg-kv>span{font-weight:700;color:var(--ink-3);margin-right:4px}
+mark.sg-hl{background:#FDE68A;color:inherit;border-radius:2px;box-shadow:0 0 0 2px #FDE68A}
+:root[data-theme="dark"] mark.sg-hl{background:#7A5B12;box-shadow:0 0 0 2px #7A5B12}
+.sg-flot{position:fixed;z-index:150;border:0;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;box-shadow:0 8px 24px rgba(0,0,0,.22);cursor:pointer}
+.sg-flot[hidden]{display:none}
+.sg-fils{min-width:0}
+.sg-fils>h4{margin:0 0 8px;font-size:14.5px;display:flex;gap:6px;align-items:center}
+.sg-fil{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:var(--surface)}
+.sg-fil.nl{border-color:var(--encours)}
+.sg-fil.traitee{background:var(--surface-2)}
+.sg-fh{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.sg-st{font-size:11px;font-weight:800;border-radius:99px;padding:2px 8px;white-space:nowrap}
+.sg-st.ouv{background:var(--accent-soft);color:var(--accent)}
+.sg-st.tr{background:var(--surface);color:var(--ok);border:1px solid var(--line)}
+.sg-ti{font-size:14px;flex:1 1 200px;min-width:0;overflow-wrap:anywhere}
+.sg-ent{font-size:12.5px;color:var(--ink-3);font-style:italic}
+.sg-cit{flex:1 1 220px;min-width:0;margin:0;padding:4px 10px;border-left:3px solid var(--encours);background:var(--surface-2);border-radius:0 8px 8px 0;font-size:13px;color:var(--ink-2);cursor:pointer;max-height:7.6em;overflow:hidden;overflow-wrap:anywhere}
+.sg-cit:hover,.sg-cit.on{border-left-color:var(--accent);color:var(--ink)}
+.sg-cit.perdu,.sg-cit.fixe{cursor:default}
+.sg-cit.perdu{border-left-color:var(--line-2)}
+.sg-mod{display:block;font-size:11.5px;font-style:italic;color:var(--bad);margin-top:2px}
+.sg-mod[hidden]{display:none}
+.sg-trt{font-size:12.5px;color:var(--ok);margin-top:6px}
+.sg-msgs{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.sg-msg{border-top:1px solid var(--line);padding-top:8px}
+.sg-msg:first-child{border-top:0;padding-top:0}
+.sg-msg.nv{box-shadow:inset 3px 0 0 var(--encours);padding-left:9px}
+.sg-mh{font-size:12.5px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.sg-mh b{color:var(--ink)}
+.sg-toi{font-size:10.5px;font-weight:800;background:var(--surface-2);border-radius:99px;padding:0 6px}
+.sg-modif{font-style:italic;color:var(--ink-3)}
+.sg-ma{margin-left:auto;display:inline-flex;gap:4px}
+.sg-ma button,.sg-fpied button{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:7px;padding:3px 9px;font-size:12px;cursor:pointer;font-family:inherit}
+.sg-ma button:hover,.sg-fpied button:hover{border-color:var(--accent);color:var(--accent)}
+.sg-fil button.sg-danger{color:var(--bad)}
+.sg-tx{white-space:pre-wrap;font-size:14px;margin-top:3px;overflow-wrap:anywhere}
+.sg-msg textarea,.sg-rep textarea,.sg-form textarea,.sg-form input{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--line-2);border-radius:9px;background:var(--surface);color:var(--ink);font-family:inherit;font-size:14px}
+.sg-msg.ed .sg-fa{margin-top:6px}
+.sg-rep{display:flex;gap:8px;align-items:flex-end;margin-top:10px}
+.sg-rep textarea{flex:1;min-width:0}
+.sg-rep .mm-b{padding:8px 12px}
+.sg-fpied{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;margin-top:8px}
+.sg-form{border:1px solid var(--accent);border-radius:10px;padding:12px;margin:0 0 12px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.sg-form h4{margin:0;font-size:14.5px}
+.sg-fa{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sg-err{font-size:12.5px;color:var(--bad)}
+.sg-info{font-size:13px;min-height:1em;margin:8px 0 0;color:var(--ink-2)}.sg-info.err{color:var(--bad)}
+.sg-tr>summary{cursor:pointer;font-size:13px;color:var(--ink-2);margin:6px 0 8px}
+.sg-vide{color:var(--ink-3);font-size:13px;padding:8px;margin:0}
+@media(max-width:640px){
+  .sg-wrap .sg-cat{max-height:44vh}
+  .sg-wrap .sg-ap-w{max-height:60vh;padding:10px 12px}
+  .sg-wrap .sg-rep{flex-direction:column;align-items:stretch}
+  .sg-wrap textarea,.sg-wrap input{font-size:16px}
+  .sg-wrap .sg-mh .sg-ma{margin-left:0;width:100%}
+  .sg-wrap .sg-ma button,.sg-wrap .sg-fpied button{min-height:32px}
+  .sg-wrap .sg-tete .mm-b{padding:8px 9px}
+}
 
 /* Éditeur visuel */
 /* Éditeur de contenu (TipTap) */
@@ -2248,7 +2344,7 @@ a.mml-r:hover{border-color:var(--accent)}
         <button data-s="mbr" class="on">Membres</button>
         <button data-s="act">Activité</button>
         <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
-        <button data-s="cnt">Contenu</button>
+        <button data-s="cnt">Contenu <span class="sub-badge cnt" id="sgBadge" hidden></span><span class="sub-badge" id="sgNonLu" hidden></span></button>
         <button data-s="stats">Statistiques</button>
         <button data-s="nouv">Nouveautés</button>
         <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
@@ -2347,6 +2443,26 @@ a.mml-r:hover{border-color:var(--accent)}
       </div>
 
       <div class="subview" id="sv-cnt">
+        <nav class="subtabs sg-sub" id="cntSub" aria-label="Contenu">
+          <button type="button" data-cs="sug" class="on">Suggestions <span class="sub-badge cnt" id="sgBadgeIn" hidden></span><span class="sub-badge" id="sgNonLuIn" hidden></span></button>
+        </nav>
+        <div class="cs-view on" id="csv-sug">
+          <div class="panel">
+            <h2>Suggestions sur le contenu</h2>
+            <p class="mbr-sub">Lis une fiche ou un bloc et propose une amélioration : sélectionne un passage pour le commenter précisément, ou commente le contenu entier. Chaque suggestion est un fil où tous les admins peuvent répondre.</p>
+            <div class="sg-wrap">
+              <div class="sg-col">
+                <div class="sg-tete"><input type="search" id="sgQ" placeholder="Rechercher…" aria-label="Rechercher un contenu" autocomplete="off"><button type="button" class="mm-b pri" data-sg="nouvelle-libre" title="Nouvelle fiche, idée…">+ Suggestion libre</button></div>
+                <label class="sg-filtre"><input type="checkbox" id="sgOuv"> Avec suggestions ouvertes</label>
+                <div class="sg-cat" id="sgCat"></div>
+              </div>
+              <div class="sg-det" id="sgDet"></div>
+            </div>
+            <p class="sg-info" id="sgInfo"></p>
+          </div>
+          <button type="button" id="sgFlot" class="sg-flot" hidden>💬 Commenter ce passage</button>
+        </div>
+        <div class="cs-view" id="csv-edi">
         <div class="panel">
           <h2>Contenu éditorial</h2>
           <p class="mbr-sub">Chaque modification est publiée immédiatement pour toute la lignée, et la version précédente est archivée.</p>
@@ -2397,6 +2513,7 @@ a.mml-r:hover{border-color:var(--accent)}
               <p class="cnt-msg" id="cntMsg"></p>
             </div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -3770,6 +3887,19 @@ function buildActions(){
         href:'#fiches-pratiques', fait:false, go:'Voir' }); }
   }catch(e){ console.error(e); }
 
+  // 6 quater) Admins : nouvelles réponses dans les suggestions de contenu (01/11/2026)
+  try{
+    if(EST_ADMIN && SG.ok){
+      const nl = sgNonLus();
+      if(nl.length){ evaluable = true;
+        const n = nl.reduce((t,s)=>t+sgNouveaux(s).length, 0);
+        actions.push({ cle:'sgnl', t: n>1 ? n+' nouvelles réponses dans les suggestions de contenu' : '1 nouvelle réponse dans les suggestions de contenu',
+          urg: nl.length+' fil'+(nl.length>1?'s':'')+' non lu'+(nl.length>1?'s':''),
+          d: nl.slice(0,3).map(sgTitreFil).join(' · ') + (nl.length>3 ? ' · +'+(nl.length-3) : ''),
+          href:'#admin?s=contenu', fait:false, go:'Lire' }); }
+    }
+  }catch(e){}
+
   // 7) Remplir mon mail manager — première action de la liste le lundi, mise en avant dès le mardi
   if(typeof MM_COUR !== 'undefined' && MOI_ID && MM && !(MM_REG && MM_REG.participe === false)){
     evaluable = true;
@@ -4097,6 +4227,7 @@ function showAdminSub(s){
   document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
   if(s==='act'){ try{ if(ACT) buildActivite(); else chargerActivite(); }catch(e){ console.error(e); } }
   if(s==='log'){ try{ buildChangelog(); }catch(e){ console.error(e); } }
+  if(s==='cnt'){ try{ showCntSub(CNT_SUB); }catch(e){ console.error(e); } }
 }
 
 /* ---------- Admin → Changelog Kairos (31/10/2026) ----------
@@ -4105,6 +4236,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['f','Admin → Contenu : sous-onglet « Suggestions » pour tous les admins — commenter une fiche ou un bloc (un passage précis ou le contenu entier), proposer une idée libre, en discuter en fil ; l’édition du contenu est réservée au propriétaire.'],
     ['f','Fiches pratiques : Donation et Succession (nouvelles) ; guide de souscription pas à pas dans chaque fiche produit (AV, SCPI CIF et agent lié, PER, Girardin, FCPI, Exceltis…).'],
     ['f','Fiches mises à jour : micro-entreprise (déménagement, versement libératoire, passage en société), contacts réseau, outils (PDF, mots de passe), accès MEGA, transfert PER, habilitations ; FAQ « annuler une formation Forman ».'],
     ['f','Accueil : raccourci MEGA FORMAN dans « Ressources utiles ».'],
@@ -4231,6 +4363,7 @@ function tabState(tab){
   sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ if(i.value) p.set('f_'+i.dataset.f,i.value); });
   if(tab==='ann'&&typeof ANN_SORT!=='undefined'&&(ANN_SORT.col!=='date'||ANN_SORT.dir!=='desc')) p.set('tri',ANN_SORT.col+'.'+ANN_SORT.dir);
   if(tab==='admin'&&curSub!=='mbr') p.set('s', ADMIN_SLUG[curSub]);
+  if(tab==='admin'&&curSub==='cnt') sgTabState(p);
   if(tab==='surv'&&typeof SURV_SUB!=='undefined'&&SURV_SUB!=='ins') p.set('s', SURV_SLUG[SURV_SUB]);
   if(tab==='res') rsTabState(p);
   if(tab==='lig') ligTabState(p);
@@ -4268,7 +4401,7 @@ function applyState(tab,p){
       for(let pass=0;pass<3;pass++){ let changed=false; chips.forEach(c=>{ if(c.classList.contains('on')!==want.has(c.dataset.t)){ c.click(); changed=true; } }); if(!changed) break; } }
     const vue=p.get('vue')||'list'; const vb=sec.querySelector('.vtoggle button[data-m="'+vue+'"]'); if(vb&&!vb.classList.contains('on')) vb.click();
     sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ const want=p.get('f_'+i.dataset.f)||''; if(i.value!==want){ i.value=want; fire(i,['input']); } });
-    if(tab==='admin'){ const s=p.get('s')||''; showAdminSub(SLUG_ADMIN[s]||s||'mbr'); }
+    if(tab==='admin'){ const s=p.get('s')||''; showAdminSub(SLUG_ADMIN[s]||s||'mbr'); if(curSub==='cnt') sgApplyState(p); }
     if(tab==='surv'&&typeof showSurvSub==='function'){ const s=p.get('s')||''; showSurvSub(SLUG_SURV[s]||s||'ins'); buildSurv(); }
     if(tab==='res') rsApplyState(p);
     if(tab==='lig') ligApplyState(p);
@@ -8838,6 +8971,514 @@ document.addEventListener('keydown', e=>{
   if((e.ctrlKey||e.metaKey) && e.key==='Enter' && document.getElementById('retBox') && !document.getElementById('retBox').hidden) retEnvoyer();
 });
 
+/* ---------- Admin → Contenu → Suggestions (01/11/2026, règle Florian) ----------
+   Deux sous-onglets internes : « Suggestions » (tous les admins) et « Édition » (le propriétaire seul ;
+   l'écriture du contenu est aussi réservée côté serveur par est_proprietaire()). Une suggestion = un fil
+   plat dont le premier message est le corps. Ancre = passage cité { texte, avant, apres } dans le texte
+   de l'aperçu (espaces repliés) : on le retrouve et on le surligne (mark.sg-hl). Non lu = un message d'un
+   autre créé ou modifié après ma dernière ouverture du fil (contenu_suggestions_vues, par mon_uid()). */
+const CNT_SUBS = ['sug','edi'];
+const CNT_SUB_SLUG = { sug:'suggestions', edi:'edition' };
+const SLUG_CNT_SUB = Object.fromEntries(Object.entries(CNT_SUB_SLUG).map(([k,v])=>[v,k]));
+let CNT_SUB = 'sug';
+let SG = { ok:false, s:[], m:[], v:{}, uid:null };
+let SG_CLE = null;            // contenu ouvert : 'page:<slug>' | 'bloc:<cle>' | 'libre'
+let SG_Q = '', SG_OUV = false; // recherche et filtre « avec suggestions ouvertes »
+let SG_FORM = null;           // formulaire de nouvelle suggestion : { ancre } (ancre nulle = contenu entier)
+let SG_EDIT = null;           // message en cours de modification
+let SG_NV = new Set();        // messages non lus au moment de l'ouverture (mis en évidence)
+let SG_ENVOI = false, SG_SEL_T = null, SG_SEL_ANCRE = null;
+const SG_NOMS = { fiches_resumes:'Résumés des fiches', fiches_acces:'Accès aux fiches' };
+const SG_ICO = { missions:'🧭', faq:'❓', objections:'🛡️', fiches:'🗂️', nav:'🧵', reflexes:'⚡', rituels:'🔁', ressources:'🔗', accueil:'🏠', fiches_resumes:'📝', fiches_acces:'🔐' };
+const SG_IGNORES = new Set(['pages','version','faqPubliee']);
+const sgT = x => x ? new Date(x).getTime() : 0;
+const sgCle = s => s.cible_type==='libre' ? 'libre' : s.cible_type+':'+s.cible;
+function sgNomBloc(cle){ const s = (typeof BL_SCHEMAS!=='undefined') && BL_SCHEMAS[cle]; return (s && s.nom) || SG_NOMS[cle] || cle; }
+function sgDateLongue(iso){
+  if(!iso) return '';
+  try{ return new Date(iso).toLocaleString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }); }catch(e){ return String(iso); }
+}
+function sgMsgs(id){ return SG.m.filter(m=>+m.suggestion_id===+id).sort((a,b)=>sgT(a.cree_le)-sgT(b.cree_le) || a.id-b.id); }
+const sgDeMoi = m => !!((SG.uid && m.auteur_uid===SG.uid) || (!SG.uid && MOI_ID && +m.auteur_membre_id===+MOI_ID));
+// messages d'un autre, créés ou modifiés depuis ma dernière ouverture du fil
+function sgNouveaux(s){ const vu = sgT(SG.v[s.id]); return sgMsgs(s.id).filter(m=>!sgDeMoi(m) && Math.max(sgT(m.cree_le), sgT(m.modifie_le)) > vu); }
+const sgNonLus = () => SG.s.filter(s=>sgNouveaux(s).length);
+const sgOuvertes = () => SG.s.filter(s=>s.statut==='ouverte');
+function sgCible(cle){
+  if(cle==='libre') return { type:'libre', t:'Suggestions libres', i:'💡' };
+  const k = String(cle||''), p = k.indexOf(':'); if(p<0) return null;
+  const type = k.slice(0,p), id = k.slice(p+1), C = CONTENU || {};
+  if(type==='page'){ const g = (C.pages||{})[id]; return { type, id, t: g ? (g.t||id) : id, i: g ? (g.i||'📄') : '❔', existe: !!g, val: g }; }
+  if(type==='bloc') return { type, id, t: sgNomBloc(id), i: SG_ICO[id]||'🧩', existe: C[id]!==undefined, val: C[id] };
+  return null;
+}
+const sgTitreFil = s => s.titre || ((sgCible(sgCle(s))||{}).t) || '';
+
+function sgBadges(){
+  const n = sgOuvertes().length, u = sgNonLus().length;
+  const pose = (id, v, t) => { const el = document.getElementById(id); if(!el) return; el.hidden = !v; el.textContent = v ? String(v) : ''; el.title = v ? t : ''; };
+  const tn = n+' suggestion'+(n>1?'s':'')+' ouverte'+(n>1?'s':''), tu = u+' fil'+(u>1?'s':'')+' non lu'+(u>1?'s':'');
+  pose('sgBadge', n, tn); pose('sgNonLu', u, tu); pose('sgBadgeIn', n, tn); pose('sgNonLuIn', u, tu);
+}
+async function sgCharger(){
+  if(!SB || !SBUSER || !EST_ADMIN) return false;
+  try{
+    if(!SG.uid){ try{ const u = await SB.rpc('mon_uid'); if(u && !u.error && typeof u.data==='string') SG.uid = u.data; }catch(e){} }
+    const [s, m, v] = await Promise.all([
+      SB.from('contenu_suggestions').select('*').order('maj', { ascending:false }),
+      SB.from('contenu_suggestion_messages').select('*').order('cree_le'),
+      SB.from('contenu_suggestions_vues').select('suggestion_id,vu_le') ]);
+    if(s.error || m.error) throw (s.error || m.error);
+    SG.s = s.data || []; SG.m = m.data || [];
+    SG.v = {}; ((v && !v.error && v.data) || []).forEach(x=>{ SG.v[x.suggestion_id] = x.vu_le; });
+    SG.ok = true;
+  }catch(e){ return false; }
+  sgBadges();
+  try{ sgRendre(); }catch(e){ console.error(e); }
+  if(window.__booted){ try{ buildActions(); }catch(e){} }
+  return true;
+}
+// Sous-onglets internes : « Édition » n'existe que pour le propriétaire
+function sgNav(){
+  const nav = document.getElementById('cntSub'); if(!nav) return;
+  const b = nav.querySelector('[data-cs="edi"]');
+  if(EST_PROPRIO && !b) nav.insertAdjacentHTML('beforeend', '<button type="button" data-cs="edi">Édition</button>');
+  if(!EST_PROPRIO && b) b.remove();
+  nav.querySelectorAll('[data-cs]').forEach(x=>x.classList.toggle('on', x.dataset.cs===CNT_SUB));
+}
+function showCntSub(s){
+  if(!CNT_SUBS.includes(s)) s = 'sug';
+  const repli = s==='edi' && !EST_PROPRIO;
+  if(repli) s = 'sug';
+  CNT_SUB = s;
+  sgNav();
+  document.querySelectorAll('#sv-cnt .cs-view').forEach(v=>v.classList.toggle('on', v.id==='csv-'+s));
+  if(s==='sug'){ try{ sgRendre(); }catch(e){ console.error(e); } }
+  else { const f = document.getElementById('sgFlot'); if(f) f.hidden = true; }
+  if(repli) setTimeout(()=>syncHash(false), 0);   // l'adresse qui menait à l'Édition retombe sur Suggestions
+}
+function sgTabState(p){
+  if(CNT_SUB!=='sug') p.set('c', CNT_SUB_SLUG[CNT_SUB]);
+  else if(SG_CLE) p.set('sg', SG_CLE);
+}
+function sgApplyState(p){
+  const c = p.get('c')||'';
+  showCntSub(SLUG_CNT_SUB[c] || (CNT_SUBS.includes(c) ? c : 'sug'));
+  if(CNT_SUB!=='sug') return;
+  const k = p.get('sg')||'';
+  if(k !== (SG_CLE||'')){ if(k && sgCible(k)) sgOuvrir(k); else { SG_CLE = null; sgRendre(); } }
+}
+
+/* --- le catalogue --- */
+function sgCatalogue(){
+  const C = CONTENU || {}, P = C.pages || {}, vus = new Set(), groupes = [];
+  const fiche = s => ({ cle:'page:'+s, t:P[s].t||s, i:P[s].i||'📄' });
+  (Array.isArray(C.fiches) ? C.fiches : []).forEach(r=>{
+    const it = (r.pages||[]).filter(s=>P[s] && !vus.has(s)).map(s=>{ vus.add(s); return fiche(s); });
+    if(it.length) groupes.push({ t:(r.i?r.i+' ':'')+(r.t||'Rayon'), it, fiche:true });
+  });
+  const autres = Object.keys(P).filter(s=>!vus.has(s)).map(fiche).sort((a,b)=>a.t.localeCompare(b.t,'fr'));
+  if(autres.length) groupes.push({ t:'Autres', it:autres, fiche:true });
+  const blocs = Object.keys(C).filter(k=>!SG_IGNORES.has(k) && C[k] && typeof C[k]==='object')
+    .map(k=>({ cle:'bloc:'+k, t:sgNomBloc(k), i:SG_ICO[k]||'🧩' })).sort((a,b)=>a.t.localeCompare(b.t,'fr'));
+  if(blocs.length) groupes.push({ t:'Blocs', it:blocs, haut:true });
+  const connus = new Set(groupes.flatMap(g=>g.it.map(x=>x.cle)));
+  const disparus = [...new Set(SG.s.filter(s=>s.cible_type!=='libre').map(sgCle))].filter(k=>!connus.has(k))
+    .map(k=>({ cle:k, t:k.slice(k.indexOf(':')+1), i:'❔' }));
+  if(disparus.length) groupes.push({ t:'Contenus disparus', it:disparus, haut:true });
+  return groupes;
+}
+function sgRendreCat(){
+  const el = document.getElementById('sgCat'); if(!el) return;
+  const q = norm(SG_Q);
+  const nb = cle => SG.s.filter(s=>s.statut==='ouverte' && sgCle(s)===cle).length;
+  const nl = cle => SG.s.some(s=>sgCle(s)===cle && sgNouveaux(s).length);
+  const garde = x => (!q || norm(x.t+' '+x.cle).includes(q)) && (!SG_OUV || nb(x.cle)>0);
+  const item = x => { const k = nb(x.cle), u = nl(x.cle);
+    return '<button type="button" class="sg-it'+(x.cle===SG_CLE?' on':'')+(u?' nl':'')+'" data-sgcle="'+esc(x.cle)+'">'
+      + '<span class="ic">'+esc(x.i)+'</span><span class="t">'+esc(x.t)+'</span>'
+      + (u?'<span class="sg-pt" title="Du nouveau pour toi"></span>':'')
+      + (k?'<span class="sg-n" title="'+k+' suggestion'+(k>1?'s':'')+' ouverte'+(k>1?'s':'')+'">'+k+'</span>':'') + '</button>'; };
+  let h = '';
+  const libre = { cle:'libre', t:'Suggestions libres (nouvelle fiche, idée…)', i:'💡' };
+  if(garde(libre)) h += item(libre);
+  let tete = false;
+  sgCatalogue().forEach(g=>{
+    const it = g.it.filter(garde); if(!it.length) return;
+    if(g.fiche && !tete){ h += '<div class="sg-gh">Fiches pratiques</div>'; tete = true; }
+    h += (g.haut ? '<div class="sg-gh">' : '<div class="sg-gt">')+esc(g.t)+'</div>' + it.map(item).join('');
+  });
+  el.innerHTML = h || '<p class="sg-vide">'+(SG_OUV ? 'Aucune suggestion ouverte'+(q?' pour cette recherche':'')+'.' : 'Rien ne correspond à ta recherche.')+'</p>';
+}
+
+/* --- l'aperçu : lisible, sans rien d'actif --- */
+function sgPropre(html){
+  const t = document.createElement('template'); t.innerHTML = String(html||'');
+  t.content.querySelectorAll('script,style,iframe,object,embed,form,button.copy').forEach(x=>x.remove());
+  t.content.querySelectorAll('*').forEach(el=>{
+    [...el.attributes].forEach(a=>{ if(/^on/i.test(a.name) || a.name==='id' || a.name==='contenteditable') el.removeAttribute(a.name); });
+    if(/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(el.tagName)) el.setAttribute('disabled', '');
+    if(el.tagName==='A'){ el.removeAttribute('target'); el.setAttribute('tabindex', '-1'); }
+  });
+  const d = document.createElement('div'); d.appendChild(t.content); return d.innerHTML;
+}
+const SG_TITRES = ['t','titre','q','o','n','nom','label','title'];
+function sgGenerique(v, sch, niv){
+  if(v==null || v==='') return '';
+  if(typeof v==='boolean') return '<p>'+(v?'oui':'non')+'</p>';
+  if(typeof v!=='object') return '<p>'+esc(String(v))+'</p>';
+  if(Array.isArray(v)){
+    if(!v.length) return '<p class="sg-vide">(vide)</p>';
+    const isch = sch && sch.item;
+    return '<ul>'+v.map(x=>{
+      if(x==null || typeof x!=='object') return '<li>'+esc(String(x))+'</li>';
+      const ch = SG_TITRES.find(k=>typeof x[k]==='string' && x[k]);
+      const reste = Object.fromEntries(Object.entries(x).filter(([k])=>k!==ch));
+      return '<li>'+(ch?'<b>'+esc(x[ch])+'</b>':'')+(niv<3 ? sgGenerique(reste, isch, niv+1) : '')+'</li>';
+    }).join('')+'</ul>';
+  }
+  const lib = k => { const c = sch && sch.champs && sch.champs.find(f=>f.k===k); return c ? c.l : k; };
+  return Object.entries(v).filter(([k,x])=>x!=null && x!=='' && !(Array.isArray(x) && !x.length)).map(([k,x])=>
+    typeof x==='object' ? '<div class="sg-kv"><span>'+esc(lib(k))+'</span></div>'+sgGenerique(x, sch && sch.champs && sch.champs.find(f=>f.k===k), niv+1)
+                        : '<div class="sg-kv"><span>'+esc(lib(k))+' :</span> '+esc(typeof x==='boolean' ? (x?'oui':'non') : String(x))+'</div>').join('');
+}
+function sgApercuBloc(cle, v){
+  if(v===undefined) return '<p class="sg-vide">Ce bloc n’existe plus.</p>';
+  const P = (CONTENU && CONTENU.pages) || {};
+  const pg = s => esc((P[s] && P[s].t) || s);
+  const ul = a => a.length ? '<ul>'+a.join('')+'</ul>' : '';
+  if(cle==='faq' && Array.isArray(v)) return v.map(x=>'<div class="sg-q"><h4>'+esc(x.q||'')+'</h4>'+(x.th?'<small>'+esc(x.th)+'</small>':'')+'<div class="sg-r">'+sgPropre(x.a||'')+'</div></div>').join('');
+  if(cle==='objections' && Array.isArray(v)) return v.map(o=>'<div class="sg-q"><h4>'+esc(o.o||'')+'</h4>'+(o.tag?'<small>'+esc(o.tag)+'</small>':'')+ul((o.r||[]).map(r=>'<li>'+esc(r)+'</li>'))+'</div>').join('');
+  if(cle==='missions' && v && Array.isArray(v.phases)) return v.phases.map(ph=>
+    '<h3>Phase '+esc(ph.n==null?'':ph.n)+(ph.t?' — '+esc(ph.t):'')+'</h3>'+(ph.intro?'<p>'+esc(ph.intro)+'</p>':'')
+    + (ph.missions||[]).map(m=>'<h4>'+esc([m.id, m.t].filter(Boolean).join(' — '))+'</h4>'+(m.pq?'<p>'+esc(m.pq)+'</p>':'')
+        + ul((m.actions||[]).map(a=>'<li>'+esc(a.t||a.id||'')+'</li>'))
+        + ((m.pages||[]).length ? '<p><small>Fiches : '+m.pages.map(pg).join(', ')+'</small></p>' : '')).join('')
+    + (ph.porte ? '<p><b>Point d’étape : '+esc(ph.porte.t||'')+'</b>'+(ph.porte.d?' — '+esc(ph.porte.d):'')+'</p>' : '')).join('');
+  if(cle==='fiches' && Array.isArray(v)) return v.map(r=>'<h4>'+esc((r.i?r.i+' ':'')+(r.t||''))+'</h4>'+ul((r.pages||[]).map(s=>'<li>'+pg(s)+'</li>'))).join('');
+  if(cle==='nav' && Array.isArray(v)) return v.map(n=>'<h3>'+esc(n.t||'')+'</h3>'+(n.groupes||[]).map(g=>'<h4>'+esc(g.t||'')+'</h4>'+ul((g.pages||[]).map(s=>'<li>'+pg(s)+'</li>'))).join('')).join('');
+  if(cle==='fiches_resumes' && v && typeof v==='object' && !Array.isArray(v)) return '<dl>'+Object.entries(v).map(([s,t])=>'<dt>'+pg(s)+'</dt><dd>'+esc(t)+'</dd>').join('')+'</dl>';
+  return sgGenerique(v, (typeof BL_SCHEMAS!=='undefined') && BL_SCHEMAS[cle], 0) || '<p class="sg-vide">(vide)</p>';
+}
+function sgApercu(c){
+  if(c.type==='page') return c.val ? sgPropre(c.val.h) : '<p class="sg-vide">Cette fiche n’existe plus.</p>';
+  return sgApercuBloc(c.id, c.val);
+}
+// Les clics dans l'aperçu ne déclenchent rien (liens, boutons Copier, cases…) ; les sections repliées s'ouvrent quand même.
+document.addEventListener('click', e=>{
+  const ap = e.target.closest && e.target.closest('#sgAp'); if(!ap) return;
+  if(!e.target.closest('summary')) e.preventDefault();
+  e.stopPropagation();
+}, true);
+
+/* --- le passage cité : texte de l'aperçu, espaces repliés, avec la position de chaque caractère --- */
+const SG_BLOCS_TXT = 'p,li,h1,h2,h3,h4,h5,h6,div,dd,dt,td,th,blockquote,pre,summary,figcaption,small';
+function sgTexteIndex(root){
+  const map = []; let s = '', bloc = null;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let n;
+  while((n = w.nextNode())){
+    const v = n.nodeValue; if(!v) continue;
+    const b = n.parentElement && n.parentElement.closest(SG_BLOCS_TXT);
+    if(b!==bloc && s.length && s[s.length-1]!==' '){ s += ' '; map.push([n, 0]); }
+    bloc = b;
+    for(let i=0;i<v.length;i++){
+      if(/\s/.test(v[i])){ if(!s.length || s[s.length-1]===' ') continue; s += ' '; }
+      else s += v[i];
+      map.push([n, i]);
+    }
+  }
+  return { s, map };
+}
+function sgTrouver(idx, an){
+  const t = an && an.texte; if(!t) return -1;
+  const av = an.avant||'', apr = an.apres||'';
+  let best = -1, score = -1, i = idx.s.indexOf(t);
+  while(i>=0){
+    let sc = 0;
+    for(let k=1; k<=av.length && i-k>=0 && idx.s[i-k]===av[av.length-k]; k++) sc++;
+    for(let k=0; k<apr.length && idx.s[i+t.length+k]===apr[k]; k++) sc++;
+    if(sc>score){ score = sc; best = i; }
+    i = idx.s.indexOf(t, i+1);
+  }
+  return best;
+}
+function sgAncreSelection(){
+  const ap = document.getElementById('sgAp'), sel = window.getSelection();
+  if(!ap || !sel || sel.isCollapsed || !sel.rangeCount) return null;
+  const r = sel.getRangeAt(0);
+  if(!ap.contains(r.commonAncestorContainer)) return null;
+  const idx = sgTexteIndex(ap); let a = -1, b = -1; const vu = new Map();
+  idx.map.forEach(([n,o], k)=>{
+    if(!vu.has(n)) vu.set(n, r.intersectsNode(n));
+    if(!vu.get(n)) return;
+    let dedans = false;
+    try{ dedans = r.comparePoint(n, o)===0 && r.comparePoint(n, Math.min(o+1, n.nodeValue.length))===0; }catch(e){}
+    if(dedans){ if(a<0) a = k; b = k+1; }
+  });
+  if(a<0) return null;
+  while(a<b && idx.s[a]===' ') a++;
+  while(b>a && idx.s[b-1]===' ') b--;
+  if(b-a<2) return null;
+  if(b-a>800) b = a+800;
+  return { texte: idx.s.slice(a,b), avant: idx.s.slice(Math.max(0,a-40), a), apres: idx.s.slice(b, b+40) };
+}
+function sgEffacer(ap){
+  (ap||document).querySelectorAll('mark.sg-hl').forEach(m=>{ const p = m.parentNode; while(m.firstChild) p.insertBefore(m.firstChild, m); p.removeChild(m); p.normalize(); });
+}
+function sgSurligner(id){
+  const s = SG.s.find(x=>+x.id===+id), ap = document.getElementById('sgAp');
+  document.querySelectorAll('.sg-cit.on').forEach(x=>x.classList.remove('on'));
+  if(!s || !s.ancre || !ap) return false;
+  sgEffacer(ap);
+  const idx = sgTexteIndex(ap), i = sgTrouver(idx, s.ancre);
+  const cit = document.querySelector('.sg-cit[data-sgcit="'+s.id+'"]');
+  if(i<0){ if(cit){ cit.classList.add('perdu'); const m = cit.querySelector('.sg-mod'); if(m) m.hidden = false; } return false; }
+  if(cit) cit.classList.add('on');
+  const plages = new Map();
+  for(let k=i; k<i+s.ancre.texte.length; k++){
+    const [n,o] = idx.map[k]; const r = plages.get(n);
+    if(r){ r[0] = Math.min(r[0], o); r[1] = Math.max(r[1], o+1); } else plages.set(n, [o, o+1]);
+  }
+  let premier = null;
+  plages.forEach(([a,b], n)=>{
+    b = Math.min(b, n.nodeValue.length); if(b<=a) return;
+    const mid = a>0 ? n.splitText(a) : n; if(b-a < mid.nodeValue.length) mid.splitText(b-a);
+    const mk = document.createElement('mark'); mk.className = 'sg-hl';
+    mid.parentNode.insertBefore(mk, mid); mk.appendChild(mid);
+    if(!premier) premier = mk;
+  });
+  if(premier && premier.scrollIntoView) premier.scrollIntoView({ behavior:'smooth', block:'center' });
+  return !!premier;
+}
+// « passage modifié depuis » : la citation n'existe plus dans l'aperçu actuel
+function sgMarquerPerdus(){
+  const ap = document.getElementById('sgAp'); if(!ap) return;
+  const idx = sgTexteIndex(ap);
+  document.querySelectorAll('.sg-cit[data-sgcit]').forEach(c=>{
+    const s = SG.s.find(x=>+x.id===+c.dataset.sgcit);
+    const perdu = !s || sgTrouver(idx, s.ancre)<0;
+    c.classList.toggle('perdu', perdu);
+    const m = c.querySelector('.sg-mod'); if(m) m.hidden = !perdu;
+  });
+}
+// bouton flottant « Commenter ce passage » au-dessus (souris) ou au-dessous (doigt) de la sélection
+function sgSelection(){
+  const b = document.getElementById('sgFlot'); if(!b) return;
+  const ap = document.getElementById('sgAp'), sel = window.getSelection();
+  const ok = ap && sel && !sel.isCollapsed && sel.rangeCount && ap.contains(sel.getRangeAt(0).commonAncestorContainer) && sel.toString().trim().length>1;
+  if(!ok){ b.hidden = true; SG_SEL_ANCRE = null; return; }
+  SG_SEL_ANCRE = sgAncreSelection();
+  if(!SG_SEL_ANCRE){ b.hidden = true; return; }
+  const rc = sel.getRangeAt(0).getBoundingClientRect();
+  b.hidden = false;
+  const doigt = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+  const top = doigt ? rc.bottom + 10 : rc.top - b.offsetHeight - 8;
+  b.style.top = Math.max(8, Math.min(window.innerHeight - b.offsetHeight - 8, top < 8 ? rc.bottom + 10 : top)) + 'px';
+  b.style.left = Math.max(8, Math.min(window.innerWidth - b.offsetWidth - 8, rc.left + rc.width/2 - b.offsetWidth/2)) + 'px';
+}
+document.addEventListener('selectionchange', ()=>{ clearTimeout(SG_SEL_T); SG_SEL_T = setTimeout(sgSelection, 120); });
+document.addEventListener('scroll', ()=>{ const b = document.getElementById('sgFlot'); if(b && !b.hidden) sgSelection(); }, true);
+function sgCommenterPassage(){
+  const a = sgAncreSelection() || SG_SEL_ANCRE;
+  const b = document.getElementById('sgFlot'); if(b) b.hidden = true;
+  if(!a) return;
+  SG_SEL_ANCRE = null;
+  try{ window.getSelection().removeAllRanges(); }catch(e){}
+  SG_FORM = { ancre: a }; sgRendreForm();
+}
+
+/* --- le détail : aperçu et fils --- */
+function sgMsg(m){
+  const moi = sgDeMoi(m);
+  if(SG_EDIT===m.id) return '<div class="sg-msg ed" data-sgmsg="'+m.id+'"><textarea data-sgedtxt="'+m.id+'" rows="3">'+esc(m.texte)+'</textarea>'
+    + '<div class="sg-fa"><button type="button" class="mm-b pri" data-sgedok="'+m.id+'">Enregistrer</button><button type="button" class="mm-b" data-sgedno="'+m.id+'">Annuler</button></div></div>';
+  return '<div class="sg-msg'+(SG_NV.has(m.id)?' nv':'')+'" data-sgmsg="'+m.id+'"><div class="sg-mh"><b>'+esc(m.auteur_nom||'—')+'</b>'+(moi?'<span class="sg-toi">toi</span>':'')
+    + '<span>·</span><time datetime="'+esc(m.cree_le||'')+'" title="'+esc(sgDateLongue(m.cree_le))+'">'+esc(fmtQuand(m.cree_le))+'</time>'
+    + (m.modifie_le ? '<span>·</span><span class="sg-modif" title="Modifié '+esc(sgDateLongue(m.modifie_le))+'">modifié</span>' : '')
+    + ((moi||EST_PROPRIO) ? '<span class="sg-ma">'+(moi?'<button type="button" data-sged="'+m.id+'">Modifier</button>':'')
+        + (EST_PROPRIO?'<button type="button" class="sg-danger" data-sgsupmsg="'+m.id+'">Supprimer</button>':'')+'</span>' : '')
+    + '</div><div class="sg-tx">'+esc(m.texte)+'</div></div>';
+}
+function sgFil(s){
+  const a = s.ancre && s.ancre.texte ? s.ancre : null, ouverte = s.statut==='ouverte';
+  return '<article class="sg-fil'+(ouverte?'':' traitee')+(sgNouveaux(s).length?' nl':'')+'" data-sgfil="'+s.id+'"><div class="sg-fh">'
+    + (ouverte ? '<span class="sg-st ouv">Ouverte</span>' : '<span class="sg-st tr">Traitée</span>')
+    + (s.cible_type==='libre' ? '<b class="sg-ti">'+esc(s.titre||'(sans titre)')+'</b>' : '')
+    + (a ? '<blockquote class="sg-cit" data-sgcit="'+s.id+'" title="Voir le passage dans l’aperçu">'+esc(a.texte)+'<span class="sg-mod" hidden>passage modifié depuis</span></blockquote>'
+         : (s.cible_type!=='libre' ? '<span class="sg-ent">Sur le contenu entier</span>' : ''))
+    + '</div>'
+    + (ouverte ? '' : '<div class="sg-trt">Traitée'+(s.traitee_par?' par '+esc(s.traitee_par):'')
+        + (s.traitee_le?' · <time title="'+esc(sgDateLongue(s.traitee_le))+'">'+esc(fmtQuand(s.traitee_le))+'</time>':'')+(s.motif?' — '+esc(s.motif):'')+'</div>')
+    + '<div class="sg-msgs">'+sgMsgs(s.id).map(sgMsg).join('')+'</div>'
+    + '<div class="sg-rep"><textarea data-sgrep="'+s.id+'" rows="2" placeholder="Répondre…"></textarea><button type="button" class="mm-b" data-sgrepondre="'+s.id+'">Répondre</button></div>'
+    + (EST_PROPRIO ? '<div class="sg-fpied">'+(ouverte ? '<button type="button" data-sgtraiter="'+s.id+'">✓ Marquer traitée</button>' : '<button type="button" data-sgrouvrir="'+s.id+'">Rouvrir</button>')
+        + '<button type="button" class="sg-danger" data-sgsupsug="'+s.id+'">Supprimer la suggestion</button></div>' : '')
+    + '</article>';
+}
+function sgRendreForm(){
+  const z = document.getElementById('sgForm'); if(!z) return;
+  if(!SG_FORM){ z.innerHTML = ''; return; }
+  const libre = SG_CLE==='libre';
+  z.innerHTML = '<div class="sg-form"><h4>'+(libre ? 'Nouvelle suggestion libre' : SG_FORM.ancre ? 'Commenter ce passage' : 'Commenter le contenu entier')+'</h4>'
+    + (SG_FORM.ancre ? '<blockquote class="sg-cit fixe">'+esc(SG_FORM.ancre.texte)+'</blockquote>' : '')
+    + (libre ? '<input type="text" id="sgTitre" maxlength="140" placeholder="Titre (obligatoire) — ex. « Une fiche sur le PER collectif »">' : '')
+    + '<textarea id="sgTexte" rows="4" placeholder="Ta suggestion : ce qui manque, ce qui est faux, ce que tu proposes…"></textarea>'
+    + '<div class="sg-fa"><button type="button" class="mm-b pri" id="sgEnvoyer">Envoyer</button><button type="button" class="mm-b" id="sgAnnuler">Annuler</button><span class="sg-err" id="sgErr"></span></div></div>';
+  try{ z.scrollIntoView({ behavior:'smooth', block:'nearest' }); }catch(e){}
+  setTimeout(()=>{ const f = document.getElementById(libre ? 'sgTitre' : 'sgTexte'); if(f) f.focus({ preventScroll:true }); }, 30);
+}
+function sgRendreDet(){
+  const el = document.getElementById('sgDet'); if(!el) return;
+  const c = SG_CLE ? sgCible(SG_CLE) : null;
+  if(!c){ SG_CLE = null; el.innerHTML = '<div class="sg-accueil"><p><b>Choisis un contenu</b> dans la liste pour le lire et proposer une amélioration.</p><p>Sélectionne un passage de l’aperçu pour le commenter précisément, ou commente le contenu entier. Une idée de nouvelle fiche ? « + Suggestion libre ».</p></div>'; return; }
+  const fils = SG.s.filter(s=>sgCle(s)===SG_CLE);
+  const ouv = fils.filter(s=>s.statut==='ouverte').sort((a,b)=>sgT(b.maj)-sgT(a.maj));
+  const tr = fils.filter(s=>s.statut!=='ouverte').sort((a,b)=>sgT(b.traitee_le||b.maj)-sgT(a.traitee_le||a.maj));
+  const libre = c.type==='libre';
+  el.innerHTML = '<div class="sg-det-h"><h3>'+esc(c.i+' '+c.t)+'</h3>'
+      + (libre ? '<button type="button" class="mm-b pri" data-sg="libre">+ Suggestion libre</button>' : '<button type="button" class="mm-b" data-sg="entier">💬 Commenter le contenu entier</button>') + '</div>'
+    + (libre ? '' : '<p class="sg-aide">Sélectionne un passage de l’aperçu pour le commenter précisément. L’aperçu est en lecture seule.</p>')
+    + '<div id="sgForm"></div>'
+    + '<div class="sg-corps'+(libre?'':' deux')+'">'
+    + (libre ? '' : '<div class="sg-ap-w"><div class="sg-ap'+(c.type==='page'?' nc':'')+'" id="sgAp">'+sgApercu(c)+'</div></div>')
+    + '<div class="sg-fils"><h4>Suggestions'+(ouv.length?' <span class="sg-n">'+ouv.length+'</span>':'')+'</h4>'
+    + (ouv.length ? ouv.map(sgFil).join('') : '<p class="sg-vide">Aucune suggestion ouverte'+(libre?'.':' sur ce contenu.')+'</p>')
+    + (tr.length ? '<details class="sg-tr"><summary>'+tr.length+' suggestion'+(tr.length>1?'s':'')+' traitée'+(tr.length>1?'s':'')+'</summary>'+tr.map(sgFil).join('')+'</details>' : '')
+    + '</div></div>';
+  sgRendreForm();
+  sgMarquerPerdus();
+}
+function sgRendre(){
+  const p = document.getElementById('csv-sug'); if(!p) return;
+  sgBadges(); sgRendreCat(); sgRendreDet();
+}
+function sgInfo(txt, err){ const e = document.getElementById('sgInfo'); if(!e) return; e.textContent = txt||''; e.classList.toggle('err', !!err); }
+async function sgMarquerLu(cle){
+  const l = SG.s.filter(s=>sgCle(s)===cle && sgNouveaux(s).length);
+  if(!l.length) return;
+  const maintenant = new Date().toISOString();
+  l.forEach(s=>{ SG.v[s.id] = maintenant; });
+  sgBadges(); sgRendreCat(); try{ buildActions(); }catch(e){}
+  for(const s of l){
+    try{ const r = await SB.rpc('suggestion_vue', { p_id: s.id }); if(r && !r.error && typeof r.data==='string') SG.v[s.id] = r.data; }catch(e){}
+  }
+}
+function sgOuvrir(cle){
+  SG_CLE = cle; SG_FORM = null; SG_EDIT = null; sgInfo('');
+  SG_NV = new Set(SG.s.filter(s=>sgCle(s)===cle).flatMap(s=>sgNouveaux(s).map(m=>m.id)));
+  sgRendreCat(); sgRendreDet(); syncHash(true);
+  sgMarquerLu(cle);
+  if(window.innerWidth<=900){ const d = document.getElementById('sgDet'); if(d && d.scrollIntoView) d.scrollIntoView({ behavior:'smooth', block:'start' }); }
+}
+
+/* --- écritures (tout passe par le serveur, puis on relit) --- */
+async function sgApres(){ await sgCharger(); sgRendre(); }
+async function sgEnvoyer(){
+  if(SG_ENVOI || !SG_FORM || !SG_CLE) return;
+  const err = document.getElementById('sgErr'), libre = SG_CLE==='libre';
+  const texte = ((document.getElementById('sgTexte')||{}).value||'').trim();
+  const titre = libre ? ((document.getElementById('sgTitre')||{}).value||'').trim() : '';
+  if(libre && !titre){ err.textContent = 'Le titre est obligatoire.'; return; }
+  if(!texte){ err.textContent = 'Écris ta suggestion.'; return; }
+  const p = SG_CLE.indexOf(':');
+  SG_ENVOI = true; err.textContent = 'Envoi…';
+  try{
+    const r = await SB.rpc('suggestion_creer', { p_cible_type: libre ? 'libre' : SG_CLE.slice(0,p), p_cible: libre ? null : SG_CLE.slice(p+1),
+      p_titre: titre || null, p_ancre: SG_FORM.ancre || null, p_texte: texte });
+    if(r.error) throw r.error;
+    SG_FORM = null;
+    await sgApres();
+  }catch(e){ err.textContent = 'Envoi impossible — réessaie.'; }
+  SG_ENVOI = false;
+}
+async function sgRepondre(id){
+  const ta = document.querySelector('[data-sgrep="'+id+'"]'); const texte = ((ta||{}).value||'').trim();
+  if(!texte || SG_ENVOI){ if(ta) ta.focus(); return; }
+  SG_ENVOI = true;
+  try{
+    const r = await SB.from('contenu_suggestion_messages').insert({ suggestion_id: id, texte });
+    if(r.error) throw r.error;
+    sgInfo(''); await sgApres();
+  }catch(e){ sgInfo('Réponse impossible — réessaie.', true); }
+  SG_ENVOI = false;
+}
+function sgMsgRedessiner(id){
+  const m = SG.m.find(x=>+x.id===+id), el = document.querySelector('[data-sgmsg="'+id+'"]');
+  if(m && el){ el.outerHTML = sgMsg(m); const t = document.querySelector('[data-sgedtxt="'+id+'"]'); if(t){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }
+}
+async function sgModifier(id){
+  const t = document.querySelector('[data-sgedtxt="'+id+'"]'); const texte = ((t||{}).value||'').trim();
+  if(!texte){ sgInfo('Un message ne peut pas être vide.', true); return; }
+  try{
+    const r = await SB.from('contenu_suggestion_messages').update({ texte }).eq('id', id);
+    if(r.error) throw r.error;
+    SG_EDIT = null; sgInfo(''); await sgApres();
+  }catch(e){ sgInfo('Modification impossible — réessaie.', true); }
+}
+async function sgSupprimerMsg(id){
+  if(!EST_PROPRIO) return;
+  const m = SG.m.find(x=>+x.id===+id); if(!m) return;
+  if(!await edModal('Supprimer ce message de '+(m.auteur_nom||'—')+' ? C’est définitif.', [], null, 'Supprimer')) return;
+  try{ const r = await SB.from('contenu_suggestion_messages').delete().eq('id', id); if(r.error) throw r.error; sgInfo(''); await sgApres(); }
+  catch(e){ sgInfo('Suppression impossible — réessaie.', true); }
+}
+async function sgSupprimerSug(id){
+  if(!EST_PROPRIO) return;
+  const s = SG.s.find(x=>+x.id===+id); if(!s) return;
+  const n = sgMsgs(id).length;
+  if(!await edModal('Supprimer toute la suggestion'+(s.titre?' « '+s.titre+' »':'')+' et ses '+n+' message'+(n>1?'s':'')+' ? C’est définitif.', [], null, 'Supprimer')) return;
+  try{ const r = await SB.from('contenu_suggestions').delete().eq('id', id); if(r.error) throw r.error; sgInfo(''); await sgApres(); }
+  catch(e){ sgInfo('Suppression impossible — réessaie.', true); }
+}
+async function sgStatut(id, traiter){
+  if(!EST_PROPRIO) return;
+  let maj = { statut:'ouverte' };
+  if(traiter){
+    const r = await edModal('Marquer la suggestion comme traitée', [{ k:'motif', l:'Un mot, facultatif (intégrée, refusée, en partie…)', v:'' }], null, 'Marquer traitée');
+    if(!r) return;
+    maj = { statut:'traitee', motif: (r.motif||'').trim() || null };
+  }
+  try{ const x = await SB.from('contenu_suggestions').update(maj).eq('id', id); if(x.error) throw x.error; sgInfo(''); await sgApres(); }
+  catch(e){ sgInfo('Changement de statut impossible — réessaie.', true); }
+}
+document.addEventListener('click', e=>{
+  const t = e.target && e.target.closest ? e.target : null; if(!t) return;
+  const cs = t.closest('#cntSub [data-cs]'); if(cs){ showCntSub(cs.dataset.cs); syncHash(true); return; }
+  if(!t.closest('#csv-sug')) return;
+  if(t.closest('#sgFlot')){ sgCommenterPassage(); return; }
+  const k = t.closest('[data-sgcle]'); if(k){ sgOuvrir(k.dataset.sgcle); return; }
+  const g = t.closest('[data-sg]');
+  if(g){
+    const a = g.dataset.sg;
+    if(a==='nouvelle-libre' && SG_CLE!=='libre') sgOuvrir('libre');
+    SG_FORM = { ancre:null }; sgRendreForm(); return;
+  }
+  if(t.closest('#sgEnvoyer')){ sgEnvoyer(); return; }
+  if(t.closest('#sgAnnuler')){ SG_FORM = null; sgRendreForm(); return; }
+  const c = t.closest('.sg-cit[data-sgcit]'); if(c){ sgSurligner(+c.dataset.sgcit); return; }
+  const r = t.closest('[data-sgrepondre]'); if(r){ sgRepondre(+r.dataset.sgrepondre); return; }
+  const ed = t.closest('[data-sged]'); if(ed){ const id = +ed.dataset.sged; const av = SG_EDIT; SG_EDIT = id; if(av) sgMsgRedessiner(av); sgMsgRedessiner(id); return; }
+  const no = t.closest('[data-sgedno]'); if(no){ SG_EDIT = null; sgMsgRedessiner(+no.dataset.sgedno); return; }
+  const ok = t.closest('[data-sgedok]'); if(ok){ sgModifier(+ok.dataset.sgedok); return; }
+  const sm = t.closest('[data-sgsupmsg]'); if(sm){ sgSupprimerMsg(+sm.dataset.sgsupmsg); return; }
+  const ss = t.closest('[data-sgsupsug]'); if(ss){ sgSupprimerSug(+ss.dataset.sgsupsug); return; }
+  const tr = t.closest('[data-sgtraiter]'); if(tr){ sgStatut(+tr.dataset.sgtraiter, true); return; }
+  const ro = t.closest('[data-sgrouvrir]'); if(ro){ sgStatut(+ro.dataset.sgrouvrir, false); return; }
+});
+// garder la sélection quand on appuie sur le bouton flottant
+document.addEventListener('mousedown', e=>{ if(e.target.closest && e.target.closest('#sgFlot')) e.preventDefault(); });
+document.addEventListener('touchstart', e=>{ if(e.target.closest && e.target.closest('#sgFlot')){ e.preventDefault(); sgCommenterPassage(); } }, { passive:false });
+document.addEventListener('input', e=>{ if(e.target.id==='sgQ'){ SG_Q = e.target.value; sgRendreCat(); } });
+document.addEventListener('change', e=>{ if(e.target.id==='sgOuv'){ SG_OUV = e.target.checked; sgRendreCat(); } });
+document.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey) && e.key==='Enter' && e.target.closest){
+    if(e.target.id==='sgTexte' || e.target.id==='sgTitre'){ e.preventDefault(); sgEnvoyer(); }
+    else if(e.target.dataset && e.target.dataset.sgrep){ e.preventDefault(); sgRepondre(+e.target.dataset.sgrep); }
+    else if(e.target.dataset && e.target.dataset.sgedtxt){ e.preventDefault(); sgModifier(+e.target.dataset.sgedtxt); }
+  }
+});
+
 /* ---------- Compte personnel & synchronisation ---------- */
 const SB_URL = 'https://xslusoecharxelwmbyal.supabase.co';
 const SB_KEY = 'sb_publishable_WPzpaFRXyczA2lUjIG51vg_PtLFx_XO';
@@ -8845,6 +9486,7 @@ const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/su
 const AUTH_MAIL = false;   // connexion par code e-mail : nécessite un SMTP externe (service intégré limité à 2 envois/h)
 let SB=null, SBUSER=null, SYNC_T=null, SYNC_FAIT=false;
 let EST_ADMIN=false;   // renseigné par buildMembres() : seul un admin peut trier les retours
+let EST_PROPRIO=false; // renseigné par buildMembres() (RPC est_proprietaire) : seul le propriétaire édite le contenu (01/11/2026)
 
 // Actions de la semaine : ce qui est fait est mémorisé par semaine (clé = lundi de la semaine),
 // donc tout repart à zéro chaque lundi sans qu'on ait à purger quoi que ce soit.
@@ -9029,7 +9671,7 @@ function fmtQuand(iso){
   return fmtD(isoJour(d));
 }
 function masquerAdmin(btn){
-  EST_ADMIN=false;
+  EST_ADMIN=false; EST_PROPRIO=false;
   if(btn) btn.hidden=true;
   if(curTab==='admin'){ showTab('home'); curTab='home'; syncHash(false); }
   return false;
@@ -9047,11 +9689,15 @@ async function buildMembres(){
   catch(e){ return masquerAdmin(btn); }
   if(btn) btn.hidden=false;
   EST_ADMIN=true;
+  // Admin → Contenu → Édition : le propriétaire seul (le serveur le refuse aussi aux autres)
+  try{ const pr=await SB.rpc('est_proprietaire'); EST_PROPRIO = !pr.error && pr.data===true; }catch(e){ EST_PROPRIO=false; }
+  try{ sgNav(); }catch(e){}
   try{ routerQuandPret(); }catch(e){}
   try{ if(curTab==='fiches') buildFiches(); majParcours(); }catch(e){}
   try{ buildRetours(); }catch(e){}
   buildDemandes();
-  buildContenuAdmin();
+  if(EST_PROPRIO) buildContenuAdmin();
+  sgCharger();
   buildJournal();
   body.innerHTML = rows.length ? rows.map(m=>{
     const nom = m.nom || (m.email||'').split('@')[0];
@@ -9642,14 +10288,14 @@ function edSlashChoisir(i){
   if(typeof it[2]==='function') it[2](ED.chain().focus()).run(); else edAction(it[2]);
 }
 // --- petite fenêtre de saisie (remplace prompt()) ---
-function edModal(titre, champs, retirer){
+function edModal(titre, champs, retirer, valider){
   return new Promise(ok=>{
     const fond = document.createElement('div'); fond.className = 'ed-modal';
     fond.innerHTML = '<form class="ed-modal-c"><h3>'+esc(titre)+'</h3>'
       + champs.map(c=>'<label>'+esc(c.l)+(c.type==='zone' ? '<textarea name="'+c.k+'" rows="12">'+esc(c.v||'')+'</textarea>'
           : c.type==='liste' ? '<select name="'+c.k+'">'+c.options.map(([v,l])=>'<option value="'+esc(v)+'">'+esc(l)+'</option>').join('')+'</select>'
           : '<input name="'+c.k+'" value="'+esc(c.v||'')+'" autocomplete="off">')+'</label>').join('')
-      + '<div class="ed-modal-a">'+(retirer?'<button type="button" data-r="1">'+esc(retirer)+'</button>':'')+'<span></span><button type="button" data-a="1">Annuler</button><button type="submit" class="acc-btn">Valider</button></div></form>';
+      + '<div class="ed-modal-a">'+(retirer?'<button type="button" data-r="1">'+esc(retirer)+'</button>':'')+'<span></span><button type="button" data-a="1">Annuler</button><button type="submit" class="acc-btn">'+esc(valider||'Valider')+'</button></div></form>';
     document.body.appendChild(fond);
     const fin = v => { fond.remove(); ok(v); };
     fond.addEventListener('click', e=>{ if(e.target===fond || e.target.dataset.a) fin(null); if(e.target.dataset.r) fin('retirer'); });

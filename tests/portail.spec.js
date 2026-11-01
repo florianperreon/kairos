@@ -4697,3 +4697,335 @@ test.describe('Historique, brouillon et conflit (21/10/2026)', () => {
     await expect.poll(() => page.evaluate(() => window.__T.contenu_pages.map(p => p.slug))).toEqual(['esp', 'vieille']);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Admin → Contenu → Suggestions (01/11/2026)', () => {
+  // Faux Supabase en mémoire, pessimiste : il applique ce que fait le serveur (auteur imposé, un message
+  // ne se modifie que par son auteur, le statut et les suppressions ne passent que pour le propriétaire).
+  const poserSG = (page, o) => page.evaluate((o) => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    MOI_ID = 20028;
+    SBUSER = { id: 'u-moi', email: 'moi@test.invalid' };
+    const il = h => new Date(Date.now() - h * 3600000).toISOString();
+    CONTENU = {
+      pages: {
+        esp: { t: 'Ouvrir un ESP', i: '🎓', h: '<h2>Les étapes</h2><p>Le client <b>signe</b> la convention de compte en ligne.</p><p>Puis il verse 500 € minimum.</p>'
+          + '<div class="tpl"><button class="copy" type="button">Copier</button><pre>Bonjour [Prénom]</pre></div><p><a href="#p/per" class="plink">Voir le PER</a> <label><input type="checkbox"> fait</label></p><div id="objTrain"></div>' },
+        per: { t: 'Le PER', i: '💶', h: '<p>Le PER individuel.</p>' },
+        divers: { t: 'Divers', i: '', h: '<p>Une fiche sans rayon.</p>' } },
+      fiches: [{ i: '💶', t: 'Produits', pages: ['esp', 'per'] }],
+      faq: [{ q: 'Comment annuler une formation ?', th: 'Formations', a: '<p>Écris au secrétariat.</p>' }],
+      missions: { phases: [{ id: 'p1', n: 1, t: 'Fondations', missions: [{ id: '1.1', t: 'Se présenter', actions: [{ id: 'a', t: 'Remplir sa fiche' }] }] }] },
+      objections: [{ o: 'C’est trop cher', r: ['Comparons le coût réel', 'Parlons de ton objectif'] }],
+      faqPubliee: true,
+    };
+    const T = window.__T = { n: 100, appels: [], proprio: !!o.proprio, moi: { uid: 'u-moi', nom: 'Moi Test' },
+      contenu_suggestions: [
+        { id: 1, cible_type: 'page', cible: 'esp', titre: null, ancre: null, statut: 'ouverte', auteur_uid: 'u-autre', auteur_nom: 'Rémi A.', cree_le: il(30), maj: il(2) },
+        { id: 2, cible_type: 'bloc', cible: 'faq', titre: null, ancre: { texte: 'Écris au secrétariat.', avant: 'formation ? Formations ', apres: '' }, statut: 'ouverte', auteur_uid: 'u-moi', auteur_nom: 'Moi Test', cree_le: il(20), maj: il(20) },
+        { id: 3, cible_type: 'page', cible: 'per', titre: null, ancre: null, statut: 'traitee', motif: 'intégrée', traitee_par: 'Florian', traitee_le: il(5), auteur_uid: 'u-autre', auteur_nom: 'Rémi A.', cree_le: il(50), maj: il(5) },
+        { id: 4, cible_type: 'libre', cible: null, titre: 'Une fiche sur le PER collectif', ancre: null, statut: 'ouverte', auteur_uid: 'u-autre', auteur_nom: 'Rémi A.', cree_le: il(40), maj: il(40) }],
+      contenu_suggestion_messages: [
+        { id: 11, suggestion_id: 1, texte: 'Il manque le montant minimum.', auteur_uid: 'u-autre', auteur_nom: 'Rémi A.', cree_le: il(30), modifie_le: il(1) },  // modifié après ma lecture
+        { id: 12, suggestion_id: 1, texte: 'Je regarde.', auteur_uid: 'u-moi', auteur_nom: 'Moi Test', cree_le: il(10), modifie_le: null },
+        { id: 13, suggestion_id: 1, texte: 'Merci !', auteur_uid: 'u-autre', auteur_nom: 'Rémi A.', cree_le: il(2), modifie_le: null },
+        { id: 21, suggestion_id: 2, texte: 'Préciser l’adresse.', auteur_uid: 'u-moi', auteur_nom: 'Moi Test', cree_le: il(20), modifie_le: null },
+        { id: 31, suggestion_id: 3, texte: 'Ajouter le plafond.', auteur_uid: 'u-autre', auteur_nom: 'Rémi A.', cree_le: il(50), modifie_le: null },
+        { id: 41, suggestion_id: 4, texte: 'Pour les entreprises.', auteur_uid: 'u-autre', auteur_nom: 'Rémi A.', cree_le: il(40), modifie_le: null }],
+      contenu_suggestions_vues: [{ suggestion_id: 1, vu_le: il(5) }, { suggestion_id: 3, vu_le: il(1) }, { suggestion_id: 4, vu_le: il(1) }] };
+    const maintenant = () => new Date().toISOString();
+    const q = (t) => {
+      const st = { f: [], op: 'select', v: null };
+      const rows = () => (T[t] || (T[t] = [])).filter(r => st.f.every(([k, v]) => r[k] === v));
+      const fin = async () => {
+        T.appels.push([t, st.op, st.v]);
+        if (st.op === 'insert') {
+          const r = { id: ++T.n, ...st.v };
+          if (t === 'contenu_suggestion_messages') Object.assign(r, { auteur_uid: T.moi.uid, auteur_nom: T.moi.nom, auteur_membre_id: 20028, cree_le: maintenant(), modifie_le: null });
+          T[t].push(r); return { data: null, error: null };
+        }
+        if (st.op === 'update') {
+          rows().forEach(r => {
+            if (t === 'contenu_suggestion_messages') { if (r.auteur_uid !== T.moi.uid) return; r.texte = st.v.texte; r.modifie_le = maintenant(); return; }
+            if (t === 'contenu_suggestions') { if (!T.proprio) return; Object.assign(r, st.v);
+              if (st.v.statut === 'traitee') { r.traitee_par = T.moi.nom; r.traitee_le = maintenant(); } else { r.traitee_par = null; r.traitee_le = null; r.motif = null; } }
+          });
+          return { data: null, error: null };
+        }
+        if (st.op === 'delete') {
+          if (!T.proprio) return { data: null, error: null };
+          const l = rows(); T[t] = T[t].filter(r => !l.includes(r));
+          if (t === 'contenu_suggestions') T.contenu_suggestion_messages = T.contenu_suggestion_messages.filter(m => !l.some(s => s.id === m.suggestion_id));
+          return { data: null, error: null };
+        }
+        return { data: rows().map(r => ({ ...r })), error: null };
+      };
+      const ch = { select() { return ch; }, eq(k, v) { st.f.push([k, v]); return ch; }, order() { return ch; }, limit() { return ch; }, in() { return ch; }, gte() { return ch; },
+        update(v) { st.op = 'update'; st.v = v; return ch; }, delete() { st.op = 'delete'; return ch; }, insert(v) { st.op = 'insert'; st.v = v; return fin(); },
+        maybeSingle: async () => { const r = await fin(); return { data: (r.data || [])[0] || null, error: null }; }, then: (a, b) => fin().then(a, b) };
+      return ch;
+    };
+    SB = { from: q, rpc: async (nom, a) => {
+      T.appels.push(['rpc', nom, a]);
+      if (nom === 'est_admin') return { data: true, error: null };
+      if (nom === 'est_proprietaire') return { data: T.proprio, error: null };
+      if (nom === 'mon_uid') return { data: T.moi.uid, error: null };
+      if (nom === 'membres_connectes') return { data: [], error: null };
+      if (nom === 'suggestion_vue') { const v = T.contenu_suggestions_vues.find(x => x.suggestion_id === a.p_id); const m = maintenant();
+        if (v) v.vu_le = m; else T.contenu_suggestions_vues.push({ suggestion_id: a.p_id, vu_le: m }); return { data: m, error: null }; }
+      if (nom === 'suggestion_creer') { const id = ++T.n, m = maintenant();
+        T.contenu_suggestions.push({ id, cible_type: a.p_cible_type, cible: a.p_cible, titre: a.p_titre, ancre: a.p_ancre, statut: 'ouverte', auteur_uid: T.moi.uid, auteur_nom: T.moi.nom, cree_le: m, maj: m });
+        T.contenu_suggestion_messages.push({ id: ++T.n, suggestion_id: id, texte: a.p_texte, auteur_uid: T.moi.uid, auteur_nom: T.moi.nom, cree_le: m, modifie_le: null });
+        return { data: id, error: null }; }
+      return { data: null, error: null };
+    } };
+    return true;
+  }, o);
+  // Ouvre Admin → Contenu en passant par le vrai démarrage de l'onglet Admin (buildMembres)
+  async function ouvrirSG(page, o = {}) {
+    const erreurs = await ouvrir(page);
+    const dialogues = [];
+    page.on('dialog', d => { dialogues.push(d.type()); d.dismiss(); });
+    await poserSG(page, o);
+    await page.evaluate(async (h) => {
+      await buildMembres();
+      await new Promise(r => setTimeout(r, 50));
+      location.hash = h || '#admin?s=contenu';
+    }, o.hash);
+    await page.waitForTimeout(150);
+    return { erreurs, dialogues };
+  }
+
+  test('non-propriétaire : pas de sous-onglet Édition, l’adresse qui y mène retombe sur Suggestions', async ({ page }) => {
+    const { erreurs } = await ouvrirSG(page, { proprio: false, hash: '#admin?s=contenu&c=edition' });
+    expect(await page.evaluate(() => EST_PROPRIO)).toBe(false);
+    await expect(page.locator('#cntSub [data-cs="edi"]')).toHaveCount(0);
+    await expect(page.locator('#csv-sug')).toBeVisible();
+    await expect(page.locator('#csv-edi')).toBeHidden();
+    await expect.poll(() => page.evaluate(() => location.hash)).toBe('#admin?s=contenu');
+    // l'éditeur n'est même pas chargé pour un admin simple
+    expect(await page.evaluate(() => window.__T.appels.some(a => a[0] === 'contenu_pages'))).toBe(false);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('propriétaire : le sous-onglet Édition existe et passe dans l’adresse, pas Suggestions (par défaut)', async ({ page }) => {
+    const { erreurs } = await ouvrirSG(page, { proprio: true, hash: '#admin?s=contenu&c=edition' });
+    expect(await page.evaluate(() => EST_PROPRIO)).toBe(true);
+    await expect(page.locator('#csv-edi')).toBeVisible();
+    await expect(page.locator('#cntSub [data-cs="edi"]')).toHaveClass(/on/);
+    await expect(page.locator('#cntListe')).toBeAttached();
+    await page.locator('#cntSub [data-cs="sug"]').click();
+    await expect(page.locator('#csv-sug')).toBeVisible();
+    await expect.poll(() => page.evaluate(() => location.hash)).toBe('#admin?s=contenu');
+    await page.locator('#cntSub [data-cs="edi"]').click();
+    await expect.poll(() => page.evaluate(() => location.hash)).toBe('#admin?s=contenu&c=edition');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('catalogue : libres en tête, fiches par rayon, blocs nommés ; compteurs ouverts et non lus ; recherche et filtre', async ({ page }) => {
+    const { erreurs } = await ouvrirSG(page, { proprio: false });
+    // 3 suggestions ouvertes, 1 fil non lu (un message neuf et un message modifié après ma lecture)
+    await expect(page.locator('#sgBadge')).toHaveText('3');
+    await expect(page.locator('#sgBadge')).toHaveClass(/cnt/);
+    await expect(page.locator('#sgNonLu')).toHaveText('1');
+    await expect(page.locator('#sgBadgeIn')).toHaveText('3');
+    const cat = await page.evaluate(() => ({
+      items: [...document.querySelectorAll('#sgCat .sg-it')].map(b => b.dataset.sgcle),
+      titres: [...document.querySelectorAll('#sgCat .sg-gh, #sgCat .sg-gt')].map(x => x.textContent),
+      noms: [...document.querySelectorAll('#sgCat .sg-it .t')].map(x => x.textContent) }));
+    expect(cat.items[0]).toBe('libre');
+    expect(cat.items).toEqual(['libre', 'page:esp', 'page:per', 'page:divers', 'bloc:objections', 'bloc:missions', 'bloc:faq', 'bloc:fiches']);
+    expect(cat.titres).toEqual(['Fiches pratiques', '💶 Produits', 'Autres', 'Blocs']);
+    expect(cat.noms).toContain('Questions fréquentes');
+    expect(cat.noms).toContain('Parcours en missions');
+    await expect(page.locator('[data-sgcle="page:esp"] .sg-n')).toHaveText('1');
+    await expect(page.locator('[data-sgcle="page:esp"] .sg-pt')).toHaveCount(1);
+    await expect(page.locator('[data-sgcle="page:per"] .sg-n')).toHaveCount(0);     // seulement traitée
+    await expect(page.locator('[data-sgcle="libre"] .sg-pt')).toHaveCount(0);       // déjà lue
+    await page.locator('#sgQ').fill('frequentes');
+    await expect(page.locator('#sgCat .sg-it')).toHaveCount(1);
+    await page.locator('#sgQ').fill('');
+    await page.locator('#sgOuv').check();
+    expect(await page.locator('#sgCat .sg-it').evaluateAll(l => l.map(b => b.dataset.sgcle))).toEqual(['libre', 'page:esp', 'bloc:faq']);
+    // ouvrir le contenu marque le fil comme lu
+    await page.locator('[data-sgcle="page:esp"]').click();
+    await expect(page.locator('#sgNonLu')).toBeHidden();
+    await expect(page.locator('#sgBadge')).toHaveText('3');
+    await expect(page.locator('.sg-msg.nv')).toHaveCount(2);                       // les deux nouveautés restent repérables
+    expect(await page.evaluate(() => window.__T.appels.filter(a => a[1] === 'suggestion_vue').map(a => a[2].p_id))).toEqual([1]);
+    await expect.poll(() => page.evaluate(() => location.hash)).toBe('#admin?s=contenu&sg=page%3Aesp');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('aperçu : fiche en .nc et blocs lisibles, sans rien d’actif', async ({ page }) => {
+    const { erreurs } = await ouvrirSG(page, { proprio: false });
+    await page.locator('[data-sgcle="page:esp"]').click();
+    await expect(page.locator('#sgAp')).toHaveClass(/nc/);
+    await expect(page.locator('#sgAp')).toContainText('convention de compte');
+    await expect(page.locator('#sgAp button.copy')).toHaveCount(0);
+    await expect(page.locator('#sgAp [id]')).toHaveCount(0);
+    await expect(page.locator('#sgAp input[type="checkbox"]')).toBeDisabled();
+    await page.locator('#sgAp a').click();
+    expect(await page.evaluate(() => ({ h: location.hash, fiche: document.getElementById('psheet').classList.contains('on') })))
+      .toEqual({ h: '#admin?s=contenu&sg=page%3Aesp', fiche: false });
+    await page.locator('[data-sgcle="bloc:faq"]').click();
+    await expect(page.locator('#sgAp h4')).toHaveText('Comment annuler une formation ?');
+    await expect(page.locator('#sgAp')).toContainText('Écris au secrétariat.');
+    await page.locator('[data-sgcle="bloc:missions"]').click();
+    await expect(page.locator('#sgAp h3')).toHaveText('Phase 1 — Fondations');
+    await expect(page.locator('#sgAp h4')).toHaveText('1.1 — Se présenter');
+    await expect(page.locator('#sgAp li')).toHaveText('Remplir sa fiche');
+    await page.locator('[data-sgcle="bloc:objections"]').click();
+    await expect(page.locator('#sgAp li')).toHaveText(['Comparons le coût réel', 'Parlons de ton objectif']);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('commenter un passage : ancre gardée, citation dans le fil, surlignage, « passage modifié depuis »', async ({ page }) => {
+    const { erreurs } = await ouvrirSG(page, { proprio: false });
+    await page.locator('[data-sgcle="page:esp"]').click();
+    // sélection à cheval sur <b>signe</b> et le texte qui suit
+    await page.evaluate(() => {
+      const p = [...document.querySelectorAll('#sgAp p')].find(x => x.textContent.includes('convention'));
+      const b = p.querySelector('b').firstChild, apres = p.querySelector('b').nextSibling;
+      const r = document.createRange(); r.setStart(b, 0); r.setEnd(apres, ' la convention'.length);
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    });
+    await expect(page.locator('#sgFlot')).toBeVisible();
+    await page.locator('#sgFlot').click();
+    await expect(page.locator('.sg-form .sg-cit')).toHaveText('signe la convention');
+    await page.locator('#sgTexte').fill('Préciser : convention de compte-titres.');
+    await page.locator('#sgEnvoyer').click();
+    const a = await page.evaluate(() => window.__T.appels.find(x => x[1] === 'suggestion_creer')[2]);
+    expect(a.p_cible_type).toBe('page');
+    expect(a.p_cible).toBe('esp');
+    expect(a.p_ancre.texte).toBe('signe la convention');
+    expect(a.p_ancre.avant).toBe('Les étapes Le client ');                       // un espace entre deux blocs
+    expect(a.p_ancre.apres).toBe(' de compte en ligne. Puis il verse 500 €');
+    const id = await page.evaluate(() => window.__T.contenu_suggestions.find(s => s.ancre && s.cible === 'esp').id);
+    const cit = page.locator('.sg-cit[data-sgcit="' + id + '"]');
+    await expect(cit).toContainText('signe la convention');
+    await cit.click();
+    await expect(page.locator('#sgAp mark.sg-hl')).toHaveCount(2);              // un morceau dans <b>, un après
+    expect(await page.locator('#sgAp mark.sg-hl').evaluateAll(l => l.map(m => m.textContent).join(''))).toBe('signe la convention');
+    // le contenu change : la citation le dit, et rien n'est surligné
+    await page.evaluate(() => { CONTENU.pages.esp.h = '<p>Texte entièrement réécrit.</p>'; sgRendreDet(); });
+    await expect(cit.locator('.sg-mod')).toBeVisible();
+    await expect(cit.locator('.sg-mod')).toHaveText('passage modifié depuis');
+    await cit.click();
+    await expect(page.locator('#sgAp mark.sg-hl')).toHaveCount(0);
+    // commenter le contenu entier
+    await page.locator('[data-sg="entier"]').click();
+    await expect(page.locator('.sg-form h4')).toHaveText('Commenter le contenu entier');
+    await expect(page.locator('.sg-form .sg-cit')).toHaveCount(0);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('suggestion libre : titre obligatoire, entrée en tête du catalogue', async ({ page }) => {
+    const { erreurs } = await ouvrirSG(page, { proprio: false });
+    await page.locator('.sg-tete [data-sg="nouvelle-libre"]').click();
+    await expect(page.locator('#sgTitre')).toBeVisible();
+    await page.locator('#sgTexte').fill('Une fiche sur la prévoyance.');
+    await page.locator('#sgEnvoyer').click();
+    await expect(page.locator('#sgErr')).toHaveText('Le titre est obligatoire.');
+    await page.locator('#sgTitre').fill('Fiche prévoyance');
+    await page.locator('#sgEnvoyer').click();
+    await expect(page.locator('.sg-fil .sg-ti').first()).toHaveText('Fiche prévoyance');
+    await expect(page.locator('[data-sgcle="libre"] .sg-n')).toHaveText('2');
+    const a = await page.evaluate(() => window.__T.appels.find(x => x[1] === 'suggestion_creer')[2]);
+    expect([a.p_cible_type, a.p_cible, a.p_titre]).toEqual(['libre', null, 'Fiche prévoyance']);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('fil (admin simple) : répondre, modifier son message, ni Supprimer ni statut', async ({ page }) => {
+    const { erreurs } = await ouvrirSG(page, { proprio: false });
+    await page.locator('[data-sgcle="page:esp"]').click();
+    const fil = page.locator('[data-sgfil="1"]');
+    await expect(fil.locator('.sg-msg')).toHaveCount(3);
+    await expect(fil.locator('[data-sgmsg="11"] .sg-modif')).toHaveText('modifié');
+    await expect(fil.locator('[data-sgmsg="11"] time')).toHaveAttribute('title', /\d{4}/);
+    await expect(page.locator('[data-sgsupmsg], [data-sgsupsug], [data-sgtraiter], [data-sgrouvrir]')).toHaveCount(0);
+    await expect(fil.locator('[data-sgmsg="11"] [data-sged]')).toHaveCount(0);       // pas le mien
+    await expect(fil.locator('[data-sgmsg="12"] [data-sged]')).toHaveCount(1);       // le mien
+    await fil.locator('[data-sgrep="1"]').fill('C’est corrigé ?');
+    await fil.locator('[data-sgrepondre="1"]').click();
+    await expect(page.locator('[data-sgfil="1"] .sg-msg')).toHaveCount(4);
+    await expect(page.locator('[data-sgfil="1"] .sg-msg').last()).toContainText('C’est corrigé ?');
+    await expect(page.locator('[data-sgfil="1"] .sg-msg').last().locator('.sg-toi')).toHaveText('toi');
+    await page.locator('[data-sgmsg="12"] [data-sged]').click();
+    await page.locator('[data-sgedtxt="12"]').fill('Je regarde demain.');
+    await page.locator('[data-sgedok="12"]').click();
+    await expect(page.locator('[data-sgmsg="12"] .sg-tx')).toHaveText('Je regarde demain.');
+    await expect(page.locator('[data-sgmsg="12"] .sg-modif')).toHaveText('modifié');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('fil (propriétaire) : supprimer un message, traitée avec un mot puis rouvrir, supprimer la suggestion — confirmations du portail', async ({ page }) => {
+    const { erreurs, dialogues } = await ouvrirSG(page, { proprio: true });
+    await page.locator('[data-sgcle="page:esp"]').click();
+    await page.locator('[data-sgsupmsg="13"]').click();
+    await expect(page.locator('.ed-modal')).toBeVisible();
+    await page.locator('.ed-modal button[type="submit"]').click();
+    await expect(page.locator('[data-sgmsg="13"]')).toHaveCount(0);
+    await page.locator('[data-sgtraiter="1"]').click();
+    await page.locator('.ed-modal input[name="motif"]').fill('intégrée');
+    await page.locator('.ed-modal button[type="submit"]').click();
+    await expect(page.locator('details.sg-tr [data-sgfil="1"]')).toBeAttached();
+    await expect(page.locator('details.sg-tr summary')).toHaveText('1 suggestion traitée');
+    await expect(page.locator('[data-sgfil="1"] .sg-trt')).toContainText('Traitée par Moi Test');
+    await expect(page.locator('[data-sgfil="1"] .sg-trt')).toContainText('— intégrée');
+    await expect(page.locator('#sgBadge')).toHaveText('2');
+    await page.locator('details.sg-tr summary').click();
+    await page.locator('[data-sgrouvrir="1"]').click();
+    await expect(page.locator('details.sg-tr')).toHaveCount(0);
+    await expect(page.locator('#sgBadge')).toHaveText('3');
+    // annuler ne supprime rien
+    await page.locator('[data-sgsupsug="1"]').click();
+    await page.locator('.ed-modal [data-a]').click();
+    await expect(page.locator('[data-sgfil="1"]')).toHaveCount(1);
+    await page.locator('[data-sgsupsug="1"]').click();
+    await expect(page.locator('.ed-modal h3')).toContainText('2 messages');
+    await page.locator('.ed-modal button[type="submit"]').click();
+    await expect(page.locator('[data-sgfil="1"]')).toHaveCount(0);
+    expect(await page.evaluate(() => window.__T.contenu_suggestion_messages.some(m => m.suggestion_id === 1))).toBe(false);
+    expect(dialogues).toEqual([]);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('Mes actions : les nouvelles réponses, avec le lien vers Admin → Contenu → Suggestions', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poser(page, { atelier: ATELIER_SEMAINE_PASSEE.map(v => v === '@@SAMEDI@@' ? jours().samedi : v), dm: jours().dm });
+    await poserSG(page, { proprio: false });
+    const r = await page.evaluate(async () => {
+      const act = () => document.querySelector('#homeActions .sact[data-act="sgnl"]');
+      document.querySelector('nav.tabs [data-v="admin"]').hidden = false;
+      EST_ADMIN = false; SG.ok = false; buildActions();
+      const sans = !!act();
+      EST_ADMIN = true; await sgCharger(); buildActions();
+      const a = act();
+      return { sans, txt: a && a.textContent.replace(/\s+/g, ' '), href: a && a.getAttribute('href') };
+    });
+    expect(r.sans).toBe(false);
+    expect(r.txt).toContain('2 nouvelles réponses dans les suggestions de contenu');
+    expect(r.txt).toContain('1 fil non lu');
+    expect(r.href).toBe('#admin?s=contenu');
+    await page.locator('#homeActions .sact[data-act="sgnl"]').click();
+    await expect(page.locator('#csv-sug')).toBeVisible();
+    await expect(page.locator('#cntSub [data-cs="sug"]')).toHaveClass(/on/);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('téléphone (390 px) : rien ne déborde, la citation et le fil tiennent', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const { erreurs } = await ouvrirSG(page, { proprio: true });
+    await page.locator('[data-sgcle="page:esp"]').click();
+    await expect(page.locator('[data-sgfil="1"]')).toBeVisible();
+    const w = await page.evaluate(() => ({ doc: document.documentElement.scrollWidth,
+      fil: document.querySelector('[data-sgfil="1"]').getBoundingClientRect().right, rep: getComputedStyle(document.querySelector('.sg-rep')).flexDirection }));
+    expect(w.doc).toBeLessThanOrEqual(390);
+    expect(w.fil).toBeLessThanOrEqual(390);
+    expect(w.rep).toBe('column');
+    expect(erreurs).toEqual([]);
+  });
+});
