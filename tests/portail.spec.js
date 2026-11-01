@@ -5083,7 +5083,20 @@ test.describe('Panneau de fiche (01/11/2026)', () => {
     const erreurs = await ouvrir(page);
     await page.evaluate((f) => { eval('(' + f + ')')(); localStorage.removeItem('kairos_ps'); PS_PREF.w = 0; PS_PREF.full = false; showPage('a-un'); }, contenu.toString());
     const larg = () => page.evaluate(() => Math.round(document.getElementById('psheetCard').getBoundingClientRect().width));
+    // attendre la fin de l'animation d'ouverture (le panneau glisse de 24 px) avant de viser la poignée :
+    // sur la CI, plus lente, la mesure tombait en pleine animation (régression du 01/11/2026)
+    await page.waitForFunction(() => !document.getElementById('psheetCard').getAnimations().some(a => a.playState === 'running'));
     const w0 = await larg();
+    // un geste commencé DANS la fiche et relâché sur le fond (sélection de texte) ne la ferme pas
+    const c = await page.locator('#psheet .ps-body').boundingBox();
+    await page.mouse.move(c.x + 40, c.y + 20); await page.mouse.down();
+    await page.mouse.move(100, c.y + 20, { steps: 4 }); await page.mouse.up();
+    expect(await page.evaluate(() => document.getElementById('psheet').classList.contains('on')), 'relâché dehors : la fiche reste ouverte').toBe(true);
+    // un vrai clic sur le fond la ferme toujours
+    await page.mouse.click(60, 400);
+    expect(await page.evaluate(() => document.getElementById('psheet').classList.contains('on'))).toBe(false);
+    await page.evaluate(() => showPage('a-un'));
+    await page.waitForFunction(() => !document.getElementById('psheetCard').getAnimations().some(a => a.playState === 'running'));
     const h = await page.locator('#psheet .ps-resize').boundingBox();
     await page.mouse.move(h.x + h.width / 2, h.y + 200); await page.mouse.down();
     await page.mouse.move(200, h.y + 200, { steps: 5 }); await page.mouse.up();

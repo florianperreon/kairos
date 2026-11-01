@@ -4264,6 +4264,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['b','Fiche pratique : sélectionner du texte ou tirer le bord du panneau en relâchant la souris en dehors ne ferme plus la fiche.'],
     ['f','Fiches pratiques : le filtre « Ma phase en cours » est retiré.'],
     ['f','Menu Forman simplifié : Ateliers, Parcours, Autres événements, Annuaire. « Autres événements » regroupe Réunions d’équipe, Formations et Événements en sous-onglets en haut de page (le dernier consulté est rouvert ; les adresses restent les mêmes).'],
     ['f','Menu : la rubrique « Le réseau » s’appelle désormais « Forman ». Mission 3.6 « Devenir autonome en R2 sur mes modules » : case SCPI ajoutée.'],
@@ -5392,7 +5393,11 @@ function freshBanner(p){
   return '<div class="fresh'+(old?' old':'')+'"><span>'+(old?'⚠️':'⏱')+'</span><div><b>Contenu daté — mis à jour en '+MOIS[mo-1]+' '+y+'.</b> '+(old?'Plus de '+months+' mois : les chiffres (frais, minimums, plafonds, allocations) ont pu changer — vérifie-les avant de les utiliser en rendez-vous.':'Les chiffres (frais, minimums, plafonds, allocations) évoluent : vérifie-les avant de les utiliser en rendez-vous.')+'</div></div>';
 }
 function closePage(){ const sh=document.getElementById('psheet'); sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); document.body.classList.remove('ps-open'); if(location.hash.startsWith('#p/')){ try{ history.replaceState(null,'',hashFor(curTab)); }catch(_){} } }
-document.getElementById('psheet').addEventListener('click',e=>{ if(e.target.id==='psheet' && Date.now()-psFinTirage>400) closePage(); });
+// Clic sur le fond : ferme la fiche seulement si le geste a COMMENCÉ sur le fond. Un geste commencé dans la fiche
+// (sélection de texte, tirage du bord) et relâché dehors produit un « click » sur #psheet : il ne doit pas fermer.
+let psDownFond=false;
+document.addEventListener('pointerdown', e=>{ psDownFond = !!(e.target && e.target.id==='psheet'); }, true);
+document.getElementById('psheet').addEventListener('click',e=>{ if(e.target.id==='psheet' && psDownFond && Date.now()-psFinTirage>400) closePage(); });
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('psheet').classList.contains('on')) return;
   if(e.key==='Escape') closePage();
