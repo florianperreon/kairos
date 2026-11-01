@@ -5029,3 +5029,87 @@ test.describe('Admin → Contenu → Suggestions (01/11/2026)', () => {
     expect(erreurs).toEqual([]);
   });
 });
+
+/* ------------------------------------------------------------------ */
+test.describe('Panneau de fiche (01/11/2026)', () => {
+  const contenu = () => {
+    CONTENU = Object.assign(CONTENU || {}, {
+      pages: {
+        'a-un': { t: 'Fiche un', i: '🧾', n: 1, h: '<p>Un.</p>' },
+        'a-deux': { t: 'Fiche deux', i: '🧾', n: 2, h: '<p>Deux.</p>' },
+        'b-un': { t: 'Fiche trois', i: '📞', n: 3, h: '<p>Trois.</p>' },
+      },
+      fiches: [
+        { t: 'Administratif', i: '🧾', pages: ['a-un', 'a-deux'] },
+        { t: 'Prospection', i: '📞', pages: ['b-un'] },
+      ],
+    });
+  };
+  test('fil d’Ariane « Fiches pratiques › rayon », pas de pastilles, précédente/suivante dans le rayon', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate((f) => {
+      eval('(' + f + ')')(); localStorage.removeItem('kairos_ps');
+      showPage('a-deux');
+      const c = document.getElementById('psheetCard');
+      return { crumb: c.querySelector('.crumb').textContent.replace(/\s+/g, ' ').trim(), tabs: !!c.querySelector('.ps-tabs'),
+        foot: c.querySelector('.ps-foot').textContent };
+    }, contenu.toString());
+    expect(r.crumb).toBe('Fiches pratiques › 🧾 Administratif');
+    expect(r.tabs).toBe(false);
+    expect(r.foot).toContain('← Fiche un');
+    expect(r.foot).not.toContain('Fiche trois');
+    // clic sur le rayon : la fiche se ferme, l'onglet Fiches pratiques s'ouvre filtré
+    await page.click('#psheet .crumb a[data-ffcrumb="r0"]');
+    const f = await page.evaluate(() => ({ ouvert: document.getElementById('psheet').classList.contains('on'), filtre: document.getElementById('fichesR').value,
+      on: (document.querySelector('#fichesChips .on') || {}).textContent, cartes: document.querySelectorAll('#fichesListe .ff-card').length, tab: curTab }));
+    expect(f).toMatchObject({ ouvert: false, filtre: 'r0', tab: 'fiches', cartes: 2 });
+    expect(f.on).toContain('Administratif');
+    // « Fiches pratiques » : toutes les fiches
+    await page.evaluate(() => showPage('b-un'));
+    await page.click('#psheet .crumb a[data-ffcrumb=""]');
+    expect(await page.evaluate(() => document.getElementById('fichesR').value)).toBe('');
+    expect(erreurs).toEqual([]);
+  });
+  test('largeur réglable à la souris, plein écran, choix retenus ; masqués sur téléphone', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    await page.evaluate((f) => { eval('(' + f + ')')(); localStorage.removeItem('kairos_ps'); PS_PREF.w = 0; PS_PREF.full = false; showPage('a-un'); }, contenu.toString());
+    const larg = () => page.evaluate(() => Math.round(document.getElementById('psheetCard').getBoundingClientRect().width));
+    const w0 = await larg();
+    const h = await page.locator('#psheet .ps-resize').boundingBox();
+    await page.mouse.move(h.x + h.width / 2, h.y + 200); await page.mouse.down();
+    await page.mouse.move(200, h.y + 200, { steps: 5 }); await page.mouse.up();
+    const w1 = await larg();
+    expect(w1).toBeGreaterThan(w0 + 200);
+    expect(w1).toBeLessThanOrEqual(1300 - 60 + 1);
+    expect(JSON.parse(await page.evaluate(() => localStorage.getItem('kairos_ps'))).w).toBe(w1);
+    // rouverte : même largeur
+    await page.evaluate(() => { closePage(); showPage('a-deux'); });
+    expect(await larg()).toBe(w1);
+    // plein écran
+    await page.click('#psFull');
+    expect(await larg()).toBe(1300);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('kairos_ps')).full)).toBe(true);
+    await page.evaluate(() => { closePage(); showPage('a-un'); });
+    expect(await larg()).toBe(1300);
+    expect(await page.textContent('#psFull')).toBe('⤡');
+    await page.click('#psFull');
+    expect(await larg()).toBe(w1);
+    // tirer vers la droite et relâcher sur le fond : la fiche reste ouverte
+    await page.waitForTimeout(300);   // fin de l'animation d'entrée
+    const h2 = await page.locator('#psheet .ps-resize').boundingBox();
+    await page.mouse.move(h2.x + h2.width / 2, h2.y + 200); await page.mouse.down();
+    await page.mouse.move(1200, h2.y + 200, { steps: 5 }); await page.mouse.up();
+    expect(await page.evaluate(() => document.getElementById('psheet').classList.contains('on'))).toBe(true);
+    expect(await larg()).toBe(480);
+    // double-clic sur la poignée : largeur par défaut
+    await page.dblclick('#psheet .ps-resize');
+    expect(await larg()).toBe(w0);
+    // téléphone : ni poignée ni plein écran
+    await page.setViewportSize({ width: 390, height: 800 });
+    expect(await page.isVisible('#psheet .ps-resize')).toBe(false);
+    expect(await page.isVisible('#psFull')).toBe(false);
+    expect(erreurs).toEqual([]);
+  });
+});

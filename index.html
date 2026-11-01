@@ -653,11 +653,25 @@ a.pf-lien{text-decoration:none;white-space:nowrap}
 /* Panneau latéral des pages du guide */
 #psheet{position:fixed;inset:0;background:rgba(15,20,26,.45);display:none;z-index:55}
 #psheet.on{display:block}
-.psheet-card{position:absolute;top:0;right:0;bottom:0;width:min(820px,100%);background:var(--surface);border-left:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;animation:psIn .18s ease-out}
+.psheet-card{position:absolute;top:0;right:0;bottom:0;width:var(--psw,min(820px,100%));max-width:100%;background:var(--surface);border-left:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;animation:psIn .18s ease-out}
 @keyframes psIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
 .ps-head{padding:14px 22px 10px;border-bottom:1px solid var(--line);background:var(--surface);flex:none}
-.ps-head .crumb{font-size:12.5px;color:var(--ink-3);margin-bottom:4px;padding-right:44px}
-.ps-head h1{font-size:21px;font-weight:800;margin:0;padding-right:44px;font-family:"Sora"}
+.ps-head .crumb{font-size:12.5px;color:var(--ink-3);margin-bottom:4px;padding-right:92px}
+.ps-head .crumb a{color:var(--ink-2);text-decoration:none;font-weight:600}
+.ps-head .crumb a:hover{color:var(--accent);text-decoration:underline}
+.ps-head .crumb .sep{margin:0 3px;color:var(--ink-3)}
+.ps-btns{position:absolute;top:12px;right:14px;display:flex;gap:6px}
+.ps-btns .ps-close{position:static}
+.ps-full{border:0;background:var(--surface-2);border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer;color:var(--ink-2)}
+.ps-full:hover{color:var(--ink)}
+.ps-resize{position:absolute;top:0;bottom:0;left:-4px;width:9px;cursor:ew-resize;z-index:2}
+.ps-resize:hover,body.ps-resizing .ps-resize{background:linear-gradient(90deg,transparent 3px,var(--accent) 3px,var(--accent) 5px,transparent 5px)}
+body.ps-resizing{cursor:ew-resize;user-select:none}
+.psheet-card.full{width:100%;border-left:0}
+.psheet-card.full .ps-resize{display:none}
+.psheet-card.full .ps-body>*,.psheet-card.full .ps-head>h1,.psheet-card.full .ps-head>.crumb{max-width:900px;margin-left:auto;margin-right:auto}
+@media(max-width:700px){.ps-resize,.ps-full{display:none}.psheet-card{width:100%}.ps-head .crumb,.ps-head h1{padding-right:46px}}
+.ps-head h1{font-size:21px;font-weight:800;margin:0;padding-right:92px;font-family:"Sora"}
 .ps-close{position:absolute;top:12px;right:14px;border:0;background:var(--surface-2);border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer;color:var(--ink-2)}
 .ps-close:hover{color:var(--ink)}
 .ps-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
@@ -4236,6 +4250,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-01', [
+    ['f','Fiche pratique ouverte : fil d’Ariane « Fiches pratiques › rayon » cliquable, panneau élargissable à la souris (double-clic : largeur par défaut) et mode plein écran, retenus sur l’appareil ; la rangée des fiches voisines en haut est retirée, précédente/suivante suivent le rayon.'],
     ['f','Fiche Exceltis refondue : toute la gamme (Rendement, Patrimoine indice / Taux / à coupons, Sérénité, Protect), historique au 28/10/2026, discours client et vigilance.'],
     ['f','Admin → Contenu : sous-onglet « Suggestions » pour tous les admins — commenter une fiche ou un bloc (un passage précis ou le contenu entier), proposer une idée libre, en discuter en fil ; l’édition du contenu est réservée au propriétaire.'],
     ['f','Fiches pratiques : Donation et Succession (nouvelles) ; guide de souscription pas à pas dans chaque fiche produit (AV, SCPI CIF et agent lié, PER, Girardin, FCPI, Exceltis…).'],
@@ -5273,24 +5288,77 @@ function pageSiblings(slug){
   for(const sec of navSecs()) for(const g of (sec.groupes||[])) if((g.pages||[]).includes(slug)) return g.pages.filter(x=>C.pages[x]);
   return [slug];
 }
+/* --- Panneau de fiche : fil d'Ariane, largeur réglable, plein écran (01/11/2026) ---
+   Sur ordinateur, le bord gauche du panneau se tire pour l'élargir (double-clic = largeur par défaut)
+   et ⤢ bascule en plein écran ; les deux choix sont retenus sur l'appareil (localStorage kairos_ps). */
+function psRayon(slug){ try{ const R=fichesRayons(); const i=R.findIndex(x=>x.pages.includes(slug)); return i<0?null:{ r:R[i], i }; }catch(e){ return null; } }
+function psCrumb(slug){
+  const ray=psRayon(slug);
+  return '<nav class="crumb" aria-label="Fil d’Ariane"><a href="#fiches-pratiques" data-ffcrumb="">Fiches pratiques</a>'
+    + (ray ? ' <span class="sep">›</span> <a href="#fiches-pratiques" data-ffcrumb="r'+ray.i+'">'+(ray.r.i?ray.r.i+' ':'')+esc(ray.r.t)+'</a>' : '')+'</nav>';
+}
+let PS_PREF = { w:0, full:false }; try{ PS_PREF = Object.assign(PS_PREF, JSON.parse(localStorage.getItem('kairos_ps')||'{}')); }catch(e){}
+const psSauver = ()=>{ try{ localStorage.setItem('kairos_ps', JSON.stringify(PS_PREF)); }catch(e){} };
+const psOutils = ()=>'<div class="ps-resize" title="Tirer pour élargir · double-clic : largeur par défaut" aria-hidden="true"></div>';
+const psBoutons = ()=>'<div class="ps-btns"><button type="button" class="ps-full" id="psFull"></button><button class="ps-close" id="psClose" title="Fermer (Échap)">✕</button></div>';
+function psAppliquer(){
+  const card=document.getElementById('psheetCard'); if(!card) return;
+  card.classList.toggle('full', !!PS_PREF.full);
+  if(PS_PREF.w>0 && !PS_PREF.full) card.style.setProperty('--psw', Math.min(PS_PREF.w, window.innerWidth)+'px'); else card.style.removeProperty('--psw');
+  const b=document.getElementById('psFull');
+  if(b){ b.textContent = PS_PREF.full ? '⤡' : '⤢'; b.title = PS_PREF.full ? 'Revenir au panneau' : 'Plein écran'; b.setAttribute('aria-pressed', PS_PREF.full?'true':'false'); }
+}
+document.addEventListener('click', e=>{
+  const f=e.target.closest && e.target.closest('#psFull'); if(!f) return;
+  PS_PREF.full=!PS_PREF.full; psSauver(); psAppliquer();
+});
+// Fil d'Ariane : ferme la fiche et ouvre Fiches pratiques (filtrée sur le rayon) — en capture, avant le
+// gestionnaire générique des liens « #fiches-pratiques »
+document.addEventListener('click', e=>{
+  const a=e.target.closest && e.target.closest('#psheet [data-ffcrumb]'); if(!a) return;
+  e.preventDefault(); e.stopPropagation();
+  closePage();
+  const r=document.getElementById('fichesR'); if(r) r.value=a.dataset.ffcrumb||'';
+  const q=document.getElementById('fichesQ'); if(q) q.value='';
+  showTab('fiches'); curTab='fiches'; try{ buildFiches(); }catch(_){}
+  syncHash(true); window.scrollTo({top:0});
+}, true);
+let psFinTirage=0;   // fin du dernier tirage : le clic qui suit (relâché sur le fond) ne ferme pas la fiche
+(()=>{
+  let drag=null;
+  document.addEventListener('pointerdown', e=>{
+    const h=e.target.closest && e.target.closest('#psheet .ps-resize'); if(!h || PS_PREF.full) return;
+    e.preventDefault(); drag={ id:e.pointerId }; document.body.classList.add('ps-resizing');
+  });
+  document.addEventListener('pointermove', e=>{
+    if(!drag) return;
+    const w=Math.max(480, Math.min(window.innerWidth-60, window.innerWidth-e.clientX));
+    PS_PREF.w=Math.round(w); psAppliquer();
+  });
+  const fin=()=>{ if(!drag) return; drag=null; psFinTirage=Date.now(); document.body.classList.remove('ps-resizing'); psSauver(); };
+  document.addEventListener('pointerup', fin); document.addEventListener('pointercancel', fin);
+  document.addEventListener('dblclick', e=>{ if(e.target.closest && e.target.closest('#psheet .ps-resize')){ PS_PREF.w=0; psSauver(); psAppliquer(); } });
+})();
 function showPage(slug){
   const C=CONTENU; const p=C.pages[slug]; if(!p) return;
   const acc=ficheAcces(slug);
   if(!acc.ok){
-    const card=document.getElementById('psheetCard'); card.innerHTML=ficheVerrouHtml(slug, acc);
+    const card=document.getElementById('psheetCard'); card.innerHTML=psOutils()+ficheVerrouHtml(slug, acc);
     const sh=document.getElementById('psheet'); sh.classList.add('on'); sh.setAttribute('aria-hidden','false'); document.body.classList.add('ps-open');
+    psAppliquer();
     document.getElementById('psClose').addEventListener('click',closePage);
     const v=card.querySelector('.ff-vers-parcours'); if(v) v.addEventListener('click',e=>{ e.preventDefault(); closePage(); showTab('home'); curTab='home'; syncHash(true); });
     return;
   }
-  const sib=pageSiblings(slug); const i=sib.indexOf(slug); const prev=sib[i-1], next=sib[i+1];
-  const path=pagePath(slug);
+  // 01/11/2026 : fil d'Ariane et précédente/suivante calés sur les rayons de l'onglet Fiches pratiques
+  // (plus sur les groupes du parcours) ; plus de rangée de pastilles des fiches voisines en haut.
+  const ray=psRayon(slug), sib=ray?ray.r.pages:[slug]; const i=sib.indexOf(slug); const prev=sib[i-1], next=sib[i+1];
   const card=document.getElementById('psheetCard');
-  card.innerHTML='<div class="ps-head"><button class="ps-close" id="psClose" title="Fermer (Échap)">✕</button><div class="crumb">'+path.map(x=>esc(x)).join(' › ')+'</div><h1>'+(p.i?p.i+' ':'')+esc(p.t)+' '+ffavBtn(slug)+'</h1>'+
-    (sib.length>1?'<div class="ps-tabs">'+sib.map(x=>'<a href="#p/'+x+'" class="'+(x===slug?'on':'')+(ficheOuverte(x)?'':' lock')+'">'+(ficheOuverte(x)?(C.pages[x].i?C.pages[x].i+' ':''):'🔒 ')+esc(C.pages[x].t)+'</a>').join('')+'</div>':'')+'</div>'+
+  card.innerHTML=psOutils()+'<div class="ps-head">'+psBoutons()+psCrumb(slug)+'<h1>'+(p.i?p.i+' ':'')+esc(p.t)+' '+ffavBtn(slug)+'</h1></div>'+
     '<div class="ps-body">'+freshBanner(p)+'<div class="nc">'+p.h+'</div></div>'+
     '<div class="ps-foot"><span>'+(prev?'<a href="#p/'+prev+'">← '+esc(C.pages[prev].t)+'</a>':'<span class="kbd">Échap pour fermer</span>')+'</span><span>'+(next?'<a href="#p/'+next+'">'+esc(C.pages[next].t)+' →</a>':'')+'</span></div>';
   const sh=document.getElementById('psheet'); sh.classList.add('on'); sh.setAttribute('aria-hidden','false'); document.body.classList.add('ps-open');
+  psAppliquer();
   card.querySelector('.ps-body').scrollTop=0;
   document.getElementById('psClose').addEventListener('click',closePage);
   if(card.querySelector('#objTrain')) initObjections(card);
@@ -5305,7 +5373,7 @@ function freshBanner(p){
   return '<div class="fresh'+(old?' old':'')+'"><span>'+(old?'⚠️':'⏱')+'</span><div><b>Contenu daté — mis à jour en '+MOIS[mo-1]+' '+y+'.</b> '+(old?'Plus de '+months+' mois : les chiffres (frais, minimums, plafonds, allocations) ont pu changer — vérifie-les avant de les utiliser en rendez-vous.':'Les chiffres (frais, minimums, plafonds, allocations) évoluent : vérifie-les avant de les utiliser en rendez-vous.')+'</div></div>';
 }
 function closePage(){ const sh=document.getElementById('psheet'); sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); document.body.classList.remove('ps-open'); if(location.hash.startsWith('#p/')){ try{ history.replaceState(null,'',hashFor(curTab)); }catch(_){} } }
-document.getElementById('psheet').addEventListener('click',e=>{ if(e.target.id==='psheet') closePage(); });
+document.getElementById('psheet').addEventListener('click',e=>{ if(e.target.id==='psheet' && Date.now()-psFinTirage>400) closePage(); });
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('psheet').classList.contains('on')) return;
   if(e.key==='Escape') closePage();
@@ -5531,7 +5599,7 @@ const ficheOuverte = s => ficheAcces(s).ok;
 // Fiche verrouillée ouverte par un lien, la recherche ou une adresse : on montre pourquoi, pas le contenu
 function ficheVerrouHtml(slug, a){
   const p = CONTENU.pages[slug];
-  return '<div class="ps-head"><button class="ps-close" id="psClose" title="Fermer (Échap)">✕</button><div class="crumb">Fiches pratiques</div><h1>'+(p.i?p.i+' ':'')+esc(p.t)+'</h1></div>'
+  return '<div class="ps-head">'+psBoutons()+psCrumb(slug)+'<h1>'+(p.i?p.i+' ':'')+esc(p.t)+'</h1></div>'
     + '<div class="ps-body"><div class="ff-verrou"><span>🔒</span><div><b>Cette fiche n’est pas encore débloquée.</b><p>'+esc(a.raison)+'.'+(a.detail?' '+esc(a.detail):'')+'</p>'
     + '<p>Les fiches s’ouvrent au fur et à mesure de ton parcours : avance sur tes missions et elles se débloqueront toutes seules.</p>'
     + '<a class="acc-btn ff-vers-parcours" href="#accueil" data-mialler="'+esc((a.ph||{}).id||'')+'"'+(a.m?' data-mimis="'+esc(a.m.id)+'"':'')+'>Voir dans mon parcours</a></div></div></div>';
