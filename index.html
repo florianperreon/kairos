@@ -840,7 +840,8 @@ div.chk label.ok a.lk{text-decoration:none;color:var(--ink-3)}
 .wit .wt .m{color:var(--ink-2);font-size:13px}
 .wit .wlig{margin-top:4px}
 .wit .wlig .xtra{display:inline-block;font-size:12.5px}
-.wit.rit .wt b{font-weight:600}
+.wit.rit .wt b,.wit.dl .wt b{font-weight:600}
+.wit .wag{margin-top:4px}
 .wit.jal{background:var(--gold-soft);border-radius:8px;padding:6px 10px;color:var(--gold-ink);font-weight:600}
 .wtag{display:inline-block;border-radius:5px;padding:0 6px;font-size:11px;font-weight:700;letter-spacing:.03em;vertical-align:1px;margin-left:4px;white-space:nowrap}
 .wtag.pil{background:var(--accent-soft);color:var(--accent)}
@@ -6256,6 +6257,16 @@ document.getElementById('modalDl').addEventListener('click',async ()=>{
 // Rituels : r = {dow:1..7 (lundi=1), s:"09:00", e:"11:00", nth:3 (3e semaine du mois)} ; sans r → pas de date calculable
 const ritOn=(r,d)=>{ if(!r||!r.dow) return false; const dow=d.getDay()===0?7:d.getDay(); if(dow!==r.dow) return false; if(r.nth){ const n=Math.ceil(d.getDate()/7); if(n!==r.nth) return false; } return true; };
 const hhmm=s=>(s||'').replace(/^0/,'').replace(':','h').replace(/h00$/,'h');
+// 02/11/2026 : dates importantes de la lignée (contenu_blocs.dates_lignee = [{n, du, au, s, e, q, lieu, lien, d}]),
+// éditables dans Admin → Contenu ; affichées dans « Les 7 prochains jours » avec un bouton Google Agenda
+// (comme les séances, les rituels du jour). Une date sur plusieurs jours apparaît chaque jour de sa plage.
+const dlFin = x => (x.au && x.au>=x.du) ? x.au : x.du;
+function wGcal(o, desc){
+  let h=gcalHtml(o); if(!h||!desc) return h;
+  return h.replace(/href="([^"]+)"/, (m,u)=>{ const url=new URL(u.replace(/&amp;/g,'&')); const d=url.searchParams.get('details');
+    url.searchParams.set('details', [desc, d].filter(Boolean).join('\n')); return 'href="'+esc(url.toString())+'"'; });
+}
+const wAg = h => h ? '<div class="wlig wag">'+h+'</div>' : '';
 function buildWeek(){
   const el=document.getElementById('homeWeek'); if(!el) return;
   const pad=n=>String(n).padStart(2,'0');
@@ -6267,12 +6278,21 @@ function buildWeek(){
   for(let i=0;i<=7;i++){
     const d=new Date(TODAY); d.setDate(d.getDate()+i); const iso=isoOf(d), md=mmdd(d); const items=[];
     // Rituels de la lignée
-    ((CONTENU&&CONTENU.rituels)||[]).forEach(r=>{ if(ritOn(r.r,d)) items.push({t:(r.r.s||'')+' '+(r.r.e||''), h:'<div class="wit rit"><span class="ic">🗓️</span><span class="hr num">'+hhmm(r.r.s)+(r.r.e?' – '+hhmm(r.r.e):'')+'</span><span class="wt"><b>'+esc(r.n||r.t)+'</b><span class="wtag rit">'+esc(r.q||'rituel')+'</span><div class="m">'+esc(r.d||'')+'</div></span></div>'}); });
+    ((CONTENU&&CONTENU.rituels)||[]).forEach(r=>{ if(ritOn(r.r,d)) items.push({t:(r.r.s||'')+' '+(r.r.e||''), h:'<div class="wit rit"><span class="ic">🗓️</span><span class="hr num">'+hhmm(r.r.s)+(r.r.e?' – '+hhmm(r.r.e):'')+'</span><span class="wt"><b>'+esc(r.n||r.t)+'</b><span class="wtag rit">'+esc(r.q||'rituel')+'</span><div class="m">'+esc(r.d||'')+'</div>'
+      +wAg(wGcal({start:iso, end:iso, hor:(r.r.s||'')+(r.r.e?' - '+r.r.e:''), title:r.n||r.t||'Rituel de la lignée'}, r.d))+'</span></div>'}); });
+    // Dates importantes de la lignée (bloc dates_lignee)
+    ((CONTENU&&CONTENU.dates_lignee)||[]).forEach(x=>{ if(!x||!x.du||iso<x.du||iso>dlFin(x)) return;
+      const hor=x.s?(x.s+(x.e?' - '+x.e:'')):'', lk=String(x.lien||'').trim(), visio=/^https?:\/\/\S+$/i.test(lk);
+      const multi=dlFin(x)>x.du?' <span class="m">(du '+fmtD(x.du)+' au '+fmtD(dlFin(x))+')</span>':'';
+      const lieu=[x.lieu?esc(x.lieu):'', visio?'<a href="'+esc(lk)+'" target="_blank" rel="noopener">Rejoindre la visio</a>':''].filter(Boolean).join(' · ');
+      items.push({t:x.s||'00', h:'<div class="wit dl"><span class="ic">⭐</span><span class="hr num">'+(x.s?hhmm(x.s)+(x.e?' – '+hhmm(x.e):''):'')+'</span><span class="wt"><b>'+esc(x.n||'')+'</b><span class="wtag pil">'+esc(x.q||'date de la lignée')+'</span>'+multi
+        +(x.d?'<div class="m">'+esc(x.d)+'</div>':'')+(lieu?'<div class="m">'+lieu+'</div>':'')
+        +wAg(wGcal({start:x.du, end:dlFin(x), hor, title:x.n||'Date de la lignée', link:visio?lk:'', lieu:x.lieu||''}, x.d))+'</span></div>'}); });
     // Ateliers, réunions, formations, événements : pilotés par la lignée ou avec des adhérents de la lignée inscrits (jour de début)
     ALL.filter(o=>o.a.start===iso).forEach(o=>{ const a=o.a; const pil=isLigneePilote(a.pilotes); const ins=(a.guests||[]).filter(ligAdh).map(id=>byId.get(id)).filter(Boolean);
       if(!pil&&!ins.length) return;
       const multi=a.end&&a.end>a.start?' <span class="m">(jusqu’au '+fmtD(a.end)+')</span>':'';
-      items.push({t:(a.hor||'99'), h:'<div class="wit"><span class="ic">'+({atelier:'🎓',réunion:'👥',formation:'📚',événement:'🎉'})[o.k]+'</span><span class="hr num">'+esc(a.hor||'')+'</span><span class="wt"><a href="'+a.url+'" target="_blank" rel="noopener">'+esc(a.title)+'</a>'+(pil?'<span class="wtag pil">piloté par la lignée</span>':'')+multi+'<div class="m">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span>'+'</div>'+(ins.length?'<div class="wlig"><span class="xtra lig-in" title="Membres de ta lignée inscrits">Lignée inscrite : '+ins.map(m=>'<span class="lig-open" data-id="'+m.id+'">'+esc(m.name)+'</span>').join(', ')+'</span></div>':'')+'</span></div>'}); });
+      items.push({t:(a.hor||'99'), h:'<div class="wit"><span class="ic">'+({atelier:'🎓',réunion:'👥',formation:'📚',événement:'🎉'})[o.k]+'</span><span class="hr num">'+esc(a.hor||'')+'</span><span class="wt"><a href="'+a.url+'" target="_blank" rel="noopener">'+esc(a.title)+'</a>'+(pil?'<span class="wtag pil">piloté par la lignée</span>':'')+multi+'<div class="m">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span>'+'</div>'+(ins.length?'<div class="wlig"><span class="xtra lig-in" title="Membres de ta lignée inscrits">Lignée inscrite : '+ins.map(m=>'<span class="lig-open" data-id="'+m.id+'">'+esc(m.name)+'</span>').join(', ')+'</span></div>':'')+wAg(gcalHtml(a))+'</span></div>'}); });
     // Anniversaires (naissance) et anniversaires d'inscription — adhérents de la lignée uniquement
     M.forEach(m=>{ if(!ligAdh(m.id)) return;
       const x=EXTRA[m.id]; if(x&&x.bd===md) items.push({t:'00', h:'<div class="wit"><span class="ic">🎂</span><span class="hr"></span><span class="wt"><span class="lig-open link" data-id="'+m.id+'">'+esc(m.name)+'</span> <span class="m">fête son anniversaire'+(i===0?' aujourd’hui !':'')+'</span></span></div>'});
@@ -9197,7 +9217,7 @@ let SG_EDIT = null;           // message en cours de modification
 let SG_NV = new Set();        // messages non lus au moment de l'ouverture (mis en évidence)
 let SG_ENVOI = false, SG_SEL_T = null, SG_SEL_ANCRE = null;
 const SG_NOMS = { fiches_resumes:'Résumés des fiches', fiches_acces:'Accès aux fiches' };
-const SG_ICO = { missions:'🧭', faq:'❓', objections:'🛡️', fiches:'🗂️', nav:'🧵', reflexes:'⚡', rituels:'🔁', ressources:'🔗', accueil:'🏠', fiches_resumes:'📝', fiches_acces:'🔐' };
+const SG_ICO = { missions:'🧭', faq:'❓', objections:'🛡️', fiches:'🗂️', nav:'🧵', reflexes:'⚡', rituels:'🔁', dates_lignee:'⭐', ressources:'🔗', accueil:'🏠', fiches_resumes:'📝', fiches_acces:'🔐' };
 const SG_IGNORES = new Set(['pages','version','faqPubliee']);
 const sgT = x => x ? new Date(x).getTime() : 0;
 const sgCle = s => s.cible_type==='libre' ? 'libre' : s.cible_type+':'+s.cible;
@@ -10834,6 +10854,11 @@ const BL_SCHEMAS = {
     { k:'d', l:'Description', type:'long' },
     { k:'r', l:'Récurrence (pour « Les 7 prochains jours »)', type:'objet', facultatif:true, champs:[
       { k:'dow', l:'Jour', type:'choix', nombre:true, options:BL_JOURS }, { k:'s', l:'Début (HH:MM)', type:'texte', court:true }, { k:'e', l:'Fin (HH:MM)', type:'texte', court:true } ] } ] } },
+  dates_lignee: { nom:'Dates importantes de la lignée', type:'liste', titre:x=>(x.du||'?')+' — '+(x.n||''), nouveau:()=>({ n:'', du:'', au:'', s:'', e:'', q:'', lieu:'', lien:'', d:'' }), item:{ type:'objet', champs:[
+    { k:'n', l:'Nom', type:'texte' }, { k:'du', l:'Date (AAAA-MM-JJ)', type:'texte', court:true }, { k:'au', l:'Jusqu’au (AAAA-MM-JJ, facultatif)', type:'texte', court:true },
+    { k:'s', l:'Début (HH:MM, vide = journée)', type:'texte', court:true }, { k:'e', l:'Fin (HH:MM)', type:'texte', court:true },
+    { k:'q', l:'Étiquette (ex. Point Boost)', type:'texte', court:true }, { k:'lieu', l:'Lieu', type:'texte' }, { k:'lien', l:'Lien visio', type:'texte' },
+    { k:'d', l:'Description', type:'long' } ] } },
   ressources: { nom:'Ressources utiles (accueil)', type:'liste', titre:blTitre('t'), nouveau:()=>({ t:'', k:'', d:'', u:'', r:'' }), item:{ type:'objet', champs:[
     { k:'t', l:'Nom', type:'texte' }, { k:'k', l:'Type (Outil, Document…)', type:'texte', court:true }, { k:'d', l:'Description', type:'long' },
     { k:'u', l:'Lien', type:'texte' }, { k:'r', l:'Recommandé par', type:'texte', court:true } ] } },

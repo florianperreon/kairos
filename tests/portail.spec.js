@@ -2741,6 +2741,41 @@ test.describe('Semaines ISO, jours fériés, vacances scolaires', () => {
     expect(erreurs).toEqual([]);
   });
 
+  test('l’accueil (02/11/2026) : dates de la lignée dans les 7 jours, chacune avec son bouton Google Agenda', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await preparer(page);
+    const r = await page.evaluate(() => {
+      ZONE_CHOISIE = null; CAL_CFG = null;
+      const avant = CONTENU;
+      const j2 = ajouterJours(todayIso, 2), j5 = ajouterJours(todayIso, 5);
+      CONTENU = Object.assign({}, CONTENU || {}, { rituels: [], dates_lignee: [
+        { n: 'Point Boost test', du: j2, s: '19:00', e: '20:30', q: 'Point Boost', lien: 'https://meet.google.com/abc-defg-hij', d: 'Coaching en équipe' },
+        { n: 'Forum test', du: j5, au: ajouterJours(j5, 1), q: 'Forum', lieu: 'Toulouse' },
+        { n: 'Passée', du: ajouterJours(todayIso, -3), s: '10:00' },
+        { n: 'Trop loin', du: ajouterJours(todayIso, 30) },
+      ] });
+      buildWeek();
+      const el = document.getElementById('homeWeek');
+      const dl = [...el.querySelectorAll('.wit.dl')].map(w => ({
+        t: w.querySelector('b').textContent, hr: w.querySelector('.hr').textContent,
+        visio: !!w.querySelector('a[href^="https://meet.google.com"]'),
+        g: (w.querySelector('a.gcal') || {}).href || '' }));
+      CONTENU = avant;
+      return dl;
+    });
+    expect(r.map(x => x.t)).toEqual(['Point Boost test', 'Forum test', 'Forum test']);   // le forum, chaque jour de sa plage
+    expect(r[0].hr).toBe('19h – 20h30');
+    expect(r[0].visio).toBe(true);
+    const g = new URL(r[0].g);
+    expect(g.hostname).toBe('calendar.google.com');
+    expect(g.searchParams.get('text')).toBe('Point Boost test');
+    expect(g.searchParams.get('dates')).toMatch(/^\d{8}T190000\/\d{8}T203000$/);
+    expect(g.searchParams.get('details')).toContain('Coaching en équipe');
+    expect(g.searchParams.get('details')).toContain('https://meet.google.com/abc-defg-hij');
+    expect(new URL(r[1].g).searchParams.get('recur'), 'deux jours : un seul événement répété').toMatch(/^RRULE:FREQ=DAILY/);
+    expect(erreurs).toEqual([]);
+  });
+
   test('téléphone (390 px) : l’en-tête de semaine et la gouttière tiennent dans l’écran', async ({ browser }) => {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 800 } });
     const page = await ctx.newPage();
