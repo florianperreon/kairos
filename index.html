@@ -2016,6 +2016,9 @@ body.ps-open #fbBtn{bottom:64px}
 .rs-intro p{color:var(--ink-2);font-size:14px;margin:0}
 .rs-intro .rs-priv{display:inline-flex;gap:6px;align-items:center;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--gold-ink);background:var(--gold-soft);border-radius:99px;padding:3px 11px}
 .rs-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:18px}
+.rs-cat{grid-column:1/-1;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin:6px 0 -2px}
+.rs-cat:first-child{margin-top:0}
+#resSimCards .rs-card .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .rs-card{display:flex;gap:11px;align-items:flex-start;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 13px;cursor:pointer;font:inherit;color:var(--ink);transition:border-color .12s,box-shadow .12s}
 .rs-card:hover{border-color:var(--accent)}
 .rs-card.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
@@ -4307,6 +4310,10 @@ function showAdminSub(s){
    ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
+  ['2026-11-02', [
+    ['f','Ressources : 9 nouveaux simulateurs tirés du MEGA FORMAN — Jeanbrun, SCPI à crédit (CACF, SOFIAP, CFCAL), SCPI en démembrement, LMNP, plus-value immobilière, prêt à paliers, rallongement de crédit, réduction d’impôt combinée et objectif de titre.'],
+    ['f','Ressources : les simulateurs sont rangés par famille (épargne, SCPI, immobilier, crédit, fiscalité, activité).'],
+  ]],
   ['2026-11-01', [
     ['f','Ressources : nouveau bouton « 📄 PDF » qui crée un vrai fichier PDF, sans l’adresse de la page, la date ni le titre que le navigateur ajoute en marge à l’impression (courriers en texte, simulations en pages A4).'],
     ['f','Ressources → Courriers : le bloc de l’établissement destinataire est aligné à droite, comme « Fait à … », à l’écran et dans le fichier Word.'],
@@ -11863,12 +11870,57 @@ function rsTri(flux){
   for(let i=0;i<200;i++){ const mid=(lo+hi)/2; (van(lo)*van(mid)<=0) ? hi=mid : lo=mid; }
   return (lo+hi)/2;
 }
+/* Échéancier d'un prêt avec différé (02/11/2026, simulateurs Jeanbrun, SCPI à crédit, LMNP).
+   taux et ass en % annuels ; n = mois d'amortissement, o.diff = mois de différé EN PLUS.
+   Différé total : intérêts capitalisés (capital × (1 + différé × taux/12), comme les classeurs), seule
+   l'assurance est payée. Différé partiel : intérêts et assurance payés. o.assBase 'apres' = assurance
+   sur le capital après différé (règle des classeurs), sinon sur le capital emprunté. */
+function rsPret(K, taux, n, o){
+  o=o||{}; const i=taux/1200, diff=Math.max(0,Math.round(o.diff||0)), tot=o.dtype!=='partiel';
+  const K2 = tot ? K*(1+diff*i) : K, aM=(o.ass||0)/1200*(o.assBase==='apres'?K2:K);
+  const L=[]; let crd=K;
+  for(let k=1;k<=diff;k++){
+    const it = tot ? 0 : K*i; if(tot) crd = K*(1+k*i);
+    L.push({k, it, am:0, as:aM, ech:it+aM, crd});
+  }
+  const m=rsPmt(taux/100, n, K2); crd=K2;
+  for(let k=1;k<=n;k++){ const it=crd*i, am=Math.min(crd, m-it); crd=Math.max(0, crd-am); L.push({k:diff+k, it, am, as:aM, ech:m+aM, crd}); }
+  return {L, m, K2};
+}
+/* Taux annuel nominal d'un prêt de K sur n mois à mensualité m (équivalent de RATE × 12) */
+function rsTauxMensu(K, n, m){
+  if(!(K>0)||!(n>0)||!(m>0)) return NaN;
+  let lo=0, hi=0.5;
+  for(let j=0;j<100;j++){ const mid=(lo+hi)/2; (rsPmt(mid, n, K) > m) ? hi=mid : lo=mid; }
+  return (lo+hi)/2;
+}
+/* Plus-value immobilière des particuliers (art. 150 U et s. du CGI), surtaxe de l'art. 1609 nonies G.
+   p : cession (prix net de frais de vente), acq (prix d'achat), fraisAcq, trav, ans (années pleines),
+   amort (amortissements déduits, réintégrés), forfFrais / forfTrav : true = forfait imposé, false = réel,
+   absent = le plus favorable des deux. */
+function rsPlusValue(p){
+  const ans=Math.max(0,p.ans||0);
+  const fa = p.forfFrais===true ? p.acq*0.075 : p.forfFrais===false ? (p.fraisAcq||0) : Math.max(p.fraisAcq||0, p.acq*0.075);
+  const f15 = ans>5 ? p.acq*0.15 : 0;
+  const tr = p.forfTrav===true ? f15 : p.forfTrav===false ? (p.trav||0) : Math.max(p.trav||0, f15);
+  const revient = p.acq + fa + tr - (p.amort||0);
+  const brute = Math.max(0, p.cession - revient);
+  const ab = rsParcAbatt(ans), nIR=brute*(1-ab.ir), nPS=brute*(1-ab.ps);
+  const ir=nIR*0.19, ps=nPS*0.172, surtaxe=rsSurtaxe(nIR);
+  return {revient, brute, abIR:ab.ir, abPS:ab.ps, nIR, nPS, ir, ps, surtaxe, impot:ir+ps+surtaxe};
+}
+function rsSurtaxe(x){
+  if(x<=50000) return 0;
+  const T=[[60000,0.02,1/20],[100000,0.02],[110000,0.03,1/10],[150000,0.03],[160000,0.04,0.15],[200000,0.04],[210000,0.05,0.20],[250000,0.05],[260000,0.06,0.25]];
+  for(const t of T){ if(x<=t[0]) return t[2] ? t[1]*x - (t[0]-x)*t[2] : t[1]*x; }
+  return 0.06*x;
+}
 
 /* ---------------------------- Simulateurs ----------------------------- */
 const RS_TMI = [['0','0 %'],['11','11 %'],['30','30 %'],['41','41 %'],['45','45 %']];
 const RS_SIMS = [
 {
-  id:'av', slug:'assurance-vie', ic:'🛡️', t:'Assurance vie', d:'Épargne acquise année par année ; frais, rachat total ou partiel, comparaison avec un livret ou un second contrat',
+  id:'av', slug:'assurance-vie', cat:'epargne', ic:'🛡️', t:'Assurance vie', d:'Épargne acquise année par année ; frais, rachat total ou partiel, comparaison avec un livret ou un second contrat',
   // Par défaut : le classeur « Simulateur Ass. Vie » de Florian, sans frais, rendement net.
   // Options à cocher (22/09/2026) : les frais, le rachat, un second contrat. Ajoutées le 24/09/2026 d'après
   // le simulateur d'un confrère : comparaison avec un livret réglementé, rachat partiel et année du rachat,
@@ -12039,7 +12091,7 @@ const RS_SIMS = [
   }
 },
 {
-  id:'scpi', slug:'scpi', ic:'🏢', t:'SCPI', d:'Revenus, réinvestissement des dividendes, délai de jouissance et valeur de retrait',
+  id:'scpi', slug:'scpi', cat:'scpi', ic:'🏢', t:'SCPI', d:'Revenus, réinvestissement des dividendes, délai de jouissance et valeur de retrait',
   g:[
     {t:'Souscription', f:[
       {k:'nom', l:'Nom de la SCPI', t:'txt', v:'', w:1, h:'Facultatif : repris à l’impression et dans le fichier Excel'},
@@ -12121,7 +12173,7 @@ const RS_SIMS = [
   }
 },
 {
-  id:'per', slug:'per', ic:'🧓', t:'PER', d:'Capital à la retraite, économie d’impôt, rente nette et durée du capital',
+  id:'per', slug:'per', cat:'epargne', ic:'🧓', t:'PER', d:'Capital à la retraite, économie d’impôt, rente nette et durée du capital',
   g:[
     {t:'Phase d’épargne', f:[
       {k:'age', l:'Âge à l’ouverture', t:'num', u:'ans', v:43, min:18, max:80},
@@ -12215,7 +12267,7 @@ const RS_SIMS = [
   }
 },
 {
-  id:'renta', slug:'rentabilite-locative', ic:'🏠', t:'Rentabilité locative', d:'Rendement brut, net et net-net, cash-flow et effort d’épargne mensuel',
+  id:'renta', slug:'rentabilite-locative', cat:'immo', ic:'🏠', t:'Rentabilité locative', d:'Rendement brut, net et net-net, cash-flow et effort d’épargne mensuel',
   g:[
     {t:'Coût d’achat', f:[
       {k:'prix', l:'Prix du bien', t:'eur', v:150000},
@@ -12293,7 +12345,7 @@ const RS_SIMS = [
   }
 },
 {
-  id:'parc', slug:'parc-immobilier', ic:'🏘️', t:'Parc immobilier', d:'Performance réelle de biens déjà détenus : rentabilité avant et après impôts, net vendeur', custom:true,
+  id:'parc', slug:'parc-immobilier', cat:'immo', ic:'🏘️', t:'Parc immobilier', d:'Performance réelle de biens déjà détenus : rentabilité avant et après impôts, net vendeur', custom:true,
   g:[
     {t:'Fiscalité du foyer', f:[
       {k:'tmi', l:'Tranche marginale', t:'sel', v:'30', o:RS_TMI},
@@ -12306,7 +12358,7 @@ const RS_SIMS = [
   // (capacité selon les revenus / je saisis le capital / je saisis la mensualité), assurance sur le
   // capital initial ou sur le capital restant dû, frais annexes, CRD et capital amorti à un horizon,
   // part capital / intérêts / assurance de chaque année, comparatif selon la durée.
-  id:'credit', slug:'credit-immobilier',
+  id:'credit', slug:'credit-immobilier', cat:'credit',
   cmpT:'Prêts comparés', cmpCols:[['Simulation','lib','t'],['Capital','K','e'],['Durée','duree','ans'],['Taux','taux','pct'],['Assurance','assl','t'],
     ['Mensualité','mens','e2','min'],['Coût total','cout','e','min'],['Part des intérêts','pint','p0'],['CRD à l’horizon','crdl','t']], ic:'🏦', t:'Crédit immobilier', d:'Capital ou mensualité, capacité d’emprunt, amortissement, coût du crédit et comparatif des durées',
   g:[
@@ -12436,7 +12488,7 @@ const RS_SIMS = [
 {
   // Girardin industriel (22/09/2026) : réduction d'impôt = apport × (1 + rentabilité). Les deux montants
   // sont liés — saisir l'un recalcule l'autre (lier), la rentabilité recalcule celui qu'on n'a pas saisi.
-  id:'girardin', slug:'girardin', ic:'🌴', t:'Girardin', d:'Réduction d’impôt visée ↔ apport nécessaire, selon la rentabilité de l’opération',
+  id:'girardin', slug:'girardin', cat:'fisc', ic:'🌴', t:'Girardin', d:'Réduction d’impôt visée ↔ apport nécessaire, selon la rentabilité de l’opération',
   g:[
     {t:'Opération', f:[
       {k:'red', l:'Réduction d’impôt souhaitée', t:'eur', v:3025, min:0, h:'Remplis ce champ : l’apport se calcule'},
@@ -12474,7 +12526,7 @@ const RS_SIMS = [
   }
 },
 {
-  id:'activite', slug:'objectif-activite', ic:'🎯', t:'Objectif d’activité', d:'Combien de R1 par semaine pour atteindre ton objectif de volume d’affaires',
+  id:'activite', slug:'objectif-activite', cat:'act', ic:'🎯', t:'Objectif d’activité', d:'Combien de R1 par semaine pour atteindre ton objectif de volume d’affaires',
   g:[
     {t:'Objectif', f:[
       {k:'va', l:'Volume d’affaires annuel visé', t:'eur', v:500000},
@@ -12499,6 +12551,725 @@ const RS_SIMS = [
         {k:'R1 par semaine', v:RS_N(parSem,1), s:'soit '+RS_N(r1/12,1)+' par mois', cls:'hl'},
       ],
       notes:['Pour tenir le rythme, compte le nombre d’appels nécessaires pour caler un R1 et bloque ces créneaux dans ton agenda.']
+    };
+  }
+},{
+  // Jeanbrun (02/11/2026, d'après « 2026 10 Simulateur Jeanbrun » du MEGA FORMAN, repris d'un modèle Pinel) :
+  // statut du bailleur privé, amortissement d'une part du prix déduit des revenus fonciers.
+  // Le classeur traduisait l'avantage en « réduction d'impôt » = amortissement × (TMI + PS) ; ici on
+  // calcule le revenu foncier année par année (déficit, report, imputation sur le revenu global).
+  id:'jeanbrun', slug:'jeanbrun', cat:'immo', ic:'🏗️', t:'Jeanbrun', d:'Statut du bailleur privé : amortissement, économie d’impôt, effort d’épargne et revente',
+  g:[
+    {t:'Le bien', f:[
+      {k:'etat', l:'Logement', t:'sel', v:'neuf', o:[['neuf','Neuf ou VEFA'],['ancien','Ancien avec travaux (≥ 30 % du prix)']]},
+      {k:'prix', l:'Prix d’acquisition', t:'eur', v:167800, min:0},
+      {k:'trav', l:'Montant des travaux', t:'eur', v:0, min:0, show:v=>v.etat==='ancien', h:'Au moins 30 % du prix d’acquisition'},
+      {k:'not', l:'Frais de notaire', t:'pct', v:2.5, h:'2 à 3 % dans le neuf, 7 à 8 % dans l’ancien'},
+      {k:'zone', l:'Zone', t:'sel', v:'A', o:[['Abis','A bis'],['A','A'],['B1','B1'],['B2','B2'],['C','C']]},
+      {k:'surf', l:'Surface pondérée', t:'num', u:'m²', v:37.19, min:1},
+    ]},
+    {t:'Location et amortissement', f:[
+      {k:'niv', l:'Niveau de loyer', t:'sel', v:'inter', w:1, o:[['inter','Intermédiaire (environ −15 % du marché)'],['social','Social (environ −30 %)'],['tres','Très social (environ −45 %)']]},
+      {k:'loyer', l:'Loyer mensuel hors charges', t:'eur', v:523, min:0},
+      {k:'chg', l:'Charges non récupérables', t:'pct', v:30, h:'En % du loyer : copropriété, gestion, garantie, assurance, taxe foncière (≈ 32 % dans le classeur)'},
+      {k:'taux', l:'Taux d’amortissement annuel', t:'pct', v:3.5, step:'0.5', h:'Se règle avec le niveau de loyer : neuf 3,5 / 4,5 / 5,5 % · ancien 3 / 3,5 / 4 %'},
+      {k:'base', l:'Part amortissable du prix', t:'pct', v:80, h:'Le terrain (20 % forfaitaires) ne s’amortit pas'},
+      {k:'plaf', l:'Plafond annuel d’amortissement', t:'eur', v:8000, h:'8 000 / 10 000 / 12 000 € selon le niveau de loyer'},
+      {k:'rl', l:'Revalorisation des loyers', t:'pct', v:1.5},
+      {k:'rv', l:'Revalorisation du bien', t:'pct', v:0.5},
+    ]},
+    {t:'Financement', f:[
+      {k:'apport', l:'Apport', t:'eur', v:10000, min:0},
+      {k:'tx', l:'Taux nominal', t:'pct', v:3.5, step:'0.05'},
+      {k:'duree', l:'Durée d’amortissement du prêt', t:'num', u:'ans', v:25, min:5, max:30},
+      {k:'diff', l:'Différé total', t:'num', u:'mois', v:12, min:0, max:36, h:'Neuf : le temps de la construction, sans loyer ni amortissement'},
+      {k:'ass', l:'Assurance emprunteur', t:'pct', v:0.2, step:'0.01', h:'Taux annuel global sur le capital emprunté'},
+    ]},
+    {t:'Fiscalité du foyer', f:[
+      {k:'tmi', l:'Tranche marginale d’imposition', t:'sel', v:'30', o:RS_TMI},
+      {k:'ps', l:'Prélèvements sociaux', t:'pct', v:17.2, h:'17,2 % sur les revenus fonciers (location nue) en 2026'},
+      {k:'autres', l:'Autres revenus fonciers du foyer', t:'eur', v:0, min:0, h:'Par an : ils absorbent le déficit en premier (économie TMI + PS)'},
+      {k:'glob', l:'Imputer l’amortissement sur le revenu global', t:'chk', v:1, h:'Dans la limite de 10 700 € par an. Point non encore tranché par l’administration : décoche pour une hypothèse prudente.'},
+      {k:'hor', l:'Revente au bout de', t:'num', u:'ans', v:12, min:1, max:40},
+    ]},
+  ],
+  lier(v, k){
+    if(k!=='etat' && k!=='niv') return {};
+    const T = v.etat==='ancien' ? {inter:3, social:3.5, tres:4} : {inter:3.5, social:4.5, tres:5.5};
+    const out = { taux:T[v.niv]||3.5, plaf:{inter:8000, social:10000, tres:12000}[v.niv]||8000 };
+    if(k==='etat') out.not = v.etat==='ancien' ? 7.5 : 2.5;
+    return out;
+  },
+  calc(v){
+    const anc = v.etat==='ancien', trav = anc ? (v.trav||0) : 0;
+    const notaire = v.prix*v.not/100;
+    const fban = v.prix*0.01 + 1500;                                   // dossier + courtage (classeur)
+    const fgar = 0.009*Math.max(0, v.prix+notaire+fban-v.apport) + 725; // garantie (classeur)
+    const K = Math.max(0, v.prix + trav + notaire + fban + fgar - v.apport);
+    const diff = Math.max(0, Math.round(v.diff)), n = Math.round(v.duree*12);
+    const P = rsPret(K, v.tx, n, {diff, dtype:'total', ass:v.ass, assBase:'apres'});
+    const baseA = (v.prix + trav) * v.base/100, amortAn = Math.min(v.plaf>0 ? v.plaf : Infinity, baseA*v.taux/100);
+    const tmi=+v.tmi/100, ps=v.ps/100;
+    const PLAF_RG = 10700, an = Math.max(v.hor, Math.ceil((n+diff)/12));
+    // plafond de loyer (arrêté du 6 janvier 2026, €/m²) × coefficient de surface
+    const GRILLE = {inter:{Abis:19.71,A:14.64,B1:11.80,B2:10.26,C:10.26}, social:{Abis:13.68,A:10.17,B1:8.20,B2:7.12,C:6.15}, tres:{Abis:10.93,A:8.12,B1:6.55,B2:5.69,C:4.91}};
+    const coef = Math.round(Math.min(0.7 + 19/(v.surf||1), 1.2)*100)/100;
+    const loyerMax = (GRILLE[v.niv]||GRILLE.inter)[v.zone]*v.surf*coef;
+    const rows=[]; let report=0, amortCum=0, ecoCum=0, effCum=0;
+    const flux=[{t:0, v:-v.apport}];
+    for(let y=1;y<=an;y++){
+      const mois = P.L.slice((y-1)*12, y*12);
+      const loue = Math.max(0, y*12 - diff) - Math.max(0, (y-1)*12 - diff);   // mois loués dans l'année
+      const ml = Math.max(0, y-1-Math.floor(diff/12));
+      const Lb = v.loyer*loue*Math.pow(1+v.rl/100, ml), Cb = Lb*v.chg/100;
+      const Ib = mois.reduce((s,x)=>s+x.it+x.as,0), ech = mois.reduce((s,x)=>s+x.ech,0);
+      const Ab = Math.min(amortAn*loue/12, Math.max(0, baseA-amortCum)); amortCum += Ab;
+      // fiscalité foncière : avec et sans l'investissement
+      const sans = v.autres*(tmi+ps);
+      let X = v.autres + Lb - Ib, global=0, imposable=0;
+      const autresCh = Cb + (v.glob ? Ab : 0), nonGlob = v.glob ? 0 : Ab;
+      if(X < 0){ report += -X; X = 0; global = autresCh; }
+      else { const r = X - autresCh; if(r >= 0) X = r; else { global = -r; X = 0; } }
+      if(X > 0 && nonGlob > 0){ const u = Math.min(X, nonGlob); X -= u; report += nonGlob - u; }
+      else report += nonGlob;
+      if(X > 0 && report > 0){ const u = Math.min(X, report); X -= u; report -= u; }
+      imposable = X;
+      const imput = Math.min(global, PLAF_RG); report += global - imput;
+      const avec = imposable*(tmi+ps) - imput*tmi;
+      const eco = sans - avec;                     // économie (> 0) ou supplément d'impôt (< 0)
+      const effort = ech - (Lb - Cb) - eco;
+      ecoCum += eco; if(y<=v.hor) effCum += effort;
+      if(y<=v.hor) flux.push({t:y, v:-effort});
+      const crd = mois.length ? mois[mois.length-1].crd : 0;
+      rows.push({y, Lb, Cb, Ib, Ab, res:Lb-Cb-Ib-Ab, eco, ech, effort, crd, report, ecoCum});
+    }
+    // revente à l'horizon : les amortissements déduits minorent le prix de revient (plus-value)
+    const h = Math.min(v.hor, rows.length), Rh = rows[h-1];
+    const valeur = (v.prix+trav)*Math.pow(1+v.rv/100, v.hor);
+    const amortH = rows.slice(0,h).reduce((s,r)=>s+r.Ab,0);
+    const pv = rsPlusValue({cession:valeur, acq:v.prix, fraisAcq:notaire, trav, ans:v.hor, amort:amortH});
+    const net = valeur - Rh.crd - pv.impot;
+    flux[flux.length-1].v += net;
+    const tri = rsTri(flux);
+    const ans9 = rows.slice(0, Math.min(rows.length, 9 + Math.ceil(diff/12)));
+    const eff9 = ans9.reduce((s,r)=>s+r.effort,0)/(ans9.length*12||1);
+    const eco9 = ans9.reduce((s,r)=>s+r.eco,0);
+    let warn='';
+    if(v.loyer > loyerMax + 0.5) warn='Le loyer dépasse le plafond '+({inter:'intermédiaire',social:'social',tres:'très social'}[v.niv])+' de la zone '+v.zone.replace('bis',' bis')+' : '+RS_E(loyerMax)+' / mois au maximum pour '+RS_N(v.surf,2)+' m².';
+    else if(anc && trav < 0.3*v.prix) warn='Dans l’ancien, les travaux doivent atteindre au moins 30 % du prix d’acquisition ('+RS_E(0.3*v.prix)+').';
+    else if(v.hor < 9 + diff/12) warn='Revente avant la fin de l’engagement de location de 9 ans : l’avantage fiscal serait repris (amortissements réintégrés, intérêts de retard).';
+    return {
+      warn,
+      kpis:[
+        {k:'Amortissement annuel', v:RS_E(amortAn), s:RS_P(v.taux/100,1)+' de '+RS_E(baseA)+(baseA*v.taux/100>amortAn+0.5?' · plafonné':''), cls:'hl'},
+        {k:'Économie d’impôt sur 9 ans', v:RS_E(eco9), s:'cumulée sur toute la durée : '+RS_E(ecoCum)},
+        {k:'Effort d’épargne', v:RS_E(eff9)+' / mois', s:'en moyenne sur les 9 ans d’engagement', cls:eff9>0?'':'good'},
+        {k:'Mensualité', v:RS_E(P.L.length>diff?P.L[diff].ech:0,2), s:'assurance comprise, après '+diff+' mois de différé'},
+        {k:'Montant emprunté', v:RS_E(K), s:'frais bancaires '+RS_E(fban+fgar)+' et notaire '+RS_E(notaire)+' compris'},
+        {k:'Loyer plafond', v:RS_E(loyerMax)+' / mois', s:'zone '+v.zone.replace('bis',' bis')+' · coefficient '+RS_N(coef,2), cls:v.loyer>loyerMax+0.5?'bad':''},
+        {k:'Patrimoine net à '+v.hor+' ans', v:RS_E(net), s:'valeur '+RS_E(valeur)+' − capital dû − impôt sur la plus-value '+RS_E(pv.impot)},
+        {k:'Rendement de l’opération', v:isFinite(tri)?RS_P(tri,1):'—', s:'taux de rendement interne de l’apport et de l’effort, revente comprise', cls:tri>=0?'good':'bad'},
+      ],
+      chart:{type:'bar', x:rows.map(r=>'An '+r.y), series:[
+        {n:'Loyers nets de charges', c:RS_COL[0], d:rows.map(r=>r.Lb-r.Cb)},
+        {n:'Économie d’impôt', c:RS_COL[1], d:rows.map(r=>Math.max(0,r.eco))},
+        {n:'Effort d’épargne', c:RS_COL[3], d:rows.map(r=>Math.max(0,r.effort))}], mark:'An '+v.hor},
+      table:{h:['Année','Loyers','Charges','Intérêts et assurance','Amortissement','Résultat foncier','Économie d’impôt','Mensualités','Effort / mois','Capital restant dû','Déficit reportable'],
+        rows:rows.map(r=>[r.y, RS_E(r.Lb), RS_E(r.Cb), RS_E(r.Ib), RS_E(r.Ab), RS_E(r.res), RS_E(r.eco), RS_E(r.ech), RS_E(r.effort/12), RS_E(r.crd), RS_E(r.report)]),
+        hl:rows.map(r=>r.y===9+Math.ceil(diff/12)||r.y===v.hor)},
+      notes:[
+        'Dispositif Jeanbrun (loi de finances 2026) : location nue à titre de résidence principale pendant 9 ans, logement collectif, loyer et ressources du locataire plafonnés. Réservé aux acquisitions jusqu’au 31/12/2028.',
+        'L’amortissement porte sur '+RS_N(v.base)+' % du prix'+(anc?' (travaux compris)':'')+', au taux choisi et dans la limite du plafond annuel. Il s’ajoute aux charges du revenu foncier ; il n’entre pas dans le plafonnement global des niches fiscales.',
+        'Déficit : la part due aux intérêts ne se reporte que sur les revenus fonciers des 10 années suivantes ; le reste s’impute sur le revenu global jusqu’à 10 700 € par an (économie au taux marginal, sans prélèvements sociaux). Le report est ici sans limite de durée.',
+        'Mois de différé : construction, sans loyer ni amortissement. Frais bancaires estimés comme dans le classeur (1 % + 1 500 € de dossier et courtage, garantie 0,9 % + 725 €).',
+        'Revente : les amortissements déduits sont réintégrés dans la plus-value (prix de revient minoré), abattements pour durée de détention, 19 % + 17,2 % et surtaxe éventuelle.',
+        'Plusieurs points (taux de l’ancien, imputation de l’amortissement sur le revenu global) attendent encore les commentaires de l’administration : à revalider avant de présenter au client.',
+      ]
+    };
+  }
+},
+{
+  // SCPI à crédit (02/11/2026, d'après les simulateurs « SCPI financement CACF / SOFIAP / CFCAL » et les
+  // conditions Meilleurtaux du MEGA FORMAN). Le classeur ignorait l'impôt sur les dividendes : on l'ajoute
+  // (case à cocher), avec les intérêts déductibles au réel.
+  id:'scpifin', slug:'scpi-a-credit', cat:'scpi', ic:'🏦', t:'SCPI à crédit', d:'Financement par les partenaires (CACF, SOFIAP, CFCAL) : effort d’épargne, délai de jouissance, patrimoine constitué',
+  g:[
+    {t:'Investissement', f:[
+      {k:'inv', l:'Montant investi en parts', t:'eur', v:100250, min:0},
+      {k:'nb', l:'Nombre de SCPI', t:'num', u:'SCPI', v:2, min:1, max:5},
+      {k:'rdt', l:'Taux de distribution moyen', t:'pct', v:5.65},
+      {k:'dj', l:'Délai de jouissance', t:'num', u:'mois', v:6, min:0, max:12},
+      {k:'rev', l:'Revalorisation annuelle des parts', t:'pct', v:0},
+    ]},
+    {t:'Partenaire bancaire', f:[
+      {k:'part', l:'Partenaire', t:'sel', v:'cacf', w:1, o:[['cacf','CACF (Crédit Agricole Personal Finance)'],['sofiap','SOFIAP'],['cfcal','CFCAL'],['autre','Autre banque (frais saisis)']], h:'Change le taux, la durée, le différé et les frais selon les conditions Meilleurtaux'},
+      {k:'tx', l:'Taux nominal', t:'pct', v:5.1, step:'0.05'},
+      {k:'duree', l:'Durée d’amortissement', t:'num', u:'ans', v:20, min:5, max:25},
+      {k:'dtype', l:'Différé', t:'sel', v:'total', o:[['total','Différé total (intérêts capitalisés)'],['partiel','Différé partiel (intérêts payés)']]},
+      {k:'diff', l:'Durée du différé', t:'num', u:'mois', v:6, min:0, max:12, h:'En plus de la durée d’amortissement'},
+      {k:'ass', l:'Assurance emprunteur', t:'pct', v:0.3, step:'0.01', h:'Taux annuel sur le capital emprunté'},
+      {k:'fcou', l:'Frais de courtage', t:'eur', v:0, show:v=>v.part==='autre'},
+      {k:'fdos', l:'Frais de dossier', t:'eur', v:0, show:v=>v.part==='autre'},
+      {k:'fgar', l:'Frais de garantie (caution, nantissement)', t:'eur', v:0, show:v=>v.part==='autre'},
+      {k:'app', l:'Apport en plus du minimum', t:'eur', v:0, min:0},
+    ]},
+    {t:'Fiscalité et foyer', f:[
+      {k:'fisc', l:'Tenir compte de l’impôt sur les dividendes', t:'chk', v:1},
+      {k:'tmi', l:'Tranche marginale d’imposition', t:'sel', v:'30', o:RS_TMI, show:v=>v.fisc},
+      {k:'ps', l:'Prélèvements sociaux', t:'pct', v:17.2, show:v=>v.fisc, h:'17,2 % sur les revenus fonciers ; moins sur les SCPI européennes'},
+      {k:'revenus', l:'Revenus nets mensuels du foyer', t:'eur', v:0, h:'Pour le taux d’endettement — 0 pour ne pas le calculer'},
+      {k:'credits', l:'Crédits en cours (mensualités)', t:'eur', v:0, show:v=>v.revenus>0},
+    ]},
+  ],
+  lier(v, k){
+    if(k!=='part') return {};
+    return ({ cacf:{tx:5.1, duree:20, dtype:'total', diff:6, ass:0.3},
+              sofiap:{tx:4.25, duree:20, dtype:'partiel', diff:6, ass:0.21},
+              cfcal:{tx:4.99, duree:20, dtype:'partiel', diff:9, ass:0.3} })[v.part] || {};
+  },
+  calc(v){
+    const nb=Math.max(1,Math.round(v.nb)), inv=v.inv;
+    let cou=0, dos=0, gar=0, appMin=0, lib='';
+    if(v.part==='cacf'){ cou = 950 + (nb-1)*(inv>200000?600:950); appMin = 0.1*inv + cou; lib='apport de 10 % du prix des parts + courtage, nantissement des parts'; }
+    else if(v.part==='sofiap'){ cou = 950*nb; dos = 1200; gar = 0.011*inv + 650*nb; appMin = cou+dos+gar; lib='financement du prix des parts, frais en apport, caution Crédit Logement'; }
+    else if(v.part==='cfcal'){ cou = Math.max(750, Math.min(1500, 0.01*inv)); dos = 0.01*inv; gar = 135.84*nb; appMin = cou+dos+gar; lib='financement du prix des parts, frais en apport, nantissement'; }
+    else { cou=v.fcou||0; dos=v.fdos||0; gar=v.fgar||0; appMin=0; lib='frais saisis'; }
+    const frais=cou+dos+gar, apport=appMin+(v.app||0), K=Math.max(0, inv+frais-apport);
+    const diff=Math.max(0,Math.round(v.diff)), n=Math.round(v.duree*12);
+    const P=rsPret(K, v.tx, n, {diff, dtype:v.dtype, ass:v.ass, assBase:'apres'});
+    const divM=inv*v.rdt/1200, dj=Math.max(0,Math.round(v.dj)), tx=v.fisc?(+v.tmi+v.ps)/100:0;
+    const rows=[]; let report=0, effCum=0, provision=0;
+    const flux=[{t:0, v:-apport}];
+    const N=Math.ceil((n+diff)/12);
+    for(let y=1;y<=N;y++){
+      const L=P.L.slice((y-1)*12, y*12), ech=L.reduce((s,x)=>s+x.ech,0), it=L.reduce((s,x)=>s+x.it+x.as,0);
+      const moisDiv = L.filter(x=>x.k>dj).length;
+      const div = divM*moisDiv*Math.pow(1+v.rev/100, y-1);
+      let base = div - it; if(base<0){ report += -base; base=0; } else { const u=Math.min(base,report); base-=u; report-=u; }
+      const imp = base*tx, effort = ech - div + imp;
+      if(y===1) provision = L.filter(x=>x.k<=dj).reduce((s,x)=>s+x.ech,0);
+      effCum += effort; flux.push({t:y, v:-effort});
+      rows.push({y, ech, it, div, imp, effort, crd:L.length?L[L.length-1].crd:0});
+    }
+    const patri = inv*Math.pow(1+v.rev/100, N);
+    flux[flux.length-1].v += patri;
+    const tri = rsTri(flux);
+    const mens = P.L.length>diff ? P.L[diff].ech : 0;
+    const ycour = rows.slice(1, Math.max(2, N-1));
+    const effMoy = ycour.length ? ycour.reduce((s,r)=>s+r.effort,0)/(12*ycour.length) : 0;
+    const effAvant = mens - divM;
+    const endet = v.revenus>0 ? ((v.credits||0)+mens)/v.revenus : NaN, lim = v.part==='cacf'?0.40:0.35;
+    let warn='';
+    if(v.part==='sofiap' && K<80000) warn='SOFIAP finance à partir de 80 000 € : ce montant est en dessous du minimum.';
+    else if(v.part==='cacf' && v.duree>20) warn='CACF finance de 5 à 20 ans (différé de 3 à 6 mois en plus).';
+    else if(isFinite(endet) && endet>lim) warn='Taux d’endettement de '+RS_P(endet,1)+', au-delà des '+RS_P(lim,0)+' admis par '+({cacf:'CACF',sofiap:'SOFIAP',cfcal:'CFCAL'}[v.part]||'la banque')+'.';
+    const kpis=[
+      {k:'Effort d’épargne', v:RS_E(v.fisc?effMoy:effAvant)+' / mois', s:v.fisc?'après impôt, en moyenne pendant le prêt (avant impôt : '+RS_E(effAvant)+')':'mensualité − dividendes', cls:'hl'},
+      {k:'Mensualité', v:RS_E(mens,2), s:'assurance comprise, après le différé'},
+      {k:'Dividendes', v:RS_E(divM)+' / mois', s:'au taux de '+RS_P(v.rdt/100,2)},
+      {k:'Apport', v:RS_E(apport), s:lib},
+      {k:'Frais bancaires', v:RS_E(frais), s:'courtage '+RS_E(cou)+(dos?' · dossier '+RS_E(dos):'')+(gar?' · garantie '+RS_E(gar):'')},
+      {k:'Montant emprunté', v:RS_E(K), s:v.duree+' ans + '+diff+' mois de différé '+(v.dtype==='total'?'total':'partiel')},
+      {k:'Provision délai de jouissance', v:RS_E(provision), s:'mensualités des '+dj+' premiers mois, sans dividendes'},
+      {k:'Effort total', v:RS_E(apport+effCum), s:'apport + effort sur la durée du prêt'},
+      {k:'Patrimoine constitué', v:RS_E(patri), s:'puis '+RS_E(divM*Math.pow(1+v.rev/100,N))+' / mois de revenus bruts'},
+      {k:'Rendement de l’effort', v:isFinite(tri)?RS_P(tri,1):'—', s:'taux de rendement interne (patrimoine au prix de souscription)', cls:tri>=0?'good':'bad'},
+    ];
+    if(isFinite(endet)) kpis.push({k:'Taux d’endettement', v:RS_P(endet,1), s:'dividendes des SCPI non retenus', cls:endet>lim?'bad':'good'});
+    return {
+      warn, kpis,
+      chart:{type:'bar', x:rows.map(r=>'An '+r.y), series:[
+        {n:'Dividendes', c:RS_COL[0], d:rows.map(r=>r.div)},
+        {n:'Effort d’épargne', c:RS_COL[3], d:rows.map(r=>Math.max(0,r.effort))}]},
+      table:{h:['Année','Mensualités','Dont intérêts et assurance','Dividendes','Impôt','Effort de l’année','Effort / mois','Capital restant dû'],
+        rows:rows.map(r=>[r.y, RS_E(r.ech), RS_E(r.it), RS_E(r.div), RS_E(r.imp), RS_E(r.effort), RS_E(r.effort/12), RS_E(r.crd)])},
+      notes:[
+        'Conditions des partenaires (Meilleurtaux) : CACF juillet 2025 (90 % du prix des parts, 5 à 20 ans, TAEG 5,10 %, endettement 40 %, nantissement), SOFIAP mars 2026 (minimum 80 000 €, 4,15 % jusqu’à 15 ans et 4,25 % sur 20 ans, différé partiel de 6 mois, caution Crédit Logement, propriétaire et 30 000 € d’épargne après l’opération), CFCAL d’après le classeur. À vérifier avant toute proposition.',
+        'Différé total : les intérêts s’ajoutent au capital et seule l’assurance est payée. Différé partiel : intérêts et assurance payés pendant le différé.',
+        'Les dividendes commencent après le délai de jouissance : prévois la trésorerie des premières mensualités (provision).',
+        v.fisc ? 'Impôt : dividendes imposés au taux marginal + prélèvements sociaux, après déduction des intérêts et de l’assurance (régime réel des revenus fonciers). Un excédent d’intérêts se reporte sur les années suivantes.' : 'Impôt sur les dividendes non pris en compte, comme dans le classeur d’origine.',
+        'Patrimoine au prix de souscription ; la valeur de retrait est inférieure du montant des frais de souscription. Le capital n’est pas garanti.',
+      ]
+    };
+  }
+},
+{
+  // Démembrement de SCPI (02/11/2026, d'après « Simulateur SCPI en Nue-Propriété V2.1 » et « … en Usufruit
+  // V1.0 »). Correction : le classeur nue-propriété calculait le rendement sur durée − 1 ans (flux posés en
+  // années 1 à 5 au lieu de 0 à 5). IS ramené de 28 % à 25 % (taux normal depuis 2022).
+  id:'demembrement', slug:'scpi-demembrement', cat:'scpi', ic:'✂️', t:'SCPI en démembrement', d:'Nue-propriété (sans revenus ni impôt) ou usufruit temporaire (revenus immédiats)',
+  g:[
+    {t:'Opération', f:[
+      {k:'mode', l:'J’achète', t:'sel', v:'np', w:1, o:[['np','la nue-propriété (capital à terme)'],['us','l’usufruit temporaire (revenus pendant la durée)']]},
+      {k:'inv', l:'Montant investi', t:'eur', v:75000, min:0},
+      {k:'prix', l:'Prix de souscription de la part', t:'eur', v:1000},
+      {k:'vr', l:'Valeur de retrait de la part', t:'eur', v:900, show:v=>v.mode==='np'},
+      {k:'cle', l:'Clé de répartition', t:'pct', v:75, step:'1', h:'Valeur de la nue-propriété (ou de l’usufruit) en % de la pleine propriété, selon la durée'},
+      {k:'duree', l:'Durée du démembrement', t:'num', u:'ans', v:5, min:1, max:20},
+    ]},
+    {t:'Hypothèses', f:[
+      {k:'rdt', l:'Taux de distribution', t:'pct', v:4.7},
+      {k:'pv', l:'Revalorisation annuelle de la part', t:'pct', v:0.3, show:v=>v.mode==='np'},
+      {k:'rl', l:'Revalorisation des dividendes', t:'pct', v:0, show:v=>v.mode==='us'},
+    ]},
+    {t:'Fiscalité', f:[
+      {k:'reg', l:'Usufruitier', t:'sel', v:'is', show:v=>v.mode==='us', o:[['is','Société à l’impôt sur les sociétés'],['ir','Particulier (impôt sur le revenu)']]},
+      {k:'is', l:'Taux d’impôt sur les sociétés', t:'pct', v:25, show:v=>v.mode==='us'&&v.reg==='is', h:'15 % jusqu’à 42 500 € de bénéfice pour une PME, 25 % au-delà'},
+      {k:'tmi', l:'Tranche marginale d’imposition', t:'sel', v:'30', o:RS_TMI, show:v=>v.mode==='np'||v.reg==='ir'},
+      {k:'ps', l:'Prélèvements sociaux', t:'pct', v:17.2, show:v=>v.mode==='np'||v.reg==='ir'},
+      {k:'ifi', l:'Taux marginal d’IFI', t:'sel', v:'0', show:v=>v.mode==='np', o:[['0','Non assujetti'],['0.5','0,5 %'],['0.7','0,7 %'],['1','1 %'],['1.25','1,25 %'],['1.5','1,5 %']]},
+    ]},
+  ],
+  calc(v){
+    const d=Math.max(1,Math.round(v.duree)), cle=v.cle/100;
+    if(v.mode==='np'){
+      const parts = v.inv/(v.prix*cle||1);
+      const pp = parts*v.prix*Math.pow(1+v.pv/100, d), retrait = parts*v.vr*Math.pow(1+v.pv/100, d);
+      const tri = v.inv>0 ? Math.pow(retrait/v.inv, 1/d) - 1 : NaN;
+      const rente = parts*v.prix*Math.pow(1+v.pv/100,d)*v.rdt/100;
+      const tx=(+v.tmi+v.ps)/100, equiv = tri/(1-tx);
+      const rows=[]; let ifiCum=0;
+      for(let y=1;y<=d;y++){ const val=parts*v.vr*Math.pow(1+v.pv/100,y); const ifi=val*(+v.ifi)/100; ifiCum+=ifi; rows.push([y, RS_E(val), RS_E(ifi), RS_E(parts*v.prix*Math.pow(1+v.pv/100,y)*v.rdt/100*tx)]); }
+      return {
+        kpis:[
+          {k:'Capital au terme', v:RS_E(retrait), s:'en valeur de retrait · '+RS_E(pp)+' au prix de souscription', cls:'hl'},
+          {k:'Rendement annuel', v:RS_P(tri,2), s:'sans revenus, donc sans impôt pendant '+d+' ans', cls:tri>=0?'good':'bad'},
+          {k:'Équivalent en pleine propriété', v:RS_P(equiv,2), s:'rendement brut qu’il faudrait avant impôt (TMI + PS de '+RS_P(tx,1)+')'},
+          {k:'Parts acquises', v:RS_N(parts,1), s:'décote de '+RS_P(1-cle,0)+' sur le prix'},
+          {k:'Revenus après le démembrement', v:RS_E(rente/12)+' / mois', s:'à partir de l’année '+(d+1)+', bruts'},
+          {k:'IFI évité', v:RS_E(ifiCum), s:'la nue-propriété n’entre pas dans l’IFI de son titulaire'},
+        ],
+        table:{h:['Année','Valeur de retrait des parts','IFI évité','Impôt évité sur les dividendes (pleine propriété)'], rows},
+        notes:[
+          'Pendant le démembrement, l’usufruitier touche les dividendes et en paie l’impôt : le nu-propriétaire n’a ni revenu ni fiscalité. Au terme, il récupère la pleine propriété sans frais ni impôt.',
+          'Rendement = (capital au terme ÷ montant investi) puissance 1/'+d+' − 1. Le classeur d’origine calculait sur '+(d-1)+' années : son rendement était surestimé.',
+          'Idéal pour préparer la retraite, investir à crédit (intérêts déductibles d’autres revenus fonciers) ou transmettre. Le capital n’est pas garanti et la liquidité des parts démembrées est faible.',
+        ]
+      };
+    }
+    const parts = v.inv/(v.prix*cle||1), div0 = parts*v.prix*v.rdt/100;
+    const amort = v.inv/d, ir = v.reg==='ir';
+    const rows=[], flux=[{t:0, v:-v.inv}]; let netCum=0;
+    for(let y=1;y<=d;y++){
+      const div = div0*Math.pow(1+v.rl/100, y-1);
+      const imp = ir ? div*(+v.tmi+v.ps)/100 : Math.max(0, div-amort)*v.is/100;
+      const net = div-imp; netCum+=net; flux.push({t:y, v:net});
+      rows.push([y, RS_E(div), ir?'—':RS_E(amort), RS_E(imp), RS_E(net), RS_E(netCum)]);
+    }
+    const tri=rsTri(flux);
+    return {
+      warn: ir ? 'Pour un particulier, l’usufruit est rarement intéressant : les dividendes sont imposés en totalité et le capital investi disparaît au terme.' : '',
+      kpis:[
+        {k:'Revenus nets', v:RS_E(netCum/d)+' / an', s:'en moyenne, après '+(ir?'impôt sur le revenu':'impôt sur les sociétés'), cls:'hl'},
+        {k:'Capital reconstitué', v:RS_E(netCum), s:'pour '+RS_E(v.inv)+' investis, qui s’éteignent au terme'},
+        {k:'Rendement annuel net', v:isFinite(tri)?RS_P(tri,2):'—', s:'taux de rendement interne', cls:tri>=0?'good':'bad'},
+        {k:'Dividendes bruts', v:RS_E(div0)+' / an', s:RS_N(parts,1)+' parts en usufruit'},
+      ],
+      table:{h:['Année','Dividendes','Amortissement de l’usufruit','Impôt','Revenu net','Cumul net'], rows},
+      notes:[
+        ir ? 'Particulier : dividendes imposés au taux marginal + prélèvements sociaux ; le prix de l’usufruit n’est pas déductible.'
+           : 'Société à l’IS : le prix de l’usufruit s’amortit sur la durée du démembrement ('+RS_E(amort)+' par an), ce qui réduit l’impôt sur les dividendes.',
+        'Au terme, l’usufruit s’éteint : le montant investi n’est pas récupéré, il est remplacé par les revenus perçus.',
+      ]
+    };
+  }
+},
+{
+  // LMNP (02/11/2026, d'après les simulateurs « LMNP-Amortissement Résidence de Services V3.4 », « … sans
+  // exploitant V1.1 » et « LMNP Colocatère V2.2 ») : un seul outil, le type de location à choisir.
+  // Mis à jour : réintégration des amortissements dans la plus-value (loi de finances 2025, sauf résidences
+  // de services), micro-BIC à 50 % jusqu'à 77 700 €, prélèvements sociaux à 18,6 % sur les BIC (2026).
+  id:'lmnp', slug:'lmnp', cat:'immo', ic:'🛋️', t:'LMNP', d:'Location meublée au réel : amortissements, impôt, effort d’épargne, comparaison avec le micro-BIC',
+  g:[
+    {t:'Type de location', f:[
+      {k:'type', l:'Location', t:'sel', v:'rs', w:1, o:[['rs','Résidence de services (bail commercial, gestionnaire)'],['meuble','Meublé classique, sans gestionnaire'],['coloc','Colocation meublée']]},
+    ]},
+    {t:'Le bien', f:[
+      {k:'prix', l:'Prix TTC (terrain compris)', t:'eur', v:120000, min:0},
+      {k:'tva', l:'Récupérer la TVA (neuf en résidence de services)', t:'chk', v:1, show:v=>v.type==='rs', h:'20 % du prix, remboursés par l’État ; engagement d’exploitation de 20 ans'},
+      {k:'terr', l:'Part du terrain', t:'pct', v:15, h:'Non amortissable'},
+      {k:'mob', l:'Mobilier TTC', t:'eur', v:5400, min:0},
+      {k:'trav', l:'Travaux', t:'eur', v:0, min:0, show:v=>v.type!=='rs'},
+      {k:'not', l:'Frais de notaire', t:'pct', v:2.3},
+    ]},
+    {t:'Loyers et charges', f:[
+      {k:'loyA', l:'Loyer annuel HT versé par le gestionnaire', t:'eur', v:5000, show:v=>v.type==='rs'},
+      {k:'loyM', l:'Loyer mensuel charges comprises', t:'eur', v:650, show:v=>v.type==='meuble'},
+      {k:'nch', l:'Nombre de chambres', t:'num', u:'ch.', v:4, min:1, max:10, show:v=>v.type==='coloc'},
+      {k:'lch', l:'Loyer par chambre', t:'eur', v:450, show:v=>v.type==='coloc'},
+      {k:'vac', l:'Vacance locative', t:'pct', v:4, show:v=>v.type!=='rs', h:'4 % ≈ deux semaines par an'},
+      {k:'chg', l:'Charges non récupérables', t:'pct', v:18, h:'En % du loyer : copropriété, taxe foncière, assurance, gestion'},
+      {k:'cpt', l:'Expert-comptable', t:'eur', v:300, h:'Par an'},
+      {k:'rl', l:'Revalorisation des loyers', t:'pct', v:0},
+      {k:'rv', l:'Revalorisation du bien', t:'pct', v:0},
+    ]},
+    {t:'Financement', f:[
+      {k:'apport', l:'Apport', t:'eur', v:10000, min:0},
+      {k:'fdos', l:'Frais de dossier et courtage', t:'eur', v:500},
+      {k:'tx', l:'Taux nominal', t:'pct', v:3.5, step:'0.05'},
+      {k:'duree', l:'Durée', t:'num', u:'ans', v:25, min:5, max:30},
+      {k:'diff', l:'Différé total', t:'num', u:'mois', v:12, min:0, max:36, h:'Neuf : le temps de la construction, sans loyer'},
+      {k:'ass', l:'Assurance emprunteur', t:'pct', v:0.15, step:'0.01'},
+    ]},
+    {t:'Amortissement et fiscalité', f:[
+      {k:'dimm', l:'Amortissement du bâti', t:'num', u:'ans', v:30, min:15, max:50},
+      {k:'dmob', l:'Amortissement du mobilier', t:'num', u:'ans', v:10, min:3, max:15},
+      {k:'tmi', l:'Tranche marginale d’imposition', t:'sel', v:'30', o:RS_TMI},
+      {k:'ps', l:'Prélèvements sociaux', t:'pct', v:18.6, h:'18,6 % sur les revenus de location meublée en 2026'},
+      {k:'hor', l:'Revente au bout de', t:'num', u:'ans', v:20, min:1, max:40},
+    ]},
+  ],
+  lier(v, k){
+    if(k!=='type') return {};
+    return v.type==='rs' ? {not:2.3, chg:18, diff:12, tva:1} : {not:7.5, chg:v.type==='coloc'?22:20, diff:0};
+  },
+  calc(v){
+    const rs=v.type==='rs', tvaOk = rs && v.tva;
+    const prixHT = tvaOk ? v.prix/1.2 : v.prix, mobHT = tvaOk ? v.mob/1.2 : v.mob;
+    const tvaRec = tvaOk ? (v.prix - prixHT) + (v.mob - mobHT) : 0;
+    const notaire = v.prix*v.not/100, trav = rs ? 0 : (v.trav||0);
+    const fgar = 0.009*Math.max(0, v.prix + mobHT + notaire + v.fdos - v.apport) + 725;
+    const K = Math.max(0, v.prix + v.mob + trav + notaire + v.fdos + fgar - tvaRec - v.apport);
+    const diff = Math.max(0,Math.round(v.diff)), n=Math.round(v.duree*12);
+    const P = rsPret(K, v.tx, n, {diff, dtype:'total', ass:v.ass, assBase:'apres'});
+    const baseImm = prixHT*(1-v.terr/100) + notaire + trav;
+    const loyerAn = rs ? v.loyA : v.type==='coloc' ? v.nch*v.lch*12*(1-v.vac/100) : v.loyM*12*(1-v.vac/100);
+    const tx=(+v.tmi+v.ps)/100, MICRO=77700;
+    const N = Math.max(v.hor, Math.ceil((n+diff)/12));
+    const rows=[], flux=[{t:0, v:-v.apport}];
+    let reserve=0, deficit=0, impCum=0, microCum=0, sansImp=0, amortCum=0;
+    for(let y=1;y<=N;y++){
+      const L=P.L.slice((y-1)*12, y*12);
+      const loue = Math.max(0, y*12-diff) - Math.max(0, (y-1)*12-diff), ml=Math.max(0,y-1-Math.floor(diff/12));
+      const rec = loyerAn*loue/12*Math.pow(1+v.rl/100, ml), chg = rec*v.chg/100 + (loue?v.cpt:0);
+      const it = L.reduce((s,x)=>s+x.it+x.as,0), ech=L.reduce((s,x)=>s+x.ech,0);
+      const yl = y - Math.floor(diff/12);    // année d'exploitation
+      const am = loue ? (yl<=v.dimm ? baseImm/v.dimm : 0)*loue/12 + (yl<=v.dmob ? mobHT/v.dmob : 0)*loue/12 : 0;
+      let r = rec - chg - it;
+      if(r<0){ deficit += -r; r=0; } else { const u=Math.min(r,deficit); r-=u; deficit-=u; }
+      const dispo = am + reserve, cons = Math.min(r, dispo); reserve = dispo - cons; amortCum += cons;
+      const imposable = r - cons, imp = imposable*tx; impCum += imp; if(loue && imp<1) sansImp++;
+      const micro = rec<=MICRO ? rec*0.5*tx : NaN; microCum += isFinite(micro)?micro:imp;
+      const effort = ech - (rec - chg) + imp;
+      if(y<=v.hor) flux.push({t:y, v:-effort});
+      rows.push({y, rec, chg, it, am, cons, imposable, imp, micro, ech, effort, reserve, crd:L.length?L[L.length-1].crd:0});
+    }
+    const h=Math.min(v.hor, rows.length), R=rows[h-1];
+    const valeur = v.prix*Math.pow(1+v.rv/100, v.hor);
+    const amH = rows.slice(0,h).reduce((s,r)=>s+r.cons,0);
+    const pv = rsPlusValue({cession:valeur, acq:v.prix, fraisAcq:notaire, trav, ans:v.hor, amort: rs ? 0 : amH});
+    const net = valeur - R.crd - pv.impot;
+    flux[flux.length-1].v += net;
+    const tri=rsTri(flux);
+    const pret = rows.slice(0, Math.ceil((n+diff)/12)), effMoy = pret.reduce((s,r)=>s+r.effort,0)/(12*pret.length||1);
+    const microOk = loyerAn<=MICRO;
+    let warn='';
+    if(loyerAn>23000) warn='Plus de 23 000 € de recettes par an : si elles dépassent aussi les autres revenus d’activité du foyer, le loueur devient professionnel (LMP), avec cotisations sociales.';
+    return {
+      warn,
+      kpis:[
+        {k:'Effort d’épargne', v:RS_E(effMoy)+' / mois', s:'en moyenne pendant le prêt, impôt compris', cls:'hl'},
+        {k:'Impôt au réel', v:RS_E(impCum), s:'cumulé sur '+N+' ans · '+sansImp+' année(s) sans impôt'},
+        {k:'Impôt au micro-BIC', v:microOk?RS_E(microCum):'non accessible', s:microOk?(microCum<impCum-0.5?'plus avantageux que le réel ici':'abattement de 50 % sur les recettes'):'recettes au-delà de 77 700 €'},
+        {k:'Amortissements en réserve', v:RS_E(rows[rows.length-1].reserve), s:'reportables sans limite de durée'},
+        {k:'Loyers', v:RS_E(loyerAn/12)+' / mois', s:rs?'loyer HT du gestionnaire':'vacance déduite'},
+        {k:'TVA récupérée', v:RS_E(tvaRec), s:tvaOk?'déduite du capital emprunté':'sans objet'},
+        {k:'Montant emprunté', v:RS_E(K), s:'mensualité '+RS_E(P.L.length>diff?P.L[diff].ech:0,2)+' assurance comprise'},
+        {k:'Patrimoine net à '+v.hor+' ans', v:RS_E(net), s:'après capital dû et impôt sur la plus-value '+RS_E(pv.impot)+(rs?'':' (amortissements réintégrés)')},
+        {k:'Rendement de l’opération', v:isFinite(tri)?RS_P(tri,1):'—', s:'taux de rendement interne, revente comprise', cls:tri>=0?'good':'bad'},
+      ],
+      chart:{type:'bar', x:rows.map(r=>'An '+r.y), series:[
+        {n:'Amortissement consommé', c:RS_COL[0], d:rows.map(r=>r.cons)},
+        {n:'Résultat imposable', c:RS_COL[3], d:rows.map(r=>r.imposable)}]},
+      table:{h:['Année','Recettes','Charges','Intérêts et assurance','Amortissements de l’année','Amortissement consommé','Résultat imposable','Impôt au réel','Impôt au micro-BIC','Effort / mois','Réserve','Capital restant dû'],
+        rows:rows.map(r=>[r.y, RS_E(r.rec), RS_E(r.chg), RS_E(r.it), RS_E(r.am), RS_E(r.cons), RS_E(r.imposable), RS_E(r.imp), isFinite(r.micro)?RS_E(r.micro):'—', RS_E(r.effort/12), RS_E(r.reserve), RS_E(r.crd)])},
+      notes:[
+        'Régime réel : recettes − charges − intérêts − assurance, puis amortissements du bâti ('+v.dimm+' ans, terrain exclu) et du mobilier ('+v.dmob+' ans). L’amortissement ne peut pas créer de déficit : l’excédent est mis en réserve et reporté sans limite de durée.',
+        'Micro-BIC : abattement forfaitaire de 50 % sur les recettes jusqu’à 77 700 € par an (location meublée de longue durée).',
+        rs ? 'Résidence de services (étudiants, seniors, EHPAD) : les amortissements ne sont pas réintégrés dans la plus-value à la revente.'
+           : 'Depuis la loi de finances 2025, les amortissements déduits sont réintégrés dans la plus-value à la revente (prix de revient minoré).',
+        tvaOk ? 'TVA récupérée : bail commercial avec services para-hôteliers, engagement de 20 ans ; une revente plus tôt sans reprise du bail par un exploitant oblige à reverser une partie de la TVA.' : 'Prévoir le renouvellement du mobilier tous les 7 à 10 ans.',
+        'Prélèvements sociaux à 18,6 % sur les revenus de location meublée depuis 2026 (17,2 % pour la plus-value immobilière).',
+      ]
+    };
+  }
+},
+{
+  // Plus-value immobilière (02/11/2026, d'après « Simulateur Plus-value Immo 2018 V2.1 ») : forfaits,
+  // abattements pour durée de détention, surtaxe, réintégration des amortissements LMNP.
+  id:'pv', slug:'plus-value-immobiliere', cat:'immo', ic:'🏷️', t:'Plus-value immobilière', d:'Impôt à la revente selon la durée de détention, surtaxe comprise, et meilleur moment pour vendre',
+  g:[
+    {t:'Cession', f:[
+      {k:'usage', l:'Bien vendu', t:'sel', v:'loc', w:1, o:[['loc','Résidence secondaire, locatif, terrain'],['rp','Résidence principale (exonérée)']]},
+      {k:'pc', l:'Prix de vente', t:'eur', v:300000, min:0},
+      {k:'fc', l:'Frais de vente à ta charge', t:'eur', v:0, h:'Diagnostics, agence si payée par le vendeur'},
+      {k:'anc', l:'Année de la vente', t:'num', v:RS_AN(), min:1950, max:2100, fmt:'an'},
+    ]},
+    {t:'Acquisition', f:[
+      {k:'pa', l:'Prix d’achat', t:'eur', v:200000, min:0},
+      {k:'ana', l:'Année d’achat', t:'num', v:RS_AN()-10, min:1900, max:2100, fmt:'an'},
+      {k:'fa', l:'Frais d’acquisition', t:'sel', v:'forf', o:[['forf','Forfait de 7,5 %'],['reel','Montant réel']]},
+      {k:'far', l:'Frais réels (notaire, agence)', t:'eur', v:0, show:v=>v.fa==='reel'},
+      {k:'tr', l:'Travaux', t:'sel', v:'forf', o:[['forf','Forfait de 15 % (après 5 ans)'],['reel','Montant réel justifié'],['non','Aucun']]},
+      {k:'trr', l:'Travaux réels', t:'eur', v:0, show:v=>v.tr==='reel'},
+      {k:'amort', l:'Amortissements déduits (LMNP, Jeanbrun)', t:'eur', v:0, h:'Réintégrés dans la plus-value ; 0 pour une résidence de services'},
+    ]},
+  ],
+  calc(v){
+    const ans = Math.max(0, Math.round(v.anc - v.ana));
+    const opts = ac => rsPlusValue({cession:v.pc - v.fc, acq:v.pa, fraisAcq:v.fa==='reel'?v.far:0, forfFrais:v.fa!=='reel', trav:v.tr==='reel'?v.trr:0, forfTrav:v.tr==='forf', ans:ac, amort:v.amort});
+    if(v.usage==='rp') return { kpis:[{k:'Impôt sur la plus-value', v:RS_E(0), s:'la résidence principale est exonérée', cls:'hl'}, {k:'Net vendeur', v:RS_E(v.pc-v.fc)}],
+      notes:['La vente de la résidence principale au jour de la cession est exonérée, quelle que soit la durée de détention. Le bien doit être vendu dans un délai normal après le départ (environ un an).'] };
+    const r = opts(ans);
+    const tab=[];
+    for(let a=Math.max(0,ans-1); a<=Math.max(ans+1,31); a++){ const x=opts(a); tab.push([v.ana+a, a+' ans', RS_P(x.abIR,0), RS_P(x.abPS,0), RS_E(x.ir), RS_E(x.ps), RS_E(x.surtaxe), RS_E(x.impot), RS_E(v.pc - v.fc - x.impot)]); }
+    return {
+      kpis:[
+        {k:'Impôt sur la plus-value', v:RS_E(r.impot), s:'impôt 19 % + prélèvements sociaux 17,2 %'+(r.surtaxe?' + surtaxe':''), cls:'hl'},
+        {k:'Plus-value brute', v:RS_E(r.brute), s:'prix de revient '+RS_E(r.revient)+(v.amort?' (après '+RS_E(v.amort)+' d’amortissements réintégrés)':'')},
+        {k:'Abattements', v:RS_P(r.abIR,0)+' / '+RS_P(r.abPS,0), s:'impôt sur le revenu / prélèvements sociaux, pour '+ans+' ans de détention'},
+        {k:'Impôt sur le revenu', v:RS_E(r.ir), s:'19 % de '+RS_E(r.nIR)},
+        {k:'Prélèvements sociaux', v:RS_E(r.ps), s:'17,2 % de '+RS_E(r.nPS)},
+        {k:'Surtaxe', v:RS_E(r.surtaxe), s:'plus-value nette au-delà de 50 000 €'},
+        {k:'Net vendeur', v:RS_E(v.pc - v.fc - r.impot), s:'avant remboursement d’un éventuel crédit', cls:'good'},
+      ],
+      chart:{type:'bar', x:tab.map(t=>String(t[0])), series:[{n:'Impôt total si vente cette année-là', c:RS_COL[3], d:tab.map((t,i)=>opts(Math.max(0,ans-1)+i).impot)}]},
+      tables:[{t:'Et si tu vends plus tard ?', h:['Année de vente','Détention','Abattement IR','Abattement PS','Impôt 19 %','PS 17,2 %','Surtaxe','Impôt total','Net vendeur'], rows:tab, hl:tab.map(t=>t[0]===v.anc)}],
+      notes:[
+        'Abattements : impôt sur le revenu 6 % par an de la 6e à la 21e année et 4 % la 22e (exonération après 22 ans) ; prélèvements sociaux 1,65 % par an de la 6e à la 21e, 1,60 % la 22e puis 9 % par an (exonération après 30 ans).',
+        'Forfaits : 7,5 % du prix d’achat pour les frais d’acquisition ; 15 % pour les travaux si le bien est détenu depuis plus de 5 ans (sans justificatif).',
+        'Surtaxe de 2 à 6 % sur la plus-value nette imposable au-delà de 50 000 € (hors terrains à bâtir), avec un lissage à l’entrée de chaque tranche.',
+        'Durée calculée en années pleines entre les deux années saisies : vérifie la date exacte de l’acte, un jour près peut changer l’abattement.',
+      ]
+    };
+  }
+},
+{
+  // Prêt à paliers (02/11/2026, d'après « Simulateur Emprunt sur 2 lignes (prêt à paliers) V2.1 ») : deux
+  // lignes avec ou sans lissage, comparées à un prêt sur une seule ligne.
+  id:'paliers', slug:'pret-a-paliers', cat:'credit', ic:'🪜', t:'Prêt à paliers', d:'Deux lignes de prêt, avec ou sans lissage, comparées à un prêt sur une seule ligne',
+  g:[
+    {t:'Prêt court (n° 1)', f:[
+      {k:'k1', l:'Montant', t:'eur', v:170000, min:0},
+      {k:'t1', l:'Taux nominal', t:'pct', v:1, step:'0.05'},
+      {k:'d1', l:'Durée', t:'num', u:'ans', v:15, min:1, max:30},
+    ]},
+    {t:'Prêt long (n° 2)', f:[
+      {k:'k2', l:'Montant', t:'eur', v:140000, min:0},
+      {k:'t2', l:'Taux nominal', t:'pct', v:1.65, step:'0.05'},
+      {k:'d2', l:'Durée', t:'num', u:'ans', v:25, min:2, max:35},
+    ]},
+    {t:'Assurance', f:[
+      {k:'ass', l:'Assurance emprunteur', t:'pct', v:0, step:'0.01', h:'Taux annuel sur le capital emprunté'},
+    ]},
+  ],
+  calc(v){
+    const n1=Math.round(v.d1*12), n2=Math.round(v.d2*12), i1=v.t1/1200, i2=v.t2/1200, K=v.k1+v.k2, aM=v.ass/1200;
+    const m1=rsPmt(v.t1/100,n1,v.k1), m2=rsPmt(v.t2/100,n2,v.k2), mU=rsPmt(v.t2/100,n2,K);
+    const ass1=aM*K, ass2=aM*v.k2;
+    // lissage : mensualité du prêt long pendant le palier 1 pour que le total reste constant ensuite
+    const a=Math.pow(1+i2,n1), b=Math.pow(1+i2,-(n2-n1));
+    const g13 = n2>n1 ? (v.k2*i2*a - m1*(1-b)) / (a - b) : m2;
+    const lisse = m1 + g13;
+    const coutSans = (m1+m2+ass1)*n1 + (m2+ass2)*(n2-n1) - K;
+    const coutAvec = (lisse+ass1)*n1 + (lisse+ass2)*(n2-n1) - K;
+    const coutU = (mU+aM*K)*n2 - K;
+    const teq = rsTauxMensu(K, n2, lisse);
+    const neg = g13 < v.k2*i2 - 1e-6;
+    // échéancier annuel lissé
+    const rows=[]; let c1=v.k1, c2=v.k2;
+    for(let y=1;y<=Math.ceil(n2/12);y++){
+      let e=0,it=0;
+      for(let k=(y-1)*12+1;k<=Math.min(y*12,n2);k++){
+        const p1 = k<=n1 ? m1 : 0, p2 = k<=n1 ? g13 : lisse;
+        const x1=c1*i1, x2=c2*i2; it+=x1+x2; c1=Math.max(0,c1-(p1-x1)); c2=c2-(p2-x2); e+=p1+p2;
+      }
+      rows.push([y, RS_E(e), RS_E(it), RS_E(Math.max(0,c1)), RS_E(c2), RS_E(Math.max(0,c1)+c2)]);
+    }
+    return {
+      warn: neg ? 'Amortissement négatif sur le prêt long pendant le premier palier : augmente le montant du prêt long ou raccourcis le prêt court.' : '',
+      kpis:[
+        {k:'Mensualité lissée', v:RS_E(lisse+ass1,2), s:'constante sur '+v.d2+' ans', cls:'hl'},
+        {k:'Coût avec lissage', v:RS_E(coutAvec), s:'économie de '+RS_E(coutU-coutAvec)+' face à une seule ligne', cls:coutAvec<coutU?'good':''},
+        {k:'Taux équivalent', v:RS_P(teq,2), s:'d’un prêt unique de '+RS_E(K)+' sur '+v.d2+' ans, hors assurance'},
+        {k:'Sans lissage', v:RS_E(m1+m2+ass1,2)+' puis '+RS_E(m2+ass2,2), s:'coût '+RS_E(coutSans)},
+        {k:'Une seule ligne', v:RS_E(mU+aM*K,2), s:'au taux du prêt long · coût '+RS_E(coutU)},
+      ],
+      tables:[{t:'Les trois montages', h:['Montage','Mensualité palier 1','Mensualité palier 2','Coût du crédit'], rows:[
+        ['Deux lignes sans lissage', RS_E(m1+m2+ass1,2), RS_E(m2+ass2,2), RS_E(coutSans)],
+        ['Deux lignes avec lissage', RS_E(lisse+ass1,2), RS_E(lisse+ass2,2), RS_E(coutAvec)],
+        ['Une seule ligne', RS_E(mU+aM*K,2), RS_E(mU+aM*K,2), RS_E(coutU)]]}],
+      table:{h:['Année','Échéances (avec lissage)','Intérêts','Capital dû prêt court','Capital dû prêt long','Capital dû total'], rows},
+      notes:[
+        'Lissage : pendant les '+v.d1+' premières années, le prêt long ne rembourse qu’une petite part de capital, pour que la somme des deux mensualités reste la même sur toute la durée.',
+        'Intérêt : profiter du taux plus bas des durées courtes (ou d’un prêt aidé) sans alourdir la mensualité.',
+      ]
+    };
+  }
+},
+{
+  // Rallongement de crédit (02/11/2026, d'après « Rallongement de crédit.xlsx ») : baisser la mensualité en
+  // allongeant la durée, et placer la différence.
+  id:'rallong', slug:'rallongement-de-credit', cat:'credit', ic:'↔️', t:'Rallongement de crédit', d:'Allonger son prêt de 12, 24 ou 36 mois et placer l’effort d’épargne libéré : le gain net',
+  g:[
+    {t:'Crédit actuel', f:[
+      {k:'crd', l:'Capital restant dû', t:'eur', v:153156, min:0},
+      {k:'tx', l:'Taux nominal', t:'pct', v:1.5, step:'0.05'},
+      {k:'mr', l:'Durée restante', t:'num', u:'mois', v:101, min:1, max:420},
+    ]},
+    {t:'Rallongement', f:[
+      {k:'aj', l:'Durée ajoutée', t:'num', u:'mois', v:24, min:1, max:120},
+      {k:'rp', l:'Rendement du placement', t:'pct', v:4, h:'Net de frais et d’impôt, par an'},
+    ]},
+  ],
+  calc(v){
+    const base = rsPmt(v.tx/100, v.mr, v.crd), intBase = base*v.mr - v.crd, rm=v.rp/1200;
+    const sim = aj => {
+      const n=v.mr+aj, m=rsPmt(v.tx/100, n, v.crd), gain=base-m, intAj=m*n-v.crd-intBase;
+      let pl=0; for(let k=0;k<v.mr;k++) pl = pl*(1+rm) + gain;              // on place la mensualité gagnée
+      const valFin = pl; for(let k=0;k<aj;k++) pl = pl*(1+rm) - m;          // puis on paie les mois ajoutés avec
+      return {aj, m, gain, intAj, valFin, net:pl, effort:m*aj};
+    };
+    const L=[12,24,36].concat(v.aj).filter((x,i,a)=>a.indexOf(x)===i).sort((a,b)=>a-b).map(sim), S=sim(v.aj);
+    return {
+      warn: S.net<0 ? 'Avec ce rendement, le placement ne couvre pas les mois ajoutés : le rallongement coûte plus qu’il ne rapporte.' : '',
+      kpis:[
+        {k:'Nouvelle mensualité', v:RS_E(S.m,2), s:'au lieu de '+RS_E(base,2)},
+        {k:'Effort d’épargne libéré', v:RS_E(S.gain,2)+' / mois', s:'pendant '+v.mr+' mois, à placer', cls:'hl'},
+        {k:'Intérêts ajoutés', v:RS_E(S.intAj), s:'surcoût du crédit'},
+        {k:'Placement à la fin du crédit initial', v:RS_E(S.valFin), s:'à '+RS_P(v.rp/100,1)+' par an'},
+        {k:'Gain net', v:RS_E(S.net), s:'après avoir payé les '+v.aj+' mois ajoutés avec le placement', cls:S.net>=0?'good':'bad'},
+      ],
+      tables:[{t:'Comparatif des durées', h:['Durée ajoutée','Mensualité','Gain mensuel','Intérêts ajoutés','Mensualités ajoutées','Placement constitué','Gain net'],
+        rows:L.map(x=>[x.aj+' mois', RS_E(x.m,2), RS_E(x.gain,2), RS_E(x.intAj), RS_E(x.effort), RS_E(x.valFin), RS_E(x.net)]), hl:L.map(x=>x.aj===v.aj)}],
+      notes:[
+        'Le rallongement suppose l’accord de la banque (avenant, frais éventuels) : à négocier, ou par un rachat de crédit.',
+        'Intéressant quand le taux du crédit est nettement inférieur au rendement du placement : on garde de l’argent qui travaille plus qu’il ne coûte.',
+        'Simulation hors assurance emprunteur et hors frais d’avenant.',
+      ]
+    };
+  }
+},
+{
+  // Réduction d'impôt combinée (02/11/2026, d'après « Reduc IR FCPI FIP + G3F » du MEGA FORMAN, mis à jour
+  // loi de finances 2026 : FIP métropole et FCPI classiques supprimés, FCPI « jeunes entreprises innovantes »
+  // à 30 %, FIP Corse / outre-mer à 30 %).
+  id:'reduc', slug:'reduction-d-impot', cat:'fisc', ic:'🧾', t:'Réduction d’impôt', d:'PER, FCPI, FIP outre-mer et Girardin combinés, avec le plafonnement des niches fiscales',
+  g:[
+    {t:'Le foyer', f:[
+      {k:'imp', l:'Impôt sur le revenu dû avant réductions', t:'eur', v:8000, min:0, h:'Ligne « impôt sur le revenu net » de l’avis, avant réductions et crédits'},
+      {k:'tmi', l:'Tranche marginale d’imposition', t:'sel', v:'30', o:RS_TMI},
+      {k:'couple', l:'Couple marié ou pacsé', t:'chk', v:0},
+      {k:'autres', l:'Autres niches déjà utilisées', t:'eur', v:0, h:'Emploi à domicile, garde d’enfant… dans le plafond de 10 000 €'},
+    ]},
+    {t:'PER', f:[
+      {k:'per', l:'Versement', t:'eur', v:3000, min:0},
+      {k:'plaf', l:'Plafond de déduction disponible', t:'eur', v:10000, h:'Indiqué sur l’avis d’impôt (plafond épargne retraite)'},
+    ]},
+    {t:'FCPI jeunes entreprises innovantes', f:[
+      {k:'fcpi', l:'Versement', t:'eur', v:3000, min:0},
+      {k:'tfcpi', l:'Taux de réduction effectif', t:'pct', v:27, h:'30 % × la part investie dans les entreprises (90 % = 27 %). Vérifie le taux du millésime.'},
+    ]},
+    {t:'FIP Corse ou outre-mer', f:[
+      {k:'fip', l:'Versement', t:'eur', v:0, min:0},
+      {k:'tfip', l:'Taux de réduction', t:'pct', v:30},
+    ]},
+    {t:'Girardin industriel', f:[
+      {k:'gir', l:'Apport', t:'eur', v:0, min:0},
+      {k:'grdt', l:'Rentabilité', t:'pct', v:10},
+    ]},
+  ],
+  calc(v){
+    const tmi=+v.tmi/100, c=v.couple?2:1;
+    const perD=Math.min(v.per, v.plaf), ecoPer=perD*tmi, impApres=Math.max(0, v.imp-ecoPer);
+    const fipV=Math.min(v.fip, 12000*c), fcpiV=Math.min(v.fcpi, 75000*c);
+    let fip=fipV*v.tfip/100; const fcpi=fcpiV*v.tfcpi/100; let gir=v.gir*(1+v.grdt/100);
+    const msg=[];
+    // plafonnement global : 10 000 € (FIP + autres) ; 18 000 € avec l'outre-mer (Girardin retenu à 44 %)
+    const place10 = Math.max(0, 10000 - v.autres);
+    if(fip>place10){ msg.push('FIP : '+RS_E(fip-place10)+' de réduction au-delà du plafond de 10 000 €, perdus.'); fip=place10; }
+    const place18 = Math.max(0, 18000 - v.autres - fip);
+    if(gir*0.44>place18){ const g2=place18/0.44; msg.push('Girardin : réduction ramenée à '+RS_E(g2)+' par le plafond de 18 000 €.'); gir=g2; }
+    // imputation sur l'impôt : les réductions non reportables d'abord, le Girardin (reportable 5 ans) ensuite
+    let reste=impApres; const imputer=x=>{ const u=Math.min(reste,x); reste-=u; return u; };
+    const uFip=imputer(fip), uFcpi=imputer(fcpi), uGir=imputer(gir);
+    if(fcpi+fip-uFcpi-uFip>0.5) msg.push('FCPI / FIP : '+RS_E(fcpi+fip-uFcpi-uFip)+' de réduction dépassent l’impôt et sont perdus.');
+    if(gir-uGir>0.5) msg.push('Girardin : '+RS_E(gir-uGir)+' reportables sur les 5 années suivantes.');
+    const eco = ecoPer + uFip + uFcpi + uGir, verse = v.per + v.fip + v.fcpi + v.gir;
+    const rows=[
+      ['PER', RS_E(v.per), RS_E(ecoPer), 'non (déduction du revenu)', 'récupérable à la retraite'],
+      ['FCPI jeunes entreprises innovantes', RS_E(v.fcpi), RS_E(uFcpi), 'non', 'bloqué 7 à 10 ans, capital à risque'],
+      ['FIP Corse / outre-mer', RS_E(v.fip), RS_E(uFip), 'oui, 10 000 €', 'bloqué 7 à 10 ans, capital à risque'],
+      ['Girardin industriel', RS_E(v.gir), RS_E(uGir), 'oui, 44 % dans 18 000 €', 'apport définitivement acquis'],
+    ];
+    return {
+      warn: msg.join(' '),
+      kpis:[
+        {k:'Impôt après réductions', v:RS_E(reste), s:'au lieu de '+RS_E(v.imp), cls:'hl'},
+        {k:'Économie d’impôt', v:RS_E(eco), s:'dont PER '+RS_E(ecoPer)+' et réductions '+RS_E(uFip+uFcpi+uGir), cls:'good'},
+        {k:'Sommes investies', v:RS_E(verse), s:'PER, FCPI, FIP et Girardin'},
+        {k:'Niches fiscales utilisées', v:RS_E(v.autres+fip+gir*0.44), s:'sur 18 000 € (dont 10 000 € hors outre-mer)'},
+      ],
+      tables:[{t:'Détail par dispositif', h:['Dispositif','Versé','Économie retenue','Dans le plafond des niches','À savoir'], rows}],
+      notes:[
+        'PER : versement déduit du revenu imposable dans la limite du plafond ; économie estimée au taux marginal (elle est moindre si la déduction fait changer de tranche). Le capital reste au client, imposé à la sortie.',
+        'FCPI : depuis le 21/02/2026, seuls les FCPI investis dans des jeunes entreprises innovantes ouvrent droit à la réduction (30 %, hors plafond des niches, plafond de versement 75 000 € / 150 000 €). Les FIP métropole n’en ouvrent plus depuis le 01/01/2026.',
+        'FIP Corse et outre-mer : 30 %, versements retenus jusqu’à 12 000 € (24 000 € pour un couple), dans le plafond de 10 000 €.',
+        'Girardin : réduction = apport × (1 + rentabilité), retenue à 44 % dans le plafond de 18 000 € ; l’excédent sur l’impôt se reporte 5 ans.',
+        'Les réductions FCPI et FIP au-delà de l’impôt dû sont perdues : cale les versements sur l’impôt de l’année. Taux à vérifier pour chaque millésime.',
+      ]
+    };
+  }
+},
+{
+  // Objectif de titre (02/11/2026, d'après « OBJECTIF VA PERSO Titre - temps de passage » de l'UDP de
+  // septembre 2026) : le volume d'affaires d'un titre réparti sur l'année PMR (août → juillet).
+  id:'titre', slug:'objectif-titre', cat:'act', ic:'🏆', t:'Objectif de titre', d:'Manager, Major ou Expert : le volume d’affaires mois par mois et les R1 qu’il faut pour y arriver',
+  g:[
+    {t:'Objectif', f:[
+      {k:'titre', l:'Titre visé', t:'sel', v:'man', w:1, o:[['man','Manager — 600 000 € de VA acté'],['maj','Major — 1 200 000 €'],['exp','Expert — 1 700 000 €'],['perso','Objectif personnel']]},
+      {k:'va', l:'Volume d’affaires annuel', t:'eur', v:600000, min:0},
+      {k:'pscpi', l:'Part réalisée en SCPI', t:'pct', v:33, step:'1', h:'Le reste en placements et versements programmés'},
+      {k:'fait', l:'Déjà réalisé depuis le 1er août', t:'eur', v:0, min:0},
+    ]},
+    {t:'Tes ratios', f:[
+      {k:'foyer', l:'VA placement moyen par foyer', t:'eur', v:25000},
+      {k:'conv', l:'Taux de transformation R1 → client', t:'pct', v:50},
+      {k:'tscpi', l:'Ticket SCPI moyen', t:'eur', v:80000},
+      {k:'rscpi', l:'R1 qui débouchent sur une SCPI', t:'pct', v:20, h:'1 R1 sur 5 dans le classeur'},
+      {k:'sem', l:'Semaines travaillées par an', t:'num', u:'sem.', v:47, min:1, max:52},
+    ]},
+  ],
+  lier(v, k){ return k==='titre' && v.titre!=='perso' ? {va:{man:600000, maj:1200000, exp:1700000}[v.titre], pscpi:{man:33, maj:53, exp:52}[v.titre]} : {}; },
+  calc(v){
+    const pS=v.pscpi/100, vaP=v.va*(1-pS), vaS=v.va*pS;
+    const foyers = v.foyer>0 ? vaP/v.foyer : 0, r1P = v.conv>0 ? foyers/(v.conv/100) : 0;
+    const dealsS = v.tscpi>0 ? vaS/v.tscpi : 0, r1S = v.rscpi>0 ? dealsS/(v.rscpi/100) : 0;
+    const r1 = Math.max(r1P, r1S), sup = Math.max(0, r1S - r1P);
+    const parSem = r1/(v.sem||1);
+    // année PMR : août → juillet
+    const now=new Date(), y0 = now.getMonth()>=7 ? now.getFullYear() : now.getFullYear()-1;
+    const fin=new Date(y0+1, 6, 31), semRest = Math.max(1, (fin-now)/(7*864e5)*(v.sem/52));
+    const reste = Math.max(0, v.va - v.fait), r1Rest = v.va>0 ? r1*reste/v.va : 0;
+    const MOIS=['Août','Septembre','Octobre','Novembre','Décembre','Janvier','Février','Mars','Avril','Mai','Juin','Juillet'];
+    // août compte pour moitié (congés), comme dans le classeur
+    const poids=MOIS.map((m,i)=>i===0?0.5:1), tot=poids.reduce((s,x)=>s+x,0);
+    let cum=0;
+    const rows=MOIS.map((m,i)=>{ const va=v.va*poids[i]/tot; cum+=va; return [m+' '+(i<5?y0:y0+1), RS_E(va*(1-pS)), RS_E(va*pS), RS_E(va), RS_E(cum), RS_N(r1*poids[i]/tot,1)]; });
+    return {
+      warn: sup>0.5 ? 'Avec ces ratios, les R1 nécessaires aux placements ne suffisent pas pour la part SCPI : il faut '+RS_N(Math.ceil(sup))+' R1 de plus, ou un ticket SCPI plus élevé.' : '',
+      kpis:[
+        {k:'R1 par semaine', v:RS_N(parSem,1), s:RS_N(Math.ceil(r1-1e-9))+' R1 sur l’année', cls:'hl'},
+        {k:'Foyers à équiper', v:RS_N(Math.ceil(foyers-1e-9)), s:RS_E(vaP)+' en placements'},
+        {k:'Souscriptions SCPI', v:RS_N(dealsS,1), s:RS_E(vaS)+' au ticket de '+RS_E(v.tscpi)},
+        {k:'Objectif par trimestre', v:RS_E(v.va/4), s:'soit '+RS_E(v.va/12)+' par mois en moyenne'},
+        {k:'Reste à faire', v:RS_E(reste), s:'d’ici le 31 juillet '+(y0+1)+' : '+RS_N(r1Rest/semRest,1)+' R1 par semaine', cls:reste>0?'':'good'},
+      ],
+      tables:[{t:'Plan mois par mois (année août → juillet)', h:['Mois','Placements et VP','SCPI','VA du mois','Cumul','R1'], rows}],
+      notes:[
+        'Base du classeur de l’UDP : 1 foyer = 25 000 € de placements, 1 R1 sur 5 permet 80 000 € de SCPI. Manager : 1 R1 par semaine à 50 % de transformation ; Major : 75 % ; Expert : 85 %, ou 2 R1 par semaine à 50 %.',
+        'Août compte pour un demi-mois. Remplace ces ratios par les tiens, relevés dans ton Mail Manager.',
+      ]
     };
   }
 },
@@ -12959,7 +13730,14 @@ function rsParcFormHtml(){
 }
 
 /* ------------------------------- Rendu -------------------------------- */
+// Familles de simulateurs (02/11/2026, 17 outils) : les cartes sont rangées par famille, dans cet ordre.
+const RS_CATS = [['epargne','Épargne et retraite'],['scpi','SCPI'],['immo','Immobilier'],['credit','Crédit'],['fisc','Fiscalité'],['act','Mon activité']];
 function rsCartes(list, cur, attr){
+  if(list.some(t=>t.cat)) return RS_CATS.map(([c,l])=>{ const L=list.filter(t=>t.cat===c); return L.length ? '<div class="rs-cat">'+esc(l)+'</div>'+rsCartes1(L, cur, attr) : ''; }).join('')
+    + rsCartes1(list.filter(t=>!RS_CATS.some(c=>c[0]===t.cat)), cur, attr);
+  return rsCartes1(list, cur, attr);
+}
+function rsCartes1(list, cur, attr){
   return list.map(t=>'<button type="button" class="rs-card'+(t.id===cur?' on':'')+'" '+attr+'="'+t.id+'"><span class="ic">'+t.ic+'</span><span><b>'+esc(t.t)+'</b><span class="d">'+esc(t.d)+'</span></span></button>').join('');
 }
 function rsRenderSim(){

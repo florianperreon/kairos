@@ -402,7 +402,8 @@ test.describe('Audit de confidentialité', () => {
   const { spawnSync } = require('child_process');
   const os = require('os');
   const GARDE = path.join(RACINE, 'tests', 'garde.py');
-  const ENV = { API_BASE: 'https://api.asso-forman.fr', LIGNEE: 'Jean Dupont,Marie Martin' };
+  // « Jeanne » et non « Jean » (02/11/2026) : l’audit compare des sous-chaînes et le simulateur Jeanbrun contient « jean ».
+  const ENV = { API_BASE: 'https://api.asso-forman.fr', LIGNEE: 'Jeanne Dupont,Marie Martin' };
 
   const lancer = (fichier) => spawnSync('python3', [GARDE, fichier],
     { encoding: 'utf8', env: { ...process.env, ...ENV } });
@@ -5506,5 +5507,159 @@ test.describe('MCP Kairos (01/11/2026)', () => {
     expect(r['3.6/scpi'], 'la case cochée par l’IA est gardée').toBe('2026-11-01T15:00:00.000Z');
     expect(r['1.1/a'], 'le plus récent l’emporte').toBe('2026-10-01T10:00:00.000Z');
     expect(erreurs).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Ressources — simulateurs du MEGA FORMAN (02/11/2026)', () => {
+  // Valeurs attendues : celles que calculent les classeurs du MEGA sur les mêmes hypothèses
+  // (sauf corrections signalées dans les commentaires des simulateurs).
+  const sp = s => String(s).replace(/\s/g, ' ');
+  const calc = (page, id, over) => page.evaluate(([id, over]) => {
+    const d = RS_SIMS.find(t => t.id === id);
+    const o = d.calc(Object.assign({}, rsVals(d), over));
+    return { kpis: Object.fromEntries(o.kpis.map(k => [k.k, k.v + ' | ' + (k.s || '')])), warn: o.warn || '', table: o.table, tables: o.tables };
+  }, [id, over]);
+
+  test('les 17 simulateurs ont un identifiant, une adresse et une famille uniques, et se calculent sans erreur', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const ids = RS_SIMS.map(t => t.id), slugs = RS_SIMS.map(t => t.slug);
+      const sansCat = RS_SIMS.filter(t => !RS_CATS.some(c => c[0] === t.cat)).map(t => t.id);
+      const ko = []; RS_SIMS.filter(t => !t.custom).forEach(t => { try { const o = t.calc(Object.assign({}, rsVals(t))); if (!o.kpis.length || o.kpis.some(k => /NaN|undefined/.test(k.v + k.s))) ko.push(t.id); } catch (e) { ko.push(t.id + ': ' + e.message); } });
+      return { n: RS_SIMS.length, ids: new Set(ids).size, slugs: new Set(slugs).size, sansCat, ko };
+    });
+    expect(r).toEqual({ n: 17, ids: 17, slugs: 17, sansCat: [], ko: [] });
+    expect(erreurs).toEqual([]);
+  });
+
+  test('cartes rangées par famille et chaque nouveau simulateur s’ouvre par son adresse', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    for (const slug of ['jeanbrun', 'scpi-a-credit', 'scpi-demembrement', 'lmnp', 'plus-value-immobiliere', 'pret-a-paliers', 'rallongement-de-credit', 'reduction-d-impot', 'objectif-titre']) {
+      const r = await page.evaluate((s) => {
+        document.getElementById('lock').style.display = 'none'; document.getElementById('app').style.display = 'grid'; window.__booted = true;
+        location.hash = '#ressources?outil=' + s; routeHash();
+        return { titre: (document.querySelector('#resSim .rs-head h2') || {}).textContent || '', kpis: document.querySelectorAll('#rsOut .rs-kpi').length,
+                 cats: [...document.querySelectorAll('#resSimCards .rs-cat')].map(x => x.textContent) };
+      }, slug);
+      expect(r.kpis).toBeGreaterThan(2);
+      expect(r.cats).toEqual(['Épargne et retraite', 'SCPI', 'Immobilier', 'Crédit', 'Fiscalité', 'Mon activité']);
+    }
+    expect(erreurs).toEqual([]);
+  });
+
+  test('SCPI à crédit : mensualité et effort cumulé du classeur CACF', async ({ page }) => {
+    // Classeur CACF V1.2 : 100 250 € investis, frais de courtage 1 002,50 €, apport 11 027,50 €,
+    // 90 225 € à 5,10 % sur 240 mois + 6 mois de différé total, ADI 0,3 % → 638,88 €/mois ;
+    // participation cumulée 51 208,26 € ; provision délai de jouissance 138,79 €.
+    await ouvrir(page);
+    const r = await calc(page, 'scpifin', { part: 'autre', fcou: 1002.5, fdos: 0, fgar: 0, app: 11027.5, inv: 100250, rdt: 5664.5 / 1002.5, tx: 5.1, duree: 20, diff: 6, dtype: 'total', ass: 0.3, fisc: 0, dj: 6, nb: 2 });
+    expect(sp(r.kpis['Mensualité'])).toMatch(/^638,88 €/);
+    expect(sp(r.kpis['Effort total'])).toMatch(/^51 208 €/);
+    expect(sp(r.kpis['Provision délai de jouissance'])).toMatch(/^139 €/);
+    expect(sp(r.kpis['Dividendes'])).toMatch(/^472 €/);
+  });
+
+  test('SCPI à crédit : le choix du partenaire règle le différé et les frais (SOFIAP)', async ({ page }) => {
+    // Classeur SOFIAP V1.13 : différé partiel de 6 mois → provision = 6 × (intérêts + ADI) = 2 155 €
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const d = RS_SIMS.find(t => t.id === 'scpifin'); const v = Object.assign({}, rsVals(d), { part: 'sofiap' });
+      Object.assign(v, d.lier(v, 'part'));
+      return { v: [v.tx, v.dtype, v.diff], o: Object.fromEntries(d.calc(Object.assign(v, { inv: 100000, nb: 1, tx: 4.1, ass: 0.21, fisc: 0 })).kpis.map(k => [k.k, k.v])) };
+    });
+    expect(r.v).toEqual([4.25, 'partiel', 6]);
+    expect(sp(r.o['Frais bancaires'])).toBe('3 900 €');          // 950 + 1 200 + 1,1 % × 100 000 + 650 (classeur : 3 881 €, caution sur le montant net d’apport)
+    expect(sp(r.o['Montant emprunté'])).toBe('100 000 €');
+    expect(sp(r.o['Provision délai de jouissance'])).toBe('2 155 €');
+  });
+
+  test('démembrement : capital du classeur nue-propriété, rendement corrigé ; usufruit à l’IS', async ({ page }) => {
+    await ouvrir(page);
+    const np = await calc(page, 'demembrement', { mode: 'np', inv: 75000, prix: 1000, vr: 900, cle: 75, duree: 5, pv: 0.3 });
+    expect(sp(np.kpis['Capital au terme'])).toMatch(/^91 358 €/);      // Excel : 91 358,12
+    expect(sp(np.kpis['Rendement annuel'])).toMatch(/^4,02 %/);         // Excel : 5,06 % (calculé sur 4 ans)
+    const us = await calc(page, 'demembrement', { mode: 'us', inv: 20000, prix: 1000, cle: 22, duree: 5, rdt: 5.5, rl: 0, reg: 'is', is: 28 });
+    expect(sp(us.kpis['Capital reconstitué'])).toMatch(/^23 600 €/);   // Excel : 4 720 × 5
+    expect(sp(us.kpis['Rendement annuel net'])).toMatch(/^5,78 %/);     // Excel : 5,78 %
+  });
+
+  test('LMNP : emprunt, TVA et amortissements du classeur Résidence de services', async ({ page }) => {
+    // Classeur V3.4 : 99 544,84 € empruntés à 1,4 % / 25 ans + 12 mois de différé, ADI 0,15 % → 411,58 €/mois ;
+    // TVA récupérée 20 900 € ; amortissement annuel 3 375,33 € (bâti 87 760 € / 30 ans + mobilier 4 500 € / 10 ans).
+    await ouvrir(page);
+    const r = await calc(page, 'lmnp', { type: 'rs', tva: 1, prix: 120000, terr: 15, mob: 5400, not: 2.3, apport: 10000, fdos: 500, tx: 1.4, duree: 25, diff: 12, ass: 0.15, cpt: 0 });
+    expect(sp(r.kpis['Montant emprunté'])).toMatch(/^99 545 € \| mensualité 411,58 €/);
+    expect(sp(r.kpis['TVA récupérée'])).toMatch(/^20 900 €/);
+    expect(sp(r.table.rows[2][4])).toBe('3 375 €');
+    // l'amortissement ne crée jamais de déficit : impôt nul tant que la réserve couvre le résultat
+    expect(r.table.rows.slice(1, 10).every(x => sp(x[7]) === '0 €')).toBe(true);
+  });
+
+  test('plus-value immobilière : abattements à 10 ans, surtaxe lissée, résidence principale', async ({ page }) => {
+    await ouvrir(page);
+    const r = await calc(page, 'pv', { usage: 'loc', pc: 300000, fc: 0, pa: 200000, ana: 2016, anc: 2026, fa: 'forf', tr: 'forf', amort: 0 });
+    // 300 000 − (200 000 + 7,5 % + 15 %) = 55 000 ; IR 19 % × 70 % ; PS 17,2 % × 91,75 %
+    expect(sp(r.kpis['Plus-value brute'])).toMatch(/^55 000 €/);
+    expect(sp(r.kpis['Impôt sur le revenu'])).toMatch(/^7 315 €/);
+    expect(sp(r.kpis['Prélèvements sociaux'])).toMatch(/^8 680 €/);
+    const s = await page.evaluate(() => [rsSurtaxe(50000), rsSurtaxe(55000), rsSurtaxe(80000), rsSurtaxe(105000), rsSurtaxe(300000)]);
+    expect(s.map(x => Math.round(x))).toEqual([0, 850, 1600, 2650, 18000]);
+    const rp = await calc(page, 'pv', { usage: 'rp' });
+    expect(sp(rp.kpis['Impôt sur la plus-value'])).toMatch(/^0 €/);
+  });
+
+  test('prêt à paliers : les chiffres du classeur « Emprunt sur 2 lignes »', async ({ page }) => {
+    await ouvrir(page);
+    const r = await calc(page, 'paliers', { k1: 170000, t1: 1, d1: 15, k2: 140000, t2: 1.65, d2: 25, ass: 0 });
+    expect(sp(r.kpis['Mensualité lissée'])).toMatch(/^1 229,77 €/);      // Excel : 1 229,77
+    expect(sp(r.kpis['Coût avec lissage'])).toMatch(/^58 930 €/);       // Excel : 58 929,81
+    expect(sp(r.kpis['Une seule ligne'])).toMatch(/^1 261,77 € \| au taux du prêt long · coût 68 531 €/);
+    expect(sp(r.kpis['Sans lissage'])).toMatch(/^1 587,27 € puis 569,83 €/);
+    expect(sp(r.kpis['Taux équivalent'])).toMatch(/^1,43 %/);
+  });
+
+  test('rallongement : mensualité actuelle du classeur et gain net cohérent', async ({ page }) => {
+    await ouvrir(page);
+    const r = await calc(page, 'rallong', { crd: 153156, tx: 1.5, mr: 101, aj: 24, rp: 4 });
+    expect(sp(r.kpis['Nouvelle mensualité'])).toMatch(/au lieu de 1 615,08 €$/);   // Excel : 1 615,08
+    expect(r.tables[0].rows.map(x => x[0])).toEqual(['12 mois', '24 mois', '36 mois']);
+    const bas = await calc(page, 'rallong', { crd: 153156, tx: 1.5, mr: 101, aj: 24, rp: 0 });
+    expect(bas.warn).toMatch(/coûte plus/);                                     // placement à 0 % : perdant
+  });
+
+  test('Jeanbrun : taux et plafond suivent le niveau de loyer, plafond de loyer de la zone', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      const d = RS_SIMS.find(t => t.id === 'jeanbrun'), v = Object.assign({}, rsVals(d));
+      const reg = (k, x) => { v[k] = x; Object.assign(v, d.lier(v, k)); return [v.taux, v.plaf, v.not]; };
+      return { social: reg('niv', 'social'), ancien: reg('etat', 'ancien'), tres: reg('niv', 'tres'), neuf: reg('etat', 'neuf') };
+    });
+    expect(r).toEqual({ social: [4.5, 10000, 2.5], ancien: [3.5, 10000, 7.5], tres: [4, 12000, 7.5], neuf: [5.5, 12000, 2.5] });
+    // classeur : 167 800 € × 80 % × 3,5 % = 4 698 € d'amortissement ; plafond 8 000 € au-delà de 285 714 €
+    const a = await calc(page, 'jeanbrun', {});
+    expect(sp(a.kpis['Amortissement annuel'])).toMatch(/^4 698 €/);
+    const b = await calc(page, 'jeanbrun', { prix: 400000 });
+    expect(sp(b.kpis['Amortissement annuel'])).toMatch(/^8 000 € .*plafonné/);
+    // zone A, 37,19 m², intermédiaire : 14,64 × 37,19 × 1,2 = 653 € ; 700 € dépasse
+    const c = await calc(page, 'jeanbrun', { loyer: 700 });
+    expect(sp(c.warn)).toMatch(/dépasse le plafond intermédiaire de la zone A : 653 €/);
+  });
+
+  test('réduction d’impôt : plafond des niches et réductions perdues', async ({ page }) => {
+    await ouvrir(page);
+    const a = await calc(page, 'reduc', { imp: 8000, tmi: '30', per: 3000, plaf: 10000, fcpi: 3000, tfcpi: 27, fip: 0, gir: 0, autres: 0 });
+    expect(sp(a.kpis['Impôt après réductions'])).toMatch(/^6 290 €/);   // 8 000 − 900 − 810
+    const b = await calc(page, 'reduc', { imp: 30000, fip: 12000, tfip: 30, autres: 8000, fcpi: 0, per: 0, gir: 0 });
+    expect(b.warn).toMatch(/au-delà du plafond de 10 000 €/);
+    expect(sp(b.kpis['Économie d’impôt'])).toMatch(/^2 000 €/);
+  });
+
+  test('objectif de titre : R1 du classeur Manager', async ({ page }) => {
+    // 600 000 € dont 33 % SCPI : 402 000 € / 25 000 € = 16,08 foyers ÷ 50 % = 32,16 R1 ; ÷ 47 semaines
+    await ouvrir(page);
+    const r = await calc(page, 'titre', {});
+    expect(sp(r.kpis['R1 par semaine'])).toMatch(/^0,7 \| 33 R1/);
+    expect(r.tables[0].rows.length).toBe(12);
   });
 });
