@@ -2016,9 +2016,18 @@ body.ps-open #fbBtn{bottom:64px}
 .rs-intro p{color:var(--ink-2);font-size:14px;margin:0}
 .rs-intro .rs-priv{display:inline-flex;gap:6px;align-items:center;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--gold-ink);background:var(--gold-soft);border-radius:99px;padding:3px 11px}
 .rs-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:18px}
-.rs-cat{grid-column:1/-1;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin:6px 0 -2px}
-.rs-cat:first-child{margin-top:0}
-#resSimCards .rs-card .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#resSimCards{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:14px}
+.rs-fams,.rs-pks{display:flex;flex-wrap:wrap;gap:6px}
+.rs-fam,.rs-pk{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:13px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:5px 12px;line-height:1.2;transition:border-color .12s,background .12s}
+.rs-fam:hover,.rs-pk:hover{border-color:var(--accent);color:var(--ink)}
+.rs-fam{font-weight:600}
+.rs-fam .n{font-size:11px;font-weight:600;color:var(--ink-3);background:var(--surface-2);border-radius:999px;padding:0 6px}
+.rs-fam.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.rs-fam.on .n{background:var(--accent-soft);color:var(--ink)}
+.rs-fam.cur{border-color:var(--accent)}
+.rs-pk .ic{font-size:15px;line-height:1}
+.rs-pk.on{background:var(--accent-soft);border-color:var(--accent);color:var(--ink);font-weight:600}
+.rs-fam:focus-visible,.rs-pk:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .rs-card{display:flex;gap:11px;align-items:flex-start;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px 13px;cursor:pointer;font:inherit;color:var(--ink);transition:border-color .12s,box-shadow .12s}
 .rs-card:hover{border-color:var(--accent)}
 .rs-card.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
@@ -4312,7 +4321,7 @@ function showAdminSub(s){
 const KAIROS_CHANGELOG = [
   ['2026-11-02', [
     ['f','Ressources : 9 nouveaux simulateurs tirés du MEGA FORMAN — Jeanbrun, SCPI à crédit (CACF, SOFIAP, CFCAL), SCPI en démembrement, LMNP, plus-value immobilière, prêt à paliers, rallongement de crédit, réduction d’impôt combinée et objectif de titre.'],
-    ['f','Ressources : les simulateurs sont rangés par famille (épargne, SCPI, immobilier, crédit, fiscalité, activité).'],
+    ['f','Ressources : le choix du simulateur tient en deux rangées de pastilles (la famille, puis l’outil) juste au-dessus du simulateur, au lieu de la grille de cartes.'],
   ]],
   ['2026-11-01', [
     ['f','Ressources : nouveau bouton « 📄 PDF » qui crée un vrai fichier PDF, sans l’adresse de la page, la date ni le titre que le navigateur ajoute en marge à l’impression (courriers en texte, simulations en pages A4).'],
@@ -13730,18 +13739,32 @@ function rsParcFormHtml(){
 }
 
 /* ------------------------------- Rendu -------------------------------- */
-// Familles de simulateurs (02/11/2026, 17 outils) : les cartes sont rangées par famille, dans cet ordre.
-const RS_CATS = [['epargne','Épargne et retraite'],['scpi','SCPI'],['immo','Immobilier'],['credit','Crédit'],['fisc','Fiscalité'],['act','Mon activité']];
+// Familles de simulateurs (02/11/2026, 17 outils), dans cet ordre.
+// Choix d'un simulateur (proposition 1 du 02/11/2026) : une rangée de pastilles pour les familles, une
+// rangée pour les outils de la famille affichée, juste au-dessus du simulateur (≈ 70 px au lieu de la
+// grille de cartes). La description de chaque outil passe en infobulle. RS_FAM = famille affichée ;
+// null = celle du simulateur ouvert.
+const RS_CATS = [['epargne','Épargne et retraite','Épargne'],['scpi','SCPI','SCPI'],['immo','Immobilier','Immobilier'],['credit','Crédit','Crédit'],['fisc','Fiscalité','Fiscalité'],['act','Mon activité','Activité']];
+let RS_FAM = null;
 function rsCartes(list, cur, attr){
-  if(list.some(t=>t.cat)) return RS_CATS.map(([c,l])=>{ const L=list.filter(t=>t.cat===c); return L.length ? '<div class="rs-cat">'+esc(l)+'</div>'+rsCartes1(L, cur, attr) : ''; }).join('')
-    + rsCartes1(list.filter(t=>!RS_CATS.some(c=>c[0]===t.cat)), cur, attr);
+  if(attr==='data-sim' && list.some(t=>t.cat)) return rsPastilles(list, cur);
   return rsCartes1(list, cur, attr);
+}
+function rsPastilles(list, cur){
+  const curDef = list.find(t=>t.id===cur), fam = RS_FAM || (curDef && curDef.cat) || RS_CATS[0][0];
+  const fams = RS_CATS.filter(c=>list.some(t=>t.cat===c[0]));
+  return '<div class="rs-fams" role="tablist" aria-label="Familles de simulateurs">'
+    + fams.map(([c,l,court])=>'<button type="button" role="tab" class="rs-fam'+(c===fam?' on':'')+(curDef&&curDef.cat===c&&c!==fam?' cur':'')+'" data-fam="'+c+'" aria-selected="'+(c===fam)+'" title="'+esc(l)+'">'+esc(court)+'<span class="n">'+list.filter(t=>t.cat===c).length+'</span></button>').join('')
+    + '</div><div class="rs-pks">'
+    + list.filter(t=>t.cat===fam).map(t=>'<button type="button" class="rs-pk'+(t.id===cur?' on':'')+'" data-sim="'+t.id+'" title="'+esc(t.d)+'"'+(t.id===cur?' aria-current="true"':'')+'><span class="ic">'+t.ic+'</span>'+esc(t.t)+'</button>').join('')
+    + '</div>';
 }
 function rsCartes1(list, cur, attr){
   return list.map(t=>'<button type="button" class="rs-card'+(t.id===cur?' on':'')+'" '+attr+'="'+t.id+'"><span class="ic">'+t.ic+'</span><span><b>'+esc(t.t)+'</b><span class="d">'+esc(t.d)+'</span></span></button>').join('');
 }
 function rsRenderSim(){
   const def=rsDef(RS_SIM); if(!def) return;
+  RS_FAM = null;
   document.getElementById('resSimCards').innerHTML = rsCartes(RS_SIMS, RS_SIM, 'data-sim');
   const box=document.getElementById('resSim');
   if(def.custom && !RS_PARC) RS_PARC=[rsBienNeuf(1), rsBienNeuf(2)];
@@ -14187,7 +14210,8 @@ document.getElementById('resSub').addEventListener('click', e=>{
 document.getElementById('v-res').addEventListener('click', e=>{
   const t=e.target.closest('button'); if(!t) return;
   const versOutil = id => { if(window.innerWidth<980){ const e=document.getElementById(id); if(e) e.scrollIntoView({behavior:'smooth',block:'start'}); } };
-  if(t.dataset.sim){ rsOuvrirSim(t.dataset.sim); syncHash(true); versOutil('resSim'); return; }
+  if(t.dataset.fam){ RS_FAM=t.dataset.fam; document.getElementById('resSimCards').innerHTML = rsCartes(RS_SIMS, RS_SIM, 'data-sim'); return; }
+  if(t.dataset.sim){ rsOuvrirSim(t.dataset.sim); syncHash(true); return; }
   if(t.dataset.doc){ rsOuvrirDoc(t.dataset.doc); syncHash(true); versOutil('resDoc'); return; }
   const sub = t.closest('.subview'); if(!sub) return;
   const def = sub.id==='sr-sim' ? rsDef(RS_SIM) : rsDef(RS_DOC);

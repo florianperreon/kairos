@@ -5521,6 +5521,23 @@ test.describe('Ressources — simulateurs du MEGA FORMAN (02/11/2026)', () => {
     return { kpis: Object.fromEntries(o.kpis.map(k => [k.k, k.v + ' | ' + (k.s || '')])), warn: o.warn || '', table: o.table, tables: o.tables };
   }, [id, over]);
 
+  test('pastilles : changer de famille montre ses outils sans fermer le simulateur, un clic ouvre l’outil', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none'; document.getElementById('app').style.display = 'grid'; window.__booted = true;
+      location.hash = '#ressources?outil=jeanbrun'; routeHash();
+      document.querySelector('#resSimCards [data-fam="credit"]').click();
+      const apres = { sim: RS_SIM, outils: [...document.querySelectorAll('#resSimCards .rs-pk')].map(b => b.dataset.sim), cur: !!document.querySelector('#resSimCards .rs-fam.cur[data-fam="immo"]') };
+      document.querySelector('#resSimCards [data-sim="paliers"]').click();
+      return { apres, sim: RS_SIM, fam: document.querySelector('#resSimCards .rs-fam.on').dataset.fam, titre: document.querySelector('#resSim .rs-head h2').textContent };
+    });
+    expect(r.apres).toEqual({ sim: 'jeanbrun', outils: ['credit', 'paliers', 'rallong'], cur: true });
+    expect(r.sim).toBe('paliers');
+    expect(r.fam).toBe('credit');
+    expect(r.titre).toMatch(/Prêt à paliers/);
+    expect(erreurs).toEqual([]);
+  });
+
   test('les 17 simulateurs ont un identifiant, une adresse et une famille uniques, et se calculent sans erreur', async ({ page }) => {
     const erreurs = await ouvrir(page);
     const r = await page.evaluate(() => {
@@ -5540,10 +5557,17 @@ test.describe('Ressources — simulateurs du MEGA FORMAN (02/11/2026)', () => {
         document.getElementById('lock').style.display = 'none'; document.getElementById('app').style.display = 'grid'; window.__booted = true;
         location.hash = '#ressources?outil=' + s; routeHash();
         return { titre: (document.querySelector('#resSim .rs-head h2') || {}).textContent || '', kpis: document.querySelectorAll('#rsOut .rs-kpi').length,
-                 cats: [...document.querySelectorAll('#resSimCards .rs-cat')].map(x => x.textContent) };
+                 cats: [...document.querySelectorAll('#resSimCards .rs-fam')].map(x => x.firstChild.textContent),
+                 fam: (document.querySelector('#resSimCards .rs-fam.on') || {}).dataset.fam,
+                 outil: (document.querySelector('#resSimCards .rs-pk.on') || {}).dataset.sim,
+                 cat: RS_SIMS.find(t => t.id === RS_SIM).cat,
+                 haut: document.getElementById('resSimCards').getBoundingClientRect().height };
       }, slug);
       expect(r.kpis).toBeGreaterThan(2);
-      expect(r.cats).toEqual(['Épargne et retraite', 'SCPI', 'Immobilier', 'Crédit', 'Fiscalité', 'Mon activité']);
+      expect(r.cats).toEqual(['Épargne', 'SCPI', 'Immobilier', 'Crédit', 'Fiscalité', 'Activité']);
+      expect(r.fam).toBe(r.cat);                     // la famille du simulateur ouvert est affichée
+      expect(r.outil).toBeTruthy();
+      expect(r.haut).toBeLessThan(120);              // deux rangées de pastilles, pas la grille de cartes
     }
     expect(erreurs).toEqual([]);
   });
