@@ -1103,7 +1103,7 @@ test.describe('Mail Manager — invités relevés et lecture du mur', () => {
   test('EDM / DM ne se saisit plus à la main', async ({ page }) => {
     await ouvrir(page);
     const champs = await page.evaluate(() => MM_CPT.map(c => c[1]));
-    expect(champs).toEqual(['R0', 'R1', 'R2', 'R3', 'RX']);   // « R-signature » retiré le 01/11/2026
+    expect(champs).toEqual(['R0', 'R1', 'R2', 'RX']);   // R3 fusionné dans RX le 02/11/2026   // « R-signature » retiré le 01/11/2026
     expect(champs, 'le compteur manuel a disparu').not.toContain('EDM / DM');
   });
 
@@ -3109,11 +3109,11 @@ test.describe('Mail Manager — alléger la saisie', () => {
                memeChamp: document.querySelector('#mmMoi .mm-rdv input[data-mm="c.r1"]') === champ };
     });
     const [nP, nC] = await page.evaluate(() => [mmNo(vAddDays(MM_SEM, -7)), mmNo(MM_SEM)]);
-    expect(r.entetes).toEqual(['Période', 'R0', 'R1', 'R2', 'R3', 'RX', 'Total']);
+    expect(r.entetes).toEqual(['Période', 'R0', 'R1', 'R2', 'RX', 'Total']);
     expect(r.lignes.map(l => l.lib)).toEqual([`ÉcouléeS${nP}`, `En coursS${nC}`, `Semaines suivantesdès S${nC + 1 > 52 ? 1 : nC + 1}`]);
-    expect(r.lignes[0].champs).toEqual(['p.r0', 'p.r1', 'p.r2', 'p.r3', 'p.rx', '10']);
-    expect(r.lignes[1].champs).toEqual(['c.r0', 'c.r1', 'c.r2', 'c.r3', 'c.rx', '2']);
-    expect(r.lignes[2].champs).toEqual(['av.r0', 'av.r1', 'av.r2', 'av.r3', 'av.rx', '6']);
+    expect(r.lignes[0].champs).toEqual(['p.r0', 'p.r1', 'p.r2', 'p.rx', '10']);
+    expect(r.lignes[1].champs).toEqual(['c.r0', 'c.r1', 'c.r2', 'c.rx', '2']);
+    expect(r.lignes[2].champs).toEqual(['av.r0', 'av.r1', 'av.r2', 'av.rx', '6']);
     // l'écart n'a de sens que là où il y a un précédent : l'écoulée et l'avance
     expect(r.lignes[0].dlt).toEqual(['+1', '-1', '+1']);
     expect(r.lignes[1].dlt, 'la semaine en cours n’a pas de précédent').toEqual([]);

@@ -6549,8 +6549,9 @@ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !locat
 
 // EDM / DM ne se saisit plus : les invités présents en DM / AD / 3 Jours sont relevés dans le réseau.
 // 01/11/2026 : « R-signature » (r2b) retiré — plus saisi ni affiché ; les anciennes valeurs restent dans les données.
-const MM_CPT   = [['r0','R0'],['r1','R1'],['r2','R2'],['r3','R3'],['rx','RX']];
-const MM_AV    = [['r0','R0'],['r1','R1'],['r2','R2'],['r3','R3'],['rx','RX']];
+// 02/11/2026 : R3 fusionné dans RX (même principe) — les anciennes valeurs r3 ont été ajoutées à rx en base.
+const MM_CPT   = [['r0','R0'],['r1','R1'],['r2','R2'],['rx','RX']];
+const MM_AV    = [['r0','R0'],['r1','R1'],['r2','R2'],['rx','RX']];
 // Production. Le 4e libellé sert là où les deux listes sont fusionnées (fiche de lecture, export
 // texte) : « VA + VAA VC » ne veut rien dire tout seul une fois le personnel et l'équipe mélangés.
 const MM_PROD  = [['va',   'VA + VAA VC',      '€', 'VA + VAA VC personnel'],
