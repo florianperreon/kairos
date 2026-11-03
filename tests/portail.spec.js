@@ -17,6 +17,8 @@ async function ouvrir(page) {
   });
   await page.goto(PAGE, { waitUntil: 'load' });
   await page.waitForTimeout(400);
+  // les 3 écrans du premier jour ne s'ouvrent que dans le test qui les vérifie (03/11/2026)
+  await page.evaluate(() => { try { J0_MONTRE = true; } catch (e) {} });
   return erreurs;
 }
 // Le samedi de la semaine passée et un jour de la semaine prochaine, calculés depuis aujourd'hui
@@ -5898,7 +5900,7 @@ test.describe('Accueil « check rapide » (03/11/2026)', () => {
     const r = await page.evaluate(() => {
       semMarquer('reflexe');
       buildActions();
-      const resume = (document.querySelector('#homeActions .sact-faites summary') || {}).textContent || '';
+      const resume = (document.querySelector('#homeActions .sact-faites:not(.sact-autres) summary') || {}).textContent || '';
       const visibles = [...document.querySelectorAll('#homeActions > .sact')].filter(a => a.classList.contains('fait')).length;
       return { visibles, resume };
     });
@@ -5915,5 +5917,118 @@ test.describe('Accueil « check rapide » (03/11/2026)', () => {
     const r = await page.evaluate(() => ({ larg: document.documentElement.scrollWidth, cols: getComputedStyle(document.getElementById('homeGrid')).gridTemplateColumns.split(' ').length }));
     expect(r.larg).toBeLessThanOrEqual(390);
     expect(r.cols).toBe(1);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Dévoilement progressif (03/11/2026)', () => {
+  const MISSIONS = JSON.parse(lire('tests/missions.json'));
+  const poserDv = (page, o = {}) => page.evaluate(({ missions, o }) => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    CONTENU = { pages: {}, nav: [], missions, reflexes: [], accueil: { valeurs: [{ t: 'Ambition', i: '🚀' }] },
+      ressources: [{ t: 'Discord de la lignée', u: 'https://discord.com/channels/1' }] };
+    MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Test MOI', parrain: 'Parrain TEST' });
+    byNormName.set(norm('Parrain TEST'), { id: 20001, name: 'Parrain TEST' });
+    children.delete(norm('Test MOI'));
+    PARCOURS = { statut: o.statut || 'ROLE_NEOMAN', etapes: o.etapes || {} };
+    CHECK = {}; MIS = o.mis || {}; PORTES = o.portes || {}; VU = o.vu || {};
+    EST_ADMIN = !!o.admin; APERCU = null; J0_MONTRE = !!o.sansJ0;
+    SBUSER = { id: 'u1', email: 'moi@test.invalid' };
+    SB = { rpc: async () => ({ data: [], error: null }) };
+    majParcours(); buildActions(); majDevoilement();
+    return true;
+  }, { missions: MISSIONS, o });
+  const ouverts = page => page.evaluate(() => ['surv','reu','mm','res','veille','lig','pd'].filter(v => !document.querySelector('#side [data-v="'+v+'"]').classList.contains('nv-lock')));
+
+  test('un nouveau ne voit que l’essentiel ; une adresse cachée mène à l’accueil ; Ctrl K ne propose rien de caché', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserDv(page, { sansJ0: true });
+    expect(await ouverts(page)).toEqual([]);
+    const r = await page.evaluate(() => {
+      const v = showTab('veille');
+      return { v, tab: dvOngletDuGroupe('Ressources — simulateurs'), ok: ongletOuvert('res') };
+    });
+    expect(r.v).toBe('home');
+    expect(r.tab).toBe('res');
+    expect(r.ok).toBe(false);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('la Découverte Métier ouvre Mes sessions et Autres événements, annoncés comme nouveaux', async ({ page }) => {
+    await ouvrir(page);
+    await poserDv(page, { sansJ0: true });
+    await poserDv(page, { sansJ0: true, etapes: { dm: { d: '2026-10-01' } }, vu: await page.evaluate(() => VU) });
+    expect(await ouverts(page)).toEqual(['surv', 'reu']);
+    const r = await page.evaluate(() => ({ neufs: VU.dv.n, carte: document.getElementById('homeDv').textContent,
+      pastille: document.querySelector('#side [data-v="surv"]').classList.contains('nv-new') }));
+    expect(r.neufs).toEqual(['surv', 'reu']);
+    expect(r.carte).toContain('Nouveau pour toi');
+    expect(r.pastille).toBe(true);
+    // première visite : encart de découverte, la pastille disparaît
+    const v = await page.evaluate(() => { document.querySelector('#side [data-v="surv"]').hidden = false; const t = showTab('surv'); return { t, tour: !!document.querySelector('#v-surv .dv-tour'), n: VU.dv.n }; });
+    expect(v.t).toBe('surv');
+    expect(v.tour).toBe(true);
+    expect(v.n).toEqual(['reu']);
+  });
+
+  test('administrateur : tout est ouvert ; l’aperçu « phase 1 » referme et se quitte', async ({ page }) => {
+    await ouvrir(page);
+    await poserDv(page, { admin: true, sansJ0: true });
+    expect((await ouverts(page)).length).toBe(7);
+    await page.evaluate(() => apercuChoisir('p1'));
+    const ap = await ouverts(page);
+    const band = await page.evaluate(() => !!document.getElementById('apercuBand'));
+    await page.evaluate(() => apercuChoisir(null));
+    expect(ap).toEqual(['surv', 'reu']);
+    expect(band).toBe(true);
+    expect((await ouverts(page)).length).toBe(7);
+  });
+
+  test('premier jour : 3 écrans, puis la checklist « Ma première semaine » et la carte du parrain', async ({ page }) => {
+    await ouvrir(page);
+    await poserDv(page);
+    expect(await page.evaluate(() => document.getElementById('j0').classList.contains('on'))).toBe(true);
+    await page.click('#j0 [data-j0="1"]');
+    await page.click('#j0 [data-j0="1"]');
+    await page.click('#j0 [data-j0fin]');
+    const r = await page.evaluate(() => ({ j0: !!VU.j0, ck: document.querySelectorAll('#homeJ0 .j0-it').length, par: document.getElementById('homeParrain').textContent,
+      autres: !!document.querySelector('#homeActions .sact-autres') || document.querySelectorAll('#homeActions > .sact').length <= 1 }));
+    expect(r.j0).toBe(true);
+    expect(r.ck).toBe(5);
+    expect(r.par).toContain('Parrain TEST');
+    expect(r.autres).toBe(true);
+  });
+
+  test('mission terminée : un bravo à l’écran, une seule fois', async ({ page }) => {
+    await ouvrir(page);
+    await poserDv(page, { sansJ0: true });
+    const r = await page.evaluate(() => {
+      const m = misPhases()[0].missions.find(x => x.id === '1.6');
+      m.actions.forEach(a => { MIS['1.6/' + a.id] = '2026-11-01T10:00:00Z'; });
+      dvCelebrer();
+      const t1 = document.getElementById('bravoToast');
+      const premier = t1 && t1.classList.contains('on') && t1.textContent;
+      t1.classList.remove('on'); dvCelebrer();
+      return { premier, second: t1.classList.contains('on') };
+    });
+    expect(r.premier).toContain('1.6');
+    expect(r.second).toBe(false);
+  });
+
+  test('parrain : un filleul absent depuis 7 jours et un filleul bloqué donnent des actions', async ({ page }) => {
+    await ouvrir(page);
+    await poserDv(page, { sansJ0: true });
+    const r = await page.evaluate(() => {
+      LIG = { liste: [
+        { membre_id: 501, nom: 'Anne ABSENTE', parrain_id: 20028, connecte: true, parcours: { statut: 'ROLE_NEOMAN', etapes: {} } },
+        { membre_id: 502, nom: 'Bob BLOQUE', parrain_id: 20028, connecte: true, parcours: { statut: 'ROLE_NEOMAN', etapes: { dm: { d: '2026-01-01' } } } } ],
+        parc: { 502: { mis: { '1.2/bac': '2026-01-05T10:00:00Z' } } }, mm: {}, moi: [], vict: [], bravos: {} };
+      LIG_ACT = { 501: '2020-01-01T10:00:00Z', 502: new Date().toISOString() };
+      return parrainActions().map(a => a.t);
+    });
+    expect(r.join('|')).toContain('Prendre des nouvelles de Anne ABSENTE');
+    expect(r.join('|')).toMatch(/Débloquer Bob sur la mission/);
   });
 });

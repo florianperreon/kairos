@@ -203,6 +203,47 @@ section.view.on{display:block}
 .hgrid .hcol.vide{display:none}
 .hgrid:has(.hcol.vide){grid-template-columns:minmax(0,1fr)}
 .hl-off{display:none!important}
+/* ---------- Dévoilement progressif (03/11/2026) ---------- */
+.nv-lock{display:none!important}
+nav.tabs a.nv-new .l::after,nav.botbar a.nv-new .l::after{content:"Nouveau";margin-left:6px;font-size:10px;font-weight:800;background:var(--gold);color:#fff;border-radius:99px;padding:1px 6px;vertical-align:1px}
+nav.botbar a.nv-new .l::after{content:"•";padding:0 4px}
+#v-home.mode-nouveau .hmore{display:none}
+.dv-home h2{margin-bottom:4px}
+.dv-neufs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.dv-att{margin:8px 0 12px;padding-left:20px;font-size:14px}
+.dv-att li{margin:3px 0}
+.dv-tour{border-color:var(--gold);background:var(--gold-soft)}
+.dv-tour .dv-tt{font-family:"Sora";font-weight:800;font-size:16px;margin-bottom:6px}
+.dv-tour ol{margin:6px 0 12px;padding-left:20px;font-size:14px}
+.dv-tour li{margin:3px 0}
+.j0-c{max-width:480px;text-align:left}
+.j0-i{font-size:40px;line-height:1;margin-bottom:8px}
+.j0-c h2{font-size:20px;margin:0 0 8px}
+.j0-c p{font-size:14.5px;color:var(--ink-2);margin:8px 0}
+.j0-l{padding-left:18px;font-size:14.5px}
+.j0-l li{margin:6px 0}
+.j0-a{background:var(--surface-2);border-radius:10px;padding:12px 14px;margin:10px 0}
+.j0-a p{margin:4px 0 0;font-size:13.5px}
+.j0-pts{display:flex;gap:6px;justify-content:center;margin:16px 0 0}
+.j0-pts span{width:8px;height:8px;border-radius:50%;background:var(--line-2)}
+.j0-pts span.on{background:var(--accent)}
+.j0-ck{display:grid;gap:6px}
+.j0-it{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:var(--surface-2);text-decoration:none;color:inherit;font-size:14px;cursor:pointer}
+.j0-it .ck{flex:0 0 auto;width:18px;height:18px;border-radius:50%;border:2px solid var(--line-2);font-size:11px;line-height:14px;text-align:center;font-weight:800}
+.j0-it.ok{color:var(--ink-2);text-decoration:line-through}
+.j0-it.ok .ck{background:var(--gold);border-color:var(--gold);color:#fff}
+#homeParrain .pr-n{font-size:16px;margin:4px 0}
+.mi-aide{margin:10px 0 0;font-size:13.5px;color:var(--ink-2)}
+.bravo-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);z-index:95;background:var(--surface);border:1px solid var(--gold);box-shadow:0 10px 30px rgba(0,0,0,.2);border-radius:12px;padding:12px 18px;font-size:14.5px;max-width:min(560px,calc(100vw - 32px));opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.bravo-toast.on{opacity:1;transform:translate(-50%,0)}
+@media(max-width:860px){.bravo-toast{bottom:calc(76px + env(safe-area-inset-bottom))}}
+.apercu-band{position:sticky;top:0;z-index:45;background:#FFF1DB;color:#5A3300;border-bottom:1px solid var(--encours);padding:8px 16px;font-size:13.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+:root[data-theme="dark"] .apercu-band{background:#4A2E0F;color:#FBBF77}
+.apercu-ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:14px;font-size:13.5px;color:var(--ink-2)}
+.act-ent td:first-child{min-width:240px}
+.ent-b{display:inline-block;width:60px;height:6px;border-radius:3px;background:var(--surface-2);vertical-align:middle;overflow:hidden}
+.ent-b i{display:block;height:100%;background:var(--gold)}
+.ent-bl{color:var(--bad);font-weight:700}
 .hmore>.panel,.hmore>.bdstrip{content-visibility:auto;contain-intrinsic-size:auto 320px}
 .sact-faites{margin-top:2px}
 .sact-faites>summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ink-2);padding:6px 4px;list-style:none}
@@ -2246,10 +2287,12 @@ body.ps-open #fbBtn{bottom:64px}
       <div class="panel alr-home" id="homeAlertes" hidden></div>
       <div class="panel alr-home" id="homePortes" hidden></div>
       <div class="panel welcome" id="welcome"></div>
+      <div class="panel dv-home" id="homeDv" hidden></div>
       <a class="hnext" id="homeNext" hidden></a>
       <!-- Accueil « check rapide » (03/11/2026) : à faire à gauche, à venir à droite ; le reste en dessous, personnalisable -->
       <div class="hgrid" id="homeGrid">
         <div class="hcol" id="hcolA">
+          <div class="panel" id="homeJ0" hidden></div>
           <div class="panel" id="homeActionsPanel" hidden>
             <h2>Mes actions de la semaine</h2>
             <p class="acts-n" id="homeActionsNote"></p>
@@ -2259,6 +2302,7 @@ body.ps-open #fbBtn{bottom:64px}
           <div class="panel" id="homeParcoursMini" hidden></div>
         </div>
         <div class="hcol" id="hcolB">
+          <div class="panel" id="homeParrain" hidden></div>
           <div class="bdstrip surv-strip" id="homeSurv" hidden></div>
           <div class="panel" id="homeWeekPanel"><h2>Les 7 prochains jours <span class="badge-lig">Lignée</span> <span class="wk-inline num" id="homeWeekS"></span></h2><div class="week" id="homeWeek"></div></div>
         </div>
@@ -4067,6 +4111,9 @@ function buildActions(){
     if(fait) actions.push(act); else actions.unshift(act);
   }
 
+  // 7) Coacher mes filleuls directs (03/11/2026) : absent, bloqué, ou à féliciter
+  try{ const pa = parrainActions(); if(pa.length){ evaluable = true; pa.forEach(a=>actions.push(a)); } }catch(e){ console.error(e); }
+
   MCP_ACT = actions; try{ mcpPlanifier(); }catch(e){}
   // Rien d'évaluable : on n'affiche pas le bloc, plutôt que d'annoncer « tu es à jour »
   // sans avoir rien pu vérifier.
@@ -4090,7 +4137,9 @@ function buildActions(){
   // les actions faites tiennent sur une ligne dépliable.
   const faites = actions.filter(a=>a.fait), restent = actions.filter(a=>!a.fait);
   const ouvert = !!(liste.querySelector('details.sact-faites[open]'));
-  liste.innerHTML = restent.map(sactHtml).join('')
+  const unSeul = estNouveau() && restent.length > 1;
+  liste.innerHTML = (unSeul ? sactHtml(restent[0]) + '<details class="sact-faites sact-autres"><summary>'+(restent.length>2 ? 'Voir mes '+(restent.length-1)+' autres actions' : 'Voir mon autre action')+'</summary><div class="acts">'+restent.slice(1).map(sactHtml).join('')+'</div></details>'
+                      : restent.map(sactHtml).join(''))
     + (faites.length ? '<details class="sact-faites"'+(ouvert?' open':'')+'><summary>✓ '+faites.length+' action'+(faites.length>1?'s':'')+' faite'+(faites.length>1?'s':'')+' cette semaine</summary><div class="acts">'+faites.map(sactHtml).join('')+'</div></details>' : '');
   if(okEl) okEl.hidden = reste > 0;
   try{ homeApresActions(restent); }catch(e){ console.error(e); }
@@ -4282,6 +4331,8 @@ function showTab(v){
   // Depuis le 03/11/2026 l'annuaire est un sous-onglet d'Admin : showTab('ann') ouvre Admin → Annuaire
   let sousAdmin = null;
   if(v === 'ann'){ if(EST_ADMIN){ v = 'admin'; sousAdmin = 'ann'; } else v = 'home'; }
+  // Dévoilement progressif (03/11/2026) : un onglet pas encore ouvert par le parcours mène à l'accueil
+  if(!ongletOuvert(v)) v = 'home';
   if(AUTRES.includes(v) && AUT_DER!==v){ AUT_DER=v; try{ localStorage.setItem('kairos_aut', v); }catch(e){} }
   document.querySelectorAll('nav.tabs [data-v], nav.botbar [data-v], #plusCard [data-v]').forEach(x=>x.classList.toggle('on',menuOn(x,v)));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
@@ -4302,6 +4353,7 @@ function showTab(v){
     }catch(e){}
   }
   if(sousAdmin) showAdminSub(sousAdmin);
+  try{ dvALOuverture(v); }catch(e){}
   return v;
 }
 // Menu (31/10/2026) : chaque entrée est un vrai lien <a href="#onglet">. Clic gauche simple = navigation
@@ -4381,7 +4433,7 @@ function ouvrirPlus(){
   if(!m||!c) return;
   const dans=['home','pd','surv','cat','profil'];
   c.innerHTML = '<div class="plus-t">Aller à…</div>' + [...document.querySelectorAll('#side [data-v]')]
-    .filter(b=>!b.hidden && !dans.includes(b.dataset.v))
+    .filter(b=>!b.hidden && !b.classList.contains('nv-lock') && !dans.includes(b.dataset.v))
     .map(b=>'<a href="#'+(TAB_SLUG[menuV(b)]||menuV(b))+'" data-v="'+b.dataset.v+'"'+(b.hasAttribute('data-autres')?' data-autres=""':'')+(menuOn(b,curTab)?' class="on"':'')+'>'
       +'<span class="i">'+b.querySelector('.i').innerHTML+'</span>'+b.querySelector('.l').innerHTML+'</a>').join('')
     + '<div class="plus-t">Mon compte</div>'
@@ -4422,6 +4474,12 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-03', [
+    ['f','Dévoilement progressif : les espaces de Kairos s’ouvrent avec le parcours (Mes sessions et Autres événements après la Découverte Métier, Mail Manager à la mission 1.5, Ressources, Veille et Parcours Découverte au point d’étape 1, Ma lignée au premier filleul). Un espace pas encore ouvert est caché, y compris dans Ctrl K et par son adresse. Les administrateurs gardent tout.'],
+    ['f','Chaque ouverture est annoncée (« 🎉 Nouveau pour toi », pastille dans le menu, encart de découverte en 3 points à la première visite).'],
+    ['f','Nouveau membre : 3 écrans de bienvenue, checklist « Ma première semaine », carte « Ton parrain », une seule prochaine action à la fois ; les blocs secondaires de l’accueil n’arrivent qu’en phase 2.'],
+    ['f','Missions : la prochaine séance à réserver et à qui en parler ; un bravo à chaque mission terminée ; les points d’étape validés rejoignent le mur des victoires.'],
+    ['f','Parrains : actions pour coacher ses filleuls directs (absent depuis 7 jours, bloqué sur une mission depuis 10 jours, mission à féliciter).'],
+    ['f','Admin → Activité : « Voir Kairos comme » un nouveau, une phase 1, 2 ou un parrain ; entonnoir du parcours (faites, en cours, bloqués, durée médiane).'],
     ['f','Accueil repensé pour un coup d’œil rapide : à gauche tes actions restantes et ton parcours en résumé, à droite les 7 prochains jours (avec les ateliers suivants pilotés par la lignée). La présentation de Kairos se replie après tes premières visites.'],
     ['f','Accueil personnalisable (⚙ Personnaliser) : choisis les blocs affichés et l’ordre de ceux du bas ; l’ordre conseillé s’adapte (parrain : suivi de la lignée d’abord ; nouveau : parcours avant les actions).'],
     ['f','Nouvel onglet « Mon parcours » dans Mon espace : le détail des missions, qui était en bas de l’accueil.'],
@@ -4655,7 +4713,7 @@ function routerQuandPret(){
   const tab = m ? tabFromSlug(m[1]) : null;
   if(!tab){ HASH_APPLIQUE = true; return; }
   const btn = document.querySelector('nav.tabs [data-v="'+tab+'"]');
-  if(!btn || btn.hidden) return;          // pas encore prêt : on retentera au prochain chargement
+  if(!btn || btn.hidden || btn.classList.contains('nv-lock')) return;          // pas encore prêt (ou pas encore ouvert par le parcours) : on retentera
   HASH_APPLIQUE = true;
   routeHash();
 }
@@ -4674,7 +4732,7 @@ function routeHash(){
   if(h.startsWith('#p/')){ const slug=decodeURIComponent(h.slice(3)); if(CONTENU&&CONTENU.pages&&CONTENU.pages[slug]){ psFondFiches(h); showPage(slug); } return; }
   if(h==='#faq-apercu'){ buildFaq(true); return; }
   const m=h.match(/^#([a-z-]+)(?:\?(.*))?$/); const tab=m?tabFromSlug(m[1]):null;
-  if(tab){ const btn=document.querySelector('nav.tabs [data-v="'+tab+'"]'); if(btn&&btn.hidden) return;
+  if(tab){ const btn=document.querySelector('nav.tabs [data-v="'+tab+'"]'); if(btn&&(btn.hidden||btn.classList.contains('nv-lock'))) return;
     curTab = showTab(tab);
     if(curTab!==tab){ syncHash(false); return; }
     const p=new URLSearchParams(m[2]||'');
@@ -4778,6 +4836,276 @@ document.addEventListener('click', e=>{
   VU.hp = { s, t: new Date().toISOString() };
   saveVu(); hpPoser();
 });
+/* ---------- Dévoilement progressif (03/11/2026, règles Florian) ----------
+   Les onglets s'ouvrent avec les missions du parcours ; un onglet pas encore ouvert est CACHÉ (menu,
+   menu Plus, Ctrl K, adresse tapée à la main). Personne ne peut débloquer en avance. Les membres déjà
+   là suivent leur avancement réel ; les administrateurs gardent tout (et ont l'aperçu « comme un nouveau »).
+   - Mes sessions, Autres événements : après la Découverte Métier (mission 1.1) ;
+   - Mail Manager : accès MEGA + mail manager demandés (mission 1.5) ou point d'étape 1 ;
+   - Ressources, Veille, Parcours Découverte : point d'étape 1 (phase 2 ouverte) ;
+   - Ma lignée : premier filleul. */
+let APERCU = null;                    // aperçu admin : { phase:'j0'|'p1'|'p2'|'p3' } — jamais enregistré
+const DV_GERES = ['surv','reu','for','evt','mm','res','veille','lig','pd'];
+const DV_INFO = {
+  surv:   { t:'Mes sessions', quand:'après ta Découverte Métier', tour:['Retrouve ici les séances où tu es inscrit et celles que tu suis avec ☆.','Kairos te prévient quand une séance suivie est presque complète.','Astuce : réserve tes prochains ateliers dès qu’ils sont publiés.'] },
+  reu:    { t:'Autres événements', quand:'après ta Découverte Métier', tour:['Réunions d’équipe, formations et événements du réseau, en dehors des ateliers.','Les séances pilotées par ta lignée sont signalées.','L’inscription se fait toujours sur le site FORMAN.'] },
+  mm:     { t:'Mail Manager', quand:'quand tu auras demandé ton accès MEGA et mail manager (mission 1.5)', tour:['Chaque lundi, fais le point de ta semaine : contacts, rendez-vous, signatures.','Ta lignée le lit : c’est le meilleur moyen d’être accompagné.','Remplis-le en 5 minutes, même quand la semaine a été calme.'] },
+  res:    { t:'Ressources', quand:'au point d’étape 1', tour:['Simulateurs patrimoniaux et générateurs de courriers, prêts pour tes rendez-vous.','Commence par les simulateurs que tu utiliseras en R2.','Chaque résultat s’exporte en PDF.'] },
+  veille: { t:'Veille', quand:'au point d’étape 1', tour:['L’actualité patrimoniale de la semaine, triée pour un conseiller.','Une édition chaque lundi, des alertes quand c’est urgent.','Lis-la pour nourrir tes rendez-vous clients.'] },
+  pd:     { t:'Parcours Découverte', quand:'au point d’étape 1', tour:['Le calendrier des Découvertes Métier et des 3 Jours, pour y inviter tes contacts.','Les séances recommandées par la lignée sont mises en avant.','Prépare ton invité avec ton parrain avant la séance.'] },
+  lig:    { t:'Ma lignée', quand:'à ton premier filleul', tour:['Suis l’avancement de tes filleuls : parcours, mail manager, victoires.','Kairos te dit qui a besoin d’un coup de main.','Félicite chaque victoire : ça compte.'] },
+};
+const dvTab = v => (v==='for'||v==='evt') ? 'reu' : v;
+function misOk(mid, aid){
+  try{ for(const ph of misPhases()){ const m = (ph.missions||[]).find(x=>x.id===mid); if(m){ const a = (m.actions||[]).find(x=>x.id===aid); return !!(a && miAction(m,a).ok); } } }catch(e){}
+  return false;
+}
+function dvOuverts(){                  // null = tout est ouvert
+  if(EST_ADMIN && !APERCU) return null;
+  const n = APERCU ? ({ j0:0, p1:1, p2:2, p3:3 })[APERCU.phase] : null;
+  if(n === null && (typeof misData !== 'function' || !misData())) return null;
+  let p2, dm, mega, filleul;
+  if(n !== null){ p2 = n>=2; dm = n>=1; mega = n>=2; filleul = n>=3; }
+  else {
+    const ph2 = misPhases().find(p=>p.id==='p2'); p2 = !!(ph2 && miPhaseOuverte(ph2));
+    dm = misOk('1.1','dm');
+    // mail manager : mission 1.5 cochée, ou déjà utilisé (au moins un mail manager publié)
+    mega = misOk('1.5','mega') || !!(typeof LIG !== 'undefined' && LIG && (LIG.moi||[]).some(r=>r.statut==='publie'));
+    const moi = MOI_ID && byId.get(MOI_ID);
+    filleul = misOk('2.9','filleul') || !!(moi && (children.get(norm(moi.name))||[]).length)
+      || !!(typeof LIG !== 'undefined' && LIG && LIG.liste && LIG.liste.some(p=>p.parrain_id===MOI_ID));
+  }
+  const o = new Set();
+  if(dm || p2) ['surv','reu','for','evt'].forEach(x=>o.add(x));
+  if(mega || p2) o.add('mm');
+  if(p2) ['res','veille','pd'].forEach(x=>o.add(x));
+  if(filleul) o.add('lig');
+  return o;
+}
+function ongletOuvert(v){
+  if(!DV_GERES.includes(v)) return true;
+  try{ const o = dvOuverts(); return !o || o.has(v); }catch(e){ return true; }
+}
+function dvOngletDuGroupe(g){
+  g = String(g||'');
+  if(g==='Veille') return 'veille';
+  if(g.indexOf('Ressources')===0) return 'res';
+  if(/^R[ée]union/.test(g)) return 'reu';
+  if(/^Formation/.test(g)) return 'for';
+  if(/^[ÉE]v[ée]nement/.test(g)) return 'evt';
+  return '';
+}
+let LIG_ACT = null;                   // dernier accès de ma descendance (RPC lignee_activite)
+function parrainActions(){
+  if(APERCU || typeof LIG === 'undefined' || !LIG || !LIG.liste || !MOI_ID) return [];
+  const out = [], il7 = vAddDays(todayIso, -7), il10 = vAddDays(todayIso, -10);
+  LIG.liste.filter(p=>p.parrain_id===MOI_ID && p.connecte).forEach(p=>{
+    const prenom = String(p.nom||'').split(' ')[0] || p.nom;
+    const info = ligCtx(p, ()=>{
+      let enc = null, derniere = ''; const recentes = [];
+      misPhases().forEach(ph=>{ if(ph.avenir) return; (ph.missions||[]).forEach(m=>{
+        const ds = (m.actions||[]).map(a=>miAction(m,a)).filter(x=>x.ok && x.d).map(x=>x.d).sort();
+        const last = ds[ds.length-1] || ''; if(last > derniere) derniere = last;
+        const e = miEtat(ph, m);
+        if(e==='encours' && !enc) enc = m;
+        if(e==='faite' && last >= il7) recentes.push(m);
+      }); });
+      return { enc, derniere, recentes };
+    });
+    const acces = LIG_ACT && LIG_ACT[p.membre_id] ? String(LIG_ACT[p.membre_id]).slice(0,10) : '';
+    if(acces && acces < il7){
+      const cle = 'coach-abs-'+p.membre_id;
+      out.push({ cle, manuel:true, cls:'att', urg:'filleul', t:'Prendre des nouvelles de '+p.nom,
+        d:'Pas venu sur Kairos depuis le '+fmtD(acces)+'. Un message ou un appel suffit souvent à relancer.', href:'#ma-lignee', fait:semFait(cle), go:'Voir' });
+    } else if(info.enc && (!info.derniere || info.derniere < il10)){
+      const cle = 'coach-bloq-'+p.membre_id+'-'+info.enc.id;
+      out.push({ cle, manuel:true, cls:'att', urg:'filleul', t:'Débloquer '+prenom+' sur la mission '+info.enc.id,
+        d:info.enc.t+(info.derniere ? ' — rien de coché depuis le '+fmtD(info.derniere) : '')+'. Un appel de 10 minutes peut tout changer.', href:'#ma-lignee', fait:semFait(cle), go:'Voir' });
+    }
+    info.recentes.slice(0,1).forEach(m=>{ const cle = 'coach-bravo-'+p.membre_id+'-'+m.id;
+      out.push({ cle, manuel:true, urg:'bravo', t:'Féliciter '+prenom, d:'Mission '+m.id+' terminée : '+m.t+'.', href:'#ma-lignee', fait:semFait(cle), go:'Voir' }); });
+  });
+  return out;
+}
+// Fin de mission : un bravo à l'écran (le parrain le voit sur son accueil, le point d'étape va au mur)
+function dvCelebrer(){
+  if(APERCU || typeof misData !== 'function' || !misData()) return;
+  const faites = []; misPhases().forEach(ph=>(ph.missions||[]).forEach(m=>{ if(miFaite(m)) faites.push(m.id); }));
+  if(!Array.isArray(VU.mf)){ VU.mf = faites; saveVu(); return; }
+  const neuves = faites.filter(id=>!VU.mf.includes(id));
+  if(!neuves.length) return;
+  VU.mf = [...new Set(VU.mf.concat(neuves))]; saveVu();
+  const m = (()=>{ for(const ph of misPhases()){ const x=(ph.missions||[]).find(y=>y.id===neuves[0]); if(x) return x; } return null; })();
+  let t = document.getElementById('bravoToast');
+  if(!t){ t = document.createElement('div'); t.id='bravoToast'; t.className='bravo-toast'; document.body.appendChild(t); }
+  t.innerHTML = '🎉 <b>Bravo !</b> Mission '+esc(neuves[0])+(m?' — '+esc(m.t):'')+' terminée'+(neuves.length>1?' (+'+(neuves.length-1)+')':'')+'. Ton parrain le verra sur son accueil.';
+  t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('on'), 7000);
+}
+let J0_MONTRE = false;
+function majDevoilement(){
+  if(!window.__booted) return;
+  const o = dvOuverts();
+  DV_GERES.forEach(v=>{ const ouvert = !o || o.has(v);
+    document.querySelectorAll('nav.tabs [data-v="'+v+'"], nav.botbar [data-v="'+v+'"], #plusCard [data-v="'+v+'"]').forEach(b=>b.classList.toggle('nv-lock', !ouvert)); });
+  document.querySelectorAll('.aut-sub [data-aut]').forEach(b=>b.classList.toggle('nv-lock', !ongletOuvert(b.dataset.aut)));
+  if(!ongletOuvert(curTab)){ showTab('home'); curTab='home'; syncHash(false); }
+  // annonces : ce qui vient de s'ouvrir (pas en aperçu)
+  if(!APERCU){
+    const ouverts = DV_GERES.filter(v=>(!o || o.has(v)) && v===dvTab(v));
+    if(!VU.dv){
+      // première évaluation : rien n'est « nouveau » ; un membre déjà là est prévenu une fois du fonctionnement
+      VU.dv = { c: ouverts, n: [], v: ouverts.slice(), info: !!o && ouverts.length < 6 && !dvPremierJour(), t: new Date().toISOString() };
+      saveVu();
+    } else {
+      const neufs = ouverts.filter(v=>!(VU.dv.c||[]).includes(v));
+      if(neufs.length){
+        VU.dv = Object.assign({}, VU.dv, { c: [...new Set((VU.dv.c||[]).concat(neufs))], n: [...new Set((VU.dv.n||[]).concat(neufs))], t: new Date().toISOString() });
+        saveVu();
+      }
+    }
+  }
+  document.querySelectorAll('nav.tabs [data-v], nav.botbar [data-v]').forEach(b=>b.classList.toggle('nv-new', !APERCU && ((VU.dv&&VU.dv.n)||[]).includes(dvTab(b.dataset.v))));
+  try{ buildDvAccueil(); }catch(e){ console.error(e); }
+  try{ buildApercuBandeau(); }catch(e){}
+  try{ buildPremiereSemaine(); buildParrainCarte(); buildParcoursMini(); dvCelebrer(); }catch(e){ console.error(e); }
+  try{ homeLayout(); }catch(e){}
+  if(!APERCU && !J0_MONTRE && dvPremierJour()){ J0_MONTRE = true; try{ j0Ouvrir(); }catch(e){} }
+}
+// À la première ouverture d'un onglet fraîchement débloqué : un encart de découverte en 3 points
+function dvALOuverture(v){
+  const t = dvTab(v); if(!DV_INFO[t] || APERCU) return;
+  if(VU.dv && (VU.dv.n||[]).includes(t)){ VU.dv = Object.assign({}, VU.dv, { n: VU.dv.n.filter(x=>x!==t), t: new Date().toISOString() }); saveVu();
+    document.querySelectorAll('[data-v="'+t+'"]').forEach(b=>b.classList.remove('nv-new')); try{ buildDvAccueil(); }catch(e){} }
+  const sec = document.getElementById('v-'+v); if(!sec) return;
+  const deja = sec.querySelector(':scope > .dv-tour');
+  const vu = VU.dv && (VU.dv.v||[]).includes(t);
+  if(vu){ if(deja) deja.remove(); return; }
+  if(deja) return;
+  const d = document.createElement('div'); d.className = 'panel dv-tour';
+  d.innerHTML = '<div class="dv-tt">👋 Nouveau pour toi : '+esc(DV_INFO[t].t)+'</div><ol>'+DV_INFO[t].tour.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol>'
+    + '<button type="button" class="mm-b pri" data-dvvu="'+t+'">J’ai compris</button>';
+  sec.insertBefore(d, sec.firstChild);
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-dvvu]'); if(!b) return;
+  const t = b.dataset.dvvu;
+  VU.dv = Object.assign({}, VU.dv||{}, { v: [...new Set(((VU.dv&&VU.dv.v)||[]).concat([t]))], t: new Date().toISOString() }); saveVu();
+  document.querySelectorAll('.dv-tour').forEach(x=>{ if(x.querySelector('[data-dvvu="'+t+'"]')) x.remove(); });
+});
+// Accueil : ce qui vient de s'ouvrir + (une fois) l'explication pour les membres déjà là
+function buildDvAccueil(){
+  const el = document.getElementById('homeDv'); if(!el) return;
+  const neufs = APERCU ? [] : ((VU.dv&&VU.dv.n)||[]).filter(t=>DV_INFO[t]);
+  const o = dvOuverts();
+  const fermes = Object.keys(DV_INFO).filter(t=>o && !o.has(t));
+  let h = '';
+  if(neufs.length) h += '<h2>🎉 Nouveau pour toi</h2><p class="mbr-sub">Ton avancement vient d’ouvrir '+(neufs.length>1?'de nouveaux espaces':'un nouvel espace')+' dans Kairos.</p><div class="dv-neufs">'
+    + neufs.map(t=>'<a class="mm-b pri" href="#'+TAB_SLUG[t]+'">Découvrir '+esc(DV_INFO[t].t)+' →</a>').join('')+'</div>';
+  else if(!APERCU && VU.dv && VU.dv.info && fermes.length)
+    h += '<h2>Kairos s’adapte à ton avancement</h2><p class="mbr-sub">Pour t’éviter de te disperser, certains espaces s’ouvrent au fil de ton parcours. Voici ce qui t’attend :</p><ul class="dv-att">'
+      + fermes.map(t=>'<li><b>'+esc(DV_INFO[t].t)+'</b> — '+esc(DV_INFO[t].quand)+'</li>').join('')+'</ul><button type="button" class="mm-b" data-dvinfo>J’ai compris</button>';
+  el.hidden = !h; el.innerHTML = h;
+}
+document.addEventListener('click', e=>{
+  if(!(e.target.closest && e.target.closest('[data-dvinfo]'))) return;
+  VU.dv = Object.assign({}, VU.dv||{}, { info:false, t:new Date().toISOString() }); saveVu(); buildDvAccueil();
+});
+
+/* --- Le premier jour : 3 écrans, puis la checklist « Ma première semaine » --- */
+const dvPremierJour = () => !VU.j0 && estNouveau() && (APERCU ? APERCU.phase==='j0' : (()=>{ try{ return miPhaseProg(misPhases()[0]).ok <= 3; }catch(e){ return false; } })());
+let J0_ECRAN = 0;
+function monParrain(){
+  const moi = MOI_ID && byId.get(MOI_ID);
+  const nom = moi && moi.parrain && moi.parrain!=='Aucun' ? moi.parrain : '';
+  return { nom, membre: nom ? byNormName.get(norm(nom)) : null };
+}
+function lienDiscord(){
+  const r = ((CONTENU && CONTENU.ressources) || []).find(x=>/discord\.com/.test(x.u||''));
+  return r ? r.u : '';
+}
+function j0Ouvrir(){
+  let m = document.getElementById('j0'); if(!m){ m = document.createElement('div'); m.id='j0'; m.className='hperso'; document.body.appendChild(m); }
+  const par = monParrain(), disc = lienDiscord(), act = (MCP_ACT||[]).find(a=>!a.fait);
+  const vals = ((CONTENU && CONTENU.accueil && CONTENU.accueil.valeurs) || []).map(v=>'<span class="valeur">'+(v.i?'<span class="ic">'+v.i+'</span>':'')+esc(v.t)+'</span>').join('');
+  const E = [
+    '<div class="j0-i">🤝</div><h2>Bienvenue dans la lignée !</h2><p>Tu rejoins une équipe de conseillers qui avancent ensemble, avec trois valeurs :</p><div class="valeurs wval">'+vals+'</div>'
+      + (par.nom ? '<p>Ton parrain est <b>'+esc(par.nom)+'</b>. C’est ton premier interlocuteur : n’hésite jamais à lui poser une question.</p>' : ''),
+    '<div class="j0-i">🧭</div><h2>Comment marche Kairos</h2><ul class="j0-l"><li><b>Ton parcours</b> te guide mission par mission, dans l’ordre.</li><li><b>Tes actions de la semaine</b> te disent quoi faire maintenant.</li><li><b>Kairos s’agrandit avec toi</b> : de nouveaux espaces s’ouvrent au fil de tes étapes, pour ne pas te disperser.</li></ul>'
+      + (disc ? '<p>Pour échanger vite avec la lignée, c’est sur <a href="'+esc(disc)+'" target="_blank" rel="noopener">le Discord</a>.</p>' : ''),
+    '<div class="j0-i">🚀</div><h2>Ta première action</h2>'+(act ? '<div class="j0-a"><b>'+esc(act.t)+'</b><p>'+esc(act.d||'')+'</p></div>' : '<p>Ouvre ton parcours : ta première mission t’y attend.</p>')
+      + '<p class="mbr-sub">Ta checklist « Ma première semaine » t’attend sur l’accueil.</p>'
+  ];
+  const i = Math.max(0, Math.min(J0_ECRAN, E.length-1));
+  m.innerHTML = '<div class="hperso-c j0-c" role="dialog" aria-modal="true" aria-label="Bienvenue">'+E[i]
+    + '<div class="j0-pts">'+E.map((x,k)=>'<span class="'+(k===i?'on':'')+'"></span>').join('')+'</div>'
+    + '<div class="hp-b">'+(i>0?'<button type="button" class="mm-b" data-j0="-1">← Retour</button>':'<span></span>')
+    + (i<E.length-1 ? '<button type="button" class="mm-b pri" data-j0="1">Suivant →</button>' : '<button type="button" class="mm-b pri" data-j0fin>C’est parti !</button>')+'</div></div>';
+  m.classList.add('on');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest) return;
+  const b = e.target.closest('[data-j0]'); if(b){ J0_ECRAN += +b.dataset.j0; j0Ouvrir(); return; }
+  if(e.target.closest('[data-j0fin]')){
+    const m = document.getElementById('j0'); if(m) m.classList.remove('on');
+    if(!APERCU){ VU.j0 = { d: todayIso, t: new Date().toISOString() }; saveVu(); }
+    J0_ECRAN = 0; try{ buildPremiereSemaine(); }catch(e){}
+  }
+});
+// « Ma première semaine » : 5 points, cochés par le parcours quand c'est possible, 14 jours au plus
+function premiereSemaineItems(){
+  const disc = lienDiscord();
+  return [
+    { k:'discord', t:'Présente-toi sur le Discord de la lignée', ok: !!(VU.j0 && VU.j0.discord), manuel:true, href: disc || '' },
+    { k:'esp', t:'Fixe ton ESP avec ton parrain', ok: misOk('1.1','esp'), href:'#mon-parcours' },
+    { k:'dm', t:'Participe à ta Découverte Métier', ok: misOk('1.1','dm'), href:'#ateliers' },
+    { k:'mail', t:'Crée ton adresse mail pro et ta signature', ok: misOk('1.5','mail'), href:'#mon-parcours' },
+    { k:'bac', t:'Commence à lire le BAC (Book Administratif du Consultant)', ok: misOk('1.2','bac'), href:'#mon-parcours' },
+  ];
+}
+function buildPremiereSemaine(){
+  const el = document.getElementById('homeJ0'); if(!el) return;
+  const debut = APERCU ? (APERCU.phase==='j0' ? todayIso : null) : (VU.j0 && VU.j0.d);
+  const items = premiereSemaineItems(), faits = items.filter(x=>x.ok).length;
+  const actif = debut && estNouveau() && vAddDays(debut, 14) >= todayIso && faits < items.length;
+  el.hidden = !actif; if(!actif){ el.innerHTML=''; return; }
+  el.innerHTML = '<h2>Ma première semaine <span class="badge-lig num">'+faits+'/'+items.length+'</span></h2><div class="j0-ck">'
+    + items.map(x=>'<a class="j0-it'+(x.ok?' ok':'')+'"'+(x.href?' href="'+esc(x.href)+'"'+(/^https:/.test(x.href)?' target="_blank" rel="noopener"':''):'')+(x.manuel&&!x.ok?' data-j0ck="'+x.k+'"':'')+'><span class="ck">'+(x.ok?'✓':'')+'</span>'+esc(x.t)+'</a>').join('')+'</div>';
+}
+document.addEventListener('click', e=>{
+  const a = e.target.closest && e.target.closest('[data-j0ck]'); if(!a || APERCU) return;
+  VU.j0 = Object.assign({}, VU.j0||{ d: todayIso }, { [a.dataset.j0ck]: true, t: new Date().toISOString() }); saveVu(); buildPremiereSemaine();
+});
+// Ton parrain, sur l'accueil d'un nouveau
+function buildParrainCarte(){
+  const el = document.getElementById('homeParrain'); if(!el) return;
+  const par = monParrain(), disc = lienDiscord();
+  if(!estNouveau() || !par.nom){ el.hidden = true; el.innerHTML=''; return; }
+  el.hidden = false;
+  el.innerHTML = '<h2>Ton parrain</h2><p class="pr-n"><b>'+esc(par.nom)+'</b></p><p class="mbr-sub">Une question, un doute, une victoire : dis-le-lui. C’est lui qui valide tes points d’étape.</p>'
+    + (disc ? '<a class="mm-b" href="'+esc(disc)+'" target="_blank" rel="noopener">Lui écrire sur Discord ↗</a>' : '');
+}
+
+/* --- Aperçu « voir Kairos comme un nouveau » (admins) --- */
+function apercuChoisir(ph){
+  APERCU = ph ? { phase: ph } : null;
+  J0_ECRAN = 0;
+  try{ majDevoilement(); buildActions(); buildParcoursMini(); buildPremiereSemaine(); buildParrainCarte(); homeLayout(); }catch(e){ console.error(e); }
+  if(APERCU && APERCU.phase==='j0'){ try{ j0Ouvrir(); }catch(e){} }
+  showTab('home'); curTab='home'; syncHash(true); window.scrollTo({top:0});
+}
+function buildApercuBandeau(){
+  let b = document.getElementById('apercuBand');
+  if(!APERCU){ if(b) b.remove(); return; }
+  if(!b){ b = document.createElement('div'); b.id='apercuBand'; b.className='apercu-band'; const c=document.querySelector('#app .content'); if(c) c.insertBefore(b, c.firstChild); }
+  const lib = { j0:'un nouveau, le premier jour', p1:'un membre en phase 1', p2:'un membre en phase 2', p3:'un membre en phase 3 (parrain)' }[APERCU.phase];
+  b.innerHTML = '👁 Aperçu : tu vois Kairos comme '+lib+'. Tes propres données restent affichées. <button type="button" class="mm-b" data-apercu="">Quitter l’aperçu</button>';
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-apercu]'); if(!b) return;
+  if(!EST_ADMIN) return;
+  apercuChoisir(b.dataset.apercu || null);
+});
+
 /* ---------- Accueil « check rapide » (03/11/2026) ----------
    1re partie (grille) : Mes actions + Mon parcours (compact) à gauche, 7 prochains jours à droite.
    2e partie : blocs secondaires, ordre conseillé selon le profil, personnalisable (VU.hl, synchronisé).
@@ -4794,10 +5122,12 @@ const HOME_BLOCS = {
   homeFaqPanel:     { t:'Questions fréquentes' },
 };
 function estParrain(){
+  if(APERCU) return APERCU.phase === 'p3';
   const moi = MOI_ID && byId.get(MOI_ID); if(!moi) return false;
   return (children.get(norm(moi.name))||[]).some(c=>ADH.has(c.id));
 }
 function estNouveau(){
+  if(APERCU) return APERCU.phase === 'j0' || APERCU.phase === 'p1';
   try{ if(!misData()) return false; const p1 = misPhases().find(p=>!p.avenir); if(!p1) return false;
     const pr = miPhaseProg(p1); return pr.tot > 0 && pr.ok < pr.tot && !estParrain(); }catch(e){ return false; }
 }
@@ -4819,6 +5149,7 @@ function homeLayout(){
   const mini = document.getElementById('homeParcoursMini'), act = document.getElementById('homeActionsPanel');
   if(mini && act){ if(estNouveau()) a.insertBefore(mini, act); else a.insertBefore(act, mini); }
   Object.keys(HOME_BLOCS).forEach(id=>{ const el = document.getElementById(id); if(el) el.classList.toggle('hl-off', homeMasque(id)); });
+  document.getElementById('v-home').classList.toggle('mode-nouveau', estNouveau());
   const g = document.getElementById('homeGrid');
   if(g){ const cols = [...g.querySelectorAll('.hcol')]; cols.forEach(c=>c.classList.toggle('vide', ![...c.children].some(x=>!x.hidden && !x.classList.contains('hl-off')))); }
 }
@@ -5314,6 +5645,23 @@ function miActionHtml(ph, m, a){
     + '<span><span class="mi-at">'+esc(a.t)+(a.opt?' <small>(si concerné)</small>':'')+lien+'</span>'
     + (info?'<small class="mi-ai">'+esc(info)+'</small>':'')+'</span></label>'+tag+'</li>';
 }
+// 03/11/2026 : chaque mission propose la prochaine séance à réserver pour ses étapes automatiques
+const MI_SEANCE_KW = { dm:['decouverte metier'], ad:['atelier demarrage'], trois_jours:['3 jours'], r1_n1:['prise de r1','niveau 1'],
+  mise_en_relation:['mise en relation'], com_n1:['communication','1'], com_n2:['communication','2'], dev_n1:['developpement','niveau 1'], udp:['universite'] };
+function miSeancesHtml(m){
+  const out = [];
+  (m.actions||[]).forEach(a=>{
+    if(a.v!=='auto' || !a.auto || !MI_SEANCE_KW[a.auto]) return;
+    const e = miAction(m, a); if(e.ok || (e.f && e.f.f)) return;
+    const kw = MI_SEANCE_KW[a.auto];
+    const s = [].concat(A, F, E, R).filter(x=>x && x.start>=todayIso && kw.every(k=>norm(x.title||'').includes(k))).sort((x,y)=>x.start.localeCompare(y.start))[0];
+    if(s) out.push('<a class="mi-f ext" href="'+esc(s.url||urlAtelier(s.id))+'" target="_blank" rel="noopener">📅 '+fmtD(s.start)+' · '+esc(s.title)+' — réserver ↗</a>');
+  });
+  return out.length ? '<div class="mi-fs"><span class="mi-lab">Prochaine séance</span>'+out.join('')+'</div>' : '';
+}
+function miAideHtml(){
+  try{ const p = monParrain(); return p.nom ? '<p class="mi-aide">🙋 Un doute, un blocage ? Parles-en à <b>'+esc(p.nom)+'</b>, ton parrain.</p>' : ''; }catch(e){ return ''; }
+}
 function miMissionHtml(ph, m, ouverte){
   const e = miEtat(ph, m), p = miProg(m), bl = e==='bloquee' ? miBlocage(ph, m) : '';
   const C = CONTENU;
@@ -5328,6 +5676,8 @@ function miMissionHtml(ph, m, ouverte){
     + '<div class="mi-b">'+(m.pq?'<p class="mi-pq">'+esc(m.pq)+'</p>':'')
     + (bl?'<p class="mi-bl">🔒 '+esc(bl)+'</p>':'')
     + '<ul class="mi-al">'+(m.actions||[]).map(a=>miActionHtml(ph, m, a)).join('')+'</ul>'
+    + miSeancesHtml(m)
+    + ((e==='encours'||e==='dispo') ? miAideHtml() : '')
     + (pages?'<div class="mi-fs"><span class="mi-lab">Fiches pratiques</span>'+pages+'</div>':'')
     + ((m.obj||[]).length?'<div class="mi-obj"><span class="mi-lab">Fait avancer</span>'+m.obj.map(o=>'<span>'+esc(o)+'</span>').join('')+'</div>':'')
     + '</div></details>';
@@ -5468,6 +5818,7 @@ async function chargerPortes(){
 }
 function majParcours(){
   if(!window.__booted) return;
+  try{ setTimeout(majDevoilement, 0); }catch(e){}
   try{ if(misData()) buildMissions(); }catch(e){ console.error(e); }
   try{ buildProchaines(); }catch(e){ console.error(e); }
   try{ buildAValider(); }catch(e){ console.error(e); }
@@ -5866,7 +6217,9 @@ function buildActivite(){
   const top = type => { const m = {}; ACT.forEach(r=>(r.usage||[]).filter(u=>u.t===type).forEach(u=>{ const x = m[u.c] || (m[u.c] = { c:u.c, t:type, n:0, p:new Set() }); x.n += u.n; x.p.add(r.membre_id); }));
     return Object.values(m).sort((a,b)=>b.p.size-a.p.size || b.n-a.n).slice(0,5); };
   const tuile = (v, l) => '<div class="act-t"><b>'+v+'</b><span>'+l+'</span></div>';
-  if(vue) vue.innerHTML = '<div class="act-tuiles">'
+  if(vue) vue.innerHTML = '<div class="apercu-ctl"><span>👁 Voir Kairos comme :</span>'
+    + [['j0','un nouveau (1er jour)'],['p1','phase 1'],['p2','phase 2'],['p3','parrain (phase 3)']].map(x=>'<button type="button" class="mm-b'+(APERCU&&APERCU.phase===x[0]?' pri':'')+'" data-apercu="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'
+    + '<div class="act-tuiles">'
     + tuile(tous.filter(c=>c.j7).length+' / '+ACT.length, 'actifs cette semaine')
     + tuile(tous.filter(c=>c.j30).length, 'actifs sur 30 jours')
     + tuile(pubSem+(partic?' / '+partic:''), 'Mail Manager publiés (semaine du '+fmtD(sem)+')')
@@ -5874,7 +6227,7 @@ function buildActivite(){
     + tuile(actAppareils(), 'personnes par appareil (30 j)')
     + '</div><div class="act-tops"><div><h3>Fiches les plus lues</h3>'+(top('fiche').map(x=>'<div class="act-top">'+actLienUsage({t:'fiche',c:x.c})+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
     + '</div><div><h3>Onglets les plus utilisés</h3>'+(top('onglet').map(x=>'<div class="act-top">'+actLienUsage({t:'onglet',c:x.c})+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
-    + '</div></div>';
+    + '</div></div>' + actEntonnoir();
   // tableau
   const col = ACT_COLS.find(c=>c[0]===ACT_TRI.col) || ACT_COLS[1];
   const lignes = actFiltre().sort((a,b)=>{ const x = col[2](a), y = col[2](b); return (x<y?-1:x>y?1:0)*ACT_TRI.dir; });
@@ -5890,6 +6243,22 @@ function buildActivite(){
     }).join('') + '</tbody></table></div><p class="mbr-sub">'+lignes.length+' personne'+(lignes.length>1?'s':'')+'. Mesure des fiches, onglets et simulateurs ouverts depuis le 21/10/2026.</p>';
 }
 // Appareils utilisés sur 30 jours (mesure depuis le 03/11/2026) : nombre de personnes par type
+// Entonnoir du parcours : par mission, qui l'a faite, qui y est, qui y bloque (rien coché depuis 14 jours)
+function actEntonnoir(){
+  if(!ACT || !misData()) return '';
+  const lim = vAddDays(todayIso, -14), st = {};
+  ACT.forEach(r=>actCtx(r, ()=>{ misPhases().forEach(ph=>{ if(ph.avenir) return; (ph.missions||[]).forEach(m=>{
+    const x = st[m.id] || (st[m.id] = { m, faite:0, encours:0, bloque:0, durees:[] });
+    const e = miEtat(ph, m), ds = (m.actions||[]).map(a=>miAction(m,a)).filter(y=>y.ok && y.d).map(y=>y.d).sort();
+    if(e==='faite'){ x.faite++; if(ds.length>1) x.durees.push(Math.round((new Date(ds[ds.length-1]) - new Date(ds[0]))/864e5)); }
+    else if(e==='encours'){ x.encours++; if(!ds.length || ds[ds.length-1] < lim) x.bloque++; }
+  }); }); }));
+  const med = l => { if(!l.length) return '—'; const t = l.slice().sort((a,b)=>a-b); return t[Math.floor(t.length/2)]+' j'; };
+  const n = ACT.length;
+  return '<h3>Entonnoir du parcours</h3><div class="tbl-wrap"><table class="act-tbl act-ent"><thead><tr><th>Mission</th><th>Faite</th><th>En cours</th><th>Bloqués (14 j)</th><th>Durée médiane</th></tr></thead><tbody>'
+    + Object.values(st).map(x=>'<tr><td><b>'+esc(x.m.id)+'</b> '+esc(x.m.t)+'</td><td class="num"><span class="ent-b"><i style="width:'+Math.round(x.faite*100/Math.max(1,n))+'%"></i></span> '+x.faite+'/'+n+'</td><td class="num">'+x.encours+'</td><td class="num'+(x.bloque?' ent-bl':'')+'">'+x.bloque+'</td><td class="num">'+med(x.durees)+'</td></tr>').join('')
+    + '</tbody></table></div><p class="mbr-sub">Bloqué = mission en cours sans rien de coché depuis 14 jours. Durée = du premier au dernier élément coché.</p>';
+}
 function actAppareils(){
   const lim = vAddDays(todayIso, -30), par = { telephone:new Set(), tablette:new Set(), ordinateur:new Set() };
   (ACT||[]).forEach(r=>(r.usage||[]).forEach(u=>{ if(u.t==='appareil' && par[u.c] && String(u.j||'')>=lim) par[u.c].add(r.membre_id); }));
@@ -6760,7 +7129,7 @@ function ckRender(qraw){
   const q=norm(qraw.trim()); const res=document.getElementById('ckRes'); ckRows=[];
   if(!q){ res.innerHTML='<div class="ck-empty">Tape quelques lettres : pages du parcours, questions fréquentes, objections, ateliers, réunions, formations, événements, '+(EST_ADMIN?'membres de l’annuaire, ':'')+'ressources.</div>'; return; }
   const score=it=>{ if(it.k===q) return 0; if(it.k.startsWith(q)) return 1; if(it.k.includes(q)) return 2; if(q.length>=3&&it.kx&&it.kx.includes(q)) return 3; return 9; };
-  const hits=SIDX.map(it=>({it,sc:score(it)})).filter(x=>x.sc<9).sort((a,b)=>a.sc-b.sc||a.it.t.localeCompare(b.it.t,'fr'));
+  const hits=SIDX.map(it=>({it,sc:score(it)})).filter(x=>x.sc<9 && ongletOuvert(dvOngletDuGroupe(x.it.g))).sort((a,b)=>a.sc-b.sc||a.it.t.localeCompare(b.it.t,'fr'));
   if(q.length>=2 && EST_ADMIN){ const qd=q.replace(/[^0-9]/g,''); M.filter(m=>m.nn.includes(q)||(qd.length>=4&&m.nt.includes(qd))||(q.includes('@')&&m.nm.includes(q))).sort((a,b)=>(ADH.has(b.id)-ADH.has(a.id))||(LIGNEE_IDS.has(b.id)-LIGNEE_IDS.has(a.id))||a.nn.localeCompare(b.nn)).slice(0,8).forEach(m=>hits.push({it:{g:'Annuaire',ic:'👤',t:m.name,s:(ADH.has(m.id)?'adhérent · ':'')+(m.city||''),k:m.nn,kx:'',act:()=>openSheet(m.id)},sc:5})); }
   const groups={}; const order=[]; const perG={};
   hits.forEach(h=>{ const g=h.it.g; perG[g]=(perG[g]||0)+1; if(perG[g]>6) return; if(!groups[g]){ groups[g]=[]; order.push(g); } groups[g].push(h.it); });
@@ -8575,8 +8944,9 @@ async function chargerLig(){
     LIG = { liste, mm, moi:(o.data||[]).sort((x,y)=>x.semaine.localeCompare(y.semaine)),
             vict: v.error ? [] : (v.data||[]), bravos, parc, parcOk: !!(pc && !pc.error) };
   }catch(e){ return false; }
+  try{ const a = await SB.rpc('lignee_activite'); if(!a.error){ LIG_ACT = {}; (a.data||[]).forEach(r=>{ LIG_ACT[r.membre_id] = r.dernier_acces || ''; }); } }catch(e){}
   document.querySelectorAll('[data-v="lig"]').forEach(x=>x.hidden=false);
-  if(window.__booted){ try{ buildLig(); }catch(e){} try{ buildVictAccueil(); }catch(e){} }
+  if(window.__booted){ try{ buildLig(); }catch(e){} try{ buildVictAccueil(); }catch(e){} try{ buildActions(); majDevoilement(); }catch(e){} }
   try{ routerQuandPret(); }catch(e){}
   return true;
 }
@@ -9039,10 +9409,11 @@ function ligVictLib(cle){
   if(cle==='client1') return 'a signé son premier client';
   if(cle.indexOf('hab_')===0) return 'a obtenu son habilitation '+(LIG_HAB[cle.slice(4)]||cle.slice(4).toUpperCase());
   if(cle.indexOf('objectifs_')===0) return 'a validé tous ses objectifs '+cle.slice(10).toUpperCase();
+  if(cle.indexOf('porte_')===0) return 'a franchi son '+miPorteNom(cle.slice(6)).toLowerCase()+' !';
   const l = etapeLib(cle);
   return 'a validé : '+l;
 }
-const ligVictIco = cle => /^equipe_/.test(cle) ? (cle==='equipe_1' ? '🌱' : '🏆') : cle==='client1' ? '🤝' : cle.indexOf('hab_')===0 ? '🎓' : cle.indexOf('objectifs_')===0 ? '🏆'
+const ligVictIco = cle => cle.indexOf('porte_')===0 ? '🏁' : /^equipe_/.test(cle) ? (cle==='equipe_1' ? '🌱' : '🏆') : cle==='client1' ? '🤝' : cle.indexOf('hab_')===0 ? '🎓' : cle.indexOf('objectifs_')===0 ? '🏆'
   : ({ filleul_adherent:'🌱', invite_dm:'📣', trois_jours:'🚀', udp:'🎓' })[cle] || '✅';
 const ligVictCle = v => v.membre_id+':'+v.cle+':'+v.jour;
 function ligVictoires(){
@@ -10113,6 +10484,12 @@ async function syncPull(){
   }
   if(v.acc && v.acc.t && v.acc.t > ((VU.acc||{}).t||'')){ VU.acc = v.acc; chg=true; try{ buildWelcome(); }catch(e){} }
   if(v.wv && v.wv.n > ((VU.wv||{}).n||0)){ VU.wv = v.wv; chg=true; }
+  if(v.dv){ const a = VU.dv || {}; const u = (x,y)=>[...new Set((x||[]).concat(y||[]))];
+    const vus = u(a.v, v.dv.v), c = u(a.c, v.dv.c), n = u(a.n, v.dv.n).filter(x=>!vus.includes(x) || (a.n||[]).includes(x) && (v.dv.n||[]).includes(x));
+    const info = (v.dv.t||'') > (a.t||'') ? v.dv.info : a.info;
+    if(JSON.stringify([vus,c,n,info]) !== JSON.stringify([a.v,a.c,a.n,a.info])){ VU.dv = { c, n, v:vus, info, t: [a.t||'', v.dv.t||''].sort().pop() }; chg=true; try{ majDevoilement(); }catch(e){} } }
+  if(v.j0 && (!VU.j0 || (v.j0.t||'') > (VU.j0.t||''))){ VU.j0 = Object.assign({}, VU.j0||{}, v.j0); chg=true; }
+  if(Array.isArray(v.mf)){ const u = [...new Set((VU.mf||[]).concat(v.mf))]; if(!Array.isArray(VU.mf) || u.length !== VU.mf.length){ VU.mf = u; chg=true; } }
   if(v.hl && v.hl.t && v.hl.t > ((VU.hl||{}).t||'')){ VU.hl = v.hl; chg=true; try{ homeLayout(); }catch(e){} }
   if(v.mml && v.mml.t && v.mml.t > ((VU.mml||{}).t||'')){ VU.mml = v.mml; chg=true; try{ buildMMLignee(); }catch(e){} }
   if(v.hp && v.hp.t && v.hp.t > ((VU.hp||{}).t||'')){ VU.hp = v.hp; chg=true; try{ hpPoser(); }catch(e){} }
@@ -10225,6 +10602,7 @@ async function buildMembres(){
   if(btn) btn.hidden=false;
   EST_ADMIN=true;
   document.body.classList.add('est-admin');
+  try{ majDevoilement(); }catch(e){}
   // Admin → Contenu → Édition : le propriétaire seul (le serveur le refuse aussi aux autres)
   try{ const pr=await SB.rpc('est_proprietaire'); EST_PROPRIO = !pr.error && pr.data===true; }catch(e){ EST_PROPRIO=false; }
   try{ sgNav(); }catch(e){}
