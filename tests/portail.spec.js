@@ -5785,3 +5785,15 @@ test.describe('Annuaire réservé aux administrateurs (03/11/2026)', () => {
     expect(r.luMembre).toEqual(['donnees_reseau', 'donnees_reseau_public']);
   });
 });
+
+test.describe('Accueil : liens dans le message de bienvenue (03/11/2026)', () => {
+  test('[texte](https://…) devient un lien, le reste reste échappé', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => ({
+      lien: liensTexte('Voir [le site](https://exemple.fr/a?b=1&c=2) et <b>x</b>'),
+      js: liensTexte('[piège](javascript:alert(1))'),
+    }));
+    expect(r.lien).toBe('Voir <a href="https://exemple.fr/a?b=1&amp;c=2" target="_blank" rel="noopener">le site</a> et &lt;b&gt;x&lt;/b&gt;');
+    expect(r.js).not.toContain('<a');
+  });
+});
