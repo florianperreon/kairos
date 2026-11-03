@@ -189,6 +189,67 @@ section.view.on{display:block}
 .bdstrip .bd .w{font-weight:700;color:var(--gold-ink);margin-left:4px}
 .welcome .wmark{font-size:38px;line-height:1}
 .welcome{position:relative}
+/* ---------- Accueil « check rapide » (03/11/2026) ---------- */
+.welcome.wcompact{padding:14px 20px;gap:14px;align-items:flex-start;flex-wrap:nowrap}
+.welcome.wcompact .wmark{font-size:26px}
+.welcome.wcompact .wl{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.welcome.wcompact h2{font-size:19px;margin:0}
+.welcome.wcompact .wdate{margin:0}
+.welcome.wcompact .wtxt{padding-right:0!important}
+.welcome.wcompact .wabout{margin-top:8px}
+.welcome.wcompact .wbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex:0 0 auto}
+.welcome.wcompact .wtog{position:static!important}
+.hgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:0 20px;align-items:start}
+.hgrid .hcol.vide{display:none}
+.hgrid:has(.hcol.vide){grid-template-columns:minmax(0,1fr)}
+.hl-off{display:none!important}
+.hmore>.panel,.hmore>.bdstrip{content-visibility:auto;contain-intrinsic-size:auto 320px}
+.sact-faites{margin-top:2px}
+.sact-faites>summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ink-2);padding:6px 4px;list-style:none}
+.sact-faites>summary::-webkit-details-marker{display:none}
+.sact-faites>summary:hover{color:var(--ink)}
+.sact-faites[open]>summary{margin-bottom:6px}
+.pm{display:grid;gap:6px}
+.pm-ph{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"n t c" "b b b";gap:2px 10px;align-items:baseline;text-decoration:none;color:inherit;padding:8px 10px;border-radius:10px;background:var(--surface-2);border:1px solid transparent}
+.pm-ph:hover{border-color:var(--accent)}
+.pm-ph.on{border-color:var(--accent);background:var(--accent-soft)}
+.pm-ph.ferme{opacity:.65}
+.pm-n{grid-area:n;font-size:11.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em}
+.pm-t{grid-area:t;font-size:13.5px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pm-c{grid-area:c;font-size:12.5px;color:var(--ink-2)}
+.pm-ph .mi-bar{grid-area:b;margin-top:4px}
+.pm-tout,.wapres-tout{display:inline-block;margin-top:10px;font-size:13.5px;font-weight:700;color:var(--accent);text-decoration:none}
+.wapres{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.wapres-t{font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+.wapres-l{display:block;font-size:13.5px;color:inherit;text-decoration:none;padding:3px 0}
+.wapres-l:hover{color:var(--accent)}
+.wapres-l span{color:var(--ink-3);font-size:12.5px;text-transform:capitalize}
+.racs{display:flex;flex-wrap:wrap;gap:8px}
+.rac{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:99px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);font-size:13.5px;font-weight:600;text-decoration:none}
+.rac:hover{border-color:var(--accent);color:var(--accent)}
+.rac.in{background:var(--surface-2)}
+.hnext{display:none}
+.hperso{position:fixed;inset:0;z-index:90;background:rgba(10,12,30,.45);display:none;align-items:center;justify-content:center;padding:16px}
+.hperso.on{display:flex}
+.hperso-c{position:relative;width:100%;max-width:440px;max-height:90vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px}
+.hperso-c h2{font-size:18px;margin:0 0 4px}
+.hp-g{margin:14px 0 6px;font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em}
+.hp-l{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;border-radius:8px;background:var(--surface-2);margin-bottom:5px;font-size:14px}
+.hp-l label{display:flex;align-items:center;gap:8px;cursor:pointer}
+.hp-fixe{font-size:11.5px;color:var(--ink-3)}
+.hp-mv button{border:1px solid var(--line-2);background:var(--surface);border-radius:6px;width:28px;height:26px;cursor:pointer;color:var(--ink-2);margin-left:4px}
+.hp-mv button:disabled{opacity:.35;cursor:default}
+.hp-b{display:flex;justify-content:space-between;gap:8px;margin-top:16px;flex-wrap:wrap}
+@media(max-width:1100px){.hgrid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:860px){
+  .welcome.wcompact{flex-wrap:wrap}
+  .welcome.wcompact .wbtns{width:100%;justify-content:flex-start}
+  #v-home .hnext{position:fixed;left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom));z-index:55;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);text-decoration:none;color:inherit;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .2s,transform .2s}
+  #v-home.acts-hors .hnext:not([hidden]){opacity:1;transform:none;pointer-events:auto}
+  .hnext .hn-k{font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;flex:0 0 auto}
+  .hnext b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+  .hnext .hn-go{color:var(--accent);font-weight:700;flex:0 0 auto}
+}
 .welcome .wtog{align-self:flex-start;background:none;border:1px solid var(--line);border-radius:99px;padding:3px 11px;font-size:12px;font-weight:600;color:var(--ink-2);cursor:pointer;white-space:nowrap}
 .welcome .wtog:hover{color:var(--ink);border-color:var(--ink-3)}
 .welcome.reduit{padding-top:10px;padding-bottom:10px;gap:10px;align-items:center}
@@ -2148,6 +2209,7 @@ body.ps-open #fbBtn{bottom:64px}
     </a>
     <div class="side-nav">
       <div class="grp">Mon espace</div>
+      <a href="#mon-parcours" data-v="parc" title="Mon parcours"><span class="i" data-i="parc"></span><span class="l">Mon parcours</span></a>
       <a href="#mes-sessions" data-v="surv" hidden title="Mes sessions" data-l="Mes sessions"><span class="i" data-i="surv"></span><span class="l">Mes sessions</span></a>
       <a href="#mail-manager" data-v="mm" hidden title="Mail Manager"><span class="i" data-i="mm"></span><span class="l">Mail Manager</span></a>
       <a href="#ma-lignee" data-v="lig" hidden title="Ma lignée"><span class="i" data-i="lig"></span><span class="l">Ma lignée</span></a>
@@ -2184,24 +2246,42 @@ body.ps-open #fbBtn{bottom:64px}
       <div class="panel alr-home" id="homeAlertes" hidden></div>
       <div class="panel alr-home" id="homePortes" hidden></div>
       <div class="panel welcome" id="welcome"></div>
-      <div class="panel" id="homeActionsPanel" hidden>
-        <h2>Mes actions de la semaine</h2>
-        <p class="acts-n" id="homeActionsNote"></p>
-        <div class="acts" id="homeActions"></div>
-        <p class="acts-ok" id="homeActionsOk" hidden>Well done ; tu es à jour !</p>
+      <a class="hnext" id="homeNext" hidden></a>
+      <!-- Accueil « check rapide » (03/11/2026) : à faire à gauche, à venir à droite ; le reste en dessous, personnalisable -->
+      <div class="hgrid" id="homeGrid">
+        <div class="hcol" id="hcolA">
+          <div class="panel" id="homeActionsPanel" hidden>
+            <h2>Mes actions de la semaine</h2>
+            <p class="acts-n" id="homeActionsNote"></p>
+            <div class="acts" id="homeActions"></div>
+            <p class="acts-ok" id="homeActionsOk" hidden>Well done ; tu es à jour !</p>
+          </div>
+          <div class="panel" id="homeParcoursMini" hidden></div>
+        </div>
+        <div class="hcol" id="hcolB">
+          <div class="bdstrip surv-strip" id="homeSurv" hidden></div>
+          <div class="panel" id="homeWeekPanel"><h2>Les 7 prochains jours <span class="badge-lig">Lignée</span> <span class="wk-inline num" id="homeWeekS"></span></h2><div class="week" id="homeWeek"></div></div>
+        </div>
       </div>
-      <div class="panel" id="homeMMLig" hidden></div>
-      <div class="panel" id="homeVict" hidden></div>
-      <div class="valeurs" id="homeValeurs" hidden></div>
-      <div class="bdstrip" id="homeBd" hidden></div>
-      <div class="bdstrip surv-strip" id="homeSurv" hidden></div>
-      <div class="panel" id="homeWeekPanel"><h2>Les 7 prochains jours <span class="badge-lig">Lignée</span> <span class="wk-inline num" id="homeWeekS"></span></h2><div class="week" id="homeWeek"></div></div>
-      <div class="principes" id="homePrincipes" hidden></div>
+      <div class="hmore" id="homeMore">
+        <div class="panel" id="homeMMLig" hidden></div>
+        <div class="panel" id="homeVict" hidden></div>
+        <div class="bdstrip" id="homeBd" hidden></div>
+        <div class="panel" id="homeRac" hidden></div>
+        <div class="principes" id="homePrincipes" hidden></div>
+        <div class="panel" id="homeFaqPanel" hidden><h2>Questions fréquentes <span class="badge-lig" id="faqCount"></span></h2><div class="faq-tools"><input type="search" id="faqQ" placeholder="Rechercher une question…"><span id="faqThemes"></span></div><div class="faq" id="faqList"></div></div>
+      </div>
+      <!-- anciens blocs, plus affichés sur l’accueil (leurs fonctions les remplissent toujours) -->
+      <div hidden id="homeAnciens">
+        <div class="valeurs" id="homeValeurs" hidden></div>
+        <div class="panel" id="homeLigneePanel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
+        <div class="panel" id="homeRituelsPanel" hidden><h2>Les rituels de la lignée</h2><div class="rituels" id="homeRituels"></div></div>
+        <div class="panel" id="homeResPanel" hidden><h2>Ressources utiles</h2><div class="res" id="homeRes"></div></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-parc">
       <div class="panel" id="homeParcoursPanel" hidden><h2>Où en es-tu ? <span class="badge-lig">Ton parcours en 4 phases</span></h2><div class="phases" id="homePhases"></div><div class="etapes" id="homeEtapes"></div></div>
-      <div class="panel" id="homeLigneePanel"><h2>Prochains ateliers pilotés par ta lignée <span class="badge-lig">Lignée</span></h2><div id="homeLignee"></div></div>
-      <div class="panel" id="homeRituelsPanel" hidden><h2>Les rituels de la lignée</h2><div class="rituels" id="homeRituels"></div></div>
-      <div class="panel" id="homeFaqPanel" hidden><h2>Questions fréquentes <span class="badge-lig" id="faqCount"></span></h2><div class="faq-tools"><input type="search" id="faqQ" placeholder="Rechercher une question…"><span id="faqThemes"></span></div><div class="faq" id="faqList"></div></div>
-      <div class="panel" id="homeResPanel" hidden><h2>Ressources utiles</h2><div class="res" id="homeRes"></div></div>
     </section>
 
     <section class="view" id="v-veille">
@@ -3878,7 +3958,7 @@ function buildActions(){
                          : 'Une étape de ton parcours vient d\u2019être validée',
       urg:'nouveau',
       d: nouv.slice(0,3).map(etapeLib).join(' · ') + (nouv.length>3 ? ' · +' + (nouv.length-3) : ''),
-      href:'#accueil', fait:false, go:'Voir' });
+      href:'#mon-parcours', fait:false, go:'Voir' });
   }
 
   // 4) Sessions enregistrées où les places s'épuisent — alerte, jamais masquable à la main
@@ -3997,7 +4077,7 @@ function buildActions(){
   if(note) note.textContent = reste
     ? (reste === 1 ? 'Il te reste 1 action cette semaine.' : 'Il te reste ' + reste + ' actions cette semaine.')
     : '';
-  liste.innerHTML = actions.map(a =>
+  const sactHtml = a =>
     '<a class="sact' + (a.fait?' fait':'') + (a.cls?' '+a.cls:'') + '" href="' + esc(a.href) + '" data-act="' + esc(a.cle) + '"'
     + (a.ext?' target="_blank" rel="noopener"':'')
     + (a.manuel?' data-manuel="1"':'') + (a.ancre?' data-ancre="'+esc(a.ancre)+'"':'')
@@ -4005,8 +4085,15 @@ function buildActions(){
     + '<span class="ck">' + (a.fait?'✓':'') + '</span>'
     + '<span class="tx"><b>' + esc(a.t) + (a.urg?'<span class="urg">'+esc(a.urg)+'</span>':'') + '</b>'
     + '<p>' + esc(a.d) + '</p></span>'
-    + '<span class="go">' + esc(a.go) + ' →</span></a>').join('');
+    + '<span class="go">' + esc(a.go) + ' →</span></a>';
+  // 03/11/2026 : l'accueil est un check rapide — on ne montre que ce qui reste à faire ;
+  // les actions faites tiennent sur une ligne dépliable.
+  const faites = actions.filter(a=>a.fait), restent = actions.filter(a=>!a.fait);
+  const ouvert = !!(liste.querySelector('details.sact-faites[open]'));
+  liste.innerHTML = restent.map(sactHtml).join('')
+    + (faites.length ? '<details class="sact-faites"'+(ouvert?' open':'')+'><summary>✓ '+faites.length+' action'+(faites.length>1?'s':'')+' faite'+(faites.length>1?'s':'')+' cette semaine</summary><div class="acts">'+faites.map(sactHtml).join('')+'</div></details>' : '');
   if(okEl) okEl.hidden = reste > 0;
+  try{ homeApresActions(restent); }catch(e){ console.error(e); }
 }
 
 // Une action « manuelle » se valide en cliquant dessus : rien ne peut la constater à notre place.
@@ -4249,6 +4336,7 @@ function sideReplier(on){
 }
 /* ---------- Icônes (tracé fin, même famille pour tout le portail) ---------- */
 const ICO = {
+  parc:'<path d="M5 20.5V4.2"/><path d="M5 4.8h11.6l-2.2 3.6 2.2 3.6H5"/><circle cx="18.4" cy="19" r="1.6"/><path d="M8.6 19h3.2M13.6 19h2.4"/>',
   fb:'<path d="M20.6 12.3c0 3.9-3.8 7.1-8.6 7.1-1 0-2-.15-2.9-.42L4.2 20.6l1.5-3.7c-1.4-1.3-2.3-3-2.3-4.6 0-3.9 3.8-7.1 8.6-7.1s8.6 3.2 8.6 7.1Z"/><path d="M12 9.4v2.6M12 14.6v.1"/>',
   mm:'<rect x="4.2" y="3.3" width="15.6" height="17.4" rx="2.2"/><path d="M8.4 8.4h7.2M8.4 12h7.2M8.4 15.6h4.2"/>',
   lig:'<circle cx="12" cy="4.8" r="2.2"/><circle cx="5.2" cy="18.6" r="2.2"/><circle cx="12" cy="18.6" r="2.2"/><circle cx="18.8" cy="18.6" r="2.2"/><path d="M12 7v9.4M5.2 16.4v-2.6a1.6 1.6 0 0 1 1.6-1.6h10.4a1.6 1.6 0 0 1 1.6 1.6v2.6"/>',
@@ -4334,6 +4422,11 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-03', [
+    ['f','Accueil repensé pour un coup d’œil rapide : à gauche tes actions restantes et ton parcours en résumé, à droite les 7 prochains jours (avec les ateliers suivants pilotés par la lignée). La présentation de Kairos se replie après tes premières visites.'],
+    ['f','Accueil personnalisable (⚙ Personnaliser) : choisis les blocs affichés et l’ordre de ceux du bas ; l’ordre conseillé s’adapte (parrain : suivi de la lignée d’abord ; nouveau : parcours avant les actions).'],
+    ['f','Nouvel onglet « Mon parcours » dans Mon espace : le détail des missions, qui était en bas de l’accueil.'],
+    ['f','Accueil : « Raccourcis » remplace « Ressources utiles » ; les rituels ne sont plus en double (ils restent dans les 7 prochains jours). Sur téléphone, la prochaine action reste accessible en bas de l’écran.'],
+    ['f','Admin → Activité : nombre de personnes par type d’appareil (téléphone, ordinateur, tablette) sur 30 jours.'],
     ['f','Accueil : le message de bienvenue présente Kairos comme l’outil interne de la lignée, avec les liens vers le site FORMAN et le Discord.'],
     ['f','Annuaire déplacé dans Admin (sous-onglet « Annuaire », juste après Membres) et réservé aux administrateurs ; l’ancienne adresse #annuaire y mène. Les membres de l’annuaire n’apparaissent plus dans la recherche Ctrl K des autres comptes.'],
     ['f','Données des membres réservées aux administrateurs : les autres comptes ne reçoivent plus aucune coordonnée (téléphone, e-mail, ville) ni l’annuaire complet, et les noms (lignée inscrite, anniversaires, victoires) n’ouvrent plus de fiche.'],
@@ -4462,9 +4555,9 @@ document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('cli
 
 /* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
-const TABS=['home','veille','fiches','res','surv','pd','mm','lig','cat','reu','for','evt','fb','profil','admin'];
+const TABS=['home','parc','veille','fiches','res','surv','pd','mm','lig','cat','reu','for','evt','fb','profil','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',fiches:'fiches-pratiques',res:'ressources',surv:'mes-sessions',pd:'parcours-decouverte',mm:'mail-manager',lig:'ma-lignee',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',fb:'ameliorer-kairos',profil:'mon-profil',admin:'admin'};
+const TAB_SLUG={home:'accueil',parc:'mon-parcours',veille:'veille',fiches:'fiches-pratiques',res:'ressources',surv:'mes-sessions',pd:'parcours-decouverte',mm:'mail-manager',lig:'ma-lignee',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',fb:'ameliorer-kairos',profil:'mon-profil',admin:'admin'};
 // Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
 // « enregistre » : ancienne adresse de l'onglet, gardée pour que les liens déjà partagés fonctionnent
 const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',annuaire:'admin',mbr:'admin',stats:'admin',enregistre:'surv'});
@@ -4608,7 +4701,14 @@ document.getElementById('lockBtn').addEventListener('click',async ()=>{
 
 /* ---------- Accueil ---------- */
 // Encart de bienvenue : réductible une fois lu. Le choix suit d'un appareil à l'autre (VU.acc, le plus récent l'emporte).
-const welcomeReduit = () => !!(VU.acc && VU.acc.r);
+// 03/11/2026 : la bienvenue tient sur une ligne ; la présentation de Kairos et les valeurs sont dans
+// « À propos de Kairos », ouvert d'office les 3 premiers jours de visite, puis replié (sauf choix contraire).
+const welcomeReduit = () => VU.acc && typeof VU.acc.r === 'boolean' ? VU.acc.r : ((VU.wv && VU.wv.n) || 1) > 3;
+function compterJourVisite(){
+  if(VU.wv && VU.wv.j === todayIso) return;
+  VU.wv = { n: ((VU.wv && VU.wv.n) || 0) + 1, j: todayIso, t: new Date().toISOString() };
+  saveVu();
+}
 // « Nos valeurs » : dans l'encart de bienvenue depuis le 31/10/2026 (masquées quand il est réduit)
 // Texte éditorial avec liens (03/11/2026) : tout est échappé, puis seuls les liens écrits
 // [texte](https://…) deviennent cliquables (https uniquement, nouvel onglet).
@@ -4627,9 +4727,11 @@ function buildWelcome(){
   const red = welcomeReduit();
   const date = '<div class="wdate">'+fmtDLong(todayIso)+' <span class="wk-inline num">S'+noSemaine(todayIso)+'</span>'+(estFerie(todayIso)?' <span class="wk-tag fer">Férié · '+esc(estFerie(todayIso))+'</span>':'')+(vacancesDe(todayIso)?' <span class="wk-tag vac">'+esc(vacancesDe(todayIso).nom)+' '+zoneHtml(zoneScolaire())+'</span>':'')+'</div>';
   wEl.classList.toggle('reduit', red);
-  wEl.innerHTML='<div class="wmark">👋</div><div class="wtxt"><h2>'+salut+(ACC_NOM_AFF?' '+esc(ACC_NOM_AFF):'')+(red?'':', bienvenue sur Kairos !')+'</h2>'+date
-    +(red?'':'<p>Kairos, c’est l’art de reconnaître le bon moment — et d’agir au moment juste. Bonne journée !</p>'+(CONTENU&&CONTENU.accueil&&CONTENU.accueil.intro?'<p class="wintro">'+liensTexte(CONTENU.accueil.intro)+'</p>':'')+valeursHtml())+'</div>'
-    +'<button type="button" class="wtog" data-wtog aria-expanded="'+(red?'false':'true')+'" title="'+(red?'Afficher le message de bienvenue':'Réduire le message de bienvenue')+'">'+(red?'Déplier ▾':'Réduire ▴')+'</button>';
+  wEl.classList.add('wcompact');
+  wEl.innerHTML='<div class="wmark">👋</div><div class="wtxt"><div class="wl"><h2>'+salut+(ACC_NOM_AFF?' '+esc(ACC_NOM_AFF):'')+'</h2>'+date+'</div>'
+    +(red?'':'<div class="wabout"><p>Kairos, c’est l’art de reconnaître le bon moment — et d’agir au moment juste.</p>'+(CONTENU&&CONTENU.accueil&&CONTENU.accueil.intro?'<p class="wintro">'+liensTexte(CONTENU.accueil.intro)+'</p>':'')+valeursHtml()+'</div>')+'</div>'
+    +'<div class="wbtns"><button type="button" class="wtog" data-wtog aria-expanded="'+(red?'false':'true')+'" title="'+(red?'Afficher la présentation de Kairos':'Replier la présentation')+'">'+(red?'À propos de Kairos ▾':'Replier ▴')+'</button>'
+    +'<button type="button" class="wtog" data-hperso title="Choisir et ranger les blocs de l’accueil">⚙ Personnaliser</button></div>';
 }
 document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('[data-wtog]'); if(!b) return;
@@ -4650,7 +4752,7 @@ function hpTitre(p){
 }
 function hpPoser(){
   const home=document.getElementById('v-home'); if(!home) return;
-  home.querySelectorAll(':scope > .panel[id]:not(#welcome)').forEach(p=>{
+  home.querySelectorAll('.panel[id]:not(#welcome)').forEach(p=>{
     const t=hpTitre(p);
     let b=p.querySelector(':scope > .hp-tog');
     if(!t){ if(b) b.remove(); p.classList.remove('hp-pli','hp-plie'); return; }
@@ -4676,8 +4778,142 @@ document.addEventListener('click', e=>{
   VU.hp = { s, t: new Date().toISOString() };
   saveVu(); hpPoser();
 });
+/* ---------- Accueil « check rapide » (03/11/2026) ----------
+   1re partie (grille) : Mes actions + Mon parcours (compact) à gauche, 7 prochains jours à droite.
+   2e partie : blocs secondaires, ordre conseillé selon le profil, personnalisable (VU.hl, synchronisé).
+   Profil « parrain » : au moins un filleul adhérent. Profil « nouveau » : phase 1 pas terminée. */
+const HOME_BLOCS = {
+  homeActionsPanel: { t:'Mes actions de la semaine', grille:true },
+  homeParcoursMini: { t:'Mon parcours (résumé)', grille:true },
+  homeWeekPanel:    { t:'Les 7 prochains jours', grille:true },
+  homeMMLig:        { t:'Mail manager de ma lignée' },
+  homeVict:         { t:'Victoires de la lignée' },
+  homeBd:           { t:'Anniversaires de la lignée' },
+  homeRac:          { t:'Raccourcis' },
+  homePrincipes:    { t:'Principes de la lignée' },
+  homeFaqPanel:     { t:'Questions fréquentes' },
+};
+function estParrain(){
+  const moi = MOI_ID && byId.get(MOI_ID); if(!moi) return false;
+  return (children.get(norm(moi.name))||[]).some(c=>ADH.has(c.id));
+}
+function estNouveau(){
+  try{ if(!misData()) return false; const p1 = misPhases().find(p=>!p.avenir); if(!p1) return false;
+    const pr = miPhaseProg(p1); return pr.tot > 0 && pr.ok < pr.tot && !estParrain(); }catch(e){ return false; }
+}
+function homeOrdreConseille(){
+  return estParrain() ? ['homeMMLig','homeVict','homeRac','homeBd','homePrincipes','homeFaqPanel']
+                      : ['homeVict','homeRac','homeMMLig','homeBd','homePrincipes','homeFaqPanel'];
+}
+const homeMasque = id => !!(VU.hl && VU.hl.h && VU.hl.h[id]);
+function homeOrdre(){
+  const conseil = homeOrdreConseille();
+  const perso = (VU.hl && Array.isArray(VU.hl.o)) ? VU.hl.o.filter(id=>conseil.includes(id)) : [];
+  return perso.concat(conseil.filter(id=>!perso.includes(id)));
+}
+function homeLayout(){
+  const more = document.getElementById('homeMore'), a = document.getElementById('hcolA');
+  if(!more || !a) return;
+  homeOrdre().forEach(id=>{ const el = document.getElementById(id); if(el && el.parentNode===more) more.appendChild(el); });
+  // nouveau : le parcours passe avant les actions
+  const mini = document.getElementById('homeParcoursMini'), act = document.getElementById('homeActionsPanel');
+  if(mini && act){ if(estNouveau()) a.insertBefore(mini, act); else a.insertBefore(act, mini); }
+  Object.keys(HOME_BLOCS).forEach(id=>{ const el = document.getElementById(id); if(el) el.classList.toggle('hl-off', homeMasque(id)); });
+  const g = document.getElementById('homeGrid');
+  if(g){ const cols = [...g.querySelectorAll('.hcol')]; cols.forEach(c=>c.classList.toggle('vide', ![...c.children].some(x=>!x.hidden && !x.classList.contains('hl-off')))); }
+}
+// Mon parcours, en résumé : une barre par phase ; le détail est dans l'onglet Mon parcours
+function buildParcoursMini(){
+  const el = document.getElementById('homeParcoursMini'); if(!el) return;
+  if(typeof misData !== 'function' || !misData()){
+    const ok = CONTENU && CONTENU.parcours && CONTENU.parcours.length;
+    el.hidden = !ok; if(ok) el.innerHTML = '<h2>Mon parcours</h2><a class="pm-tout" href="#mon-parcours">Ouvrir mon parcours →</a>';
+    return;
+  }
+  const cour = (()=>{ try{ return miPhaseDefaut(); }catch(e){ return null; } })();
+  const lignes = misPhases().map(ph=>{
+    const pr = miPhaseProg(ph), ouv = miPhaseOuverte(ph);
+    return '<a class="pm-ph'+(ph.id===cour?' on':'')+(ouv?'':' ferme')+'" href="#mon-parcours" data-mialler="'+esc(ph.id)+'">'
+      + '<span class="pm-n">Phase '+ph.n+(ouv?'':' 🔒')+'</span><span class="pm-t">'+esc(ph.t)+'</span>'
+      + (ph.avenir ? '<span class="pm-c">à venir</span>' : '<span class="pm-c num">'+pr.ok+'/'+pr.tot+'</span><span class="mi-bar"><i style="width:'+pr.pct+'%"></i></span>')
+      + '</a>';
+  }).join('');
+  el.hidden = false;
+  el.innerHTML = '<h2>Mon parcours <span class="badge-lig">'+(estNouveau()?'tes premiers pas':'4 phases')+'</span></h2>'
+    + '<div class="pm">'+lignes+'</div><a class="pm-tout" href="#mon-parcours">Ouvrir mon parcours →</a>';
+}
+// Raccourcis : les liens utiles (contenu « ressources ») + les outils de Kairos
+function buildRaccourcis(){
+  const el = document.getElementById('homeRac'); if(!el) return;
+  const res = (CONTENU && CONTENU.ressources) || [];
+  const ext = res.filter(r=>/^https:\/\//.test(r.u||'')).map(r=>'<a class="rac" href="'+esc(r.u)+'" target="_blank" rel="noopener" title="'+esc(r.d||r.t)+'">'+esc(r.t)+' ↗</a>');
+  const int = [['#fiches-pratiques','📚 Fiches pratiques'],['#ressources','🧮 Simulateurs et courriers'],['#mail-manager','✉️ Mail Manager'],['#ma-lignee','🌳 Ma lignée']]
+    .map(x=>'<a class="rac in" href="'+x[0]+'">'+x[1]+'</a>');
+  el.hidden = false;
+  el.innerHTML = '<h2>Raccourcis</h2><div class="racs">'+int.concat(ext).join('')+'</div>';
+}
+// Téléphone : la prochaine action reste à portée de pouce quand on a fait défiler l'accueil
+let HOME_NEXT_OBS = null;
+function homeApresActions(restent){
+  const n = document.getElementById('homeNext'); if(!n) return;
+  const a = (restent||[])[0];
+  if(!a){ n.hidden = true; n.innerHTML=''; return; }
+  n.hidden = false;
+  n.setAttribute('href', a.href || '#accueil');
+  ['mialler','mimis'].forEach(k=>{ if(a[k]) n.dataset[k] = a[k]; else delete n.dataset[k]; });
+  n.innerHTML = '<span class="hn-k">Prochaine action</span><b>'+esc(a.t)+'</b><span class="hn-go">'+esc(a.go||'Voir')+' →</span>';
+  if(!HOME_NEXT_OBS && window.IntersectionObserver){
+    const p = document.getElementById('homeActionsPanel');
+    HOME_NEXT_OBS = new IntersectionObserver(es=>es.forEach(e=>document.getElementById('v-home').classList.toggle('acts-hors', !e.isIntersecting && e.boundingClientRect.top < 0)));
+    if(p) HOME_NEXT_OBS.observe(p);
+  }
+}
+// Personnaliser l'accueil : afficher / masquer chaque bloc, ranger les blocs secondaires
+function homePersoOuvrir(){
+  let m = document.getElementById('hperso');
+  if(!m){ m = document.createElement('div'); m.id = 'hperso'; m.className = 'hperso'; document.body.appendChild(m); }
+  const ligne = (id, rang, nb) => { const b = HOME_BLOCS[id];
+    return '<div class="hp-l"><label><input type="checkbox" data-hpv="'+id+'"'+(homeMasque(id)?'':' checked')+'> '+esc(b.t)+'</label>'
+      + (b.grille ? '<span class="hp-fixe">en haut</span>' : '<span class="hp-mv"><button type="button" data-hpm="'+id+'" data-d="-1"'+(rang===0?' disabled':'')+' title="Monter">↑</button><button type="button" data-hpm="'+id+'" data-d="1"'+(rang===nb-1?' disabled':'')+' title="Descendre">↓</button></span>')+'</div>'; };
+  const ordre = homeOrdre();
+  m.innerHTML = '<div class="hperso-c" role="dialog" aria-modal="true" aria-label="Personnaliser l’accueil"><button type="button" class="acc-x" data-hpclose title="Fermer">✕</button>'
+    + '<h2>Personnaliser mon accueil</h2><p class="mbr-sub">Coche les blocs à afficher et range ceux du bas. Ton choix te suit sur tous tes appareils.</p>'
+    + '<div class="hp-g">Tout en haut</div>' + ['homeActionsPanel','homeParcoursMini','homeWeekPanel'].map(id=>ligne(id)).join('')
+    + '<div class="hp-g">En dessous'+(estParrain()?' — ordre conseillé pour un parrain':'')+'</div>' + ordre.map((id,i)=>ligne(id,i,ordre.length)).join('')
+    + '<div class="hp-b"><button type="button" class="mm-b" data-hpreset>Revenir à l’accueil conseillé</button><button type="button" class="mm-b pri" data-hpclose>Terminé</button></div></div>';
+  m.classList.add('on');
+}
+function homePersoEnregistrer(o, h){
+  VU.hl = { o, h, t: new Date().toISOString() };
+  saveVu(); homeLayout(); homePersoOuvrir();
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest) return;
+  if(e.target.closest('[data-hperso]')){ homePersoOuvrir(); return; }
+  const m = document.getElementById('hperso'); if(!m || !m.classList.contains('on')) return;
+  if(e.target.closest('[data-hpclose]') || e.target === m){ m.classList.remove('on'); return; }
+  if(e.target.closest('[data-hpreset]')){ VU.hl = { o:[], h:{}, t:new Date().toISOString() }; saveVu(); homeLayout(); homePersoOuvrir(); return; }
+  const mv = e.target.closest('[data-hpm]');
+  if(mv){ const o = homeOrdre(), i = o.indexOf(mv.dataset.hpm), j = i + (+mv.dataset.d);
+    if(i<0 || j<0 || j>=o.length) return; [o[i], o[j]] = [o[j], o[i]];
+    homePersoEnregistrer(o, Object.assign({}, (VU.hl&&VU.hl.h)||{})); }
+});
+document.addEventListener('change', e=>{
+  const c = e.target.closest && e.target.closest('[data-hpv]'); if(!c) return;
+  const h = Object.assign({}, (VU.hl&&VU.hl.h)||{});
+  if(c.checked) delete h[c.dataset.hpv]; else h[c.dataset.hpv] = true;
+  homePersoEnregistrer((VU.hl&&VU.hl.o)||[], h);
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ const m=document.getElementById('hperso'); if(m) m.classList.remove('on'); } });
+// Type d'appareil (03/11/2026, mesure pour Admin → Activité, mentionnée dans confidentialite.html)
+function typeAppareil(){
+  const tactile = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+  const l = Math.min(screen.width||innerWidth, screen.height||innerHeight);
+  return !tactile ? 'ordinateur' : (l < 600 ? 'telephone' : 'tablette');
+}
 function buildHome(){
   ACC_NOM_AFF = prenomUser();
+  try{ compterJourVisite(); noterUsage('appareil', typeAppareil()); }catch(e){}
   buildWelcome();
   try{ buildVictAccueil(); }catch(e){}
   const in7 = new Date(TODAY); in7.setDate(in7.getDate()+7);
@@ -4708,7 +4944,7 @@ function buildHome(){
   const rows = Object.entries(byTh).sort((x,y)=>y[1]-x[1]);
   drawHBars('chartTh', rows.map(([k,v])=>({label:k, value:v, color:TH_COLORS[k]||'#7F8C8D'})));
 
-  // Prochains ateliers lignée
+  // Prochains ateliers lignée (bloc retiré de l'accueil le 03/11/2026 : les 3 suivants sont au bas de « 7 prochains jours »)
   const lig = upcoming.filter(a=>isLigneePilote(a.pilotes)).slice(0,8);
   document.getElementById('homeLignee').innerHTML = lig.length ? lig.map(a=>
     '<div class="ev"><div><b class="num">'+fmtD(a.start)+'</b></div><div class="hor num">'+esc(a.hor)+'</div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div>'+evExtras(a)+'</div></div>'
@@ -4722,6 +4958,7 @@ function buildHome(){
   const bdEl=document.getElementById('homeBd');
   if(bdEl){ bdEl.hidden=!bds.length;
     bdEl.innerHTML = bds.length ? '<span class="bl">🎂 Anniversaire'+(bds.length>1?'s':'')+' dans ta lignée</span>'+bds.map(b=>'<span class="bd lig-open" data-id="'+b.m.id+'">'+esc(b.m.name)+'<span class="w">'+(b.i===0?'C\u2019est aujourd\u2019hui !':b.i===1?'Demain !':'Dans '+b.i+' jours !')+'</span></span>').join('') : ''; }
+  try{ homeLayout(); }catch(e){}
 }
 
 /* ---------- Contenu éditorial (guide, parcours, FAQ, ressources) ---------- */
@@ -4740,6 +4977,7 @@ function buildContenu(){
   }
   if(misData()){ buildMissions(); buildProchaines(); }
   else if(C.parcours&&C.parcours.length){ document.getElementById('homeParcoursPanel').hidden=false; buildPhases(); }
+  try{ buildRaccourcis(); buildParcoursMini(); homeLayout(); }catch(e){ console.error(e); }
   if(C.rituels&&C.rituels.length){ document.getElementById('homeRituelsPanel').hidden=false;
     document.getElementById('homeRituels').innerHTML=C.rituels.map(r=>'<div class="rituel"><span class="q">'+esc(r.q||'')+'</span><b>'+esc(r.t)+'</b><p>'+esc(r.d)+'</p></div>').join(''); }
   buildFaq(false);
@@ -5309,8 +5547,10 @@ document.addEventListener('click', e=>{
   const go = e.target.closest('[data-mialler]');
   if(go){
     MI_PHASE = go.dataset.mialler; MI_CHOISIE = true; MI_OUVERTE = go.dataset.mimis || null;
+    if(curTab !== 'parc'){ curTab = showTab('parc'); syncHash(true); }
     buildMissions();
-    const cible = document.querySelector(MI_OUVERTE ? '#homeParcoursPanel [data-mi="'+MI_OUVERTE+'"]' : '#homeParcoursPanel .mi-porte');
+    const cible = MI_OUVERTE ? document.querySelector('#homeParcoursPanel [data-mi="'+MI_OUVERTE+'"]')
+      : (go.closest('#homeParcoursMini') ? document.getElementById('homeParcoursPanel') : document.querySelector('#homeParcoursPanel .mi-porte'));
     if(cible) cible.scrollIntoView({ behavior:'smooth', block:'start' });
     return;
   }
@@ -5633,6 +5873,7 @@ function buildActivite(){
     + tuile(tous.filter(c=>c.j30).length, 'actifs sur 30 jours')
     + tuile(pubSem+(partic?' / '+partic:''), 'Mail Manager publiés (semaine du '+fmtD(sem)+')')
     + tuile(Object.keys(parPh).sort().map(k=>'P'+k+' : '+parPh[k]).join(' · ') || '—', 'personnes par phase en cours')
+    + tuile(actAppareils(), 'personnes par appareil (30 j)')
     + '</div><div class="act-tops"><div><h3>Fiches les plus lues</h3>'+(top('fiche').map(x=>'<div class="act-top">'+actLienUsage({t:'fiche',c:x.c})+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
     + '</div><div><h3>Onglets les plus utilisés</h3>'+(top('onglet').map(x=>'<div class="act-top">'+actLienUsage({t:'onglet',c:x.c})+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
     + '</div></div>';
@@ -5650,6 +5891,13 @@ function buildActivite(){
         + (ACT_OUVERT===r.membre_id ? '<tr class="act-det"><td colspan="'+ACT_COLS.length+'">'+actDetail(r)+'</td></tr>' : '');
     }).join('') + '</tbody></table></div><p class="mbr-sub">'+lignes.length+' personne'+(lignes.length>1?'s':'')+'. Mesure des fiches, onglets et simulateurs ouverts depuis le 21/10/2026.</p>';
 }
+// Appareils utilisés sur 30 jours (mesure depuis le 03/11/2026) : nombre de personnes par type
+function actAppareils(){
+  const lim = vAddDays(todayIso, -30), par = { telephone:new Set(), tablette:new Set(), ordinateur:new Set() };
+  (ACT||[]).forEach(r=>(r.usage||[]).forEach(u=>{ if(u.t==='appareil' && par[u.c] && String(u.j||'')>=lim) par[u.c].add(r.membre_id); }));
+  const n = par.telephone.size + par.tablette.size + par.ordinateur.size;
+  return n ? '📱 '+par.telephone.size+' · 💻 '+par.ordinateur.size+(par.tablette.size?' · tablette '+par.tablette.size:'') : '—';
+}
 function actDetail(r){
   const c = r._c;
   let parc = '';
@@ -5661,7 +5909,7 @@ function actDetail(r){
   const conn = sems.map(s=>{ let n=0; for(let d=0; d<7; d++) if(jours.has(vAddDays(s,d))) n++; return '<i title="semaine du '+fmtD(s)+' : '+n+' jour(s)" style="height:'+(4+n*6)+'px"></i>'; }).join('');
   const mm = (r.mm||[]).slice(-12).map(x=>'<span class="act-mm '+(x.st==='publie'?'ok':'')+'" title="'+esc((x.st==='publie'?'publié':'brouillon')+' — semaine du '+fmtD(x.s))+'">'+fmtD(x.s).slice(0,5)+'</span>').join('');
   const portes = c.portes.map(p=>'<div>'+esc(miPorteNom(p.k))+' : '+esc(p.statut)+(p.demande_le?' · demandé le '+fmtD(actJour(p.demande_le)):'')+(p.traite_le?' · traité le '+fmtD(actJour(p.traite_le)):'')+'</div>').join('');
-  const usage = (r.usage||[]).slice(0,15).map(u=>'<div class="act-u"><span>'+esc(fmtD(actJour(u.d)))+'</span>'+actLienUsage(u)+(u.n>1?' <em>×'+u.n+'</em>':'')+'</div>').join('');
+  const usage = (r.usage||[]).filter(u=>u.t!=='appareil').slice(0,15).map(u=>'<div class="act-u"><span>'+esc(fmtD(actJour(u.d)))+'</span>'+actLienUsage(u)+(u.n>1?' <em>×'+u.n+'</em>':'')+'</div>').join('');
   return '<div class="act-grid"><div><h4>Parcours</h4>'+(parc||'<p class="mbr-sub">—</p>')+(portes?'<h4>Points d’étape</h4>'+portes:'')+'</div>'
     + '<div><h4>Connexions (12 semaines)</h4><div class="act-bars">'+conn+'</div>'
     + '<p class="mbr-sub">'+c.j7+' j sur 7 · '+c.j30+' j sur 30 · '+c.j90+' j sur 90 — inscrit le '+fmtD(actJour(r.premier))+'</p>'
@@ -6352,6 +6600,12 @@ function buildWeek(){
   if(sEl){ const s1=noSemaine(todayIso), s2=noSemaine(ajouterJours(todayIso,7)); sEl.textContent='S'+s1+(s2!==s1?' → S'+s2:''); }
   el.innerHTML = days.length ? days.map(x=>'<div class="wday'+(x.i===0?' today':'')+'"><div class="wd">'+(x.i===0?'Aujourd’hui':x.i===1?'Demain':JOURS[x.d.getDay()].replace(/^./,c=>c.toUpperCase()))+'<small class="num">'+x.d.getDate()+' '+MOIS[x.d.getMonth()]+'</small></div><div class="witems">'+x.items.map(it=>it.h).join('')+'</div></div>').join('')
     : '<p style="color:var(--ink-2);margin:0">Rien de prévu dans la lignée sur les 7 prochains jours.</p>';
+  // Ensuite : les 3 prochains ateliers pilotés par la lignée au-delà des 7 jours (ancien bloc d'accueil)
+  const fin7 = ajouterJours(todayIso, 7);
+  const apres = A.filter(a=>a.start>fin7 && isLigneePilote(a.pilotes)).sort((x,y)=>x.start.localeCompare(y.start)).slice(0,3);
+  if(apres.length) el.innerHTML += '<div class="wapres"><div class="wapres-t">Ensuite, pilotés par ta lignée</div>'
+    + apres.map(a=>'<a class="wapres-l" href="'+a.url+'" target="_blank" rel="noopener"><b class="num">'+fmtD(a.start)+'</b> '+esc(a.title)+' <span>'+esc(String(a.lieu||'').split(' ')[0])+'</span></a>').join('')
+    + '<a class="wapres-tout" href="#ateliers">Tous les ateliers →</a></div>';
 }
 
 /* ---------- Recherche globale (Ctrl K) ---------- */
@@ -9860,6 +10114,8 @@ async function syncPull(){
     if(!Array.isArray(VU.fiches) || set.size !== VU.fiches.length){ VU.fiches = [...set]; chg=true; }
   }
   if(v.acc && v.acc.t && v.acc.t > ((VU.acc||{}).t||'')){ VU.acc = v.acc; chg=true; try{ buildWelcome(); }catch(e){} }
+  if(v.wv && v.wv.n > ((VU.wv||{}).n||0)){ VU.wv = v.wv; chg=true; }
+  if(v.hl && v.hl.t && v.hl.t > ((VU.hl||{}).t||'')){ VU.hl = v.hl; chg=true; try{ homeLayout(); }catch(e){} }
   if(v.mml && v.mml.t && v.mml.t > ((VU.mml||{}).t||'')){ VU.mml = v.mml; chg=true; try{ buildMMLignee(); }catch(e){} }
   if(v.hp && v.hp.t && v.hp.t > ((VU.hp||{}).t||'')){ VU.hp = v.hp; chg=true; try{ hpPoser(); }catch(e){} }
   // Zone scolaire : le choix fait sur un autre appareil est repris tant qu'aucun choix n'a été fait ici

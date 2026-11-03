@@ -3898,6 +3898,7 @@ test.describe('Parcours en missions', () => {
     SBUSER = { id: 'u1', email: 'moi@test.invalid' };
     SB = { rpc: async (nom, args) => { window.__rpc.push([nom, args]); return { data: nom === 'mes_portes' ? [] : [], error: null }; } };
     majParcours();
+    showTab('parc'); curTab = 'parc';   // 03/11/2026 : le détail du parcours vit dans l'onglet Mon parcours
     return true;
   }, { missions: MISSIONS, o });
   const ok = { d: '2026-05-01' };
@@ -4202,6 +4203,7 @@ test.describe('Parcours en missions', () => {
     const erreurs = await ouvrir(page);
     await poser(page, { statut: 'ROLE_BEMAN', aValider: [{ membre_id: 20521, nom: 'Filleule Test', porte: 'porte1', demande_le: '2026-09-27T10:00:00Z', resume: [{ id: '1.1', t: 'Cursus', d: '2026-09-01' }] }] });
     const r = await page.evaluate(() => {
+      showTab('home'); curTab = 'home';
       const home = document.getElementById('v-home');
       const visibles = [...home.children].filter(c => !c.hidden).map(c => c.id);
       return { rang: visibles.indexOf('homePortes'), texte: document.getElementById('homePortes').textContent };
@@ -5795,5 +5797,123 @@ test.describe('Accueil : liens dans le message de bienvenue (03/11/2026)', () =>
     }));
     expect(r.lien).toBe('Voir <a href="https://exemple.fr/a?b=1&amp;c=2" target="_blank" rel="noopener">le site</a> et &lt;b&gt;x&lt;/b&gt;');
     expect(r.js).not.toContain('<a');
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Accueil « check rapide » (03/11/2026)', () => {
+  const MISSIONS = JSON.parse(lire('tests/missions.json'));
+  const poserAcc = (page, o = {}) => page.evaluate(({ missions, o }) => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    CONTENU = { pages: {}, nav: [], missions, reflexes: [{ t: 'Une étape à la fois', d: 'Aller bien.' }], accueil: { intro: 'Outil interne. [le site](https://exemple.fr)', valeurs: [{ t: 'Ambition', i: '🚀' }] },
+      ressources: [{ t: 'MyProdémial', u: 'https://my.exemple.fr/' }, { t: 'Sans lien', u: '' }] };
+    MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Test MOI' });
+    if(o.filleul){ ADH.add(30001); children.set(norm('Test MOI'), [{ id: 30001, name: 'Filleul Un' }]); } else children.delete(norm('Test MOI'));
+    PARCOURS = { statut: 'ROLE_NEOMAN', etapes: o.etapes || {} };
+    CHECK = {}; MIS = o.mis || {}; PORTES = {}; VU = o.vu || {};
+    SBUSER = { id: 'u1', email: 'moi@test.invalid' };
+    SB = { rpc: async () => ({ data: [], error: null }) };
+    buildContenu(); majParcours(); buildWelcome(); homeLayout();
+    return true;
+  }, { missions: MISSIONS, o });
+
+  test('structure : actions + parcours à gauche, 7 jours à droite ; plus de rituels ni de ressources sur l’accueil', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserAcc(page);
+    const r = await page.evaluate(() => ({
+      gauche: [...document.querySelectorAll('#hcolA > [id]')].map(x => x.id),
+      droite: [...document.querySelectorAll('#hcolB > [id]')].map(x => x.id),
+      parcoursDetail: document.getElementById('homeParcoursPanel').closest('section').id,
+      mini: document.querySelectorAll('#homeParcoursMini .pm-ph').length,
+      rituelsVisibles: !!document.getElementById('homeRituelsPanel').offsetParent,
+      resVisibles: !!document.getElementById('homeResPanel').offsetParent,
+      rac: [...document.querySelectorAll('#homeRac .rac')].map(a => a.textContent),
+      menu: !!document.querySelector('#side [data-v="parc"]'),
+    }));
+    expect(r.droite).toContain('homeWeekPanel');
+    expect(r.gauche).toContain('homeActionsPanel');
+    expect(r.gauche).toContain('homeParcoursMini');
+    expect(r.parcoursDetail).toBe('v-parc');
+    expect(r.mini).toBe(MISSIONS.phases.length);
+    expect(r.rituelsVisibles).toBe(false);
+    expect(r.resVisibles).toBe(false);
+    expect(r.rac.join('|')).toContain('MyProdémial');
+    expect(r.rac.join('|')).not.toContain('Sans lien');
+    expect(r.menu).toBe(true);
+    expect(erreurs).toEqual([]);
+  });
+
+  test('profil : nouveau → parcours avant les actions ; parrain → mail manager de la lignée en premier en dessous', async ({ page }) => {
+    await ouvrir(page);
+    await poserAcc(page);
+    const nouveau = await page.evaluate(() => ({ n: estNouveau(), p: estParrain(), ordre: [...document.querySelectorAll('#hcolA > [id]')].map(x => x.id) }));
+    expect(nouveau.n).toBe(true);
+    expect(nouveau.p).toBe(false);
+    expect(nouveau.ordre.indexOf('homeParcoursMini')).toBeLessThan(nouveau.ordre.indexOf('homeActionsPanel'));
+    await poserAcc(page, { filleul: true });
+    const parrain = await page.evaluate(() => ({ p: estParrain(), more: [...document.querySelectorAll('#homeMore > [id]')].map(x => x.id),
+      ordre: [...document.querySelectorAll('#hcolA > [id]')].map(x => x.id) }));
+    expect(parrain.p).toBe(true);
+    expect(parrain.more[0]).toBe('homeMMLig');
+    expect(parrain.ordre.indexOf('homeActionsPanel')).toBeLessThan(parrain.ordre.indexOf('homeParcoursMini'));
+  });
+
+  test('bienvenue : présentation ouverte les 3 premiers jours, repliée ensuite, le choix explicite l’emporte', async ({ page }) => {
+    await ouvrir(page);
+    await poserAcc(page, { vu: { wv: { n: 2, j: '2000-01-01' } } });
+    const debut = await page.evaluate(() => !!document.querySelector('#welcome .wabout'));
+    await poserAcc(page, { vu: { wv: { n: 4, j: '2000-01-01' } } });
+    const apres = await page.evaluate(() => !!document.querySelector('#welcome .wabout'));
+    await page.click('#welcome [data-wtog]');
+    const rouvert = await page.evaluate(() => ({ about: !!document.querySelector('#welcome .wabout'), lien: (document.querySelector('#welcome .wabout a') || {}).href }));
+    expect(debut).toBe(true);
+    expect(apres).toBe(false);
+    expect(rouvert.about).toBe(true);
+    expect(rouvert.lien).toBe('https://exemple.fr/');
+  });
+
+  test('personnaliser : masquer un bloc, changer l’ordre, revenir au conseillé', async ({ page }) => {
+    await ouvrir(page);
+    await poserAcc(page);
+    await page.click('#welcome [data-hperso]');
+    await page.uncheck('#hperso [data-hpv="homeWeekPanel"]');
+    const masque = await page.evaluate(() => document.getElementById('homeWeekPanel').classList.contains('hl-off'));
+    const avant = await page.evaluate(() => homeOrdre()[1]);
+    await page.click('#hperso [data-hpm="' + avant + '"][data-d="-1"]');
+    const apres = await page.evaluate(() => ({ premier: homeOrdre()[0], dom: document.querySelector('#homeMore > [id]').id, sync: !!(VU.hl && VU.hl.t) }));
+    await page.click('#hperso [data-hpreset]');
+    const reset = await page.evaluate(() => ({ week: document.getElementById('homeWeekPanel').classList.contains('hl-off'), ordre: homeOrdre().join(',') === homeOrdreConseille().join(',') }));
+    expect(masque).toBe(true);
+    expect(apres.premier).toBe(avant);
+    expect(apres.dom).toBe(avant);
+    expect(apres.sync).toBe(true);
+    expect(reset).toEqual({ week: false, ordre: true });
+  });
+
+  test('actions faites repliées sur une ligne ; une mission ouvre l’onglet Mon parcours', async ({ page }) => {
+    await ouvrir(page);
+    await poserAcc(page);
+    const r = await page.evaluate(() => {
+      semMarquer('reflexe');
+      buildActions();
+      const resume = (document.querySelector('#homeActions .sact-faites summary') || {}).textContent || '';
+      const visibles = [...document.querySelectorAll('#homeActions > .sact')].filter(a => a.classList.contains('fait')).length;
+      return { visibles, resume };
+    });
+    expect(r.visibles).toBe(0);
+    expect(r.resume).toContain('faite');
+    const lien = await page.$('#homeActions .sact[data-mimis]');
+    if(lien){ await lien.click(); expect(await page.evaluate(() => curTab)).toBe('parc'); }
+  });
+
+  test('téléphone (390 px) : une colonne, rien ne déborde', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await ouvrir(page);
+    await poserAcc(page);
+    const r = await page.evaluate(() => ({ larg: document.documentElement.scrollWidth, cols: getComputedStyle(document.getElementById('homeGrid')).gridTemplateColumns.split(' ').length }));
+    expect(r.larg).toBeLessThanOrEqual(390);
+    expect(r.cols).toBe(1);
   });
 });
