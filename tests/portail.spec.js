@@ -5726,4 +5726,47 @@ test.describe('Annuaire réservé aux administrateurs (03/11/2026)', () => {
     expect(r.vue).toBe('v-ann');
     expect(r.tab).toBe('ann');
   });
+  test('membre simple : un nom de la lignée n’ouvre plus de fiche, un admin si', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      if(!M.length) M = [{ id: 1, name: 'Test Membre', tel: '', mail: '', date: '2024-01-01', parrain: 'Aucun', mgr: 'Aucun', city: '', cp: '', nn: 'test membre', nm: '', nt: '', np: 'aucun', ng: 'aucun', nc: '' }];
+      const id = M[0].id;
+      EST_ADMIN = false; document.body.classList.remove('est-admin');
+      openSheet(id);
+      const membre = document.getElementById('sheet').classList.contains('on');
+      const s = document.createElement('span'); s.className = 'lig-open'; s.textContent = 'x'; document.body.appendChild(s);
+      const curseur = getComputedStyle(s).cursor;
+      EST_ADMIN = true; openSheet(id);
+      const admin = document.getElementById('sheet').classList.contains('on');
+      closeSheet(); s.remove();
+      return { membre, admin, curseur };
+    });
+    expect(r.membre).toBe(false);
+    expect(r.curseur).not.toBe('pointer');
+    expect(r.admin).toBe(true);
+  });
+
+  test('chargement : annuaire complet si la base l’autorise (admin), sinon version publique', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      const lu = [];
+      const faux = complet => ({ from: t => ({ select: () => ({ eq: () => ({ maybeSingle: async () => {
+        lu.push(t);
+        if(t === 'donnees_reseau') return { data: complet ? { payload: { qui: 'complet' } } : null, error: null };
+        return { data: { payload: { qui: 'public' } }, error: null };
+      } }) }) }) });
+      const avant = [SB, SBUSER];
+      SBUSER = { id: 'u' };
+      SB = faux(true);  const admin = await chargerDonnees(); const luAdmin = lu.splice(0);
+      SB = faux(false); const membre = await chargerDonnees(); const luMembre = lu.splice(0);
+      [SB, SBUSER] = avant;
+      return { admin: admin.qui, luAdmin, membre: membre.qui, luMembre };
+    });
+    expect(r.admin).toBe('complet');
+    expect(r.luAdmin).toEqual(['donnees_reseau']);
+    expect(r.membre).toBe('public');
+    expect(r.luMembre).toEqual(['donnees_reseau', 'donnees_reseau_public']);
+  });
 });

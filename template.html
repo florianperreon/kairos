@@ -379,6 +379,8 @@ tr.colf input:focus{outline:2px solid var(--accent);outline-offset:0}
 :root[data-theme="dark"] .xtra.insc{background:var(--gold-soft);color:var(--gold-ink)}
 .xtra.lig-in{color:var(--gold-ink);background:var(--gold-soft);border-radius:5px;padding:1px 7px}
 .xtra.lig-in .lig-open{cursor:pointer;text-decoration:underline;font-weight:600}
+/* 03/11/2026 : la fiche membre est réservée aux admins — ailleurs les noms ne sont plus des liens */
+body:not(.est-admin) .lig-open{cursor:auto!important;text-decoration:none!important;color:inherit}
 .xtra.act{color:var(--accent);font-weight:600;text-decoration:none;background:var(--accent-soft);border-radius:5px;padding:1px 7px}
 .xtra.act:hover{text-decoration:underline}
 .xtra.gcal-multi{color:var(--ink-2);display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px}
@@ -4062,13 +4064,18 @@ async function chargerContenu(){
   }catch(e){}
   return null;
 }
-// Données du réseau : table si connecté, fonction dédiée si entrée par mot de passe
+// Données du réseau (03/11/2026) : l'annuaire complet (donnees_reseau) n'est lisible que par les
+// administrateurs ; les autres comptes reçoivent donnees_reseau_public — mêmes données, mais sans
+// aucune coordonnée et réduites aux fiches utiles (adhérents, lignée, comptes Kairos). C'est la base
+// (RLS) qui décide : une ligne vide sur la table complète = pas admin, on lit la version publique.
 async function chargerDonnees(){
   try{
     if(SB && SBUSER){
       const r = await SB.from('donnees_reseau').select('payload').eq('id',1).maybeSingle();
-      if(r.error) throw r.error;
-      return (r.data && r.data.payload) || null;
+      if(!r.error && r.data && r.data.payload) return r.data.payload;
+      const p = await SB.from('donnees_reseau_public').select('payload').eq('id',1).maybeSingle();
+      if(p.error) throw p.error;
+      return (p.data && p.data.payload) || null;
     }
   }catch(e){}
   return null;
@@ -4325,6 +4332,7 @@ function showAdminSub(s){
 const KAIROS_CHANGELOG = [
   ['2026-11-03', [
     ['f','Annuaire réservé aux administrateurs : l’onglet, son adresse #annuaire et les membres dans la recherche Ctrl K ne sont plus visibles des autres comptes.'],
+    ['f','Données des membres réservées aux administrateurs : les autres comptes ne reçoivent plus aucune coordonnée (téléphone, e-mail, ville) ni l’annuaire complet, et les noms (lignée inscrite, anniversaires, victoires) n’ouvrent plus de fiche.'],
   ]],
   ['2026-11-02', [
     ['f','Ressources : 9 nouveaux simulateurs tirés du MEGA FORMAN — Jeanbrun, SCPI à crédit (CACF, SOFIAP, CFCAL), SCPI en démembrement, LMNP, plus-value immobilière, prêt à paliers, rallongement de crédit, réduction d’impôt combinée et objectif de titre.'],
@@ -6175,6 +6183,7 @@ function buildAnn(){
 
 /* ---------- Fiche adhérent ---------- */
 function openSheet(id){
+  if(!EST_ADMIN) return;                    // fiche membre = annuaire : administrateurs seulement (03/11/2026)
   const m=M.find(x=>x.id===id); if(!m) return;
   // ascendance par parrain
   const chain=[]; let cur=m, guard=0;
@@ -9932,6 +9941,7 @@ function fmtQuand(iso){
 }
 function masquerAdmin(btn){
   EST_ADMIN=false; EST_PROPRIO=false;
+  document.body.classList.remove('est-admin');
   if(btn) btn.hidden=true;
   document.querySelectorAll('nav.tabs [data-v="ann"]').forEach(x=>x.hidden=true);
   if(curTab==='admin'||curTab==='ann'){ showTab('home'); curTab='home'; syncHash(false); }
@@ -9950,6 +9960,7 @@ async function buildMembres(){
   catch(e){ return masquerAdmin(btn); }
   if(btn) btn.hidden=false;
   EST_ADMIN=true;
+  document.body.classList.add('est-admin');
   document.querySelectorAll('nav.tabs [data-v="ann"]').forEach(x=>x.hidden=false);
   // Admin → Contenu → Édition : le propriétaire seul (le serveur le refuse aussi aux autres)
   try{ const pr=await SB.rpc('est_proprietaire'); EST_PROPRIO = !pr.error && pr.data===true; }catch(e){ EST_PROPRIO=false; }
