@@ -4425,7 +4425,7 @@ const KAIROS_CHANGELOG = [
     ['f','Accueil repensé pour un coup d’œil rapide : à gauche tes actions restantes et ton parcours en résumé, à droite les 7 prochains jours (avec les ateliers suivants pilotés par la lignée). La présentation de Kairos se replie après tes premières visites.'],
     ['f','Accueil personnalisable (⚙ Personnaliser) : choisis les blocs affichés et l’ordre de ceux du bas ; l’ordre conseillé s’adapte (parrain : suivi de la lignée d’abord ; nouveau : parcours avant les actions).'],
     ['f','Nouvel onglet « Mon parcours » dans Mon espace : le détail des missions, qui était en bas de l’accueil.'],
-    ['f','Accueil : « Raccourcis » remplace « Ressources utiles » ; les rituels ne sont plus en double (ils restent dans les 7 prochains jours). Sur téléphone, la prochaine action reste accessible en bas de l’écran.'],
+    ['f','Accueil : « Raccourcis » (liens externes seulement : MyProdémial, site FORMAN, MEGA, Discord…) remplace « Ressources utiles » ; les rituels ne sont plus en double (ils restent dans les 7 prochains jours). Sur téléphone, la prochaine action reste accessible en bas de l’écran.'],
     ['f','Admin → Activité : nombre de personnes par type d’appareil (téléphone, ordinateur, tablette) sur 30 jours.'],
     ['f','Accueil : le message de bienvenue présente Kairos comme l’outil interne de la lignée, avec les liens vers le site FORMAN et le Discord.'],
     ['f','Annuaire déplacé dans Admin (sous-onglet « Annuaire », juste après Membres) et réservé aux administrateurs ; l’ancienne adresse #annuaire y mène. Les membres de l’annuaire n’apparaissent plus dans la recherche Ctrl K des autres comptes.'],
@@ -4842,15 +4842,13 @@ function buildParcoursMini(){
   el.innerHTML = '<h2>Mon parcours <span class="badge-lig">'+(estNouveau()?'tes premiers pas':'4 phases')+'</span></h2>'
     + '<div class="pm">'+lignes+'</div><a class="pm-tout" href="#mon-parcours">Ouvrir mon parcours →</a>';
 }
-// Raccourcis : les liens utiles (contenu « ressources ») + les outils de Kairos
+// Raccourcis : les liens utiles externes (contenu « ressources ») — pas les onglets de Kairos, déjà dans le menu
 function buildRaccourcis(){
   const el = document.getElementById('homeRac'); if(!el) return;
   const res = (CONTENU && CONTENU.ressources) || [];
   const ext = res.filter(r=>/^https:\/\//.test(r.u||'')).map(r=>'<a class="rac" href="'+esc(r.u)+'" target="_blank" rel="noopener" title="'+esc(r.d||r.t)+'">'+esc(r.t)+' ↗</a>');
-  const int = [['#fiches-pratiques','📚 Fiches pratiques'],['#ressources','🧮 Simulateurs et courriers'],['#mail-manager','✉️ Mail Manager'],['#ma-lignee','🌳 Ma lignée']]
-    .map(x=>'<a class="rac in" href="'+x[0]+'">'+x[1]+'</a>');
-  el.hidden = false;
-  el.innerHTML = '<h2>Raccourcis</h2><div class="racs">'+int.concat(ext).join('')+'</div>';
+  el.hidden = !ext.length;
+  el.innerHTML = ext.length ? '<h2>Raccourcis</h2><div class="racs">'+ext.join('')+'</div>' : '';
 }
 // Téléphone : la prochaine action reste à portée de pouce quand on a fait défiler l'accueil
 let HOME_NEXT_OBS = null;
