@@ -2155,7 +2155,6 @@ body.ps-open #fbBtn{bottom:64px}
       <a href="#ateliers" data-v="cat" title="Ateliers"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></a>
       <a href="#parcours-decouverte" data-v="pd" id="pdTabBtn" title="Parcours Découverte"><span class="i" data-i="pd"></span><span class="l">Parcours</span></a>
       <a href="#reunions-d-equipe" data-v="reu" data-autres="" title="Autres événements : réunions d’équipe, formations, événements"><span class="i" data-i="evt"></span><span class="l">Autres événements</span></a>
-      <a href="#annuaire" data-v="ann" hidden title="Annuaire"><span class="i" data-i="ann"></span><span class="l">Annuaire</span></a>
       <div class="grp">S'informer &amp; outils</div>
       <a href="#fiches-pratiques" data-v="fiches" title="Fiches pratiques"><span class="i" data-i="fiches"></span><span class="l">Fiches pratiques</span></a>
       <a href="#veille" data-v="veille" hidden title="Veille"><span class="i" data-i="veille"></span><span class="l">Veille</span></a>
@@ -2374,27 +2373,6 @@ body.ps-open #fbBtn{bottom:64px}
       <div id="evtList"></div>
       <div id="evtCalWrap" hidden></div>
     </section>
-    <section class="view" id="v-ann">
-      <div class="filters">
-        <input type="search" id="annQ" placeholder="Nom, email, téléphone, parrain, ville…">
-        <select id="annYear"><option value="">Toutes années</option></select>
-        <select id="annDep"><option value="">Tous départements</option></select>
-        <label class="chk"><input type="checkbox" id="annAdh"> Adhérents</label>
-        <label class="chk"><input type="checkbox" id="annFav"> ★ Favoris</label>
-        <button type="button" class="reset-btn" data-reset="ann" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
-      </div>
-      <div class="count-line"><span id="annCount"></span></div>
-      <div class="tbl-wrap">
-        <table>
-          <thead>
-            <tr id="annHead"><th></th><th data-col="name" class="sortable">Nom</th><th data-col="tel" class="sortable">Téléphone</th><th data-col="mail" class="sortable">Email</th><th data-col="date" class="sortable">Inscription</th><th data-col="city" class="sortable">Ville</th><th data-col="parrain" class="sortable">Parrain</th><th data-col="mgr" class="sortable">Manager</th></tr>
-            <tr class="colf"><th></th><th><input type="search" data-f="nn" placeholder="Filtrer…" aria-label="Filtrer par nom"></th><th><input type="search" data-f="nt" placeholder="Filtrer…" aria-label="Filtrer par téléphone"></th><th><input type="search" data-f="nm" placeholder="Filtrer…" aria-label="Filtrer par email"></th><th><input type="search" data-f="date" placeholder="AAAA-MM…" aria-label="Filtrer par date d’inscription"></th><th><input type="search" data-f="nc" placeholder="Filtrer…" aria-label="Filtrer par ville"></th><th><input type="search" data-f="np" placeholder="Filtrer…" aria-label="Filtrer par parrain"></th><th><input type="search" data-f="ng" placeholder="Filtrer…" aria-label="Filtrer par manager"></th></tr>
-          </thead>
-          <tbody id="annBody"></tbody>
-        </table>
-        <div class="pager"><button id="pgPrev">←</button><span id="pgInfo" class="num"></span><button id="pgNext">→</button></div>
-      </div>
-    </section>
 
     <section class="view" id="v-fb">
       <div class="panel">
@@ -2411,6 +2389,7 @@ body.ps-open #fbBtn{bottom:64px}
     <section class="view" id="v-admin">
       <nav class="subtabs" id="adminSub">
         <button data-s="mbr" class="on">Membres</button>
+        <button data-s="ann">Annuaire</button>
         <button data-s="act">Activité</button>
         <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
         <button data-s="cnt">Contenu <span class="sub-badge cnt" id="sgBadge" hidden></span><span class="sub-badge" id="sgNonLu" hidden></span></button>
@@ -2421,6 +2400,27 @@ body.ps-open #fbBtn{bottom:64px}
         <button data-s="log">Changelog Kairos</button>
       </nav>
 
+      <div class="subview" id="sv-ann"><div id="v-ann">
+        <div class="filters">
+          <input type="search" id="annQ" placeholder="Nom, email, téléphone, parrain, ville…">
+          <select id="annYear"><option value="">Toutes années</option></select>
+          <select id="annDep"><option value="">Tous départements</option></select>
+          <label class="chk"><input type="checkbox" id="annAdh"> Adhérents</label>
+          <label class="chk"><input type="checkbox" id="annFav"> ★ Favoris</label>
+          <button type="button" class="reset-btn" data-reset="ann" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
+        </div>
+        <div class="count-line"><span id="annCount"></span></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr id="annHead"><th></th><th data-col="name" class="sortable">Nom</th><th data-col="tel" class="sortable">Téléphone</th><th data-col="mail" class="sortable">Email</th><th data-col="date" class="sortable">Inscription</th><th data-col="city" class="sortable">Ville</th><th data-col="parrain" class="sortable">Parrain</th><th data-col="mgr" class="sortable">Manager</th></tr>
+              <tr class="colf"><th></th><th><input type="search" data-f="nn" placeholder="Filtrer…" aria-label="Filtrer par nom"></th><th><input type="search" data-f="nt" placeholder="Filtrer…" aria-label="Filtrer par téléphone"></th><th><input type="search" data-f="nm" placeholder="Filtrer…" aria-label="Filtrer par email"></th><th><input type="search" data-f="date" placeholder="AAAA-MM…" aria-label="Filtrer par date d’inscription"></th><th><input type="search" data-f="nc" placeholder="Filtrer…" aria-label="Filtrer par ville"></th><th><input type="search" data-f="np" placeholder="Filtrer…" aria-label="Filtrer par parrain"></th><th><input type="search" data-f="ng" placeholder="Filtrer…" aria-label="Filtrer par manager"></th></tr>
+            </thead>
+            <tbody id="annBody"></tbody>
+          </table>
+          <div class="pager"><button id="pgPrev">←</button><span id="pgInfo" class="num"></span><button id="pgNext">→</button></div>
+        </div>
+      </div></div>
       <div class="subview" id="sv-mcp"><div id="mcpAdmin"></div></div>
       <div class="subview" id="sv-log">
         <div class="panel cl-panel">
@@ -3918,7 +3918,7 @@ function buildActions(){
                              : 'Prendre des nouvelles de ' + dormeurs[0].name,
       d: dormeurs.slice(0,3).map(m => m.name + (m.vu ? ' (vu le ' + fmtD(m.vu) + ')' : ' (jamais vu en séance)')).join(' · ')
          + (dormeurs.length>3 ? ' · +' + (dormeurs.length-3) : ''),
-      href: EST_ADMIN ? '#annuaire' : '#ma-lignee', fait:semFait('filleuls'), go:'Voir' });
+      href: EST_ADMIN ? '#admin?s=annuaire' : '#ma-lignee', fait:semFait('filleuls'), go:'Voir' });
   }
 
   // 6 a) Valider les objectifs déclarés par mes filleuls directs (27/10/2026). Le relevé (EXTRA[id].oatt)
@@ -4192,7 +4192,9 @@ document.addEventListener('click', e=>{
 function showTab(v){
   // Annuaire réservé aux administrateurs (03/11/2026) : tout autre compte est renvoyé à l'accueil
   // (renvoie l'onglet réellement affiché : les appelants font « curTab = showTab(v) »)
-  if(v === 'ann' && !EST_ADMIN) v = 'home';
+  // Depuis le 03/11/2026 l'annuaire est un sous-onglet d'Admin : showTab('ann') ouvre Admin → Annuaire
+  let sousAdmin = null;
+  if(v === 'ann'){ if(EST_ADMIN){ v = 'admin'; sousAdmin = 'ann'; } else v = 'home'; }
   if(AUTRES.includes(v) && AUT_DER!==v){ AUT_DER=v; try{ localStorage.setItem('kairos_aut', v); }catch(e){} }
   document.querySelectorAll('nav.tabs [data-v], nav.botbar [data-v], #plusCard [data-v]').forEach(x=>x.classList.toggle('on',menuOn(x,v)));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
@@ -4212,6 +4214,7 @@ function showTab(v){
       if(recent && recent > (VU.bk||'')){ VU.bk = recent; saveVu(); buildActions(); }
     }catch(e){}
   }
+  if(sousAdmin) showAdminSub(sousAdmin);
   return v;
 }
 // Menu (31/10/2026) : chaque entrée est un vrai lien <a href="#onglet">. Clic gauche simple = navigation
@@ -4310,8 +4313,8 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','act','dem','cnt','stats','nouv','jrn','mcp','log'];
-const ADMIN_SLUG={mbr:'membres',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
+const ADMIN_SUBS=['mbr','ann','act','dem','cnt','stats','nouv','jrn','mcp','log'];
+const ADMIN_SLUG={mbr:'membres',ann:'annuaire',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 function showAdminSub(s){
@@ -4331,7 +4334,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-03', [
-    ['f','Annuaire réservé aux administrateurs : l’onglet, son adresse #annuaire et les membres dans la recherche Ctrl K ne sont plus visibles des autres comptes.'],
+    ['f','Annuaire déplacé dans Admin (sous-onglet « Annuaire », juste après Membres) et réservé aux administrateurs ; l’ancienne adresse #annuaire y mène. Les membres de l’annuaire n’apparaissent plus dans la recherche Ctrl K des autres comptes.'],
     ['f','Données des membres réservées aux administrateurs : les autres comptes ne reçoivent plus aucune coordonnée (téléphone, e-mail, ville) ni l’annuaire complet, et les noms (lignée inscrite, anniversaires, victoires) n’ouvrent plus de fiche.'],
   ]],
   ['2026-11-02', [
@@ -4458,18 +4461,19 @@ document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('cli
 
 /* ---------- État dans l'URL : #onglet?filtres — partageable (règle Florian 13/09/2026) ---------- */
 // Exemples : #veille · #ateliers?q=r1&lieu=Visio+%2F+Zoom&past=1 · #annuaire?f_nc=nantes&tri=name.asc · #parcours-decouverte?cat=DM&j=2,4&vue=cal
-const TABS=['home','veille','fiches','res','surv','pd','mm','lig','cat','reu','for','evt','ann','fb','profil','admin'];
+const TABS=['home','veille','fiches','res','surv','pd','mm','lig','cat','reu','for','evt','fb','profil','admin'];
 // Nom de l'onglet dans l'URL : libellé en minuscules avec des tirets (règle Florian 13/09/2026) ; les anciens ids restent acceptés
-const TAB_SLUG={home:'accueil',veille:'veille',fiches:'fiches-pratiques',res:'ressources',surv:'mes-sessions',pd:'parcours-decouverte',mm:'mail-manager',lig:'ma-lignee',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',ann:'annuaire',fb:'ameliorer-kairos',profil:'mon-profil',admin:'admin'};
+const TAB_SLUG={home:'accueil',veille:'veille',fiches:'fiches-pratiques',res:'ressources',surv:'mes-sessions',pd:'parcours-decouverte',mm:'mail-manager',lig:'ma-lignee',cat:'ateliers',reu:'reunions-d-equipe',for:'formations',evt:'evenements',fb:'ameliorer-kairos',profil:'mon-profil',admin:'admin'};
 // Les anciens liens #membres et #statistiques ouvrent l'onglet Admin sur le bon sous-menu
 // « enregistre » : ancienne adresse de l'onglet, gardée pour que les liens déjà partagés fonctionnent
-const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',mbr:'admin',stats:'admin',enregistre:'surv'});
+const SLUG_TAB=Object.assign(Object.fromEntries(Object.entries(TAB_SLUG).map(([k,v])=>[v,k])),{membres:'admin',statistiques:'admin',annuaire:'admin',mbr:'admin',stats:'admin',enregistre:'surv'});
 const tabFromSlug=x=>SLUG_TAB[x]||(TABS.includes(x)?x:null);
 let curTab='home', APPLYING=false;
 const ctrlKey=(el,tab)=>(el.id.startsWith(tab)?el.id.slice(tab.length):el.id).toLowerCase();
 function tabState(tab){
   const p=new URLSearchParams(); const sec=document.getElementById('v-'+tab); if(!sec) return p;
   sec.querySelectorAll('.filters input[id], .filters select[id]').forEach(el=>{
+    if(tab==='admin' && el.closest('.subview:not(.on)')) return;
     const k=ctrlKey(el,tab);
     if(el.type==='checkbox'){ if(el.checked!==el.defaultChecked) p.set(k, el.checked?'1':'0'); }
     else if(el.value) p.set(k, el.value);
@@ -4478,8 +4482,8 @@ function tabState(tab){
   const chips=[...sec.querySelectorAll('.chips .chip')], on=chips.filter(c=>c.classList.contains('on'));
   if(chips.length&&on.length<chips.length) p.set('th', on.map(c=>c.dataset.t).join('|'));
   const vt=sec.querySelector('.vtoggle button.on'); if(vt&&vt.dataset.m!=='list') p.set('vue',vt.dataset.m);
-  sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ if(i.value) p.set('f_'+i.dataset.f,i.value); });
-  if(tab==='ann'&&typeof ANN_SORT!=='undefined'&&(ANN_SORT.col!=='date'||ANN_SORT.dir!=='desc')) p.set('tri',ANN_SORT.col+'.'+ANN_SORT.dir);
+  sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ if(tab==='admin' && i.closest('.subview:not(.on)')) return; if(i.value) p.set('f_'+i.dataset.f,i.value); });
+  if((tab==='ann'||(tab==='admin'&&curSub==='ann'))&&typeof ANN_SORT!=='undefined'&&(ANN_SORT.col!=='date'||ANN_SORT.dir!=='desc')) p.set('tri',ANN_SORT.col+'.'+ANN_SORT.dir);
   if(tab==='admin'&&curSub!=='mbr') p.set('s', ADMIN_SLUG[curSub]);
   if(tab==='admin'&&curSub==='cnt') sgTabState(p);
   if(tab==='surv'&&typeof SURV_SUB!=='undefined'&&SURV_SUB!=='ins') p.set('s', SURV_SLUG[SURV_SUB]);
@@ -4494,7 +4498,8 @@ function tabState(tab){
   return p;
 }
 function hashFor(tab){ const q=tabState(tab).toString(); return '#'+(TAB_SLUG[tab]||tab)+(q?'?'+q:''); }
-function updateResetBtns(){ TABS.forEach(t=>{ const b=document.querySelector('.reset-btn[data-reset="'+t+'"]'); if(b) b.hidden = tabState(t).toString()===''; }); }
+function updateResetBtns(){ [...TABS,'ann'].forEach(t=>{   // 'ann' : Admin → Annuaire (03/11/2026)
+ const b=document.querySelector('.reset-btn[data-reset="'+t+'"]'); if(b) b.hidden = tabState(t).toString()===''; }); }
 document.querySelectorAll('.reset-btn').forEach(b=>b.addEventListener('click',()=>{ applyState(b.dataset.reset, new URLSearchParams()); syncHash(false); }));
 function syncHash(push){
   if(APPLYING||!window.__booted||location.hash.startsWith('#p/')) return;
@@ -4532,7 +4537,7 @@ function applyState(tab,p){
       const v=+(p.get('v')||0);
       if(v && (!MM_LU || MM_LU.id!==v)) mmVoir(v); else if(!v && MM_LU){ MM_LU=null; buildMM(); }
     }
-    if(tab==='ann'&&typeof ANN_SORT!=='undefined'){ const [c,d]=(p.get('tri')||'date.desc').split('.'); if(ANN_SORT.col!==c||ANN_SORT.dir!==d){ const th=document.querySelector('#annHead th[data-col="'+c+'"]'); if(th){ th.click(); if(ANN_SORT.dir!==d) th.click(); } } }
+    if((tab==='ann'||(tab==='admin'&&curSub==='ann'))&&typeof ANN_SORT!=='undefined'){ const [c,d]=(p.get('tri')||'date.desc').split('.'); if(ANN_SORT.col!==c||ANN_SORT.dir!==d){ const th=document.querySelector('#annHead th[data-col="'+c+'"]'); if(th){ th.click(); if(ANN_SORT.dir!==d) th.click(); } } }
   } finally { APPLYING=false; }
   updateResetBtns();
 }
@@ -9943,7 +9948,6 @@ function masquerAdmin(btn){
   EST_ADMIN=false; EST_PROPRIO=false;
   document.body.classList.remove('est-admin');
   if(btn) btn.hidden=true;
-  document.querySelectorAll('nav.tabs [data-v="ann"]').forEach(x=>x.hidden=true);
   if(curTab==='admin'||curTab==='ann'){ showTab('home'); curTab='home'; syncHash(false); }
   return false;
 }
@@ -9961,7 +9965,6 @@ async function buildMembres(){
   if(btn) btn.hidden=false;
   EST_ADMIN=true;
   document.body.classList.add('est-admin');
-  document.querySelectorAll('nav.tabs [data-v="ann"]').forEach(x=>x.hidden=false);
   // Admin → Contenu → Édition : le propriétaire seul (le serveur le refuse aussi aux autres)
   try{ const pr=await SB.rpc('est_proprietaire'); EST_PROPRIO = !pr.error && pr.data===true; }catch(e){ EST_PROPRIO=false; }
   try{ sgNav(); }catch(e){}

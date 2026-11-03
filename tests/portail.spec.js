@@ -553,14 +553,13 @@ test.describe('Liens partagés', () => {
       HASH_INITIAL = '#mail-manager'; HASH_APPLIQUE = false;
       window.__booted = true;
       document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = true);
-      // elle est partie sur l'annuaire pendant le chargement (réservé aux admins)
-      EST_ADMIN = true;
-      showTab('ann'); curTab = 'ann'; location.hash = '#annuaire';
+      // elle est partie sur les ateliers pendant le chargement
+      showTab('cat'); curTab = 'cat'; location.hash = '#ateliers';
       document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = false);
       routerQuandPret();
       return (document.querySelector('section.view.on') || {}).id;
     });
-    expect(r, 'le lien ne doit pas reprendre la main après une navigation').toBe('v-ann');
+    expect(r, 'le lien ne doit pas reprendre la main après une navigation').toBe('v-cat');
   });
 });
 
@@ -5321,7 +5320,8 @@ test.describe('Menu Forman : Autres événements (01/11/2026)', () => {
     const erreurs = await ouvrir(page);
     await page.evaluate(() => { document.getElementById('lock').style.display = 'none'; document.getElementById('app').style.display = 'grid'; window.__booted = true; localStorage.removeItem('kairos_aut'); AUT_DER = 'reu'; });
     const menu = await page.evaluate(() => [...document.querySelectorAll('#side .side-nav > *')].map(x => x.textContent.trim()).filter(Boolean));
-    expect(menu.slice(menu.indexOf('Forman'), menu.indexOf('Forman') + 5)).toEqual(['Forman', 'Ateliers', 'Parcours', 'Autres événements', 'Annuaire']);
+    expect(menu.slice(menu.indexOf('Forman'), menu.indexOf('Forman') + 4)).toEqual(['Forman', 'Ateliers', 'Parcours', 'Autres événements']);
+    expect(menu, 'l’annuaire est dans Admin depuis le 03/11/2026').not.toContain('Annuaire');
     await page.click('#side [data-autres]');
     expect(await page.evaluate(() => [curTab, location.hash.split('?')[0]])).toEqual(['reu', '#reunions-d-equipe']);
     expect(await page.textContent('#v-reu .aut-sub .on')).toBe('Réunions d’équipe');
@@ -5698,33 +5698,48 @@ test.describe('Annuaire réservé aux administrateurs (03/11/2026)', () => {
       document.getElementById('app').style.display = 'grid';
       window.__booted = true;
       EST_ADMIN = false;
-      const menu = document.querySelector('nav.tabs [data-v="ann"]').hidden;
-      document.querySelector('nav.tabs [data-v="ann"]').hidden = false;   // même si le menu était visible
-      location.hash = '#annuaire'; routeHash();
+      const menu = !document.querySelector('nav.tabs [data-v="ann"]') && !!document.querySelector('#adminSub [data-s="ann"]');
+      location.hash = '#annuaire'; routeHash();   // menu Admin masqué : l'adresse ne mène nulle part
       const vue = (document.querySelector('section.view.on') || {}).id;
       return { menu, vue, tab: curTab, hash: location.hash, direct: showTab('ann') };
     });
-    expect(r.menu, 'entrée Annuaire masquée par défaut').toBe(true);
+    expect(r.menu, 'Annuaire : plus dans le menu, mais dans les sous-onglets Admin').toBe(true);
     expect(r.vue).toBe('v-home');
     expect(r.tab).toBe('home');
-    expect(r.hash).not.toBe('#annuaire');
     expect(r.direct).toBe('home');
     expect(lire('template.html')).toContain('if(q.length>=2 && EST_ADMIN){');
   });
 
-  test('administrateur : l’annuaire s’affiche par son adresse', async ({ page }) => {
+  test('administrateur : #annuaire et #admin?s=annuaire ouvrent Admin → Annuaire, filtres et tri dans l’adresse', async ({ page }) => {
     await ouvrir(page);
     const r = await page.evaluate(() => {
       document.getElementById('lock').style.display = 'none';
       document.getElementById('app').style.display = 'grid';
       window.__booted = true;
       EST_ADMIN = true;
-      document.querySelectorAll('nav.tabs [data-v="ann"]').forEach(x => x.hidden = false);
+      try{ buildAnn(); }catch(e){}
+      document.querySelectorAll('nav.tabs [data-v="admin"]').forEach(x => x.hidden = false);
       location.hash = '#annuaire'; routeHash();
-      return { vue: (document.querySelector('section.view.on') || {}).id, tab: curTab };
+      const ancien = { vue: (document.querySelector('section.view.on') || {}).id, tab: curTab, sous: curSub };
+      showTab('home'); curTab = 'home';
+      location.hash = '#admin?s=annuaire&f_nc=nantes&tri=name.asc'; routeHash();
+      const sv = document.getElementById('sv-ann');
+      const nouveau = { vue: (document.querySelector('section.view.on') || {}).id, sous: curSub, on: sv.classList.contains('on'),
+        ville: document.querySelector('#v-ann tr.colf input[data-f="nc"]').value, tri: ANN_SORT.col + '.' + ANN_SORT.dir,
+        lien: hashFor('admin') };
+      showAdminSub('mbr');
+      const ailleurs = hashFor('admin');
+      return { ancien, nouveau, ailleurs };
     });
-    expect(r.vue).toBe('v-ann');
-    expect(r.tab).toBe('ann');
+    expect(r.ancien).toEqual({ vue: 'v-admin', tab: 'admin', sous: 'ann' });
+    expect(r.nouveau.vue).toBe('v-admin');
+    expect(r.nouveau.sous).toBe('ann');
+    expect(r.nouveau.on).toBe(true);
+    expect(r.nouveau.ville).toBe('nantes');
+    expect(r.nouveau.tri).toBe('name.asc');
+    expect(r.nouveau.lien).toContain('s=annuaire');
+    expect(r.nouveau.lien).toContain('tri=name.asc');
+    expect(r.ailleurs, 'les filtres de l’annuaire ne suivent pas sur Admin → Membres').toBe('#admin');
   });
   test('membre simple : un nom de la lignée n’ouvre plus de fiche, un admin si', async ({ page }) => {
     await ouvrir(page);
