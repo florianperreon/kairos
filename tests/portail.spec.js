@@ -553,7 +553,8 @@ test.describe('Liens partagés', () => {
       HASH_INITIAL = '#mail-manager'; HASH_APPLIQUE = false;
       window.__booted = true;
       document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = true);
-      // elle est partie sur l'annuaire pendant le chargement
+      // elle est partie sur l'annuaire pendant le chargement (réservé aux admins)
+      EST_ADMIN = true;
       showTab('ann'); curTab = 'ann'; location.hash = '#annuaire';
       document.querySelectorAll('[data-v="mm"]').forEach(x => x.hidden = false);
       routerQuandPret();
@@ -5685,5 +5686,44 @@ test.describe('Ressources — simulateurs du MEGA FORMAN (02/11/2026)', () => {
     const r = await calc(page, 'titre', {});
     expect(sp(r.kpis['R1 par semaine'])).toMatch(/^0,7 \| 33 R1/);
     expect(r.tables[0].rows.length).toBe(12);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Annuaire réservé aux administrateurs (03/11/2026)', () => {
+  test('membre simple : menu masqué, l’adresse #annuaire et showTab renvoient à l’accueil, pas de membres dans Ctrl K', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      EST_ADMIN = false;
+      const menu = document.querySelector('nav.tabs [data-v="ann"]').hidden;
+      document.querySelector('nav.tabs [data-v="ann"]').hidden = false;   // même si le menu était visible
+      location.hash = '#annuaire'; routeHash();
+      const vue = (document.querySelector('section.view.on') || {}).id;
+      return { menu, vue, tab: curTab, hash: location.hash, direct: showTab('ann') };
+    });
+    expect(r.menu, 'entrée Annuaire masquée par défaut').toBe(true);
+    expect(r.vue).toBe('v-home');
+    expect(r.tab).toBe('home');
+    expect(r.hash).not.toBe('#annuaire');
+    expect(r.direct).toBe('home');
+    expect(lire('template.html')).toContain('if(q.length>=2 && EST_ADMIN){');
+  });
+
+  test('administrateur : l’annuaire s’affiche par son adresse', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      EST_ADMIN = true;
+      document.querySelectorAll('nav.tabs [data-v="ann"]').forEach(x => x.hidden = false);
+      location.hash = '#annuaire'; routeHash();
+      return { vue: (document.querySelector('section.view.on') || {}).id, tab: curTab };
+    });
+    expect(r.vue).toBe('v-ann');
+    expect(r.tab).toBe('ann');
   });
 });

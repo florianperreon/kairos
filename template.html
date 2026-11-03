@@ -2153,7 +2153,7 @@ body.ps-open #fbBtn{bottom:64px}
       <a href="#ateliers" data-v="cat" title="Ateliers"><span class="i" data-i="cat"></span><span class="l">Ateliers</span></a>
       <a href="#parcours-decouverte" data-v="pd" id="pdTabBtn" title="Parcours Découverte"><span class="i" data-i="pd"></span><span class="l">Parcours</span></a>
       <a href="#reunions-d-equipe" data-v="reu" data-autres="" title="Autres événements : réunions d’équipe, formations, événements"><span class="i" data-i="evt"></span><span class="l">Autres événements</span></a>
-      <a href="#annuaire" data-v="ann" title="Annuaire"><span class="i" data-i="ann"></span><span class="l">Annuaire</span></a>
+      <a href="#annuaire" data-v="ann" hidden title="Annuaire"><span class="i" data-i="ann"></span><span class="l">Annuaire</span></a>
       <div class="grp">S'informer &amp; outils</div>
       <a href="#fiches-pratiques" data-v="fiches" title="Fiches pratiques"><span class="i" data-i="fiches"></span><span class="l">Fiches pratiques</span></a>
       <a href="#veille" data-v="veille" hidden title="Veille"><span class="i" data-i="veille"></span><span class="l">Veille</span></a>
@@ -3911,12 +3911,12 @@ function buildActions(){
   const dormeurs = (typeof filleulsEndormis === 'function') ? filleulsEndormis() : [];
   if(dormeurs.length){
     evaluable = true;
-    actions.push({ cle:'filleuls', manuel:true, ancre:'v-ann',
+    actions.push({ cle:'filleuls', manuel:true, ancre: EST_ADMIN ? 'v-ann' : 'v-lig',
       t: dormeurs.length > 1 ? 'Prendre des nouvelles de ' + dormeurs.length + ' filleuls'
                              : 'Prendre des nouvelles de ' + dormeurs[0].name,
       d: dormeurs.slice(0,3).map(m => m.name + (m.vu ? ' (vu le ' + fmtD(m.vu) + ')' : ' (jamais vu en séance)')).join(' · ')
          + (dormeurs.length>3 ? ' · +' + (dormeurs.length-3) : ''),
-      href:'#annuaire', fait:semFait('filleuls'), go:'Voir' });
+      href: EST_ADMIN ? '#annuaire' : '#ma-lignee', fait:semFait('filleuls'), go:'Voir' });
   }
 
   // 6 a) Valider les objectifs déclarés par mes filleuls directs (27/10/2026). Le relevé (EXTRA[id].oatt)
@@ -4183,6 +4183,9 @@ document.addEventListener('click', e=>{
   showTab(b.dataset.aut); curTab=b.dataset.aut; syncHash(true);
 });
 function showTab(v){
+  // Annuaire réservé aux administrateurs (03/11/2026) : tout autre compte est renvoyé à l'accueil
+  // (renvoie l'onglet réellement affiché : les appelants font « curTab = showTab(v) »)
+  if(v === 'ann' && !EST_ADMIN) v = 'home';
   if(AUTRES.includes(v) && AUT_DER!==v){ AUT_DER=v; try{ localStorage.setItem('kairos_aut', v); }catch(e){} }
   document.querySelectorAll('nav.tabs [data-v], nav.botbar [data-v], #plusCard [data-v]').forEach(x=>x.classList.toggle('on',menuOn(x,v)));
   document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on', s.id==='v-'+v));
@@ -4202,6 +4205,7 @@ function showTab(v){
       if(recent && recent > (VU.bk||'')){ VU.bk = recent; saveVu(); buildActions(); }
     }catch(e){}
   }
+  return v;
 }
 // Menu (31/10/2026) : chaque entrée est un vrai lien <a href="#onglet">. Clic gauche simple = navigation
 // interne (sans recharger) ; clic molette, Ctrl/Cmd/Maj + clic et clic droit (« Ouvrir dans un nouvel
@@ -4218,7 +4222,7 @@ document.addEventListener('click', e=>{
   if(e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;   // nouvel onglet / fenêtre : le navigateur
   e.preventDefault();
   const v = menuV(b);
-  showTab(v); curTab=v;
+  curTab = showTab(v);
   fermerPlus();
   syncHash(true);
   window.scrollTo({top:0});
@@ -4319,6 +4323,9 @@ function showAdminSub(s){
    ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
+  ['2026-11-03', [
+    ['f','Annuaire réservé aux administrateurs : l’onglet, son adresse #annuaire et les membres dans la recherche Ctrl K ne sont plus visibles des autres comptes.'],
+  ]],
   ['2026-11-02', [
     ['f','Ressources : 9 nouveaux simulateurs tirés du MEGA FORMAN — Jeanbrun, SCPI à crédit (CACF, SOFIAP, CFCAL), SCPI en démembrement, LMNP, plus-value immobilière, prêt à paliers, rallongement de crédit, réduction d’impôt combinée et objectif de titre.'],
     ['f','Ressources : le choix du simulateur tient en deux rangées de pastilles (la famille, puis l’outil) juste au-dessus du simulateur, au lieu de la grille de cartes.'],
@@ -4561,7 +4568,8 @@ function routeHash(){
   if(h==='#faq-apercu'){ buildFaq(true); return; }
   const m=h.match(/^#([a-z-]+)(?:\?(.*))?$/); const tab=m?tabFromSlug(m[1]):null;
   if(tab){ const btn=document.querySelector('nav.tabs [data-v="'+tab+'"]'); if(btn&&btn.hidden) return;
-    showTab(tab); curTab=tab;
+    curTab = showTab(tab);
+    if(curTab!==tab){ syncHash(false); return; }
     const p=new URLSearchParams(m[2]||'');
     if(tab==='admin'&&!p.has('s')&&SLUG_ADMIN[m[1]]) p.set('s', m[1]);
     applyState(tab, p); }
@@ -6478,10 +6486,10 @@ function ckOpen(){ const el=document.getElementById('cmdk'); el.classList.add('o
 function ckClose(){ document.getElementById('cmdk').classList.remove('on'); }
 function ckRender(qraw){
   const q=norm(qraw.trim()); const res=document.getElementById('ckRes'); ckRows=[];
-  if(!q){ res.innerHTML='<div class="ck-empty">Tape quelques lettres : pages du parcours, questions fréquentes, objections, ateliers, réunions, formations, événements, membres de l’annuaire, ressources.</div>'; return; }
+  if(!q){ res.innerHTML='<div class="ck-empty">Tape quelques lettres : pages du parcours, questions fréquentes, objections, ateliers, réunions, formations, événements, '+(EST_ADMIN?'membres de l’annuaire, ':'')+'ressources.</div>'; return; }
   const score=it=>{ if(it.k===q) return 0; if(it.k.startsWith(q)) return 1; if(it.k.includes(q)) return 2; if(q.length>=3&&it.kx&&it.kx.includes(q)) return 3; return 9; };
   const hits=SIDX.map(it=>({it,sc:score(it)})).filter(x=>x.sc<9).sort((a,b)=>a.sc-b.sc||a.it.t.localeCompare(b.it.t,'fr'));
-  if(q.length>=2){ const qd=q.replace(/[^0-9]/g,''); M.filter(m=>m.nn.includes(q)||(qd.length>=4&&m.nt.includes(qd))||(q.includes('@')&&m.nm.includes(q))).sort((a,b)=>(ADH.has(b.id)-ADH.has(a.id))||(LIGNEE_IDS.has(b.id)-LIGNEE_IDS.has(a.id))||a.nn.localeCompare(b.nn)).slice(0,8).forEach(m=>hits.push({it:{g:'Annuaire',ic:'👤',t:m.name,s:(ADH.has(m.id)?'adhérent · ':'')+(m.city||''),k:m.nn,kx:'',act:()=>openSheet(m.id)},sc:5})); }
+  if(q.length>=2 && EST_ADMIN){ const qd=q.replace(/[^0-9]/g,''); M.filter(m=>m.nn.includes(q)||(qd.length>=4&&m.nt.includes(qd))||(q.includes('@')&&m.nm.includes(q))).sort((a,b)=>(ADH.has(b.id)-ADH.has(a.id))||(LIGNEE_IDS.has(b.id)-LIGNEE_IDS.has(a.id))||a.nn.localeCompare(b.nn)).slice(0,8).forEach(m=>hits.push({it:{g:'Annuaire',ic:'👤',t:m.name,s:(ADH.has(m.id)?'adhérent · ':'')+(m.city||''),k:m.nn,kx:'',act:()=>openSheet(m.id)},sc:5})); }
   const groups={}; const order=[]; const perG={};
   hits.forEach(h=>{ const g=h.it.g; perG[g]=(perG[g]||0)+1; if(perG[g]>6) return; if(!groups[g]){ groups[g]=[]; order.push(g); } groups[g].push(h.it); });
   const gsc=g=>g==='Annuaire'?5:Math.min(...groups[g].map(score));
@@ -9925,7 +9933,8 @@ function fmtQuand(iso){
 function masquerAdmin(btn){
   EST_ADMIN=false; EST_PROPRIO=false;
   if(btn) btn.hidden=true;
-  if(curTab==='admin'){ showTab('home'); curTab='home'; syncHash(false); }
+  document.querySelectorAll('nav.tabs [data-v="ann"]').forEach(x=>x.hidden=true);
+  if(curTab==='admin'||curTab==='ann'){ showTab('home'); curTab='home'; syncHash(false); }
   return false;
 }
 async function buildMembres(){
@@ -9941,6 +9950,7 @@ async function buildMembres(){
   catch(e){ return masquerAdmin(btn); }
   if(btn) btn.hidden=false;
   EST_ADMIN=true;
+  document.querySelectorAll('nav.tabs [data-v="ann"]').forEach(x=>x.hidden=false);
   // Admin → Contenu → Édition : le propriétaire seul (le serveur le refuse aussi aux autres)
   try{ const pr=await SB.rpc('est_proprietaire'); EST_PROPRIO = !pr.error && pr.data===true; }catch(e){ EST_PROPRIO=false; }
   try{ sgNav(); }catch(e){}
