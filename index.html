@@ -1066,6 +1066,9 @@ nav.subtabs button:hover{color:var(--ink)}
 nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
 .subview{display:none}
 .subview.on{display:block}
+.subview-frm{display:none}
+.subview-frm.on{display:block}
+.frm-sub{margin-top:-4px}
 
 /* Onglet Membres */
 .mbr-sub{font-size:14px;color:var(--ink-2);margin:-4px 0 14px}
@@ -2527,38 +2530,50 @@ body.ps-open #fbBtn{bottom:64px}
     <section class="view" id="v-admin">
       <nav class="subtabs" id="adminSub">
         <button data-s="mbr" class="on">Membres</button>
-        <button data-s="ann">Annuaire</button>
+        <button data-s="frm">Forman</button>
         <button data-s="act">Activité</button>
         <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
         <button data-s="cnt">Contenu <span class="sub-badge cnt" id="sgBadge" hidden></span><span class="sub-badge" id="sgNonLu" hidden></span></button>
-        <button data-s="stats">Statistiques</button>
-        <button data-s="nouv">Nouveautés</button>
         <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
         <button data-s="mcp">MCP</button>
         <button data-s="log">Changelog Kairos</button>
       </nav>
 
-      <div class="subview" id="sv-ann"><div id="v-ann">
-        <div class="filters">
-          <input type="search" id="annQ" placeholder="Nom, email, téléphone, parrain, ville…">
-          <select id="annYear"><option value="">Toutes années</option></select>
-          <select id="annDep"><option value="">Tous départements</option></select>
-          <label class="chk"><input type="checkbox" id="annAdh"> Adhérents</label>
-          <label class="chk"><input type="checkbox" id="annFav"> ★ Favoris</label>
-          <button type="button" class="reset-btn" data-reset="ann" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
+      <!-- Admin → Forman (05/11/2026) : Annuaire, Statistiques, Nouveautés -->
+      <div class="subview-frm" id="sv-frm">
+        <nav class="subtabs frm-sub" id="frmSub"><button data-s="ann">Annuaire</button><button data-s="stats">Statistiques</button><button data-s="nouv">Nouveautés</button></nav>
+        <div class="subview" id="sv-ann"><div id="v-ann">
+          <div class="filters">
+            <input type="search" id="annQ" placeholder="Nom, email, téléphone, parrain, ville…">
+            <select id="annYear"><option value="">Toutes années</option></select>
+            <select id="annDep"><option value="">Tous départements</option></select>
+            <label class="chk"><input type="checkbox" id="annAdh"> Adhérents</label>
+            <label class="chk"><input type="checkbox" id="annFav"> ★ Favoris</label>
+            <button type="button" class="reset-btn" data-reset="ann" hidden title="Remettre tous les filtres à leur valeur par défaut">↺ Réinitialiser</button>
+          </div>
+          <div class="count-line"><span id="annCount"></span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr id="annHead"><th></th><th data-col="name" class="sortable">Nom</th><th data-col="tel" class="sortable">Téléphone</th><th data-col="mail" class="sortable">Email</th><th data-col="date" class="sortable">Inscription</th><th data-col="city" class="sortable">Ville</th><th data-col="parrain" class="sortable">Parrain</th><th data-col="mgr" class="sortable">Manager</th></tr>
+                <tr class="colf"><th></th><th><input type="search" data-f="nn" placeholder="Filtrer…" aria-label="Filtrer par nom"></th><th><input type="search" data-f="nt" placeholder="Filtrer…" aria-label="Filtrer par téléphone"></th><th><input type="search" data-f="nm" placeholder="Filtrer…" aria-label="Filtrer par email"></th><th><input type="search" data-f="date" placeholder="AAAA-MM…" aria-label="Filtrer par date d’inscription"></th><th><input type="search" data-f="nc" placeholder="Filtrer…" aria-label="Filtrer par ville"></th><th><input type="search" data-f="np" placeholder="Filtrer…" aria-label="Filtrer par parrain"></th><th><input type="search" data-f="ng" placeholder="Filtrer…" aria-label="Filtrer par manager"></th></tr>
+              </thead>
+              <tbody id="annBody"></tbody>
+            </table>
+            <div class="pager"><button id="pgPrev">←</button><span id="pgInfo" class="num"></span><button id="pgNext">→</button></div>
+          </div>
+        </div></div>
+        <div class="subview" id="sv-stats">
+          <div class="tiles" id="tiles"></div>
+          <div class="grid2">
+            <div class="panel"><h2>Inscriptions de membres par mois</h2><div id="chartIns"></div></div>
+            <div class="panel"><h2>Ateliers à venir par thématique</h2><div id="chartTh"></div></div>
+          </div>
         </div>
-        <div class="count-line"><span id="annCount"></span></div>
-        <div class="tbl-wrap">
-          <table>
-            <thead>
-              <tr id="annHead"><th></th><th data-col="name" class="sortable">Nom</th><th data-col="tel" class="sortable">Téléphone</th><th data-col="mail" class="sortable">Email</th><th data-col="date" class="sortable">Inscription</th><th data-col="city" class="sortable">Ville</th><th data-col="parrain" class="sortable">Parrain</th><th data-col="mgr" class="sortable">Manager</th></tr>
-              <tr class="colf"><th></th><th><input type="search" data-f="nn" placeholder="Filtrer…" aria-label="Filtrer par nom"></th><th><input type="search" data-f="nt" placeholder="Filtrer…" aria-label="Filtrer par téléphone"></th><th><input type="search" data-f="nm" placeholder="Filtrer…" aria-label="Filtrer par email"></th><th><input type="search" data-f="date" placeholder="AAAA-MM…" aria-label="Filtrer par date d’inscription"></th><th><input type="search" data-f="nc" placeholder="Filtrer…" aria-label="Filtrer par ville"></th><th><input type="search" data-f="np" placeholder="Filtrer…" aria-label="Filtrer par parrain"></th><th><input type="search" data-f="ng" placeholder="Filtrer…" aria-label="Filtrer par manager"></th></tr>
-            </thead>
-            <tbody id="annBody"></tbody>
-          </table>
-          <div class="pager"><button id="pgPrev">←</button><span id="pgInfo" class="num"></span><button id="pgNext">→</button></div>
+        <div class="subview" id="sv-nouv">
+          <div class="panel nv-panel" id="admNouv"></div>
         </div>
-      </div></div>
+      </div>
       <div class="subview" id="sv-mcp"><div id="mcpAdmin"></div></div>
       <div class="subview" id="sv-log">
         <div class="panel cl-panel">
@@ -2584,10 +2599,6 @@ body.ps-open #fbBtn{bottom:64px}
           </div>
           <div id="actListe"></div>
         </div>
-      </div>
-
-      <div class="subview" id="sv-nouv">
-        <div class="panel nv-panel" id="admNouv"></div>
       </div>
 
       <div class="subview" id="sv-jrn">
@@ -2726,13 +2737,6 @@ body.ps-open #fbBtn{bottom:64px}
         </div>
       </div>
 
-      <div class="subview" id="sv-stats">
-        <div class="tiles" id="tiles"></div>
-        <div class="grid2">
-          <div class="panel"><h2>Inscriptions de membres par mois</h2><div id="chartIns"></div></div>
-          <div class="panel"><h2>Ateliers à venir par thématique</h2><div id="chartTh"></div></div>
-        </div>
-      </div>
     </section>
   </main>
   <footer id="foot"></footer>
@@ -4469,15 +4473,24 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','ann','act','dem','cnt','stats','nouv','jrn','mcp','log'];
-const ADMIN_SLUG={mbr:'membres',ann:'annuaire',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
+const ADMIN_SUBS=['mbr','frm','ann','act','dem','cnt','stats','nouv','jrn','mcp','log'];
+const ADMIN_SLUG={mbr:'membres',frm:'forman',ann:'annuaire',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
+// Admin → Forman regroupe Annuaire, Statistiques et Nouveautés ; l'adresse garde le sous-onglet précis
+// (#admin?s=annuaire, ?s=statistiques, ?s=nouveautes) ; #admin?s=forman rouvre le dernier consulté.
+const FRM_SUBS = ['ann','stats','nouv'];
+let FRM_DER = 'ann';
 function showAdminSub(s){
+  if(s==='frm') s = FRM_DER;
   if(!ADMIN_SUBS.includes(s)) s='mbr';
   curSub=s;
-  document.querySelectorAll('#adminSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+  if(FRM_SUBS.includes(s)) FRM_DER = s;
+  const top = FRM_SUBS.includes(s) ? 'frm' : s;
+  document.querySelectorAll('#adminSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===top));
+  document.querySelectorAll('#frmSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
+  const frm = document.getElementById('sv-frm'); if(frm) frm.classList.toggle('on', top==='frm');
   if(s==='act'){ try{ if(ACT) buildActivite(); else chargerActivite(); }catch(e){ console.error(e); } }
   if(s==='log'){ try{ buildChangelog(); }catch(e){ console.error(e); } }
   if(s==='mcp'){ try{ buildMcpAdmin(); }catch(e){ console.error(e); } }
@@ -4490,6 +4503,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
+    ['f','Admin : nouvel onglet « Forman » qui regroupe Annuaire, Statistiques et Nouveautés (les adresses #admin?s=annuaire, statistiques et nouveautes restent valables).'],
     ['f','Phase 4 « Objectif Galaxie » : n’est plus « à venir » ; première mission « ESP Manager » ; même affichage que les autres phases tant qu’elle est fermée (point d’étape 2 + passage ADMAN).'],
     ['f','Mon parcours : une phase pas encore ouverte ne montre plus ni ses missions ni son compteur, seulement l’objectif de statut et ce qu’il faut faire pour l’ouvrir (missions de la phase précédente + point d’étape validé par le parrain).'],
   ]],
@@ -4633,7 +4647,7 @@ document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('[data-clf]'); if(!b) return;
   CL_FILTRE = b.dataset.clf; buildChangelog();
 });
-document.querySelectorAll('#adminSub button').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('#adminSub button, #frmSub button').forEach(b=>b.addEventListener('click',()=>{
   showAdminSub(b.dataset.s);
   syncHash(true);
   window.scrollTo({top:0});

@@ -5702,7 +5702,7 @@ test.describe('Annuaire réservé aux administrateurs (03/11/2026)', () => {
       document.getElementById('app').style.display = 'grid';
       window.__booted = true;
       EST_ADMIN = false;
-      const menu = !document.querySelector('nav.tabs [data-v="ann"]') && !!document.querySelector('#adminSub [data-s="ann"]');
+      const menu = !document.querySelector('nav.tabs [data-v="ann"]') && !!document.querySelector('#frmSub [data-s="ann"]');   // 05/11/2026 : dans Admin → Forman
       location.hash = '#annuaire'; routeHash();   // menu Admin masqué : l'adresse ne mène nulle part
       const vue = (document.querySelector('section.view.on') || {}).id;
       return { menu, vue, tab: curTab, hash: location.hash, direct: showTab('ann') };
@@ -6170,5 +6170,34 @@ test.describe('Phase fermée (05/11/2026)', () => {
     expect(r.ferme).toContain('phase 2');
     expect(r.ferme).toContain('point d’étape 2');
     expect(r.ferme).toContain('ADMAN');
+  });
+});
+
+test.describe('Admin → Forman (05/11/2026)', () => {
+  test('un onglet Forman regroupe Annuaire, Statistiques, Nouveautés ; les anciennes adresses restent valables', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true; EST_ADMIN = true;
+      document.querySelectorAll('nav.tabs [data-v="admin"]').forEach(x => x.hidden = false);
+      const haut = [...document.querySelectorAll('#adminSub button')].map(b => b.dataset.s);
+      const dans = [...document.querySelectorAll('#frmSub button')].map(b => b.dataset.s);
+      showTab('admin'); curTab = 'admin'; showAdminSub('stats');
+      const vu = { frm: document.getElementById('sv-frm').classList.contains('on'), stats: document.getElementById('sv-stats').classList.contains('on'),
+        bouton: document.querySelector('#adminSub button.on').dataset.s, lien: hashFor('admin') };
+      showAdminSub('mbr');
+      const ailleurs = document.getElementById('sv-frm').classList.contains('on');
+      showAdminSub('frm');
+      return { haut, dans, vu, ailleurs, retour: curSub };
+    });
+    expect(r.haut).toContain('frm');
+    expect(r.haut).not.toContain('ann');
+    expect(r.haut).not.toContain('stats');
+    expect(r.haut).not.toContain('nouv');
+    expect(r.dans).toEqual(['ann', 'stats', 'nouv']);
+    expect(r.vu).toEqual({ frm: true, stats: true, bouton: 'frm', lien: '#admin?s=statistiques' });
+    expect(r.ailleurs).toBe(false);
+    expect(r.retour).toBe('stats');
   });
 });
