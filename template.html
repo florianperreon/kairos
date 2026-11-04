@@ -2537,12 +2537,11 @@ body.ps-open #fbBtn{bottom:64px}
       <nav class="subtabs" id="adminSub">
         <button data-s="mbr" class="on">Membres</button>
         <button data-s="frm">Forman</button>
-        <button data-s="act">Activité</button>
+        <button data-s="acti">Activité</button>
         <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
         <button data-s="pte">Points d’étape en cours de validation <span class="sub-badge" id="pteBadge" hidden></span></button>
         <button data-s="cnt">Contenu <span class="sub-badge cnt" id="sgBadge" hidden></span><span class="sub-badge" id="sgNonLu" hidden></span></button>
         <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
-        <button data-s="mcp">MCP</button>
         <button data-s="log">Changelog Kairos</button>
       </nav>
 
@@ -2581,30 +2580,34 @@ body.ps-open #fbBtn{bottom:64px}
           <div class="panel nv-panel" id="admNouv"></div>
         </div>
       </div>
-      <div class="subview" id="sv-mcp"><div id="mcpAdmin"></div></div>
+      <!-- Admin → Activité (04/11/2026) : Portail Web + MCP -->
+      <div class="subview-frm" id="sv-acti">
+        <nav class="subtabs frm-sub" id="actiSub"><button data-s="act">Portail Web</button><button data-s="mcp">MCP</button></nav>
+        <div class="subview" id="sv-act">
+          <div class="panel">
+            <h2>Vue d’ensemble</h2>
+            <div id="actVue"><p class="mbr-sub">Chargement…</p></div>
+          </div>
+          <div class="panel">
+            <h2>Activité par personne</h2>
+            <p class="mbr-sub">Clique sur une ligne pour le détail (parcours mission par mission, connexions, mail managers, dernières fiches ouvertes). Clique sur un titre de colonne pour trier.</p>
+            <div class="act-filtres">
+              <input type="search" id="actQ" placeholder="Rechercher une personne…" autocomplete="off">
+              <select id="actF"><option value="">Tout le monde</option><option value="actifs">Actifs sur 30 jours</option><option value="inactifs">Inactifs depuis 30 jours</option><option value="lignee">Ma lignée descendante</option><option value="ph1">En phase 1</option><option value="ph2">En phase 2</option><option value="ph3">En phase 3</option></select>
+              <button type="button" id="actCsv" class="acc-btn">Exporter en CSV</button>
+            </div>
+            <div id="actListe"></div>
+          </div>
+        </div>
+        <div class="subview" id="sv-mcp"><div id="mcpAdmin"></div></div>
+      </div>
+
       <div class="subview" id="sv-log">
         <div class="panel cl-panel">
           <h2>Changelog Kairos</h2>
           <p class="mbr-sub">Les évolutions du portail en bref, les plus récentes en haut.</p>
           <div class="mm-filtre" id="clFiltre"><button type="button" data-clf="" class="on">Tout</button><button type="button" data-clf="f">Fonctionnalités</button><button type="button" data-clf="b">Corrections</button></div>
           <div id="clListe"></div>
-        </div>
-      </div>
-
-      <div class="subview" id="sv-act">
-        <div class="panel">
-          <h2>Vue d’ensemble</h2>
-          <div id="actVue"><p class="mbr-sub">Chargement…</p></div>
-        </div>
-        <div class="panel">
-          <h2>Activité par personne</h2>
-          <p class="mbr-sub">Clique sur une ligne pour le détail (parcours mission par mission, connexions, mail managers, dernières fiches ouvertes). Clique sur un titre de colonne pour trier.</p>
-          <div class="act-filtres">
-            <input type="search" id="actQ" placeholder="Rechercher une personne…" autocomplete="off">
-            <select id="actF"><option value="">Tout le monde</option><option value="actifs">Actifs sur 30 jours</option><option value="inactifs">Inactifs depuis 30 jours</option><option value="lignee">Ma lignée descendante</option><option value="ph1">En phase 1</option><option value="ph2">En phase 2</option><option value="ph3">En phase 3</option></select>
-            <button type="button" id="actCsv" class="acc-btn">Exporter en CSV</button>
-          </div>
-          <div id="actListe"></div>
         </div>
       </div>
 
@@ -4523,24 +4526,29 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','frm','ann','act','pte','dem','cnt','stats','nouv','jrn','mcp','log'];
-const ADMIN_SLUG={mbr:'membres',frm:'forman',pte:'points-d-etape-en-cours-de-validation',ann:'annuaire',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
+const ADMIN_SUBS=['mbr','frm','acti','ann','act','pte','dem','cnt','stats','nouv','jrn','mcp','log'];
+const ADMIN_SLUG={mbr:'membres',frm:'forman',pte:'points-d-etape-en-cours-de-validation',ann:'annuaire',acti:'activite',act:'portail-web',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 // Admin → Forman regroupe Annuaire, Statistiques et Nouveautés ; l'adresse garde le sous-onglet précis
 // (#admin?s=annuaire, ?s=statistiques, ?s=nouveautes) ; #admin?s=forman rouvre le dernier consulté.
-const FRM_SUBS = ['ann','stats','nouv'];
-let FRM_DER = 'ann';
+// 04/11/2026 : Admin → Activité regroupe Portail Web (#admin?s=portail-web) et MCP (#admin?s=mcp) ;
+// #admin?s=activite (ancienne adresse de la page Activité) rouvre le dernier consulté.
+const ADMIN_GROUPES = { frm:['ann','stats','nouv'], acti:['act','mcp'] };
+const ADMIN_GRP_DER = { frm:'ann', acti:'act' };
+const FRM_SUBS = ADMIN_GROUPES.frm;
+const adminGroupeDe = s => Object.keys(ADMIN_GROUPES).find(g=>ADMIN_GROUPES[g].includes(s)) || null;
 function showAdminSub(s){
-  if(s==='frm') s = FRM_DER;
+  if(ADMIN_GROUPES[s]) s = ADMIN_GRP_DER[s];
   if(!ADMIN_SUBS.includes(s)) s='mbr';
   curSub=s;
-  if(FRM_SUBS.includes(s)) FRM_DER = s;
-  const top = FRM_SUBS.includes(s) ? 'frm' : s;
+  const grp = adminGroupeDe(s);
+  if(grp) ADMIN_GRP_DER[grp] = s;
+  const top = grp || s;
   document.querySelectorAll('#adminSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===top));
-  document.querySelectorAll('#frmSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+  document.querySelectorAll('#frmSub button, #actiSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
-  const frm = document.getElementById('sv-frm'); if(frm) frm.classList.toggle('on', top==='frm');
+  Object.keys(ADMIN_GROUPES).forEach(g=>{ const el = document.getElementById('sv-'+g); if(el) el.classList.toggle('on', top===g); });
   if(s==='act'){ try{ if(ACT) buildActivite(); else chargerActivite(); }catch(e){ console.error(e); } }
   if(s==='pte'){ try{ chargerPortesAdmin(); }catch(e){ console.error(e); } }
   if(s==='log'){ try{ buildChangelog(); }catch(e){ console.error(e); } }
@@ -4554,6 +4562,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-04', [
+    ['f','Admin : « Activité » regroupe désormais deux sous-rubriques, « Portail Web » (l’ancienne page Activité) et « MCP ».'],
     ['f','Données à jour : toutes les 10 minutes (et au retour sur l’onglet), Kairos vérifie si les données du réseau ont été mises à jour ; si oui, une fenêtre « Nouvelles données disponibles » propose de rafraîchir.'],
     ['f','Admin → « Points d’étape en cours de validation » : toutes les demandes en attente, avec leur parrain et l’ancienneté ; un administrateur peut valider (ou répondre « Pas encore ») à la place du parrain, avec un mot pour le filleul.'],
     ['f','Admin : nouvel onglet « Forman » qui regroupe Annuaire, Statistiques et Nouveautés (les adresses #admin?s=annuaire, statistiques et nouveautes restent valables).'],
@@ -4698,7 +4707,7 @@ document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('[data-clf]'); if(!b) return;
   CL_FILTRE = b.dataset.clf; buildChangelog();
 });
-document.querySelectorAll('#adminSub button, #frmSub button').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('#adminSub button, #frmSub button, #actiSub button').forEach(b=>b.addEventListener('click',()=>{
   showAdminSub(b.dataset.s);
   syncHash(true);
   window.scrollTo({top:0});

@@ -5446,7 +5446,7 @@ test.describe('MCP Kairos (01/11/2026)', () => {
           { user_id: 'u2', nom: 'Rémi A.', ias: 'ChatGPT', connecte_le: maint, derniere: maint, appels_7j: 1, appels_30j: 1, ecritures_30j: 0, erreurs_30j: 1, bloque: true }] } : { data: null },
         from: () => q };
       SBUSER = { id: 'u0' };
-      const onglet = !!document.querySelector('#adminSub [data-s="mcp"]');
+      const onglet = !!document.querySelector('#actiSub [data-s="mcp"]');   // 04/11/2026 : dans Admin → Activité
       showAdminSub('mcp'); await new Promise(ok => setTimeout(ok, 50));
       const el = document.getElementById('mcpAdmin');
       const kpi = [...el.querySelectorAll('.mcp-kpi b')].map(b => b.textContent);
@@ -6264,5 +6264,32 @@ test.describe('Nouvelles données disponibles (04/11/2026)', () => {
     expect(r.visible).toBe(true);
     expect(r.ferme).toBe(true);
     expect(r.encore).toBe(false);
+  });
+});
+
+test.describe('Admin → Activité : Portail Web et MCP (04/11/2026)', () => {
+  test('Activité regroupe Portail Web et MCP ; les adresses restent valables', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true; EST_ADMIN = true;
+      document.querySelectorAll('nav.tabs [data-v="admin"]').forEach(x => x.hidden = false);
+      const haut = [...document.querySelectorAll('#adminSub button')].map(b => b.dataset.s);
+      const dans = [...document.querySelectorAll('#actiSub button')].map(b => b.textContent);
+      showTab('admin'); curTab = 'admin'; showAdminSub('act');
+      const web = { grp: document.getElementById('sv-acti').classList.contains('on'), act: document.getElementById('sv-act').classList.contains('on'), bouton: document.querySelector('#adminSub button.on').dataset.s, lien: hashFor('admin') };
+      showAdminSub('mbr'); showAdminSub('acti');
+      const retour = curSub;
+      return { haut, dans, web, retour, ancien: SLUG_ADMIN['activite'], mcp: SLUG_ADMIN['mcp'] };
+    });
+    expect(r.haut).toContain('acti');
+    expect(r.haut).not.toContain('mcp');
+    expect(r.haut).not.toContain('act');
+    expect(r.dans).toEqual(['Portail Web', 'MCP']);
+    expect(r.web).toEqual({ grp: true, act: true, bouton: 'acti', lien: '#admin?s=portail-web' });
+    expect(r.retour).toBe('act');
+    expect(r.ancien).toBe('acti');
+    expect(r.mcp).toBe('mcp');
   });
 });
