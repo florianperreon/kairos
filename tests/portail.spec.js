@@ -6294,19 +6294,19 @@ test.describe('Admin → Activité : Portail Web et MCP (04/11/2026)', () => {
   });
 });
 
-test.describe('Admin → Outils Tech → Supports Vie Plus (04/11/2026)', () => {
-  test('rubrique Outils Tech, 439 supports décodés, filtres et tri ; adresses #admin?s=outils-tech / supports-vie-plus', async ({ page }) => {
+test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/2026)', () => {
+  test('sous-rubrique de Ressources (plus dans l’Admin), 439 supports décodés, données au 31/10/2026, filtres et tri', async ({ page }) => {
     const erreurs = await ouvrir(page);
     const r = await page.evaluate(() => {
       document.getElementById('lock').style.display = 'none';
       document.getElementById('app').style.display = 'grid';
-      window.__booted = true; EST_ADMIN = true;
-      document.querySelectorAll('nav.tabs [data-v="admin"]').forEach(x => x.hidden = false);
-      const haut = [...document.querySelectorAll('#adminSub button')].map(b => b.dataset.s);
-      const dans = [...document.querySelectorAll('#outSub button')].map(b => b.textContent);
-      showTab('admin'); curTab = 'admin'; showAdminSub('outils');
-      const vu = { grp: document.getElementById('sv-outils').classList.contains('on'), vp: document.getElementById('sv-vieplus').classList.contains('on'),
-        bouton: document.querySelector('#adminSub button.on').dataset.s, lien: hashFor('admin') };
+      window.__booted = true;
+      const admin = [...document.querySelectorAll('#adminSub button, #v-admin nav button')].map(b => b.textContent);
+      const res = [...document.querySelectorAll('#resSub button')].map(b => b.dataset.s);
+      const dans = [...document.querySelectorAll('#resPlusSub button')].map(b => b.textContent);
+      showTab('res'); curTab = 'res'; showResSub('plus');
+      const vu = { plus: document.getElementById('sr-plus').classList.contains('on'), lien: hashFor('res') };
+      const intro = document.getElementById('vpIntro').textContent;
       const total = document.querySelectorAll('#vpBody tr').length;
       const exc = VP.l.find(x => x.isin === 'FR1459ABH750');
       document.getElementById('vpQ').value = 'LU0826452848';
@@ -6319,15 +6319,17 @@ test.describe('Admin → Outils Tech → Supports Vie Plus (04/11/2026)', () => 
       document.getElementById('vpEsg').checked = false;
       document.querySelector('.vp-tbl th[data-vpt="p5"]').click();
       const premier = document.querySelector('#vpBody tr td b').textContent;
-      showAdminSub('mbr');
-      const ailleurs = document.getElementById('sv-outils').classList.contains('on');
-      return { haut, dans, vu, total, exc, dws, esg, premier, ailleurs, slugs: [SLUG_ADMIN['outils-tech'], SLUG_ADMIN['supports-vie-plus']] };
+      showResSub('sim');
+      const ailleurs = document.getElementById('sr-plus').classList.contains('on');
+      return { admin, res, dans, vu, intro, total, exc, dws, esg, premier, ailleurs, slug: RS_SLUG_INV['pour-aller-plus-loin'] };
     });
     expect(erreurs).toEqual([]);
-    expect(r.haut).toContain('outils');
-    expect(r.haut).not.toContain('vieplus');
+    expect(r.admin.join(' ')).not.toContain('Outils Tech');
+    expect(r.admin.join(' ')).not.toContain('Supports Vie Plus');
+    expect(r.res).toEqual(['sim', 'doc', 'plus', 'lien']);
     expect(r.dans).toEqual(['Supports Vie Plus']);
-    expect(r.vu).toEqual({ grp: true, vp: true, bouton: 'outils', lien: '#admin?s=supports-vie-plus' });
+    expect(r.vu).toEqual({ plus: true, lien: '#ressources?s=pour-aller-plus-loin' });
+    expect(r.intro).toContain('données au 31/10/2026');
     expect(r.total).toBe(439);
     expect(r.exc).toMatchObject({ nom: 'EXCELTIS RENDEMENT DECEMBRE 2026', fam: 'Produit structuré', sri: 5 });
     expect(r.dws).toHaveLength(1);
@@ -6337,7 +6339,7 @@ test.describe('Admin → Outils Tech → Supports Vie Plus (04/11/2026)', () => 
     expect(r.esg).toBeLessThan(439);
     expect(r.premier).toBe('AXIOM EUROPEAN BANKS');   // meilleure perf 5 ans du catalogue (+242 %)
     expect(r.ailleurs).toBe(false);
-    expect(r.slugs).toEqual(['outils', 'vieplus']);
+    expect(r.slug).toBe('plus');
   });
 
   test('les données des supports n’apparaissent pas en clair dans la page (audit)', () => {

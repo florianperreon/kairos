@@ -1080,6 +1080,8 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .vp-tbl .vp-esg{display:inline-block;font-size:11px;font-weight:700;color:var(--ok);border:1px solid var(--ok);border-radius:4px;padding:0 5px}
 .vp-tbl th[data-vpt]{cursor:pointer;white-space:nowrap}
 #vpCsv{flex:0 0 auto;width:auto;margin-left:auto}
+.rp-v{display:none}
+.rp-v.on{display:block}
 .subview-frm{display:none}
 .subview-frm.on{display:block}
 .frm-sub{margin-top:-4px}
@@ -2386,10 +2388,30 @@ body.ps-open #fbBtn{bottom:64px}
       <nav class="subtabs" id="resSub">
         <button data-s="sim" class="on">Simulateurs</button>
         <button data-s="doc">Courriers &amp; attestations</button>
+        <button data-s="plus">Pour aller plus loin</button>
         <button data-s="lien" id="resLienBtn" hidden>Liens utiles</button>
       </nav>
       <div class="subview on" id="sr-sim"><div class="rs-cards" id="resSimCards"></div><div id="resSim"></div></div>
       <div class="subview" id="sr-doc"><div class="rs-cards" id="resDocCards"></div><div id="resDoc"></div></div>
+      <div class="subview" id="sr-plus">
+        <nav class="subtabs frm-sub" id="resPlusSub"><button data-rp="vieplus" class="on">Supports Vie Plus</button></nav>
+        <div class="rp-v on" id="rp-vieplus">
+          <div class="panel">
+            <h2>Supports Vie Plus</h2>
+            <p class="mbr-sub" id="vpIntro"></p>
+            <div class="filters">
+              <input type="search" id="vpQ" placeholder="Nom, ISIN, société de gestion, thème…" autocomplete="off">
+              <select id="vpFam"><option value="">Toutes les familles</option></select>
+              <select id="vpZone"><option value="">Toutes les zones</option></select>
+              <select id="vpSri"><option value="">Tous les SRI</option></select>
+              <label class="chk"><input type="checkbox" id="vpEsg"> Label ESG</label>
+              <button type="button" id="vpCsv" class="acc-btn">Exporter en CSV</button>
+            </div>
+            <div class="count-line"><span id="vpCount"></span></div>
+            <div class="tbl-wrap"><table class="vp-tbl"><thead><tr id="vpHead"></tr></thead><tbody id="vpBody"></tbody></table></div>
+          </div>
+        </div>
+      </div>
       <div class="subview" id="sr-lien"><div class="panel"><h2>Liens utiles</h2><div class="res" id="resLiens"></div></div></div>
     </section>
 
@@ -2550,7 +2572,6 @@ body.ps-open #fbBtn{bottom:64px}
         <button data-s="pte">Points d’étape en cours de validation <span class="sub-badge" id="pteBadge" hidden></span></button>
         <button data-s="cnt">Contenu <span class="sub-badge cnt" id="sgBadge" hidden></span><span class="sub-badge" id="sgNonLu" hidden></span></button>
         <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
-        <button data-s="outils">Outils Tech</button>
         <button data-s="log">Changelog Kairos</button>
       </nav>
 
@@ -2609,27 +2630,6 @@ body.ps-open #fbBtn{bottom:64px}
           </div>
         </div>
         <div class="subview" id="sv-mcp"><div id="mcpAdmin"></div></div>
-      </div>
-
-      <!-- Admin → Outils Tech (04/11/2026) : Supports Vie Plus -->
-      <div class="subview-frm" id="sv-outils">
-        <nav class="subtabs frm-sub" id="outSub"><button data-s="vieplus">Supports Vie Plus</button></nav>
-        <div class="subview" id="sv-vieplus">
-          <div class="panel">
-            <h2>Supports Vie Plus</h2>
-            <p class="mbr-sub" id="vpIntro"></p>
-            <div class="filters">
-              <input type="search" id="vpQ" placeholder="Nom, ISIN, société de gestion, thème…" autocomplete="off">
-              <select id="vpFam"><option value="">Toutes les familles</option></select>
-              <select id="vpZone"><option value="">Toutes les zones</option></select>
-              <select id="vpSri"><option value="">Tous les SRI</option></select>
-              <label class="chk"><input type="checkbox" id="vpEsg"> Label ESG</label>
-              <button type="button" id="vpCsv" class="acc-btn">Exporter en CSV</button>
-            </div>
-            <div class="count-line"><span id="vpCount"></span></div>
-            <div class="tbl-wrap"><table class="vp-tbl"><thead><tr id="vpHead"></tr></thead><tbody id="vpBody"></tbody></table></div>
-          </div>
-        </div>
       </div>
 
       <div class="subview" id="sv-log">
@@ -4556,16 +4556,16 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','frm','acti','ann','act','pte','dem','cnt','stats','nouv','jrn','mcp','outils','vieplus','log'];
-const ADMIN_SLUG={mbr:'membres',frm:'forman',pte:'points-d-etape-en-cours-de-validation',ann:'annuaire',acti:'activite',act:'portail-web',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',outils:'outils-tech',vieplus:'supports-vie-plus',log:'changelog'};
+const ADMIN_SUBS=['mbr','frm','acti','ann','act','pte','dem','cnt','stats','nouv','jrn','mcp','log'];
+const ADMIN_SLUG={mbr:'membres',frm:'forman',pte:'points-d-etape-en-cours-de-validation',ann:'annuaire',acti:'activite',act:'portail-web',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 // Admin → Forman regroupe Annuaire, Statistiques et Nouveautés ; l'adresse garde le sous-onglet précis
 // (#admin?s=annuaire, ?s=statistiques, ?s=nouveautes) ; #admin?s=forman rouvre le dernier consulté.
 // 04/11/2026 : Admin → Activité regroupe Portail Web (#admin?s=portail-web) et MCP (#admin?s=mcp) ;
 // #admin?s=activite (ancienne adresse de la page Activité) rouvre le dernier consulté.
-const ADMIN_GROUPES = { frm:['ann','stats','nouv'], acti:['act','mcp'], outils:['vieplus'] };
-const ADMIN_GRP_DER = { frm:'ann', acti:'act', outils:'vieplus' };
+const ADMIN_GROUPES = { frm:['ann','stats','nouv'], acti:['act','mcp'] };
+const ADMIN_GRP_DER = { frm:'ann', acti:'act' };
 const FRM_SUBS = ADMIN_GROUPES.frm;
 const adminGroupeDe = s => Object.keys(ADMIN_GROUPES).find(g=>ADMIN_GROUPES[g].includes(s)) || null;
 function showAdminSub(s){
@@ -4576,20 +4576,19 @@ function showAdminSub(s){
   if(grp) ADMIN_GRP_DER[grp] = s;
   const top = grp || s;
   document.querySelectorAll('#adminSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===top));
-  document.querySelectorAll('#frmSub button, #actiSub button, #outSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+  document.querySelectorAll('#frmSub button, #actiSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
   Object.keys(ADMIN_GROUPES).forEach(g=>{ const el = document.getElementById('sv-'+g); if(el) el.classList.toggle('on', top===g); });
   if(s==='act'){ try{ if(ACT) buildActivite(); else chargerActivite(); }catch(e){ console.error(e); } }
   if(s==='pte'){ try{ chargerPortesAdmin(); }catch(e){ console.error(e); } }
   if(s==='log'){ try{ buildChangelog(); }catch(e){ console.error(e); } }
   if(s==='mcp'){ try{ buildMcpAdmin(); }catch(e){ console.error(e); } }
-  if(s==='vieplus'){ try{ buildVieplus(); }catch(e){ console.error(e); } }
   if(s==='cnt'){ try{ showCntSub(CNT_SUB); }catch(e){ console.error(e); } }
 }
 
-/* ---------- Admin → Outils Tech → Supports Vie Plus (04/11/2026) ----------
-   Catalogue des supports du versement initial du contrat Cristalliance Avenir (portail Stellium,
-   octobre 2026). Famille, thème, zone et société de gestion sont déduits du libellé.
+/* ---------- Ressources → Pour aller plus loin → Supports Vie Plus (04/11/2026) ----------
+   Catalogue des supports du versement initial du contrat Cristalliance Avenir, données au 31/10/2026
+   (même liste que la table supports_vieplus, lue par l'outil MCP chercher_supports). Famille, thème, zone et société de gestion sont déduits du libellé.
    Données encodées en symboles (2 caractères par octet) : ni lettres ni chiffres dans la page,
    l'audit de confidentialité n'a rien à y trouver. Ligne : [nom, isin, famille, catégorie portail,
    thème, zone, société, perf 1 an, 3 ans, 5 ans (en %), étoiles, sri, label esg 0/1]. */
@@ -4631,7 +4630,7 @@ function vpFiltre(){
 const vpPct = v => v==null ? '—' : (v>0?'+':'')+String(v.toFixed(1)).replace('.',',')+' %';
 function buildVieplus(){
   const d = vpCharger();
-  document.getElementById('vpIntro').textContent = 'Contrat '+d.contrat+' : les '+d.l.length+' supports disponibles au versement initial (portail Stellium, octobre 2026). Famille, thème, zone et société de gestion sont déduits du libellé ; performances et notations telles qu’affichées par le portail.';
+  document.getElementById('vpIntro').textContent = 'Contrat '+d.contrat+' : les '+d.l.length+' supports disponibles au versement initial, données au 31/10/2026. Famille, thème, zone et société de gestion sont déduits du libellé ; performances et notations telles qu’affichées par le portail.';
   vpOptions('vpFam', VP_FAM_ORDRE.filter(x=>d.l.some(r=>r.fam===x)));
   vpOptions('vpZone', [...new Set(d.l.map(r=>r.zone))].sort((a,b)=>a.localeCompare(b,'fr')));
   vpOptions('vpSri', [...new Set(d.l.map(r=>r.sri).filter(x=>x!=null))].sort((a,b)=>a-b));
@@ -4670,7 +4669,7 @@ document.addEventListener('click', e=>{
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-04', [
-    ['f','Admin : nouvelle rubrique « Outils Tech », avec une première sous-rubrique « Supports Vie Plus » : les 439 supports du contrat Cristalliance Avenir (famille, zone, SRI, notation Morningstar, performances 1, 3 et 5 ans, label ESG), avec recherche, filtres, tri et export CSV.'],
+    ['f','Ressources : nouvelle rubrique « Pour aller plus loin », avec « Supports Vie Plus » : les 439 supports du contrat Cristalliance Avenir (famille, zone, SRI, notation Morningstar, performances 1, 3 et 5 ans, label ESG), avec recherche, filtres, tri et export CSV ; aussi interrogeable depuis ton IA (outil Kairos « chercher_supports »).'],
     ['f','Admin : « Activité » regroupe désormais deux sous-rubriques, « Portail Web » (l’ancienne page Activité) et « MCP ».'],
     ['f','Données à jour : toutes les 10 minutes (et au retour sur l’onglet), Kairos vérifie si les données du réseau ont été mises à jour ; si oui, une fenêtre « Nouvelles données disponibles » propose de rafraîchir.'],
     ['f','Admin → « Points d’étape en cours de validation » : toutes les demandes en attente, avec leur parrain et l’ancienneté ; un administrateur peut valider (ou répondre « Pas encore ») à la place du parrain, avec un mot pour le filleul.'],
@@ -4816,7 +4815,7 @@ document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('[data-clf]'); if(!b) return;
   CL_FILTRE = b.dataset.clf; buildChangelog();
 });
-document.querySelectorAll('#adminSub button, #frmSub button, #actiSub button, #outSub button').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('#adminSub button, #frmSub button, #actiSub button').forEach(b=>b.addEventListener('click',()=>{
   showAdminSub(b.dataset.s);
   syncHash(true);
   window.scrollTo({top:0});
@@ -12652,7 +12651,7 @@ document.addEventListener('click', async e=>{
 
 // --- Admin → MCP : historique d'utilisation par membre ---
 let MCP_ADM = { membres:[], journal:[], actif:true, f:{ user:'', outil:'', ia:'', statut:'', type:'' } };
-const MCP_OUTIL_LIB = { chercher_sessions:'Chercher des sessions', detail_session:'Détail d’une session', mes_sessions:'Mes sessions', chercher_fiches:'Chercher des fiches',
+const MCP_OUTIL_LIB = { chercher_supports:'Supports Vie Plus', chercher_sessions:'Chercher des sessions', detail_session:'Détail d’une session', mes_sessions:'Mes sessions', chercher_fiches:'Chercher des fiches',
   lire_fiche:'Lire une fiche', faq_objections:'FAQ / objections', liens_utiles:'Liens utiles', veille:'Veille', mes_actions:'Mes actions', ma_progression:'Ma progression',
   mon_mail_manager:'Mon mail manager', mur_mail_manager:'Mur du mail manager', ma_lignee:'Ma lignée', enregistrer_session:'Enregistrer une session',
   cocher_parcours:'Cocher le parcours', deposer_retour:'Déposer un retour', suggerer_contenu:'Suggérer un contenu', remplir_mail_manager:'Remplir le mail manager',
@@ -14605,8 +14604,8 @@ const RS_DOCS = [
 let RS_SUB='sim', RS_SIM='av', RS_DOC='heb', RS_FAIT=false;
 const RS_VAL={};               // valeurs en mémoire, par outil
 let RS_PARC=null;              // biens du simulateur « Parc immobilier »
-const RS_SUBS=['sim','doc','lien'];
-const RS_SLUG={sim:'simulateurs', doc:'courriers', lien:'liens-utiles'};
+const RS_SUBS=['sim','doc','plus','lien'];
+const RS_SLUG={sim:'simulateurs', doc:'courriers', plus:'pour-aller-plus-loin', lien:'liens-utiles'};
 const RS_SLUG_INV=Object.fromEntries(Object.entries(RS_SLUG).map(([k,v])=>[v,k]));
 const rsTools = () => RS_SIMS.concat(RS_DOCS);
 const rsDef = id => rsTools().find(t=>t.id===id);
@@ -15175,6 +15174,7 @@ function showResSub(s){
   RS_SUB=s;
   document.querySelectorAll('#resSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('#v-res .subview').forEach(v=>v.classList.toggle('on', v.id==='sr-'+s));
+  if(s==='plus'){ try{ buildVieplus(); }catch(e){ console.error(e); } }
 }
 function buildRes(){
   if(!RS_FAIT){
