@@ -2151,15 +2151,13 @@ body.ps-open #fbBtn{bottom:64px}
 <style id="rsCss">
 /* ---------- Ressources : simulateurs et courriers (15/09/2026) ---------- */
 .rs-intro p{color:var(--ink-2);font-size:14px;margin:0}
-.rp-pre{border-left:4px solid var(--accent);background:var(--accent-soft)}
-.rp-pre h2{margin:0 0 6px;font-size:17px}.rp-pre>p{margin:4px 0;font-size:14px;color:var(--ink-2)}
-.rp-pre .rp-disc{display:inline-block;margin:8px 0 4px;font-weight:600}
-.rp-pre h3{margin:14px 0 8px;font-size:14px}
-.rp-reco{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
-.rp-card{background:var(--surface,#fff);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
-.rp-card .rp-th{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2)}
-.rp-card b{font-size:14px;overflow-wrap:anywhere}.rp-card .vp-isin{font-size:12px;color:var(--ink-2)}
-.rp-card .rp-k{font-size:12.5px;color:var(--ink-2)}.rp-card button{align-self:flex-start;margin-top:4px;font-size:12.5px}
+.rp-pre{border-left:4px solid var(--accent);background:var(--accent-soft);padding:10px 14px}
+.rp-pre>p{margin:0;font-size:13.5px;color:var(--ink-2)}.rp-pre>p b{color:var(--ink)}
+.rp-pre .rp-h{margin:8px 0 4px;font-size:12px;font-weight:700;color:var(--ink-2)}
+.rp-reco{display:flex;flex-wrap:wrap;gap:6px}
+.rp-chip{display:inline-flex;gap:6px;align-items:center;max-width:100%;background:var(--surface,#fff);border:1px solid transparent;border-radius:99px;padding:3px 10px;font-size:12.5px;color:var(--ink);cursor:pointer;font:inherit;font-size:12.5px}
+.rp-chip:hover{border-color:var(--accent)}.rp-chip .rp-th{font-weight:700}.rp-chip .rp-k{color:var(--ink-2)}
+.rp-chip span{white-space:nowrap}.rp-chip .rp-nom{white-space:normal;overflow-wrap:anywhere;text-align:left}
 .rs-intro .rs-priv{display:inline-flex;gap:6px;align-items:center;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--gold-ink);background:var(--gold-soft);border-radius:99px;padding:3px 11px}
 .rs-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:18px}
 #resSimCards{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:14px}
@@ -2402,8 +2400,8 @@ body.ps-open #fbBtn{bottom:64px}
       <div class="subview on" id="sr-sim"><div class="rs-cards" id="resSimCards"></div><div id="resSim"></div></div>
       <div class="subview" id="sr-doc"><div class="rs-cards" id="resDocCards"></div><div id="resDoc"></div></div>
       <div class="subview" id="sr-plus">
-        <div class="panel rp-pre" id="rpPre"></div>
         <nav class="subtabs frm-sub" id="resPlusSub"><button data-rp="vieplus" class="on">Supports Vie Plus</button></nav>
+        <div class="panel rp-pre" id="rpPre"></div>
         <div class="rp-v on" id="rp-vieplus">
           <div class="panel">
             <h2>Supports Vie Plus</h2>
@@ -4690,16 +4688,12 @@ function buildRpPre(){
   const r = rpCharger(), d = vpCharger();
   const cartes = r.r.map(([th, ico, isin])=>{
     const f = d.l.find(x=>x.isin===isin); if(!f) return '';
-    return '<div class="rp-card"><span class="rp-th">'+ico+' '+esc(th)+'</span><b>'+esc(f.nom)+'</b>'
-      +'<span class="vp-isin">'+esc(f.isin)+' · '+esc(f.sgp||'')+'</span>'
-      +'<span class="rp-k">SRI '+(f.sri!=null?f.sri+'/7':'—')+' · 3 ans '+vpPct(f.p3)+' · 5 ans '+vpPct(f.p5)+'</span>'
-      +'<button type="button" class="acc-btn" data-rp-isin="'+esc(f.isin)+'">Voir dans la liste</button></div>';
+    return '<button type="button" class="rp-chip" data-rp-isin="'+esc(f.isin)+'" title="'+esc(f.isin)+' · '+esc(f.sgp||'')+' · 3 ans '+vpPct(f.p3)+' · 5 ans '+vpPct(f.p5)+' : voir dans la liste">'
+      +'<span class="rp-th">'+ico+' '+esc(th)+'</span><span class="rp-nom">'+esc(f.nom)+'</span><span class="rp-k">SRI '+(f.sri!=null?f.sri+'/7':'—')+'</span></button>';
   }).join('');
-  el.innerHTML = '<h2>📌 Les allocations types sont sur Discord</h2>'
-    +'<p>Les allocations types, régulièrement mises à jour et recommandées par '+esc(r.n)+', sont sur le Discord de la lignée.</p>'
-    +'<a class="rp-disc" href="'+esc(r.d)+'" target="_blank" rel="noopener">Ouvrir le salon des allocations ↗</a>'
-    +'<p>Cette page te permet d’aller plus loin et de tester. Pense à faire vérifier par '+esc(r.p)+', notre expert sur ces sujets dans la lignée :)</p>'
-    +(cartes ? '<h3>Recommandations thématiques</h3><div class="rp-reco">'+cartes+'</div>' : '');
+  el.innerHTML = '<p>📌 <b>Allocations types</b> : régulièrement mises à jour et recommandées par '+esc(r.n)+', elles sont sur <a href="'+esc(r.d)+'" target="_blank" rel="noopener">le salon Discord de la lignée ↗</a>. '
+    +'Cette page te permet d’aller plus loin et de tester ; pense à faire vérifier par '+esc(r.p)+', notre expert sur ces sujets dans la lignée :)</p>'
+    +(cartes ? '<div class="rp-h">Quelques recommandations thématiques en date du 05/11/2026</div><div class="rp-reco">'+cartes+'</div>' : '');
   el.dataset.ok = '1';
 }
 document.addEventListener('click', e=>{
@@ -4715,7 +4709,7 @@ document.addEventListener('click', e=>{
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
-    ['f','Ressources → Pour aller plus loin : encadré en tête de page qui renvoie vers les allocations types à jour sur le Discord de la lignée (à faire vérifier par notre expert allocation), et trois recommandations thématiques (énergie propre, santé, défense) avec un bouton « Voir dans la liste ».'],
+    ['f','Ressources → Pour aller plus loin : encadré en tête de page qui renvoie vers les allocations types à jour sur le Discord de la lignée (à faire vérifier par notre expert allocation), et quelques recommandations thématiques en date du 05/11/2026 (énergie propre, santé, défense), en pastilles compactes qui filtrent la liste ; placé sous la sous-rubrique « Supports Vie Plus ».'],
     ['f','Supports Vie Plus : précision sur la colonne ESG (label affiché par le portail Vie Plus, pas la classification SFDR article 8 ou 9, à vérifier dans le DIC).'],
   ]],
   ['2026-11-04', [
