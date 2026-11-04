@@ -1079,7 +1079,6 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .vp-tbl .vp-st{white-space:nowrap;color:var(--accent);letter-spacing:1px}
 .vp-tbl .vp-esg{display:inline-block;font-size:11px;font-weight:700;color:var(--ok);border:1px solid var(--ok);border-radius:4px;padding:0 5px}
 .vp-tbl th[data-vpt]{cursor:pointer;white-space:nowrap}
-#vpCsv{flex:0 0 auto;width:auto;margin-left:auto}
 .rp-v{display:none}
 .rp-v.on{display:block}
 .subview-frm{display:none}
@@ -2412,7 +2411,6 @@ body.ps-open #fbBtn{bottom:64px}
               <select id="vpZone"><option value="">Toutes les zones</option></select>
               <select id="vpSri"><option value="">Tous les SRI</option></select>
               <label class="chk"><input type="checkbox" id="vpEsg"> Label ESG</label>
-              <button type="button" id="vpCsv" class="acc-btn">Exporter en CSV</button>
             </div>
             <div class="count-line"><span id="vpCount"></span></div>
             <div class="tbl-wrap"><table class="vp-tbl"><thead><tr id="vpHead"></tr></thead><tbody id="vpBody"></tbody></table></div>
@@ -4652,21 +4650,11 @@ function buildVieplus(){
     +'<td>'+(r.esg?'<span class="vp-esg">ESG</span>':'')+'</td></tr>').join('')
     || '<tr><td colspan="10" class="mbr-sub">Aucun support ne correspond.</td></tr>';
 }
-function vpCsv(){
-  const l = vpFiltre(), sep = ';', q = v => '"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const tete = ['Support','ISIN','Famille','Catégorie portail','Thème','Zone','Société de gestion','SRI','Morningstar','Perf 1 an (%)','Perf 3 ans (%)','Perf 5 ans (%)','Label ESG'];
-  const nb = v => v==null ? '' : String(v).replace('.',',');
-  const rows = l.map(r=>[r.nom,r.isin,r.fam,r.cat,r.theme,r.zone,r.sgp,r.sri,r.ms||'',nb(r.p1),nb(r.p3),nb(r.p5),r.esg?'Oui':'']);
-  const txt = '﻿'+[tete].concat(rows).map(x=>x.map(q).join(sep)).join('\r\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type:'text/csv;charset=utf-8' }));
-  a.download = 'supports-vie-plus-'+todayIso+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
-}
 document.addEventListener('input', e=>{ if(e.target && ['vpQ','vpFam','vpZone','vpSri','vpEsg'].includes(e.target.id)) buildVieplus(); });
 document.addEventListener('change', e=>{ if(e.target && ['vpFam','vpZone','vpSri','vpEsg'].includes(e.target.id)) buildVieplus(); });
 document.addEventListener('click', e=>{
   const th = e.target.closest && e.target.closest('.vp-tbl th[data-vpt]');
   if(th){ const c = th.dataset.vpt; VP_TRI = { col:c, dir: VP_TRI.col===c ? -VP_TRI.dir : (['p1','p3','p5','ms','esg'].includes(c)?-1:1) }; buildVieplus(); return; }
-  if(e.target.closest && e.target.closest('#vpCsv')) vpCsv();
 });
 
 /* ---------- Ressources → Pour aller plus loin → encadré « Allocations types » (05/11/2026) ----------
@@ -4710,6 +4698,7 @@ document.addEventListener('click', e=>{
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
     ['f','Ressources → Pour aller plus loin : encadré en tête de page qui renvoie vers les allocations types à jour sur le Discord de la lignée (à faire vérifier par notre expert allocation), et quelques recommandations thématiques en date du 05/11/2026 (énergie propre, santé, défense), en pastilles compactes qui filtrent la liste ; placé sous la sous-rubrique « Supports Vie Plus ».'],
+    ['f','Supports Vie Plus : l’export CSV de la liste est retiré.'],
     ['f','Supports Vie Plus : précision sur la colonne ESG (label affiché par le portail Vie Plus, pas la classification SFDR article 8 ou 9, à vérifier dans le DIC).'],
   ]],
   ['2026-11-04', [
