@@ -203,6 +203,12 @@ section.view.on{display:block}
 .hgrid .hcol.vide{display:none}
 .hgrid:has(.hcol.vide){grid-template-columns:minmax(0,1fr)}
 .hl-off{display:none!important}
+.maj-dispo{position:fixed;right:18px;bottom:18px;z-index:96;width:min(380px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--accent);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.22);padding:16px 18px;display:none}
+.maj-dispo.on{display:block}
+.maj-dispo .md-t{font-family:"Sora";font-weight:800;font-size:15.5px;margin-bottom:4px}
+.maj-dispo p{margin:0 0 12px;font-size:13.5px;color:var(--ink-2)}
+.maj-dispo .md-b{display:flex;justify-content:flex-end;gap:8px}
+@media(max-width:860px){.maj-dispo{right:16px;bottom:calc(76px + env(safe-area-inset-bottom))}}
 /* ---------- Dévoilement progressif (03/11/2026) ---------- */
 .nv-lock{display:none!important}
 nav.tabs a.nv-cotis,nav.botbar a.nv-cotis,#plusCard a.nv-cotis{opacity:.5}
@@ -4235,15 +4241,50 @@ async function chargerContenu(){
 async function chargerDonnees(){
   try{
     if(SB && SBUSER){
-      const r = await SB.from('donnees_reseau').select('payload').eq('id',1).maybeSingle();
-      if(!r.error && r.data && r.data.payload) return r.data.payload;
-      const p = await SB.from('donnees_reseau_public').select('payload').eq('id',1).maybeSingle();
+      const r = await SB.from('donnees_reseau').select('payload,maj').eq('id',1).maybeSingle();
+      if(!r.error && r.data && r.data.payload){ DONNEES_SRC = 'donnees_reseau'; DONNEES_MAJ = r.data.maj || null; return r.data.payload; }
+      const p = await SB.from('donnees_reseau_public').select('payload,maj').eq('id',1).maybeSingle();
       if(p.error) throw p.error;
+      if(p.data && p.data.payload){ DONNEES_SRC = 'donnees_reseau_public'; DONNEES_MAJ = p.data.maj || null; }
       return (p.data && p.data.payload) || null;
     }
   }catch(e){}
   return null;
 }
+/* ---------- Données plus récentes disponibles (05/11/2026, règle Florian) ----------
+   Toutes les 10 minutes, et au retour sur l'onglet (au plus une fois par minute), le portail lit
+   la seule date de mise à jour des données du réseau. Si elle est plus récente que celle chargée,
+   une fenêtre « Nouvelles données disponibles » propose de rafraîchir : c'est la personne qui clique
+   (rien ne se recharge tout seul, pour ne jamais perdre une saisie en cours). */
+var DONNEES_SRC = null, DONNEES_MAJ = null, MAJ_VERIF_T = 0, MAJ_IGNOREE = null;
+async function verifierFraicheur(force){
+  if(!SB || !SBUSER || !DONNEES_SRC || !DONNEES_MAJ || document.hidden) return false;
+  if(!force && Date.now() - MAJ_VERIF_T < 60000) return false;
+  MAJ_VERIF_T = Date.now();
+  try{
+    const r = await SB.from(DONNEES_SRC).select('maj').eq('id',1).maybeSingle();
+    if(r.error || !r.data || !r.data.maj) return false;
+    if(new Date(r.data.maj) > new Date(DONNEES_MAJ) && r.data.maj !== MAJ_IGNOREE){ afficherMajDispo(r.data.maj); return true; }
+  }catch(e){}
+  return false;
+}
+function afficherMajDispo(maj){
+  let m = document.getElementById('majDispo');
+  if(!m){ m = document.createElement('div'); m.id = 'majDispo'; m.className = 'maj-dispo'; m.setAttribute('role','alertdialog'); document.body.appendChild(m); }
+  const d = new Date(maj), h = String(d.getHours()).padStart(2,'0')+'h'+String(d.getMinutes()).padStart(2,'0');
+  m.dataset.maj = maj;
+  m.innerHTML = '<div class="md-t">🔄 Nouvelles données disponibles</div>'
+    + '<p>Les données du réseau ont été mises à jour à '+h+' (ateliers, places, inscriptions, parcours). Ce que tu vois date d’avant.</p>'
+    + '<div class="md-b"><button type="button" class="mm-b" data-majplus>Plus tard</button><button type="button" class="mm-b pri" data-majok>Rafraîchir</button></div>';
+  m.classList.add('on');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest) return;
+  if(e.target.closest('[data-majok]')){ location.reload(); return; }
+  if(e.target.closest('[data-majplus]')){ const m = document.getElementById('majDispo'); if(m){ MAJ_IGNOREE = m.dataset.maj; m.classList.remove('on'); } }
+});
+setInterval(()=>verifierFraicheur(true), 10*60000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) verifierFraicheur(false); });
 // Ouverture directe : la session Google donne accès aux données
 // Une adresse Google qui figure déjà sur une fiche de la lignée ouvre l'accès sans passer par un administrateur.
 async function rattachementAuto(){
@@ -4513,6 +4554,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
+    ['f','Données à jour : toutes les 10 minutes (et au retour sur l’onglet), Kairos vérifie si les données du réseau ont été mises à jour ; si oui, une fenêtre « Nouvelles données disponibles » propose de rafraîchir.'],
     ['f','Admin → « Points d’étape en cours de validation » : toutes les demandes en attente, avec leur parrain et l’ancienneté ; un administrateur peut valider (ou répondre « Pas encore ») à la place du parrain, avec un mot pour le filleul.'],
     ['f','Admin : nouvel onglet « Forman » qui regroupe Annuaire, Statistiques et Nouveautés (les adresses #admin?s=annuaire, statistiques et nouveautes restent valables).'],
     ['f','Phase 4 « Objectif Galaxie » : n’est plus « à venir » ; première mission « ESP Manager » ; même affichage que les autres phases tant qu’elle est fermée (point d’étape 2 + passage ADMAN).'],

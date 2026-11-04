@@ -6239,3 +6239,30 @@ test.describe('Admin → Points d’étape en cours de validation (05/11/2026)',
     expect(r.lien).toBe('#admin?s=points-d-etape-en-cours-de-validation');
   });
 });
+
+test.describe('Nouvelles données disponibles (05/11/2026)', () => {
+  test('une date de mise à jour plus récente affiche la fenêtre ; « Plus tard » la ferme ; rien sinon', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      SBUSER = { id: 'u1' };
+      let maj = '2026-11-05T10:00:00+00:00';
+      SB = { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { maj, payload: { a: 1 } }, error: null }) }) }) }) };
+      await chargerDonnees();
+      const charge = { src: DONNEES_SRC, maj: DONNEES_MAJ };
+      const pareil = await verifierFraicheur(true);
+      maj = '2026-11-05T16:17:00+00:00';
+      const neuf = await verifierFraicheur(true);
+      const visible = document.getElementById('majDispo').classList.contains('on');
+      document.querySelector('[data-majplus]').click();
+      const ferme = !document.getElementById('majDispo').classList.contains('on');
+      const encore = await verifierFraicheur(true);   // même mise à jour ignorée : pas de nouvelle fenêtre
+      return { charge, pareil, neuf, visible, ferme, encore };
+    });
+    expect(r.charge).toEqual({ src: 'donnees_reseau', maj: '2026-11-05T10:00:00+00:00' });
+    expect(r.pareil).toBe(false);
+    expect(r.neuf).toBe(true);
+    expect(r.visible).toBe(true);
+    expect(r.ferme).toBe(true);
+    expect(r.encore).toBe(false);
+  });
+});
