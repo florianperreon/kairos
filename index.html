@@ -243,6 +243,11 @@ nav.botbar a.nv-new .l::after{content:"•";padding:0 4px}
 .j0-it.ok .ck{background:var(--gold);border-color:var(--gold);color:#fff}
 #homeParrain .pr-n{font-size:16px;margin:4px 0}
 .mi-aide{margin:10px 0 0;font-size:13.5px;color:var(--ink-2)}
+.mi-ferme{text-align:center;padding:28px 18px;border:1px dashed var(--line-2);border-radius:12px;background:var(--surface-2)}
+.mi-ferme .mi-fi{font-size:34px;margin-bottom:6px}
+.mi-ferme h3{margin:0 0 4px;font-size:17px}
+.mi-fe{display:inline-block;text-align:left;margin:8px auto 14px;padding-left:20px;font-size:14.5px}
+.mi-fe li{margin:6px 0}
 .bravo-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);z-index:95;background:var(--surface);border:1px solid var(--gold);box-shadow:0 10px 30px rgba(0,0,0,.2);border-radius:12px;padding:12px 18px;font-size:14.5px;max-width:min(560px,calc(100vw - 32px));opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
 .bravo-toast.on{opacity:1;transform:translate(-50%,0)}
 @media(max-width:860px){.bravo-toast{bottom:calc(76px + env(safe-area-inset-bottom))}}
@@ -4484,6 +4489,9 @@ function showAdminSub(s){
    ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
+  ['2026-11-05', [
+    ['f','Mon parcours : une phase pas encore ouverte ne montre plus ni ses missions ni son compteur, seulement l’objectif de statut et ce qu’il faut faire pour l’ouvrir (missions de la phase précédente + point d’étape validé par le parrain).'],
+  ]],
   ['2026-11-04', [
     ['f','Audit de confidentialité : le mot « asso » (et « association ») est désormais autorisé dans le portail.'],
     ['f','Admin → Activité : l’entonnoir du parcours est retiré.'],
@@ -5261,7 +5269,7 @@ function buildParcoursMini(){
     const pr = miPhaseProg(ph), ouv = miPhaseOuverte(ph);
     return '<a class="pm-ph'+(ph.id===cour?' on':'')+(ouv?'':' ferme')+'" href="#mon-parcours" data-mialler="'+esc(ph.id)+'">'
       + '<span class="pm-n">Phase '+ph.n+(ouv?'':' 🔒')+'</span><span class="pm-t">'+esc(ph.t)+'</span>'
-      + (ph.avenir ? '<span class="pm-c">à venir</span>' : '<span class="pm-c num">'+pr.ok+'/'+pr.tot+'</span><span class="mi-bar"><i style="width:'+pr.pct+'%"></i></span>')
+      + (ph.avenir ? '<span class="pm-c">à venir</span>' : !ouv ? '<span class="pm-c">vise '+esc(ph.statut||'')+'</span>' : '<span class="pm-c num">'+pr.ok+'/'+pr.tot+'</span><span class="mi-bar"><i style="width:'+pr.pct+'%"></i></span>')
       + '</a>';
   }).join('');
   el.hidden = false;
@@ -5811,6 +5819,18 @@ function miPorteHtml(ph){
     + corps + (po.v==='parrain' && !s.ouverte ? '<p class="mi-v-note"><span class="mi-v parrain">Parrain</span> la seule validation de ton parrain pour cette phase.</p>' : '')
     + '</div>';
 }
+// Phase pas encore ouverte : ni missions ni compteur, seulement ce qu'il faut faire pour l'ouvrir
+function miPhaseFermeeHtml(ph){
+  const p = (ph.ouvre||[]).map(miPorte).find(x=>!x.ouverte);
+  let quoi;
+  if(p && p.po && p.po.v==='auto') quoi = '<p>Cette phase s’ouvre avec ton passage <b>ADMAN</b>.</p>';
+  else if(p && p.ph){
+    quoi = '<ol class="mi-fe"><li>Termine toutes les missions de la <b>phase '+esc(p.ph.n)+' — '+esc(p.ph.t)+'</b>.</li>'
+      + '<li>Demande ensuite à ton parrain de valider ton <b>'+esc(miPorteNom(p.po.id).toLowerCase())+'</b> ('+esc(p.po.t)+').</li></ol>'
+      + '<button type="button" class="alr-b pri" data-miph="'+esc(p.ph.id)+'">Voir la phase '+esc(p.ph.n)+' →</button>';
+  } else quoi = '<p>Cette phase s’ouvrira au fil de ton parcours.</p>';
+  return '<div class="mi-ferme"><div class="mi-fi">🔒</div><h3>Phase '+esc(ph.n)+' — '+esc(ph.t)+'</h3><p class="mi-ai">Vise '+esc(ph.statut||'')+'. Pour l’ouvrir :</p>'+quoi+'</div>';
+}
 function buildMissions(){
   const el = document.getElementById('homeParcoursPanel');
   const D = misData();
@@ -5823,8 +5843,8 @@ function buildMissions(){
   const puces = misPhases().map(p=>{
     const pr = miPhaseProg(p), ouv = miPhaseOuverte(p);
     return '<button type="button" class="mi-chip '+esc(p.c||'')+(p.id===ph.id?' on':'')+(ouv?'':' ferme')+'" data-miph="'+esc(p.id)+'">'
-      + '<span class="mi-cn">Phase '+p.n+(ouv?'':' 🔒')+'</span><b>'+esc(p.t)+'</b><span class="mi-cs">Vise '+esc(p.statut||'')+(p.avenir?' · à venir':' · '+pr.ok+'/'+pr.tot)+'</span>'
-      + (p.avenir?'':'<span class="mi-bar"><i style="width:'+pr.pct+'%"></i></span>')+'</button>';
+      + '<span class="mi-cn">Phase '+p.n+(ouv?'':' 🔒')+'</span><b>'+esc(p.t)+'</b><span class="mi-cs">Vise '+esc(p.statut||'')+(p.avenir?' · à venir':ouv?' · '+pr.ok+'/'+pr.tot:'')+'</span>'
+      + (p.avenir||!ouv?'':'<span class="mi-bar"><i style="width:'+pr.pct+'%"></i></span>')+'</button>';
   }).join('');
   // mission ouverte par défaut : celle demandée, sinon la première en cours / à faire de la phase
   let ouvrir = MI_OUVERTE;
@@ -5841,10 +5861,10 @@ function buildMissions(){
     + '<div class="mi-chips">'+puces+'</div>'
     + '<p class="mi-vis">👀 Ton parrain et ta lignée montante voient ton avancement (Ma lignée → Parcours).</p>'
     + '<div class="mi-body">'
-    + (ph.intro?'<div class="phase-intro">'+esc(ph.intro)+'</div>':'')
-    + (bloquee?'<p class="mi-bl">🔒 '+esc(miBlocage(ph, (ph.missions||[])[0]||{}))+' Ses fiches pratiques s’ouvriront au fur et à mesure de tes missions.</p>':'')
-    + (ph.missions||[]).map(m=>miMissionHtml(ph, m, MI_GARDE ? MI_GARDE.mis.has(m.id) : m.id===ouvrir)).join('')
-    + miPorteHtml(ph)
+    + (bloquee ? miPhaseFermeeHtml(ph) : '')
+    + (bloquee ? '' : (ph.intro?'<div class="phase-intro">'+esc(ph.intro)+'</div>':''))
+    + (bloquee ? '' : (ph.missions||[]).map(m=>miMissionHtml(ph, m, MI_GARDE ? MI_GARDE.mis.has(m.id) : m.id===ouvrir)).join('')
+    + miPorteHtml(ph))
     + '</div>'
     + (refl.length ? '<details class="mi-x"><summary>Les '+refl.length+' réflexes de la lignée</summary><div class="mi-rf">'
         + refl.map(r=>'<div class="mi-r"><b>'+esc(r.t)+'</b><p>'+esc(r.d||'')+'</p></div>').join('')+'</div></details>' : '')

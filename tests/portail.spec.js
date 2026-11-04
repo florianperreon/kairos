@@ -6119,3 +6119,30 @@ test.describe('Aperçu admin simulé (04/11/2026)', () => {
     expect(apres.statut).toBe(vrai.statut);
   });
 });
+
+test.describe('Phase fermée (05/11/2026)', () => {
+  const MISSIONS = JSON.parse(lire('tests/missions.json'));
+  test('ni missions ni compteur : l’objectif de statut et comment l’ouvrir', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate((missions) => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      CONTENU = { pages: {}, nav: [], missions, reflexes: [] };
+      MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Test MOI' });
+      PARCOURS = { statut: 'ROLE_NEOMAN', etapes: { com_n1: { d: '2026-01-01' } } }; MIS = { _mig: 1 }; PORTES = {}; CHECK = {};
+      majParcours(); showTab('parc'); curTab = 'parc';
+      MI_PHASE = 'p2'; MI_CHOISIE = true; buildMissions();
+      const puce = [...document.querySelectorAll('.mi-chip')][1].textContent;
+      const puce3 = [...document.querySelectorAll('.mi-chip')][2].textContent;
+      return { puce, puce3, missions: document.querySelectorAll('#homeParcoursPanel details.mi').length,
+        ferme: (document.querySelector('.mi-ferme') || {}).textContent || '' };
+    }, MISSIONS);
+    expect(r.puce).toContain('Vise BEMAN');
+    expect(r.puce).not.toMatch(/\d+\/\d+/);
+    expect(r.puce3).not.toMatch(/\d+\/\d+/);
+    expect(r.missions).toBe(0);
+    expect(r.ferme).toContain('Termine toutes les missions de la phase 1');
+    expect(r.ferme).toContain('point d’étape 1');
+  });
+});
