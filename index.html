@@ -4638,11 +4638,11 @@ function vpFiltre(){
 const vpPct = v => v==null ? '—' : (v>0?'+':'')+String(v.toFixed(1)).replace('.',',')+' %';
 function buildVieplus(){
   const d = vpCharger();
-  document.getElementById('vpIntro').textContent = 'Contrat '+d.contrat+' : les '+d.l.length+' supports disponibles au versement initial, données au 31/10/2026. Famille, thème, zone et société de gestion sont déduits du libellé ; performances et notations telles qu’affichées par le portail.';
+  document.getElementById('vpIntro').textContent = 'Contrat '+d.contrat+' : les '+d.l.length+' supports disponibles au versement initial, données au 31/10/2026. Famille, thème, zone et société de gestion sont déduits du libellé ; performances et notations telles qu’affichées par le portail. La colonne ESG reprend le label affiché par le portail Vie Plus : ce n’est pas l’article 9, ni forcément l’article 8 SFDR ; la classification SFDR est à vérifier dans le DIC de chaque fonds.';
   vpOptions('vpFam', VP_FAM_ORDRE.filter(x=>d.l.some(r=>r.fam===x)));
   vpOptions('vpZone', [...new Set(d.l.map(r=>r.zone))].sort((a,b)=>a.localeCompare(b,'fr')));
   vpOptions('vpSri', [...new Set(d.l.map(r=>r.sri).filter(x=>x!=null))].sort((a,b)=>a-b));
-  document.getElementById('vpHead').innerHTML = VP_COLS.map(([k,t])=>'<th data-vpt="'+k+'" class="sortable'+(VP_TRI.col===k?(VP_TRI.dir>0?' asc':' desc'):'')+'">'+esc(t)+'</th>').join('');
+  document.getElementById('vpHead').innerHTML = VP_COLS.map(([k,t])=>'<th data-vpt="'+k+'"'+(k==='esg'?' title="Label ESG affiché par le portail Vie Plus — pas la classification SFDR (article 8 ou 9), à vérifier dans le DIC"':'')+' class="sortable'+(VP_TRI.col===k?(VP_TRI.dir>0?' asc':' desc'):'')+'">'+esc(t)+'</th>').join('');
   const l = vpFiltre();
   document.getElementById('vpCount').textContent = l.length+' support'+(l.length>1?'s':'')+' sur '+d.l.length;
   const n = v => '<td class="vp-n'+(v!=null&&v<0?' vp-neg':'')+'">'+vpPct(v)+'</td>';
@@ -4716,6 +4716,7 @@ document.addEventListener('click', e=>{
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
     ['f','Ressources → Pour aller plus loin : encadré en tête de page qui renvoie vers les allocations types à jour sur le Discord de la lignée (à faire vérifier par notre expert allocation), et trois recommandations thématiques (énergie propre, santé, défense) avec un bouton « Voir dans la liste ».'],
+    ['f','Supports Vie Plus : précision sur la colonne ESG (label affiché par le portail Vie Plus, pas la classification SFDR article 8 ou 9, à vérifier dans le DIC).'],
   ]],
   ['2026-11-04', [
     ['f','Ressources : nouvelle rubrique « Pour aller plus loin », avec « Supports Vie Plus » : les 439 supports du contrat Cristalliance Avenir (famille, zone, SRI, notation Morningstar, performances 1, 3 et 5 ans, label ESG), avec recherche, filtres, tri et export CSV ; aussi interrogeable depuis ton IA (outil Kairos « chercher_supports »).'],
