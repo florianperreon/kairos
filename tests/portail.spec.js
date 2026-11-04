@@ -6293,3 +6293,56 @@ test.describe('Admin → Activité : Portail Web et MCP (04/11/2026)', () => {
     expect(r.mcp).toBe('mcp');
   });
 });
+
+test.describe('Admin → Outils Tech → Supports Vie Plus (04/11/2026)', () => {
+  test('rubrique Outils Tech, 439 supports décodés, filtres et tri ; adresses #admin?s=outils-tech / supports-vie-plus', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true; EST_ADMIN = true;
+      document.querySelectorAll('nav.tabs [data-v="admin"]').forEach(x => x.hidden = false);
+      const haut = [...document.querySelectorAll('#adminSub button')].map(b => b.dataset.s);
+      const dans = [...document.querySelectorAll('#outSub button')].map(b => b.textContent);
+      showTab('admin'); curTab = 'admin'; showAdminSub('outils');
+      const vu = { grp: document.getElementById('sv-outils').classList.contains('on'), vp: document.getElementById('sv-vieplus').classList.contains('on'),
+        bouton: document.querySelector('#adminSub button.on').dataset.s, lien: hashFor('admin') };
+      const total = document.querySelectorAll('#vpBody tr').length;
+      const exc = VP.l.find(x => x.isin === 'FR1459ABH750');
+      document.getElementById('vpQ').value = 'LU0826452848';
+      document.getElementById('vpQ').dispatchEvent(new Event('input', { bubbles: true }));
+      const dws = [...document.querySelectorAll('#vpBody tr')].map(t => t.textContent);
+      document.getElementById('vpQ').value = '';
+      document.getElementById('vpEsg').checked = true;
+      document.getElementById('vpEsg').dispatchEvent(new Event('change', { bubbles: true }));
+      const esg = document.querySelectorAll('#vpBody tr').length;
+      document.getElementById('vpEsg').checked = false;
+      document.querySelector('.vp-tbl th[data-vpt="p5"]').click();
+      const premier = document.querySelector('#vpBody tr td b').textContent;
+      showAdminSub('mbr');
+      const ailleurs = document.getElementById('sv-outils').classList.contains('on');
+      return { haut, dans, vu, total, exc, dws, esg, premier, ailleurs, slugs: [SLUG_ADMIN['outils-tech'], SLUG_ADMIN['supports-vie-plus']] };
+    });
+    expect(erreurs).toEqual([]);
+    expect(r.haut).toContain('outils');
+    expect(r.haut).not.toContain('vieplus');
+    expect(r.dans).toEqual(['Supports Vie Plus']);
+    expect(r.vu).toEqual({ grp: true, vp: true, bouton: 'outils', lien: '#admin?s=supports-vie-plus' });
+    expect(r.total).toBe(439);
+    expect(r.exc).toMatchObject({ nom: 'EXCELTIS RENDEMENT DECEMBRE 2026', fam: 'Produit structuré', sri: 5 });
+    expect(r.dws).toHaveLength(1);
+    expect(r.dws[0]).toContain('DWS INVEST II');
+    expect(r.dws[0]).toContain('+109,6 %');
+    expect(r.esg).toBeGreaterThan(100);
+    expect(r.esg).toBeLessThan(439);
+    expect(r.premier).toBe('AXIOM EUROPEAN BANKS');   // meilleure perf 5 ans du catalogue (+242 %)
+    expect(r.ailleurs).toBe(false);
+    expect(r.slugs).toEqual(['outils', 'vieplus']);
+  });
+
+  test('les données des supports n’apparaissent pas en clair dans la page (audit)', () => {
+    const idx = lire('index.html');
+    expect(idx).not.toContain('LU0826452848');
+    expect(idx).not.toContain('CRISTALLIANCE');
+  });
+});
