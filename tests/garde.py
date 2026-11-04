@@ -58,8 +58,8 @@ else:
 #    ils sont dérivés des mêmes secrets que ceux d'update.py, passés par l'Action.
 #    Sans ces variables (exécution locale), ce contrôle est annoncé comme sauté plutôt que faux-vert.
 # Mots que l'audit laisse passer bien qu'ils viennent du domaine de l'API : même liste
-# qu'update.py. Le nom du réseau est assumé dans le portail depuis le 14/09/2026.
-AUTORISES = {"forman"}
+# qu'update.py. Le nom du réseau est assumé dans le portail depuis le 14/09/2026, « asso » depuis le 04/11/2026.
+AUTORISES = {"forman", "asso"}
 AUTORISES |= {m.strip().lower() for m in (os.environ.get("AUDIT_AUTORISES") or "").split(",") if m.strip()}
 
 def interdits():

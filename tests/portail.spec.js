@@ -415,15 +415,15 @@ test.describe('Audit de confidentialité', () => {
     return f;
   };
 
-  test('le nom du réseau est autorisé, « asso » et la lignée ne le sont pas', () => {
+  test('le nom du réseau et « asso » sont autorisés, la lignée ne l’est pas', () => {
     const vrai = lancer(path.join(RACINE, 'index.html'));
     test.skip(vrai.error && vrai.error.code === 'ENOENT', 'python3 absent');
     expect(vrai.status, 'la page réelle doit passer le garde-fou :\n' + vrai.stdout).toBe(0);
 
     expect(lancer(fabriquer('kairos-lignee.html', s => s.replace('<title>', '<title>Dupont '))).status,
       'un nom de la lignée doit être refusé').toBe(1);
-    expect(lancer(fabriquer('kairos-asso.html', s => s.replace('<title>', '<title>notre asso '))).status,
-      '« asso » doit rester refusé').toBe(1);
+    expect(lancer(fabriquer('kairos-asso.html', s => s.replace('<title>', '<title>notre association '))).status,
+      '« asso » / « association » sont autorisés depuis le 04/11/2026').toBe(0);
     expect(lancer(fabriquer('kairos-mail.html', s => s.replace('<title>', '<title>contact@exemple.fr '))).status,
       'une adresse e-mail doit être refusée').toBe(1);
   });

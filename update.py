@@ -494,8 +494,9 @@ def dedup(items):
 # Mots que l'audit de confidentialité laisse passer, alors qu'ils viennent du nom de domaine
 # de l'API ou de la lignée. Le nom du réseau est assumé dans le portail depuis le 14/09/2026 :
 # les objectifs et les statuts y sont nommés comme le réseau les nomme.
-# Tout le reste (« asso », les noms de la lignée, les animateurs moins conseillés) reste interdit.
-AUDIT_AUTORISES = {"forman"}
+# « asso » (et donc « association ») est autorisé depuis le 04/11/2026 (règle Florian).
+# Tout le reste (les noms de la lignée, les animateurs moins conseillés) reste interdit.
+AUDIT_AUTORISES = {"forman", "asso"}
 AUDIT_AUTORISES |= {m.strip().lower() for m in (os.environ.get("AUDIT_AUTORISES") or "").split(",") if m.strip()}
 
 # ---------------- progression individuelle (étapes validées par le réseau) ----------------

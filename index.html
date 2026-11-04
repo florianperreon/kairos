@@ -213,6 +213,7 @@ section.cotis-off>:not(.cotis-lock){display:none!important}
 .cotis-lock h2{font-size:19px;margin-bottom:10px}
 .cotis-lock p{color:var(--ink-2);font-size:14.5px;margin:8px 0}
 .cotis-lock .mm-b{display:inline-block;margin-top:10px;text-decoration:none}
+.cotis-lock .cl-delai{font-size:13.5px;background:var(--surface-2);border-radius:10px;padding:10px 14px}
 nav.tabs a.nv-new .l::after,nav.botbar a.nv-new .l::after{content:"Nouveau";margin-left:6px;font-size:10px;font-weight:800;background:var(--gold);color:#fff;border-radius:99px;padding:1px 6px;vertical-align:1px}
 nav.botbar a.nv-new .l::after{content:"•";padding:0 4px}
 #v-home.mode-nouveau .hmore{display:none}
@@ -4482,6 +4483,10 @@ function showAdminSub(s){
    ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
+  ['2026-11-04', [
+    ['f','Audit de confidentialité : le mot « asso » (et « association ») est désormais autorisé dans le portail.'],
+    ['f','Onglets Forman sans cotisation : le message précise que Kairos se synchronise avec FORMAN 4 fois par jour, donc qu’une adhésion peut mettre quelques heures à être prise en compte.'],
+  ]],
   ['2026-11-03', [
     ['f','Groupe Forman (Ateliers, Parcours Découverte, Autres événements) ouvert dès le début, comme sur le site FORMAN, pour les adhérents à jour de cotisation ; sans cotisation, les entrées restent visibles, grisées, avec « Débloqué lorsque tu auras pris ta cotisation FORMAN ».'],
     ['f','Dévoilement progressif : les espaces de Kairos s’ouvrent avec le parcours (Mes sessions après la Découverte Métier, Mail Manager à la mission 1.5, Ressources et Veille au point d’étape 1, Ma lignée au premier filleul). Un espace pas encore ouvert est caché, y compris dans Ctrl K et par son adresse. Les administrateurs gardent tout.'],
@@ -4916,8 +4921,9 @@ function cotisationPage(v){
   if(!p){ p = document.createElement('div'); p.className = 'panel cotis-lock'; sec.insertBefore(p, sec.firstChild); }
   const u = lienSiteForman();
   p.innerHTML = '<div class="cl-i">🔒</div><h2>Débloqué lorsque tu auras pris ta cotisation FORMAN</h2>'
-    + '<p>Les ateliers, le Parcours Découverte et les autres événements du réseau sont réservés aux adhérents FORMAN, comme sur le site FORMAN.</p>'
-    + '<p>Règle ta cotisation sur le site FORMAN : cet espace s’ouvrira ici automatiquement à la mise à jour suivante (quatre fois par jour). Ton parrain peut t’aider si besoin.</p>'
+    + '<p>Les ateliers, le Parcours Découverte et les autres événements du réseau sont réservés aux adhérents FORMAN, comme sur le site de l’association.</p>'
+    + '<p>Règle ta cotisation sur le site FORMAN : cet espace s’ouvrira ensuite ici automatiquement.</p>'
+    + '<p class="cl-delai">⏱ Kairos se synchronise avec FORMAN 4 fois par jour, toutes les 6 heures environ : une fois ta cotisation réglée, il peut donc s’écouler quelques heures avant qu’elle soit prise en compte ici. Ton parrain peut t’aider si besoin.</p>'
     + (u ? '<a class="mm-b pri" href="'+esc(u)+'" target="_blank" rel="noopener">Aller sur le site FORMAN ↗</a>' : '');
 }
 function ongletOuvert(v){
