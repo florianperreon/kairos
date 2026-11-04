@@ -4487,7 +4487,7 @@ const KAIROS_CHANGELOG = [
   ['2026-11-04', [
     ['f','Audit de confidentialité : le mot « asso » (et « association ») est désormais autorisé dans le portail.'],
     ['f','Admin → Activité : l’entonnoir du parcours est retiré.'],
-    ['f','Aperçu « Voir Kairos comme » : « sans cotisation (nouveau) », « adhérent (nouveau) » et « phase 1 validée » simulent vraiment le parcours (missions, étapes, fiches débloquées, visite guidée) ; rien n’est enregistré pendant l’aperçu.'],
+    ['f','Aperçu « Voir Kairos comme » : les 5 profils (sans cotisation, adhérent nouveau, filleul phase 1 validée, filleul phase 2 validée, parrain phase 3 validée avec une demande de point d’étape fictive) simulent vraiment le parcours (missions, étapes, fiches débloquées, visite guidée) ; rien n’est enregistré pendant l’aperçu.'],
     ['f','Nouvelle fiche pratique « Proxeema : contact déjà dans le portefeuille d’un autre consultant » (Administratif & statut), avec le mail type à copier.'],
     ['f','Onglets Forman sans cotisation : le message précise que Kairos se synchronise avec FORMAN 4 fois par jour, donc qu’une adhésion peut mettre quelques heures à être prise en compte.'],
   ]],
@@ -4888,7 +4888,7 @@ function dvOuverts(){                  // null = tout est ouvert
   if(n !== null && !APERCU_SV){ p2 = n>=2; dm = n>=1; mega = n>=2; filleul = n>=3; }
   else if(APERCU_SV){            // aperçu simulé : les vraies règles, sur la progression simulée
     const ph2 = misPhases().find(p=>p.id==='p2'); p2 = !!(ph2 && miPhaseOuverte(ph2));
-    dm = misOk('1.1','dm'); mega = misOk('1.5','mega'); filleul = false;
+    dm = misOk('1.1','dm'); mega = misOk('1.5','mega'); filleul = APERCU.phase === 'p3';
   }
   else {
     const ph2 = misPhases().find(p=>p.id==='p2'); p2 = !!(ph2 && miPhaseOuverte(ph2));
@@ -5150,28 +5150,34 @@ function buildParrainCarte(){
 // remplacent ta progression par une progression simulée (missions, étapes du réseau, points d'étape) ;
 // rien n'est enregistré ni synchronisé pendant l'aperçu, ta vraie progression revient en le quittant.
 let APERCU_SV = null;
-const APERCU_SIMULES = ['nonadh','adh','p1'];
+const APERCU_SIMULES = ['nonadh','adh','p1','p2','p3'];
 function apercuProgression(ph){
-  const ts = new Date().toISOString(), mis = { _mig:1 }, etapes = {};
-  const statut = 'ROLE_NEOMAN';
-  if(ph === 'adh' || ph === 'p1') etapes.adhesion = { d: todayIso };
-  if(ph === 'p1'){
-    const p1 = misPhases().find(p=>!p.avenir);
-    (p1 && p1.missions || []).forEach(m=>(m.actions||[]).forEach(a=>{
-      if(a.v === 'auto' && a.auto) etapes[a.auto] = { d: todayIso };
-      else mis[m.id+'/'+a.id] = ts;
-    }));
-  }
-  return { mis, parcours: { statut, etapes, provisoire:true }, portes: {} };
+  const ts = new Date().toISOString(), mis = { _mig:1 }, etapes = {}, portes = {};
+  // nombre de phases dont toutes les missions sont faites par le filleul
+  const nb = { nonadh:0, adh:0, p1:1, p2:2, p3:3 }[ph] || 0;
+  const statut = nb >= 3 ? 'ROLE_ADMAN' : nb >= 2 ? 'ROLE_BEMAN' : 'ROLE_NEOMAN';
+  if(ph !== 'nonadh') etapes.adhesion = { d: todayIso };
+  misPhases().filter(p=>!p.avenir).slice(0, nb).forEach(p=>(p.missions||[]).forEach(m=>(m.actions||[]).forEach(a=>{
+    if(a.v === 'auto' && a.auto) etapes[a.auto] = { d: todayIso, ok:true };
+    else mis[m.id+'/'+a.id] = ts;
+  })));
+  // points d'étape validés par le parrain : le 1 dès la phase 2 validée, le 2 à la phase 3
+  const valide = (id)=>{ portes[id] = { porte:id, statut:'validee', demande_le:ts, traite_le:ts, traite_nom:'ton parrain', mot:'Bravo, on continue !' }; };
+  if(nb >= 2) valide('porte1');
+  if(nb >= 3) valide('porte2');
+  return { mis, parcours: { statut, etapes, provisoire:true }, portes };
 }
 function apercuChoisir(ph){
   // retour à la vraie progression
-  if(APERCU_SV){ MIS = APERCU_SV.MIS; PARCOURS = APERCU_SV.PARCOURS; PORTES = APERCU_SV.PORTES; CHECK = APERCU_SV.CHECK; APERCU_SV = null; }
+  if(APERCU_SV){ MIS = APERCU_SV.MIS; PARCOURS = APERCU_SV.PARCOURS; PORTES = APERCU_SV.PORTES; CHECK = APERCU_SV.CHECK; A_VALIDER = APERCU_SV.A_VALIDER || []; APERCU_SV = null; }
   APERCU = ph ? { phase: ph } : null;
   if(APERCU && APERCU_SIMULES.includes(ph) && typeof misData === 'function' && misData()){
-    APERCU_SV = { MIS, PARCOURS, PORTES, CHECK };
+    APERCU_SV = { MIS, PARCOURS, PORTES, CHECK, A_VALIDER };
     const sim = apercuProgression(ph);
     MIS = sim.mis; PARCOURS = sim.parcours; PORTES = sim.portes; CHECK = {};
+    // parrain : une demande de point d'étape fictive, pour voir le bloc de validation en haut de l'accueil
+    A_VALIDER = ph === 'p3' ? [{ membre_id: -1, nom: 'Filleul exemple', porte: 'porte1', demande_le: new Date().toISOString(),
+      resume: (misPhases()[0].missions||[]).slice(0,4).map(m=>({ id:m.id, t:m.t, d:todayIso })) }] : [];
     MI_CHOISIE = false; MI_OUVERTE = null;
   }
   J0_ECRAN = 0; J0_MONTRE = true;
@@ -5185,7 +5191,7 @@ function buildApercuBandeau(){
   let b = document.getElementById('apercuBand');
   if(!APERCU){ if(b) b.remove(); return; }
   if(!b){ b = document.createElement('div'); b.id='apercuBand'; b.className='apercu-band'; const c=document.querySelector('#app .content'); if(c) c.insertBefore(b, c.firstChild); }
-  const lib = { nonadh:'un nouveau sans cotisation FORMAN (aucune étape validée)', adh:'un nouvel adhérent (aucune étape validée)', p1:'un membre qui a validé toute la phase 1 (point d’étape 1 pas encore validé)', p1:'un membre en phase 1', p2:'un membre en phase 2', p3:'un membre en phase 3 (parrain)' }[APERCU.phase];
+  const lib = { nonadh:'un nouveau sans cotisation FORMAN (aucune étape validée)', adh:'un nouvel adhérent (aucune étape validée)', p1:'un filleul qui a fait toutes ses missions de phase 1 (point d’étape 1 pas encore validé par son parrain)', p2:'un filleul BEMAN qui a fait ses phases 1 et 2 (point d’étape 1 validé par son parrain, point d’étape 2 pas encore)', p3:'un parrain ADMAN qui a fait ses phases 1 à 3, avec un premier filleul (une demande de point d’étape fictive l’attend en haut de l’accueil)' }[APERCU.phase];
   const simule = APERCU_SV ? 'Parcours, fiches et actions sont simulés ; rien n’est enregistré.' : 'Tes propres données restent affichées.';
   b.innerHTML = '👁 Aperçu : tu vois Kairos comme '+lib+'. '+simule+' <button type="button" class="mm-b" data-apercu="">Quitter l’aperçu</button>';
 }
@@ -6309,7 +6315,7 @@ function buildActivite(){
     return Object.values(m).sort((a,b)=>b.p.size-a.p.size || b.n-a.n).slice(0,5); };
   const tuile = (v, l) => '<div class="act-t"><b>'+v+'</b><span>'+l+'</span></div>';
   if(vue) vue.innerHTML = '<div class="apercu-ctl"><span>👁 Voir Kairos comme :</span>'
-    + [['nonadh','sans cotisation (nouveau)'],['adh','adhérent (nouveau)'],['p1','phase 1 validée'],['p2','phase 2'],['p3','parrain (phase 3)']].map(x=>'<button type="button" class="mm-b'+(APERCU&&APERCU.phase===x[0]?' pri':'')+'" data-apercu="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'
+    + [['nonadh','sans cotisation (nouveau)'],['adh','adhérent (nouveau)'],['p1','filleul · phase 1 validée'],['p2','filleul · phase 2 validée'],['p3','parrain · phase 3 validée']].map(x=>'<button type="button" class="mm-b'+(APERCU&&APERCU.phase===x[0]?' pri':'')+'" data-apercu="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'
     + '<div class="act-tuiles">'
     + tuile(tous.filter(c=>c.j7).length+' / '+ACT.length, 'actifs cette semaine')
     + tuile(tous.filter(c=>c.j30).length, 'actifs sur 30 jours')

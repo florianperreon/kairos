@@ -6103,8 +6103,18 @@ test.describe('Aperçu admin simulé (04/11/2026)', () => {
     expect(p1.statut).toBe('ROLE_NEOMAN');
     // les fiches suivent la progression simulée, pas les droits admin
     expect(await page.evaluate(() => ficheAcces('esp').via)).not.toBe('admin');
+    // phase 2 validée : point d'étape 1 validé par le parrain → phase 2 faite ; parrain : demande fictive à valider
+    await page.evaluate(() => apercuChoisir('p2'));
+    const p2 = await page.evaluate(() => ({ porte1: miPorte('porte1').ouverte, p2: miPhaseProg(misPhases()[1]).ok === miPhaseProg(misPhases()[1]).tot, statut: PARCOURS.statut }));
+    expect(p2).toEqual({ porte1: true, p2: true, statut: 'ROLE_BEMAN' });
+    await page.evaluate(() => apercuChoisir('p3'));
+    const p3 = await page.evaluate(() => ({ parrain: estParrain(), demande: document.getElementById('homePortes').textContent, lig: ongletOuvert('lig') }));
+    expect(p3.parrain).toBe(true);
+    expect(p3.demande).toContain('Filleul exemple');
+    expect(p3.lig).toBe(true);
     await page.evaluate(() => apercuChoisir(null));
-    const apres = await page.evaluate(() => ({ mis: Object.keys(MIS).length, statut: PARCOURS.statut, sync: window.__sync }));
+    const apres = await page.evaluate(() => ({ mis: Object.keys(MIS).length, statut: PARCOURS.statut, sync: window.__sync, av: A_VALIDER.length }));
+    expect(apres.av).toBe(0);
     expect(apres.mis).toBe(vrai.mis);
     expect(apres.statut).toBe(vrai.statut);
   });
