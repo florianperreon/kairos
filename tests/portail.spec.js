@@ -5974,7 +5974,7 @@ test.describe('Dévoilement progressif (03/11/2026)', () => {
     expect(v.n).toEqual([]);
   });
 
-  test('administrateur : tout est ouvert ; l’aperçu « phase 1 » referme et se quitte', async ({ page }) => {
+  test('administrateur : tout est ouvert ; l’aperçu « phase 1 validée » referme et se quitte', async ({ page }) => {
     await ouvrir(page);
     await poserDv(page, { admin: true, sansJ0: true });
     expect((await ouverts(page)).length).toBe(5);
@@ -5982,7 +5982,7 @@ test.describe('Dévoilement progressif (03/11/2026)', () => {
     const ap = await ouverts(page);
     const band = await page.evaluate(() => !!document.getElementById('apercuBand'));
     await page.evaluate(() => apercuChoisir(null));
-    expect(ap).toEqual(['surv']);
+    expect(ap).toEqual(['surv', 'mm']);   // phase 1 validée simulée : DM faite et mission 1.5 cochée
     expect(band).toBe(true);
     expect((await ouverts(page)).length).toBe(5);
   });
@@ -6055,5 +6055,57 @@ test.describe('Dévoilement progressif (03/11/2026)', () => {
     });
     expect(r.join('|')).toContain('Prendre des nouvelles de Anne ABSENTE');
     expect(r.join('|')).toMatch(/Débloquer Bob sur la mission/);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Aperçu admin simulé (04/11/2026)', () => {
+  const MISSIONS = JSON.parse(lire('tests/missions.json'));
+  const poser = page => page.evaluate((missions) => {
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    window.__booted = true;
+    CONTENU = { pages: { 'esp': { t: 'ESP', h: '' }, 'primo-liste': { t: 'Primo-liste', h: '' } }, nav: [], missions, reflexes: [], accueil: { valeurs: [] }, ressources: [] };
+    MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Test MOI', parrain: 'Aucun' }); ADH.add(20028);
+    PARCOURS = { statut: 'ROLE_XMAN', etapes: { dm: { d: '2025-01-01' } } };
+    MIS = { _mig: 1, '1.2/bac': '2025-01-05T10:00:00Z' }; CHECK = {}; PORTES = {}; VU = {};
+    EST_ADMIN = true; APERCU = null; J0_MONTRE = true;
+    SBUSER = { id: 'u1', email: 'moi@test.invalid' };
+    window.__sync = 0; SB = { rpc: async () => ({ data: [], error: null }), from: () => ({ upsert: async () => { window.__sync++; return {}; } }) };
+    majParcours(); majDevoilement();
+    return true;
+  }, MISSIONS);
+  const etat = page => page.evaluate(() => {
+    const ph = misPhases(); const p1 = ph[0], p2 = ph[1];
+    return { p1: miPhaseProg(p1).ok + '/' + miPhaseProg(p1).tot, p2ouverte: miPhaseOuverte(p2), adh: estAdherentForman(),
+      j0: !!(document.getElementById('j0') && document.getElementById('j0').classList.contains('on')),
+      mis: Object.keys(MIS).length, statut: PARCOURS.statut };
+  });
+
+  test('« sans cotisation (nouveau) » et « adhérent (nouveau) » : rien de validé, visite guidée ; « phase 1 validée » : phase 1 complète, phase 2 encore fermée ; retour à la vraie progression', async ({ page }) => {
+    await ouvrir(page);
+    await poser(page);
+    const vrai = await page.evaluate(() => ({ mis: Object.keys(MIS).length, statut: PARCOURS.statut }));
+    await page.evaluate(() => apercuChoisir('nonadh'));
+    const nonadh = await etat(page);
+    expect(nonadh.p1.startsWith('0/')).toBe(true);
+    expect(nonadh.adh).toBe(false);
+    expect(nonadh.j0).toBe(true);
+    await page.evaluate(() => { document.getElementById('j0').classList.remove('on'); apercuChoisir('adh'); });
+    const adh = await etat(page);
+    expect(adh.adh).toBe(true);
+    expect(adh.j0).toBe(true);
+    await page.evaluate(() => { document.getElementById('j0').classList.remove('on'); apercuChoisir('p1'); });
+    const p1 = await etat(page);
+    const [ok, tot] = p1.p1.split('/').map(Number);
+    expect(ok).toBe(tot);
+    expect(p1.p2ouverte).toBe(false);
+    expect(p1.statut).toBe('ROLE_NEOMAN');
+    // les fiches suivent la progression simulée, pas les droits admin
+    expect(await page.evaluate(() => ficheAcces('esp').via)).not.toBe('admin');
+    await page.evaluate(() => apercuChoisir(null));
+    const apres = await page.evaluate(() => ({ mis: Object.keys(MIS).length, statut: PARCOURS.statut, sync: window.__sync }));
+    expect(apres.mis).toBe(vrai.mis);
+    expect(apres.statut).toBe(vrai.statut);
   });
 });

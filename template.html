@@ -3913,6 +3913,7 @@ document.addEventListener('change', e=>{ if(e.target.id==='survPast') buildSurv(
 const semaineCle = () => vMonday(todayIso);
 const semFait = c => !!(SEM[semaineCle()] || {})[c];
 function semMarquer(c){
+  if(APERCU) return;            // aperçu : rien n'est enregistré
   const k = semaineCle();
   if(semFait(c)) return;
   SEM[k] = Object.assign({}, SEM[k] || {}, { [c]: true });
@@ -4253,7 +4254,7 @@ async function silentUnlock(){
 /* ---------- App ---------- */
 let A=[], M=[], byNormName=new Map(), children=new Map(), managed=new Map(), FAVS=new Set();
 try{ FAVS = new Set(JSON.parse(localStorage.getItem('kairos_favs')||'[]')); }catch(e){}
-const saveFavs = ()=>{ try{ localStorage.setItem('kairos_favs', JSON.stringify([...FAVS])); }catch(e){} planSync(); };
+const saveFavs = ()=>{ if(APERCU) return; try{ localStorage.setItem('kairos_favs', JSON.stringify([...FAVS])); }catch(e){} planSync(); };
 
 let R=[], F=[], E=[], ADH=new Set(), SITES={}, EXTRA={}, LIGNEE_IDS=new Set(), byId=new Map(), SAME=new Map();
 // pub : public visé ('' = ouvert à tous, sinon statut minimum ex. 'ADMAN' ; null = inconnu, données anciennes) ; hab : habilitation requise
@@ -4486,6 +4487,7 @@ const KAIROS_CHANGELOG = [
   ['2026-11-04', [
     ['f','Audit de confidentialité : le mot « asso » (et « association ») est désormais autorisé dans le portail.'],
     ['f','Admin → Activité : l’entonnoir du parcours est retiré.'],
+    ['f','Aperçu « Voir Kairos comme » : « sans cotisation (nouveau) », « adhérent (nouveau) » et « phase 1 validée » simulent vraiment le parcours (missions, étapes, fiches débloquées, visite guidée) ; rien n’est enregistré pendant l’aperçu.'],
     ['f','Nouvelle fiche pratique « Proxeema : contact déjà dans le portefeuille d’un autre consultant » (Administratif & statut), avec le mail type à copier.'],
     ['f','Onglets Forman sans cotisation : le message précise que Kairos se synchronise avec FORMAN 4 fois par jour, donc qu’une adhésion peut mettre quelques heures à être prise en compte.'],
   ]],
@@ -4864,7 +4866,7 @@ document.addEventListener('click', e=>{
      site FORMAN, mais seulement à un adhérent à jour de cotisation ; sinon l'entrée reste dans le menu,
      grisée, et la page explique qu'elle s'ouvre avec la cotisation (règle Florian du 03/11/2026).
    - Ma lignée : premier filleul. */
-let APERCU = null;                    // aperçu admin : { phase:'j0'|'p1'|'p2'|'p3' } — jamais enregistré
+var APERCU = null;                    // (var : lu par les fonctions d'enregistrement définies plus haut) aperçu admin : { phase:'j0'|'p1'|'p2'|'p3' } — jamais enregistré
 const DV_GERES = ['surv','mm','res','veille','lig'];
 const DV_INFO = {
   surv:   { t:'Mes sessions', quand:'après ta Découverte Métier', tour:['Retrouve ici les séances où tu es inscrit et celles que tu suis avec ☆.','Kairos te prévient quand une séance suivie est presque complète.','Astuce : réserve tes prochains ateliers dès qu’ils sont publiés.'] },
@@ -4880,10 +4882,14 @@ function misOk(mid, aid){
 }
 function dvOuverts(){                  // null = tout est ouvert
   if(EST_ADMIN && !APERCU) return null;
-  const n = APERCU ? ({ nonadh:0, j0:0, p1:1, p2:2, p3:3 })[APERCU.phase] : null;
+  const n = APERCU ? ({ nonadh:0, adh:0, p1:1, p2:2, p3:3 })[APERCU.phase] : null;
   if(n === null && (typeof misData !== 'function' || !misData())) return null;
   let p2, dm, mega, filleul;
-  if(n !== null){ p2 = n>=2; dm = n>=1; mega = n>=2; filleul = n>=3; }
+  if(n !== null && !APERCU_SV){ p2 = n>=2; dm = n>=1; mega = n>=2; filleul = n>=3; }
+  else if(APERCU_SV){            // aperçu simulé : les vraies règles, sur la progression simulée
+    const ph2 = misPhases().find(p=>p.id==='p2'); p2 = !!(ph2 && miPhaseOuverte(ph2));
+    dm = misOk('1.1','dm'); mega = misOk('1.5','mega'); filleul = false;
+  }
   else {
     const ph2 = misPhases().find(p=>p.id==='p2'); p2 = !!(ph2 && miPhaseOuverte(ph2));
     dm = misOk('1.1','dm');
@@ -5025,12 +5031,13 @@ function majDevoilement(){
 }
 // À la première ouverture d'un onglet fraîchement débloqué : un encart de découverte en 3 points
 function dvALOuverture(v){
-  const t = dvTab(v); if(!DV_INFO[t] || APERCU) return;
-  if(VU.dv && (VU.dv.n||[]).includes(t)){ VU.dv = Object.assign({}, VU.dv, { n: VU.dv.n.filter(x=>x!==t), t: new Date().toISOString() }); saveVu();
+  const t = dvTab(v); if(!DV_INFO[t]) return;
+  if(!APERCU && VU.dv && (VU.dv.n||[]).includes(t)){ VU.dv = Object.assign({}, VU.dv, { n: VU.dv.n.filter(x=>x!==t), t: new Date().toISOString() }); saveVu();
     document.querySelectorAll('[data-v="'+t+'"]').forEach(b=>b.classList.remove('nv-new')); try{ buildDvAccueil(); }catch(e){} }
   const sec = document.getElementById('v-'+v); if(!sec) return;
   const deja = sec.querySelector(':scope > .dv-tour');
-  const vu = VU.dv && (VU.dv.v||[]).includes(t);
+  // aperçu : l'encart de découverte s'affiche aussi, mémorisé pour l'aperçu seulement
+  const vu = APERCU ? (APERCU.vus||[]).includes(t) : (VU.dv && (VU.dv.v||[]).includes(t));
   if(vu){ if(deja) deja.remove(); return; }
   if(deja) return;
   const d = document.createElement('div'); d.className = 'panel dv-tour';
@@ -5041,6 +5048,7 @@ function dvALOuverture(v){
 document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('[data-dvvu]'); if(!b) return;
   const t = b.dataset.dvvu;
+  if(APERCU){ APERCU.vus = (APERCU.vus||[]).concat([t]); document.querySelectorAll('.dv-tour').forEach(x=>{ if(x.querySelector('[data-dvvu="'+t+'"]')) x.remove(); }); return; }
   VU.dv = Object.assign({}, VU.dv||{}, { v: [...new Set(((VU.dv&&VU.dv.v)||[]).concat([t]))], t: new Date().toISOString() }); saveVu();
   document.querySelectorAll('.dv-tour').forEach(x=>{ if(x.querySelector('[data-dvvu="'+t+'"]')) x.remove(); });
 });
@@ -5064,7 +5072,7 @@ document.addEventListener('click', e=>{
 });
 
 /* --- Le premier jour : 3 écrans, puis la checklist « Ma première semaine » --- */
-const dvPremierJour = () => !VU.j0 && estNouveau() && (APERCU ? APERCU.phase==='j0' : (()=>{ try{ return miPhaseProg(misPhases()[0]).ok <= 3; }catch(e){ return false; } })());
+const dvPremierJour = () => !VU.j0 && estNouveau() && (APERCU ? (APERCU.phase==='adh' || APERCU.phase==='nonadh') : (()=>{ try{ return miPhaseProg(misPhases()[0]).ok <= 3; }catch(e){ return false; } })());
 let J0_ECRAN = 0;
 function monParrain(){
   const moi = MOI_ID && byId.get(MOI_ID);
@@ -5116,7 +5124,7 @@ function premiereSemaineItems(){
 }
 function buildPremiereSemaine(){
   const el = document.getElementById('homeJ0'); if(!el) return;
-  const debut = APERCU ? (APERCU.phase==='j0' ? todayIso : null) : (VU.j0 && VU.j0.d);
+  const debut = APERCU ? ((APERCU.phase==='adh' || APERCU.phase==='nonadh') ? todayIso : null) : (VU.j0 && VU.j0.d);
   const items = premiereSemaineItems(), faits = items.filter(x=>x.ok).length;
   const actif = debut && estNouveau() && vAddDays(debut, 14) >= todayIso && faits < items.length;
   el.hidden = !actif; if(!actif){ el.innerHTML=''; return; }
@@ -5138,19 +5146,48 @@ function buildParrainCarte(){
 }
 
 /* --- Aperçu « voir Kairos comme un nouveau » (admins) --- */
+// 04/11/2026 : les profils « sans cotisation (nouveau) », « adhérent (nouveau) » et « phase 1 validée »
+// remplacent ta progression par une progression simulée (missions, étapes du réseau, points d'étape) ;
+// rien n'est enregistré ni synchronisé pendant l'aperçu, ta vraie progression revient en le quittant.
+let APERCU_SV = null;
+const APERCU_SIMULES = ['nonadh','adh','p1'];
+function apercuProgression(ph){
+  const ts = new Date().toISOString(), mis = { _mig:1 }, etapes = {};
+  const statut = 'ROLE_NEOMAN';
+  if(ph === 'adh' || ph === 'p1') etapes.adhesion = { d: todayIso };
+  if(ph === 'p1'){
+    const p1 = misPhases().find(p=>!p.avenir);
+    (p1 && p1.missions || []).forEach(m=>(m.actions||[]).forEach(a=>{
+      if(a.v === 'auto' && a.auto) etapes[a.auto] = { d: todayIso };
+      else mis[m.id+'/'+a.id] = ts;
+    }));
+  }
+  return { mis, parcours: { statut, etapes, provisoire:true }, portes: {} };
+}
 function apercuChoisir(ph){
+  // retour à la vraie progression
+  if(APERCU_SV){ MIS = APERCU_SV.MIS; PARCOURS = APERCU_SV.PARCOURS; PORTES = APERCU_SV.PORTES; CHECK = APERCU_SV.CHECK; APERCU_SV = null; }
   APERCU = ph ? { phase: ph } : null;
-  J0_ECRAN = 0;
+  if(APERCU && APERCU_SIMULES.includes(ph) && typeof misData === 'function' && misData()){
+    APERCU_SV = { MIS, PARCOURS, PORTES, CHECK };
+    const sim = apercuProgression(ph);
+    MIS = sim.mis; PARCOURS = sim.parcours; PORTES = sim.portes; CHECK = {};
+    MI_CHOISIE = false; MI_OUVERTE = null;
+  }
+  J0_ECRAN = 0; J0_MONTRE = true;
+  try{ majParcours(); }catch(e){ console.error(e); }
   try{ majDevoilement(); buildActions(); buildParcoursMini(); buildPremiereSemaine(); buildParrainCarte(); homeLayout(); }catch(e){ console.error(e); }
-  if(APERCU && APERCU.phase==='j0'){ try{ j0Ouvrir(); }catch(e){} }
+  try{ buildFiches(); }catch(e){}
+  if(APERCU && (APERCU.phase==='adh' || APERCU.phase==='nonadh')){ try{ j0Ouvrir(); }catch(e){} }
   showTab('home'); curTab='home'; syncHash(true); window.scrollTo({top:0});
 }
 function buildApercuBandeau(){
   let b = document.getElementById('apercuBand');
   if(!APERCU){ if(b) b.remove(); return; }
   if(!b){ b = document.createElement('div'); b.id='apercuBand'; b.className='apercu-band'; const c=document.querySelector('#app .content'); if(c) c.insertBefore(b, c.firstChild); }
-  const lib = { nonadh:'un nouveau sans cotisation FORMAN', j0:'un nouveau, le premier jour', p1:'un membre en phase 1', p2:'un membre en phase 2', p3:'un membre en phase 3 (parrain)' }[APERCU.phase];
-  b.innerHTML = '👁 Aperçu : tu vois Kairos comme '+lib+'. Tes propres données restent affichées. <button type="button" class="mm-b" data-apercu="">Quitter l’aperçu</button>';
+  const lib = { nonadh:'un nouveau sans cotisation FORMAN (aucune étape validée)', adh:'un nouvel adhérent (aucune étape validée)', p1:'un membre qui a validé toute la phase 1 (point d’étape 1 pas encore validé)', p1:'un membre en phase 1', p2:'un membre en phase 2', p3:'un membre en phase 3 (parrain)' }[APERCU.phase];
+  const simule = APERCU_SV ? 'Parcours, fiches et actions sont simulés ; rien n’est enregistré.' : 'Tes propres données restent affichées.';
+  b.innerHTML = '👁 Aperçu : tu vois Kairos comme '+lib+'. '+simule+' <button type="button" class="mm-b" data-apercu="">Quitter l’aperçu</button>';
 }
 document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('[data-apercu]'); if(!b) return;
@@ -5179,7 +5216,7 @@ function estParrain(){
   return (children.get(norm(moi.name))||[]).some(c=>ADH.has(c.id));
 }
 function estNouveau(){
-  if(APERCU) return APERCU.phase === 'j0' || APERCU.phase === 'p1' || APERCU.phase === 'nonadh';
+  if(APERCU) return APERCU.phase === 'adh' || APERCU.phase === 'p1' || APERCU.phase === 'nonadh';
   try{ if(!misData()) return false; const p1 = misPhases().find(p=>!p.avenir); if(!p1) return false;
     const pr = miPhaseProg(p1); return pr.tot > 0 && pr.ok < pr.tot && !estParrain(); }catch(e){ return false; }
 }
@@ -5344,7 +5381,7 @@ function buildHome(){
 
 /* ---------- Contenu éditorial (guide, parcours, FAQ, ressources) ---------- */
 let CHECK={}; try{ CHECK=JSON.parse(localStorage.getItem('kairos_check')||'{}'); }catch(e){}
-const saveCheck=()=>{ try{ localStorage.setItem('kairos_check', JSON.stringify(CHECK)); }catch(e){} planSync(); };
+const saveCheck=()=>{ if(APERCU) return; try{ localStorage.setItem('kairos_check', JSON.stringify(CHECK)); }catch(e){} planSync(); };
 let curPhase=0, phaseChoisie=false;   // tant que la personne n'a pas cliqué, on ouvre là où elle en est
 function buildContenu(){
   if(!CONTENU) return;
@@ -5473,7 +5510,7 @@ async function chargerParcours(){
    parrain (table parcours_portes, RPC mes_portes / porte_demander / portes_a_valider / porte_traiter),
    ouvertes d'office à partir de BEMAN. Porte 3 : passage ADMAN. */
 let MIS = {}; try{ MIS = JSON.parse(localStorage.getItem('kairos_mis')||'{}') || {}; }catch(e){ MIS = {}; }
-const saveMis = () => { try{ localStorage.setItem('kairos_mis', JSON.stringify(MIS)); }catch(e){} planSync(); };
+const saveMis = () => { if(APERCU) return; try{ localStorage.setItem('kairos_mis', JSON.stringify(MIS)); }catch(e){} planSync(); };
 const misTs = v => String(v||'').replace(/^[!~]/,'');
 const misFaitV = v => !!v && typeof v==='string' && v[0] !== '!';
 let PORTES = {}, PORTE_VALIDEUR = '', PORTES_OK = false, A_VALIDER = [];
@@ -5883,6 +5920,7 @@ function miResume(ph){
   }).filter(x=>x.fait);
 }
 async function miDemander(id){
+  if(APERCU) return;   // aperçu : aucune demande ni validation envoyée
   const s = miPorte(id);
   if(!s.po || !s.prete || !SB) return;
   try{
@@ -5892,6 +5930,7 @@ async function miDemander(id){
   await chargerPortes();
 }
 async function miTraiter(i, ok){
+  if(APERCU) return;   // aperçu : aucune demande ni validation envoyée
   const d = A_VALIDER[i]; if(!d || !SB) return;
   const box = document.querySelector('#homePortes .mi-val[data-i="'+i+'"]');
   const mot = box ? (box.querySelector('.mi-mot')||{}).value || '' : '';
@@ -6270,7 +6309,7 @@ function buildActivite(){
     return Object.values(m).sort((a,b)=>b.p.size-a.p.size || b.n-a.n).slice(0,5); };
   const tuile = (v, l) => '<div class="act-t"><b>'+v+'</b><span>'+l+'</span></div>';
   if(vue) vue.innerHTML = '<div class="apercu-ctl"><span>👁 Voir Kairos comme :</span>'
-    + [['nonadh','sans cotisation'],['j0','un nouveau (1er jour)'],['p1','phase 1'],['p2','phase 2'],['p3','parrain (phase 3)']].map(x=>'<button type="button" class="mm-b'+(APERCU&&APERCU.phase===x[0]?' pri':'')+'" data-apercu="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'
+    + [['nonadh','sans cotisation (nouveau)'],['adh','adhérent (nouveau)'],['p1','phase 1 validée'],['p2','phase 2'],['p3','parrain (phase 3)']].map(x=>'<button type="button" class="mm-b'+(APERCU&&APERCU.phase===x[0]?' pri':'')+'" data-apercu="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'
     + '<div class="act-tuiles">'
     + tuile(tous.filter(c=>c.j7).length+' / '+ACT.length, 'actifs cette semaine')
     + tuile(tous.filter(c=>c.j30).length, 'actifs sur 30 jours')
@@ -6377,7 +6416,7 @@ function ficheAcces(slug){
       if(!ouverte && (miFaite(m) || (!ph.avenir && miPhaseOuverte(ph) && !miManque(m.pre).length))) ouverte = { ph, m };
     }
     const socle = (acc.socle || FICHES_SOCLE).includes(slug);
-    if(EST_ADMIN) return { ok:true, via:'admin', socle, m:(premiere||{}).m };
+    if(EST_ADMIN && !APERCU) return { ok:true, via:'admin', socle, m:(premiere||{}).m };
     if(socle) return { ok:true, via:'socle' };
     if(ouverte) return { ok:true, via:'mission', m:ouverte.m, ph:ouverte.ph };
     if(rang >= MI_RANGS.indexOf('ADMAN')) return { ok:true, via:'statut', statut:MI_RANGS[rang] };
@@ -10438,12 +10477,12 @@ let EST_PROPRIO=false; // renseigné par buildMembres() (RPC est_proprietaire) :
 // Actions de la semaine : ce qui est fait est mémorisé par semaine (clé = lundi de la semaine),
 // donc tout repart à zéro chaque lundi sans qu'on ait à purger quoi que ce soit.
 let SEM = {}; try{ SEM = JSON.parse(localStorage.getItem('kairos_sem')||'{}'); }catch(e){}
-const saveSem = ()=>{ try{ localStorage.setItem('kairos_sem', JSON.stringify(SEM)); }catch(e){} planSync(); };
+const saveSem = ()=>{ if(APERCU) return; try{ localStorage.setItem('kairos_sem', JSON.stringify(SEM)); }catch(e){} planSync(); };
 // VU : ce qui a déjà été signalé une bonne fois pour toutes — contrairement à SEM, ça ne se
 // remet pas à zéro le lundi (sinon toutes les étapes déjà validées redeviendraient « nouvelles »).
 // { etapes:[clés d'étapes annoncées], bk:'AAAA-MM-JJ de la dernière alerte lue' }
 let VU = {}; try{ VU = JSON.parse(localStorage.getItem('kairos_vu')||'{}'); }catch(e){}
-const saveVu = ()=>{ try{ localStorage.setItem('kairos_vu', JSON.stringify(VU)); }catch(e){} planSync(); };
+const saveVu = ()=>{ if(APERCU) return; try{ localStorage.setItem('kairos_vu', JSON.stringify(VU)); }catch(e){} planSync(); };
 const etatLocal = ()=>({ ffav:FFAV, favs:[...FAVS], check:CHECK, mis:MIS, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM, vu:VU, zone:ZONE_CHOISIE||undefined });
 let ACC_NOM_AFF = null;
 // Prénom de la personne connectée (Google), pour personnaliser l'accueil
@@ -10498,6 +10537,7 @@ function accOuvrir(mode){
 function accFermer(){ const el=accEl('acc'); if(!el) return; el.classList.remove('on'); el.setAttribute('aria-hidden','true'); }
 
 async function syncPull(){
+  if(APERCU) return;   // l'aperçu travaille sur un état simulé : on ne le mélange pas avec la base
   if(!SB||!SBUSER) return;
   let data=null;
   try{
@@ -10562,6 +10602,7 @@ async function syncPull(){
   syncPush();
 }
 async function syncPush(){
+  if(APERCU) return;
   if(!SB||!SBUSER) return;
   clearTimeout(SYNC_T); SYNC_T=null;
   // 01/11/2026 : fusion avant envoi — une case cochée depuis un autre appareil ou par une IA (MCP) entre-temps
@@ -10578,7 +10619,8 @@ async function syncPush(){
     accEtat('À jour — ' + new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}));
   }catch(e){ accEtat('Synchronisation indisponible.'); }
 }
-function planSync(){ if(!SB||!SBUSER) return; clearTimeout(SYNC_T); SYNC_T=setTimeout(syncPush, 1200); }
+function planSync(){ if(!SB||!SBUSER||APERCU) return;   // aperçu : rien n'est enregistré
+  clearTimeout(SYNC_T); SYNC_T=setTimeout(syncPush, 1200); }
 window.addEventListener('pagehide',()=>{ if(SYNC_T) syncPush(); });
 
 // Dernier accès : la session reste ouverte des semaines, la date de connexion ne dit donc pas qui
