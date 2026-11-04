@@ -4490,6 +4490,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
+    ['f','Phase 4 « Objectif Galaxie » : n’est plus « à venir » ; première mission « ESP Manager » ; même affichage que les autres phases tant qu’elle est fermée (point d’étape 2 + passage ADMAN).'],
     ['f','Mon parcours : une phase pas encore ouverte ne montre plus ni ses missions ni son compteur, seulement l’objectif de statut et ce qu’il faut faire pour l’ouvrir (missions de la phase précédente + point d’étape validé par le parrain).'],
   ]],
   ['2026-11-04', [
@@ -5821,14 +5822,20 @@ function miPorteHtml(ph){
 }
 // Phase pas encore ouverte : ni missions ni compteur, seulement ce qu'il faut faire pour l'ouvrir
 function miPhaseFermeeHtml(ph){
-  const p = (ph.ouvre||[]).map(miPorte).find(x=>!x.ouverte);
-  let quoi;
-  if(p && p.po && p.po.v==='auto') quoi = '<p>Cette phase s’ouvre avec ton passage <b>ADMAN</b>.</p>';
-  else if(p && p.ph){
-    quoi = '<ol class="mi-fe"><li>Termine toutes les missions de la <b>phase '+esc(p.ph.n)+' — '+esc(p.ph.t)+'</b>.</li>'
-      + '<li>Demande ensuite à ton parrain de valider ton <b>'+esc(miPorteNom(p.po.id).toLowerCase())+'</b> ('+esc(p.po.t)+').</li></ol>'
-      + '<button type="button" class="alr-b pri" data-miph="'+esc(p.ph.id)+'">Voir la phase '+esc(p.ph.n)+' →</button>';
-  } else quoi = '<p>Cette phase s’ouvrira au fil de ton parcours.</p>';
+  const fermees = (ph.ouvre||[]).map(miPorte).filter(x=>!x.ouverte && x.po);
+  const etapes = [];
+  fermees.forEach(p=>{
+    if(p.po.v==='auto') etapes.push('Passe <b>ADMAN</b> : relevé automatiquement par le réseau.');
+    else if(p.ph){
+      etapes.push('Termine toutes les missions de la <b>phase '+esc(p.ph.n)+' — '+esc(p.ph.t)+'</b>.');
+      etapes.push('Demande ensuite à ton parrain de valider ton <b>'+esc(miPorteNom(p.po.id).toLowerCase())+'</b> ('+esc(p.po.t)+').');
+    }
+  });
+  const prem = fermees.find(p=>p.ph && p.po.v!=='auto');
+  const quoi = etapes.length
+    ? '<ol class="mi-fe">'+etapes.map(x=>'<li>'+x+'</li>').join('')+'</ol>'
+      + (prem ? '<button type="button" class="alr-b pri" data-miph="'+esc(prem.ph.id)+'">Voir la phase '+esc(prem.ph.n)+' →</button>' : '')
+    : '<p>Cette phase s’ouvrira au fil de ton parcours.</p>';
   return '<div class="mi-ferme"><div class="mi-fi">🔒</div><h3>Phase '+esc(ph.n)+' — '+esc(ph.t)+'</h3><p class="mi-ai">Vise '+esc(ph.statut||'')+'. Pour l’ouvrir :</p>'+quoi+'</div>';
 }
 function buildMissions(){

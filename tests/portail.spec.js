@@ -6145,4 +6145,30 @@ test.describe('Phase fermée (05/11/2026)', () => {
     expect(r.ferme).toContain('Termine toutes les missions de la phase 1');
     expect(r.ferme).toContain('point d’étape 1');
   });
+
+  test('phase 4 (plus « à venir ») : point d’étape 2 + passage ADMAN, sans compteur ni mission', async ({ page }) => {
+    await ouvrir(page);
+    const m = JSON.parse(JSON.stringify(MISSIONS));
+    const p4 = m.phases.find(p => p.id === 'p4'); delete p4.avenir;
+    p4.missions = [{ id: '4.1', t: 'ESP Manager', actions: [{ id: 'esp_manager', t: 'ESP Manager réalisé', v: 'moi' }] }];
+    const r = await page.evaluate((missions) => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      CONTENU = { pages: {}, nav: [], missions, reflexes: [] };
+      MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Test MOI' });
+      PARCOURS = { statut: 'ROLE_NEOMAN', etapes: {} }; MIS = { _mig: 1 }; PORTES = {}; CHECK = {};
+      majParcours(); showTab('parc'); curTab = 'parc';
+      MI_PHASE = 'p4'; MI_CHOISIE = true; buildMissions();
+      const puce = [...document.querySelectorAll('.mi-chip')][3].textContent;
+      return { puce, missions: document.querySelectorAll('#homeParcoursPanel details.mi').length, ferme: (document.querySelector('.mi-ferme') || {}).textContent || '' };
+    }, m);
+    expect(r.puce).toContain('Vise MAN et plus');
+    expect(r.puce).not.toContain('à venir');
+    expect(r.puce).not.toMatch(/\d+\/\d+/);
+    expect(r.missions).toBe(0);
+    expect(r.ferme).toContain('phase 2');
+    expect(r.ferme).toContain('point d’étape 2');
+    expect(r.ferme).toContain('ADMAN');
+  });
 });
