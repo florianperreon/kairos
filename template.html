@@ -2389,7 +2389,6 @@ body.ps-open #fbBtn{bottom:64px}
         <button data-s="sim" class="on">Simulateurs</button>
         <button data-s="doc">Courriers &amp; attestations</button>
         <button data-s="plus">Pour aller plus loin</button>
-        <button data-s="lien" id="resLienBtn" hidden>Liens utiles</button>
       </nav>
       <div class="subview on" id="sr-sim"><div class="rs-cards" id="resSimCards"></div><div id="resSim"></div></div>
       <div class="subview" id="sr-doc"><div class="rs-cards" id="resDocCards"></div><div id="resDoc"></div></div>
@@ -2412,7 +2411,6 @@ body.ps-open #fbBtn{bottom:64px}
           </div>
         </div>
       </div>
-      <div class="subview" id="sr-lien"><div class="panel"><h2>Liens utiles</h2><div class="res" id="resLiens"></div></div></div>
     </section>
 
     <section class="view" id="v-surv">
@@ -14604,8 +14602,8 @@ const RS_DOCS = [
 let RS_SUB='sim', RS_SIM='av', RS_DOC='heb', RS_FAIT=false;
 const RS_VAL={};               // valeurs en mémoire, par outil
 let RS_PARC=null;              // biens du simulateur « Parc immobilier »
-const RS_SUBS=['sim','doc','plus','lien'];
-const RS_SLUG={sim:'simulateurs', doc:'courriers', plus:'pour-aller-plus-loin', lien:'liens-utiles'};
+const RS_SUBS=['sim','doc','plus'];
+const RS_SLUG={sim:'simulateurs', doc:'courriers', plus:'pour-aller-plus-loin'};
 const RS_SLUG_INV=Object.fromEntries(Object.entries(RS_SLUG).map(([k,v])=>[v,k]));
 const rsTools = () => RS_SIMS.concat(RS_DOCS);
 const rsDef = id => rsTools().find(t=>t.id===id);
@@ -15180,12 +15178,6 @@ function buildRes(){
   if(!RS_FAIT){
     RS_FAIT=true;
     rsRenderSim(); rsRenderDoc();
-  }
-  const C=(typeof CONTENU!=='undefined'&&CONTENU)||{};
-  const btn=document.getElementById('resLienBtn');
-  if(C.ressources&&C.ressources.length){
-    btn.hidden=false;
-    document.getElementById('resLiens').innerHTML=document.getElementById('homeRes').innerHTML || C.ressources.map(r=>'<a class="resc" href="'+esc(r.u||'#')+'" target="_blank" rel="noopener"><b>'+esc(r.t)+'</b><p>'+esc(r.d||'')+'</p></a>').join('');
   }
 }
 function rsOuvrirSim(id){ if(!rsDef(id)) return; RS_SIM=id; rsRenderSim(); noterUsage('simu', rsDef(id).slug||id); }

@@ -6326,7 +6326,7 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
     expect(erreurs).toEqual([]);
     expect(r.admin.join(' ')).not.toContain('Outils Tech');
     expect(r.admin.join(' ')).not.toContain('Supports Vie Plus');
-    expect(r.res).toEqual(['sim', 'doc', 'plus', 'lien']);
+    expect(r.res).toEqual(['sim', 'doc', 'plus']);
     expect(r.dans).toEqual(['Supports Vie Plus']);
     expect(r.vu).toEqual({ plus: true, lien: '#ressources?s=pour-aller-plus-loin' });
     expect(r.intro).toContain('données au 31/10/2026');
