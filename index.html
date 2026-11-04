@@ -205,6 +205,14 @@ section.view.on{display:block}
 .hl-off{display:none!important}
 /* ---------- Dévoilement progressif (03/11/2026) ---------- */
 .nv-lock{display:none!important}
+nav.tabs a.nv-cotis,nav.botbar a.nv-cotis,#plusCard a.nv-cotis{opacity:.5}
+nav.tabs a.nv-cotis .l::after{content:"🔒";margin-left:6px;font-size:11px}
+section.cotis-off>:not(.cotis-lock){display:none!important}
+.cotis-lock{text-align:center;padding:36px 24px;max-width:640px;margin:20px auto}
+.cotis-lock .cl-i{font-size:38px;margin-bottom:8px}
+.cotis-lock h2{font-size:19px;margin-bottom:10px}
+.cotis-lock p{color:var(--ink-2);font-size:14.5px;margin:8px 0}
+.cotis-lock .mm-b{display:inline-block;margin-top:10px;text-decoration:none}
 nav.tabs a.nv-new .l::after,nav.botbar a.nv-new .l::after{content:"Nouveau";margin-left:6px;font-size:10px;font-weight:800;background:var(--gold);color:#fff;border-radius:99px;padding:1px 6px;vertical-align:1px}
 nav.botbar a.nv-new .l::after{content:"•";padding:0 4px}
 #v-home.mode-nouveau .hmore{display:none}
@@ -4354,6 +4362,7 @@ function showTab(v){
   }
   if(sousAdmin) showAdminSub(sousAdmin);
   try{ dvALOuverture(v); }catch(e){}
+  try{ if(FORMAN_TABS.includes(v)) cotisationPage(v); }catch(e){}
   return v;
 }
 // Menu (31/10/2026) : chaque entrée est un vrai lien <a href="#onglet">. Clic gauche simple = navigation
@@ -4474,7 +4483,8 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-03', [
-    ['f','Dévoilement progressif : les espaces de Kairos s’ouvrent avec le parcours (Mes sessions et Autres événements après la Découverte Métier, Mail Manager à la mission 1.5, Ressources, Veille et Parcours Découverte au point d’étape 1, Ma lignée au premier filleul). Un espace pas encore ouvert est caché, y compris dans Ctrl K et par son adresse. Les administrateurs gardent tout.'],
+    ['f','Groupe Forman (Ateliers, Parcours Découverte, Autres événements) ouvert dès le début, comme sur le site FORMAN, pour les adhérents à jour de cotisation ; sans cotisation, les entrées restent visibles, grisées, avec « Débloqué lorsque tu auras pris ta cotisation FORMAN ».'],
+    ['f','Dévoilement progressif : les espaces de Kairos s’ouvrent avec le parcours (Mes sessions après la Découverte Métier, Mail Manager à la mission 1.5, Ressources et Veille au point d’étape 1, Ma lignée au premier filleul). Un espace pas encore ouvert est caché, y compris dans Ctrl K et par son adresse. Les administrateurs gardent tout.'],
     ['f','Chaque ouverture est annoncée (« 🎉 Nouveau pour toi », pastille dans le menu, encart de découverte en 3 points à la première visite).'],
     ['f','Nouveau membre : 3 écrans de bienvenue, checklist « Ma première semaine », carte « Ton parrain », une seule prochaine action à la fois ; les blocs secondaires de l’accueil n’arrivent qu’en phase 2.'],
     ['f','Missions : la prochaine séance à réserver et à qui en parler ; un bravo à chaque mission terminée ; les points d’étape validés rejoignent le mur des victoires.'],
@@ -4840,19 +4850,20 @@ document.addEventListener('click', e=>{
    Les onglets s'ouvrent avec les missions du parcours ; un onglet pas encore ouvert est CACHÉ (menu,
    menu Plus, Ctrl K, adresse tapée à la main). Personne ne peut débloquer en avance. Les membres déjà
    là suivent leur avancement réel ; les administrateurs gardent tout (et ont l'aperçu « comme un nouveau »).
-   - Mes sessions, Autres événements : après la Découverte Métier (mission 1.1) ;
+   - Mes sessions : après la Découverte Métier (mission 1.1) ;
    - Mail Manager : accès MEGA + mail manager demandés (mission 1.5) ou point d'étape 1 ;
-   - Ressources, Veille, Parcours Découverte : point d'étape 1 (phase 2 ouverte) ;
+   - Ressources, Veille : point d'étape 1 (phase 2 ouverte) ;
+   - Ateliers, Parcours Découverte, Autres événements (groupe Forman) : ouverts dès le début, comme sur le
+     site FORMAN, mais seulement à un adhérent à jour de cotisation ; sinon l'entrée reste dans le menu,
+     grisée, et la page explique qu'elle s'ouvre avec la cotisation (règle Florian du 03/11/2026).
    - Ma lignée : premier filleul. */
 let APERCU = null;                    // aperçu admin : { phase:'j0'|'p1'|'p2'|'p3' } — jamais enregistré
-const DV_GERES = ['surv','reu','for','evt','mm','res','veille','lig','pd'];
+const DV_GERES = ['surv','mm','res','veille','lig'];
 const DV_INFO = {
   surv:   { t:'Mes sessions', quand:'après ta Découverte Métier', tour:['Retrouve ici les séances où tu es inscrit et celles que tu suis avec ☆.','Kairos te prévient quand une séance suivie est presque complète.','Astuce : réserve tes prochains ateliers dès qu’ils sont publiés.'] },
-  reu:    { t:'Autres événements', quand:'après ta Découverte Métier', tour:['Réunions d’équipe, formations et événements du réseau, en dehors des ateliers.','Les séances pilotées par ta lignée sont signalées.','L’inscription se fait toujours sur le site FORMAN.'] },
   mm:     { t:'Mail Manager', quand:'quand tu auras demandé ton accès MEGA et mail manager (mission 1.5)', tour:['Chaque lundi, fais le point de ta semaine : contacts, rendez-vous, signatures.','Ta lignée le lit : c’est le meilleur moyen d’être accompagné.','Remplis-le en 5 minutes, même quand la semaine a été calme.'] },
   res:    { t:'Ressources', quand:'au point d’étape 1', tour:['Simulateurs patrimoniaux et générateurs de courriers, prêts pour tes rendez-vous.','Commence par les simulateurs que tu utiliseras en R2.','Chaque résultat s’exporte en PDF.'] },
   veille: { t:'Veille', quand:'au point d’étape 1', tour:['L’actualité patrimoniale de la semaine, triée pour un conseiller.','Une édition chaque lundi, des alertes quand c’est urgent.','Lis-la pour nourrir tes rendez-vous clients.'] },
-  pd:     { t:'Parcours Découverte', quand:'au point d’étape 1', tour:['Le calendrier des Découvertes Métier et des 3 Jours, pour y inviter tes contacts.','Les séances recommandées par la lignée sont mises en avant.','Prépare ton invité avec ton parrain avant la séance.'] },
   lig:    { t:'Ma lignée', quand:'à ton premier filleul', tour:['Suis l’avancement de tes filleuls : parcours, mail manager, victoires.','Kairos te dit qui a besoin d’un coup de main.','Félicite chaque victoire : ça compte.'] },
 };
 const dvTab = v => (v==='for'||v==='evt') ? 'reu' : v;
@@ -4862,7 +4873,7 @@ function misOk(mid, aid){
 }
 function dvOuverts(){                  // null = tout est ouvert
   if(EST_ADMIN && !APERCU) return null;
-  const n = APERCU ? ({ j0:0, p1:1, p2:2, p3:3 })[APERCU.phase] : null;
+  const n = APERCU ? ({ nonadh:0, j0:0, p1:1, p2:2, p3:3 })[APERCU.phase] : null;
   if(n === null && (typeof misData !== 'function' || !misData())) return null;
   let p2, dm, mega, filleul;
   if(n !== null){ p2 = n>=2; dm = n>=1; mega = n>=2; filleul = n>=3; }
@@ -4876,11 +4887,38 @@ function dvOuverts(){                  // null = tout est ouvert
       || !!(typeof LIG !== 'undefined' && LIG && LIG.liste && LIG.liste.some(p=>p.parrain_id===MOI_ID));
   }
   const o = new Set();
-  if(dm || p2) ['surv','reu','for','evt'].forEach(x=>o.add(x));
+  if(dm || p2) o.add('surv');
   if(mega || p2) o.add('mm');
-  if(p2) ['res','veille','pd'].forEach(x=>o.add(x));
+  if(p2) ['res','veille'].forEach(x=>o.add(x));
   if(filleul) o.add('lig');
   return o;
+}
+const FORMAN_TABS = ['cat','pd','reu','for','evt'];
+// Adhérent à jour de cotisation ? (inconnu tant que la fiche n'est pas rattachée : on ne bloque pas)
+function estAdherentForman(){
+  if(EST_ADMIN && !APERCU) return true;
+  if(APERCU) return APERCU.phase !== 'nonadh';
+  if(!MOI_ID) return true;
+  return ADH.has(MOI_ID);
+}
+const cotisationRequise = v => FORMAN_TABS.includes(v) && !estAdherentForman();
+function lienSiteForman(){
+  const r = ((CONTENU && CONTENU.ressources) || []).find(x=>/forman/i.test(x.t||'') && /^https:/.test(x.u||'') && !/mega/i.test(x.u||''));
+  return r ? r.u : ((DATA && DATA.cfg && DATA.cfg.base) || '');
+}
+// Page d'un onglet Forman sans cotisation : l'onglet s'affiche, son contenu est remplacé par l'explication
+function cotisationPage(v){
+  const sec = document.getElementById('v-'+v); if(!sec) return;
+  const bloque = cotisationRequise(v);
+  sec.classList.toggle('cotis-off', bloque);
+  let p = sec.querySelector(':scope > .cotis-lock');
+  if(!bloque){ if(p) p.remove(); return; }
+  if(!p){ p = document.createElement('div'); p.className = 'panel cotis-lock'; sec.insertBefore(p, sec.firstChild); }
+  const u = lienSiteForman();
+  p.innerHTML = '<div class="cl-i">🔒</div><h2>Débloqué lorsque tu auras pris ta cotisation FORMAN</h2>'
+    + '<p>Les ateliers, le Parcours Découverte et les autres événements du réseau sont réservés aux adhérents FORMAN, comme sur le site FORMAN.</p>'
+    + '<p>Règle ta cotisation sur le site FORMAN : cet espace s’ouvrira ici automatiquement à la mise à jour suivante (quatre fois par jour). Ton parrain peut t’aider si besoin.</p>'
+    + (u ? '<a class="mm-b pri" href="'+esc(u)+'" target="_blank" rel="noopener">Aller sur le site FORMAN ↗</a>' : '');
 }
 function ongletOuvert(v){
   if(!DV_GERES.includes(v)) return true;
@@ -4948,6 +4986,12 @@ function majDevoilement(){
   DV_GERES.forEach(v=>{ const ouvert = !o || o.has(v);
     document.querySelectorAll('nav.tabs [data-v="'+v+'"], nav.botbar [data-v="'+v+'"], #plusCard [data-v="'+v+'"]').forEach(b=>b.classList.toggle('nv-lock', !ouvert)); });
   document.querySelectorAll('.aut-sub [data-aut]').forEach(b=>b.classList.toggle('nv-lock', !ongletOuvert(b.dataset.aut)));
+  // groupe Forman : visible, grisé tant que la cotisation n'est pas réglée
+  const sansCotis = !estAdherentForman();
+  FORMAN_TABS.forEach(v=>document.querySelectorAll('nav.tabs [data-v="'+v+'"], nav.botbar [data-v="'+v+'"], #plusCard [data-v="'+v+'"]').forEach(b=>{
+    b.classList.toggle('nv-cotis', sansCotis);
+    if(sansCotis) b.setAttribute('title', 'Débloqué lorsque tu auras pris ta cotisation FORMAN'); }));
+  FORMAN_TABS.forEach(cotisationPage);
   if(!ongletOuvert(curTab)){ showTab('home'); curTab='home'; syncHash(false); }
   // annonces : ce qui vient de s'ouvrir (pas en aperçu)
   if(!APERCU){
@@ -5097,7 +5141,7 @@ function buildApercuBandeau(){
   let b = document.getElementById('apercuBand');
   if(!APERCU){ if(b) b.remove(); return; }
   if(!b){ b = document.createElement('div'); b.id='apercuBand'; b.className='apercu-band'; const c=document.querySelector('#app .content'); if(c) c.insertBefore(b, c.firstChild); }
-  const lib = { j0:'un nouveau, le premier jour', p1:'un membre en phase 1', p2:'un membre en phase 2', p3:'un membre en phase 3 (parrain)' }[APERCU.phase];
+  const lib = { nonadh:'un nouveau sans cotisation FORMAN', j0:'un nouveau, le premier jour', p1:'un membre en phase 1', p2:'un membre en phase 2', p3:'un membre en phase 3 (parrain)' }[APERCU.phase];
   b.innerHTML = '👁 Aperçu : tu vois Kairos comme '+lib+'. Tes propres données restent affichées. <button type="button" class="mm-b" data-apercu="">Quitter l’aperçu</button>';
 }
 document.addEventListener('click', e=>{
@@ -5127,7 +5171,7 @@ function estParrain(){
   return (children.get(norm(moi.name))||[]).some(c=>ADH.has(c.id));
 }
 function estNouveau(){
-  if(APERCU) return APERCU.phase === 'j0' || APERCU.phase === 'p1';
+  if(APERCU) return APERCU.phase === 'j0' || APERCU.phase === 'p1' || APERCU.phase === 'nonadh';
   try{ if(!misData()) return false; const p1 = misPhases().find(p=>!p.avenir); if(!p1) return false;
     const pr = miPhaseProg(p1); return pr.tot > 0 && pr.ok < pr.tot && !estParrain(); }catch(e){ return false; }
 }
@@ -6218,7 +6262,7 @@ function buildActivite(){
     return Object.values(m).sort((a,b)=>b.p.size-a.p.size || b.n-a.n).slice(0,5); };
   const tuile = (v, l) => '<div class="act-t"><b>'+v+'</b><span>'+l+'</span></div>';
   if(vue) vue.innerHTML = '<div class="apercu-ctl"><span>👁 Voir Kairos comme :</span>'
-    + [['j0','un nouveau (1er jour)'],['p1','phase 1'],['p2','phase 2'],['p3','parrain (phase 3)']].map(x=>'<button type="button" class="mm-b'+(APERCU&&APERCU.phase===x[0]?' pri':'')+'" data-apercu="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'
+    + [['nonadh','sans cotisation'],['j0','un nouveau (1er jour)'],['p1','phase 1'],['p2','phase 2'],['p3','parrain (phase 3)']].map(x=>'<button type="button" class="mm-b'+(APERCU&&APERCU.phase===x[0]?' pri':'')+'" data-apercu="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'
     + '<div class="act-tuiles">'
     + tuile(tous.filter(c=>c.j7).length+' / '+ACT.length, 'actifs cette semaine')
     + tuile(tous.filter(c=>c.j30).length, 'actifs sur 30 jours')

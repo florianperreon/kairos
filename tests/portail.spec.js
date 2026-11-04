@@ -5932,6 +5932,7 @@ test.describe('Dévoilement progressif (03/11/2026)', () => {
     MOI_ID = 20028; byId.set(20028, { id: 20028, name: 'Test MOI', parrain: 'Parrain TEST' });
     byNormName.set(norm('Parrain TEST'), { id: 20001, name: 'Parrain TEST' });
     children.delete(norm('Test MOI'));
+    ADH.add(20028);
     PARCOURS = { statut: o.statut || 'ROLE_NEOMAN', etapes: o.etapes || {} };
     CHECK = {}; MIS = o.mis || {}; PORTES = o.portes || {}; VU = o.vu || {};
     EST_ADMIN = !!o.admin; APERCU = null; J0_MONTRE = !!o.sansJ0;
@@ -5940,7 +5941,7 @@ test.describe('Dévoilement progressif (03/11/2026)', () => {
     majParcours(); buildActions(); majDevoilement();
     return true;
   }, { missions: MISSIONS, o });
-  const ouverts = page => page.evaluate(() => ['surv','reu','mm','res','veille','lig','pd'].filter(v => !document.querySelector('#side [data-v="'+v+'"]').classList.contains('nv-lock')));
+  const ouverts = page => page.evaluate(() => ['surv','mm','res','veille','lig'].filter(v => !document.querySelector('#side [data-v="'+v+'"]').classList.contains('nv-lock')));
 
   test('un nouveau ne voit que l’essentiel ; une adresse cachée mène à l’accueil ; Ctrl K ne propose rien de caché', async ({ page }) => {
     const erreurs = await ouvrir(page);
@@ -5956,34 +5957,34 @@ test.describe('Dévoilement progressif (03/11/2026)', () => {
     expect(erreurs).toEqual([]);
   });
 
-  test('la Découverte Métier ouvre Mes sessions et Autres événements, annoncés comme nouveaux', async ({ page }) => {
+  test('la Découverte Métier ouvre Mes sessions, annoncé comme nouveau', async ({ page }) => {
     await ouvrir(page);
     await poserDv(page, { sansJ0: true });
     await poserDv(page, { sansJ0: true, etapes: { dm: { d: '2026-10-01' } }, vu: await page.evaluate(() => VU) });
-    expect(await ouverts(page)).toEqual(['surv', 'reu']);
+    expect(await ouverts(page)).toEqual(['surv']);
     const r = await page.evaluate(() => ({ neufs: VU.dv.n, carte: document.getElementById('homeDv').textContent,
       pastille: document.querySelector('#side [data-v="surv"]').classList.contains('nv-new') }));
-    expect(r.neufs).toEqual(['surv', 'reu']);
+    expect(r.neufs).toEqual(['surv']);
     expect(r.carte).toContain('Nouveau pour toi');
     expect(r.pastille).toBe(true);
     // première visite : encart de découverte, la pastille disparaît
     const v = await page.evaluate(() => { document.querySelector('#side [data-v="surv"]').hidden = false; const t = showTab('surv'); return { t, tour: !!document.querySelector('#v-surv .dv-tour'), n: VU.dv.n }; });
     expect(v.t).toBe('surv');
     expect(v.tour).toBe(true);
-    expect(v.n).toEqual(['reu']);
+    expect(v.n).toEqual([]);
   });
 
   test('administrateur : tout est ouvert ; l’aperçu « phase 1 » referme et se quitte', async ({ page }) => {
     await ouvrir(page);
     await poserDv(page, { admin: true, sansJ0: true });
-    expect((await ouverts(page)).length).toBe(7);
+    expect((await ouverts(page)).length).toBe(5);
     await page.evaluate(() => apercuChoisir('p1'));
     const ap = await ouverts(page);
     const band = await page.evaluate(() => !!document.getElementById('apercuBand'));
     await page.evaluate(() => apercuChoisir(null));
-    expect(ap).toEqual(['surv', 'reu']);
+    expect(ap).toEqual(['surv']);
     expect(band).toBe(true);
-    expect((await ouverts(page)).length).toBe(7);
+    expect((await ouverts(page)).length).toBe(5);
   });
 
   test('premier jour : 3 écrans, puis la checklist « Ma première semaine » et la carte du parrain', async ({ page }) => {
@@ -5999,6 +6000,30 @@ test.describe('Dévoilement progressif (03/11/2026)', () => {
     expect(r.ck).toBe(5);
     expect(r.par).toContain('Parrain TEST');
     expect(r.autres).toBe(true);
+  });
+
+  test('groupe Forman : ouvert d’emblée à un adhérent ; sans cotisation, visible mais grisé avec l’explication', async ({ page }) => {
+    await ouvrir(page);
+    await poserDv(page, { sansJ0: true });
+    const sans = await page.evaluate(() => {
+      ADH.delete(20028); majDevoilement();
+      const t = showTab('cat');
+      const sec = document.getElementById('v-cat');
+      return { t, grise: document.querySelector('#side [data-v="cat"]').classList.contains('nv-cotis'),
+        cache: document.querySelector('#side [data-v="pd"]').classList.contains('nv-lock'),
+        off: sec.classList.contains('cotis-off'), msg: (sec.querySelector('.cotis-lock') || {}).textContent || '' };
+    });
+    expect(sans.t).toBe('cat');
+    expect(sans.grise).toBe(true);
+    expect(sans.cache).toBe(false);
+    expect(sans.off).toBe(true);
+    expect(sans.msg).toContain('Débloqué lorsque tu auras pris ta cotisation FORMAN');
+    const avec = await page.evaluate(() => {
+      ADH.add(20028); majDevoilement(); showTab('reu');
+      return { grise: document.querySelector('#side [data-v="cat"]').classList.contains('nv-cotis'),
+        off: document.getElementById('v-cat').classList.contains('cotis-off'), reuOff: document.getElementById('v-reu').classList.contains('cotis-off') };
+    });
+    expect(avec).toEqual({ grise: false, off: false, reuOff: false });
   });
 
   test('mission terminée : un bravo à l’écran, une seule fois', async ({ page }) => {
