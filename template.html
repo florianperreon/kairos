@@ -4485,6 +4485,8 @@ function showAdminSub(s){
 const KAIROS_CHANGELOG = [
   ['2026-11-04', [
     ['f','Audit de confidentialité : le mot « asso » (et « association ») est désormais autorisé dans le portail.'],
+    ['f','Admin → Activité : l’entonnoir du parcours est retiré.'],
+    ['f','Nouvelle fiche pratique « Proxeema : contact déjà dans le portefeuille d’un autre consultant » (Administratif & statut), avec le mail type à copier.'],
     ['f','Onglets Forman sans cotisation : le message précise que Kairos se synchronise avec FORMAN 4 fois par jour, donc qu’une adhésion peut mettre quelques heures à être prise en compte.'],
   ]],
   ['2026-11-03', [
@@ -6277,7 +6279,7 @@ function buildActivite(){
     + tuile(actAppareils(), 'personnes par appareil (30 j)')
     + '</div><div class="act-tops"><div><h3>Fiches les plus lues</h3>'+(top('fiche').map(x=>'<div class="act-top">'+actLienUsage({t:'fiche',c:x.c})+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
     + '</div><div><h3>Onglets les plus utilisés</h3>'+(top('onglet').map(x=>'<div class="act-top">'+actLienUsage({t:'onglet',c:x.c})+' <span>'+x.p.size+' pers. · '+x.n+' ouv.</span></div>').join('') || '<p class="mbr-sub">Pas encore de données.</p>')
-    + '</div></div>' + actEntonnoir();
+    + '</div></div>';   // entonnoir du parcours retiré le 04/11/2026 (demande Florian)
   // tableau
   const col = ACT_COLS.find(c=>c[0]===ACT_TRI.col) || ACT_COLS[1];
   const lignes = actFiltre().sort((a,b)=>{ const x = col[2](a), y = col[2](b); return (x<y?-1:x>y?1:0)*ACT_TRI.dir; });
