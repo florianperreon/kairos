@@ -5702,7 +5702,7 @@ test.describe('Annuaire réservé aux administrateurs (03/11/2026)', () => {
       document.getElementById('app').style.display = 'grid';
       window.__booted = true;
       EST_ADMIN = false;
-      const menu = !document.querySelector('nav.tabs [data-v="ann"]') && !!document.querySelector('#frmSub [data-s="ann"]');   // 05/11/2026 : dans Admin → Forman
+      const menu = !document.querySelector('nav.tabs [data-v="ann"]') && !!document.querySelector('#frmSub [data-s="ann"]');   // 04/11/2026 : dans Admin → Forman
       location.hash = '#annuaire'; routeHash();   // menu Admin masqué : l'adresse ne mène nulle part
       const vue = (document.querySelector('section.view.on') || {}).id;
       return { menu, vue, tab: curTab, hash: location.hash, direct: showTab('ann') };
@@ -6120,7 +6120,7 @@ test.describe('Aperçu admin simulé (04/11/2026)', () => {
   });
 });
 
-test.describe('Phase fermée (05/11/2026)', () => {
+test.describe('Phase fermée (04/11/2026)', () => {
   const MISSIONS = JSON.parse(lire('tests/missions.json'));
   test('ni missions ni compteur : l’objectif de statut et comment l’ouvrir', async ({ page }) => {
     await ouvrir(page);
@@ -6173,7 +6173,7 @@ test.describe('Phase fermée (05/11/2026)', () => {
   });
 });
 
-test.describe('Admin → Forman (05/11/2026)', () => {
+test.describe('Admin → Forman (04/11/2026)', () => {
   test('un onglet Forman regroupe Annuaire, Statistiques, Nouveautés ; les anciennes adresses restent valables', async ({ page }) => {
     await ouvrir(page);
     const r = await page.evaluate(() => {
@@ -6202,7 +6202,7 @@ test.describe('Admin → Forman (05/11/2026)', () => {
   });
 });
 
-test.describe('Admin → Points d’étape en cours de validation (05/11/2026)', () => {
+test.describe('Admin → Points d’étape en cours de validation (04/11/2026)', () => {
   test('liste les demandes, « Pas encore » exige un mot, valider appelle porte_traiter à la place du parrain', async ({ page }) => {
     await ouvrir(page);
     const r = await page.evaluate(async () => {
@@ -6240,7 +6240,7 @@ test.describe('Admin → Points d’étape en cours de validation (05/11/2026)',
   });
 });
 
-test.describe('Nouvelles données disponibles (05/11/2026)', () => {
+test.describe('Nouvelles données disponibles (04/11/2026)', () => {
   test('une date de mise à jour plus récente affiche la fenêtre ; « Plus tard » la ferme ; rien sinon', async ({ page }) => {
     await ouvrir(page);
     const r = await page.evaluate(async () => {

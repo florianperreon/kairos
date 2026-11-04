@@ -2546,7 +2546,7 @@ body.ps-open #fbBtn{bottom:64px}
         <button data-s="log">Changelog Kairos</button>
       </nav>
 
-      <!-- Admin → Forman (05/11/2026) : Annuaire, Statistiques, Nouveautés -->
+      <!-- Admin → Forman (04/11/2026) : Annuaire, Statistiques, Nouveautés -->
       <div class="subview-frm" id="sv-frm">
         <nav class="subtabs frm-sub" id="frmSub"><button data-s="ann">Annuaire</button><button data-s="stats">Statistiques</button><button data-s="nouv">Nouveautés</button></nav>
         <div class="subview" id="sv-ann"><div id="v-ann">
@@ -4251,7 +4251,7 @@ async function chargerDonnees(){
   }catch(e){}
   return null;
 }
-/* ---------- Données plus récentes disponibles (05/11/2026, règle Florian) ----------
+/* ---------- Données plus récentes disponibles (04/11/2026, règle Florian) ----------
    Toutes les 10 minutes, et au retour sur l'onglet (au plus une fois par minute), le portail lit
    la seule date de mise à jour des données du réseau. Si elle est plus récente que celle chargée,
    une fenêtre « Nouvelles données disponibles » propose de rafraîchir : c'est la personne qui clique
@@ -4553,14 +4553,12 @@ function showAdminSub(s){
    ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
-  ['2026-11-05', [
+  ['2026-11-04', [
     ['f','Données à jour : toutes les 10 minutes (et au retour sur l’onglet), Kairos vérifie si les données du réseau ont été mises à jour ; si oui, une fenêtre « Nouvelles données disponibles » propose de rafraîchir.'],
     ['f','Admin → « Points d’étape en cours de validation » : toutes les demandes en attente, avec leur parrain et l’ancienneté ; un administrateur peut valider (ou répondre « Pas encore ») à la place du parrain, avec un mot pour le filleul.'],
     ['f','Admin : nouvel onglet « Forman » qui regroupe Annuaire, Statistiques et Nouveautés (les adresses #admin?s=annuaire, statistiques et nouveautes restent valables).'],
     ['f','Phase 4 « Objectif Galaxie » : n’est plus « à venir » ; première mission « ESP Manager » ; même affichage que les autres phases tant qu’elle est fermée (point d’étape 2 + passage ADMAN).'],
     ['f','Mon parcours : une phase pas encore ouverte ne montre plus ni ses missions ni son compteur, seulement l’objectif de statut et ce qu’il faut faire pour l’ouvrir (missions de la phase précédente + point d’étape validé par le parrain).'],
-  ]],
-  ['2026-11-04', [
     ['f','Audit de confidentialité : le mot « asso » (et « association ») est désormais autorisé dans le portail.'],
     ['f','Admin → Activité : l’entonnoir du parcours est retiré.'],
     ['f','Aperçu « Voir Kairos comme » : les 5 profils (sans cotisation, adhérent nouveau, filleul phase 1 validée, filleul phase 2 validée, parrain phase 3 validée avec une demande de point d’étape fictive) simulent vraiment le parcours (missions, étapes, fiches débloquées, visite guidée) ; rien n’est enregistré pendant l’aperçu.'],
@@ -11031,7 +11029,7 @@ function demSuggestions(d){
   return res.length ? '<div class="dem-sug">'+res.map(x=>'<button type="button" class="dem-s" data-fiche="'+esc(x.m.name)+' · #'+x.m.id+'">'
     + esc(x.m.name)+' <small>#'+x.m.id+(ADH.has(x.m.id)?'':' · invité·e')+'</small></button>').join('')+'</div>' : '';
 }
-/* ---------- Admin → Points d'étape en cours de validation (05/11/2026) ----------
+/* ---------- Admin → Points d'étape en cours de validation (04/11/2026) ----------
    Toutes les demandes en attente (RPC portes_en_attente_admin, admins seulement). Un admin peut
    valider ou répondre « Pas encore » à la place du parrain (porte_traiter l'autorise déjà côté serveur). */
 let PTE = [];
