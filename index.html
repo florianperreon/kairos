@@ -2151,6 +2151,15 @@ body.ps-open #fbBtn{bottom:64px}
 <style id="rsCss">
 /* ---------- Ressources : simulateurs et courriers (15/09/2026) ---------- */
 .rs-intro p{color:var(--ink-2);font-size:14px;margin:0}
+.rp-pre{border-left:4px solid var(--accent);background:var(--accent-soft)}
+.rp-pre h2{margin:0 0 6px;font-size:17px}.rp-pre>p{margin:4px 0;font-size:14px;color:var(--ink-2)}
+.rp-pre .rp-disc{display:inline-block;margin:8px 0 4px;font-weight:600}
+.rp-pre h3{margin:14px 0 8px;font-size:14px}
+.rp-reco{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.rp-card{background:var(--surface,#fff);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.rp-card .rp-th{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2)}
+.rp-card b{font-size:14px;overflow-wrap:anywhere}.rp-card .vp-isin{font-size:12px;color:var(--ink-2)}
+.rp-card .rp-k{font-size:12.5px;color:var(--ink-2)}.rp-card button{align-self:flex-start;margin-top:4px;font-size:12.5px}
 .rs-intro .rs-priv{display:inline-flex;gap:6px;align-items:center;margin-top:10px;font-size:12.5px;font-weight:600;color:var(--gold-ink);background:var(--gold-soft);border-radius:99px;padding:3px 11px}
 .rs-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:18px}
 #resSimCards{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-bottom:14px}
@@ -2393,6 +2402,7 @@ body.ps-open #fbBtn{bottom:64px}
       <div class="subview on" id="sr-sim"><div class="rs-cards" id="resSimCards"></div><div id="resSim"></div></div>
       <div class="subview" id="sr-doc"><div class="rs-cards" id="resDocCards"></div><div id="resDoc"></div></div>
       <div class="subview" id="sr-plus">
+        <div class="panel rp-pre" id="rpPre"></div>
         <nav class="subtabs frm-sub" id="resPlusSub"><button data-rp="vieplus" class="on">Supports Vie Plus</button></nav>
         <div class="rp-v on" id="rp-vieplus">
           <div class="panel">
@@ -4661,11 +4671,52 @@ document.addEventListener('click', e=>{
   if(e.target.closest && e.target.closest('#vpCsv')) vpCsv();
 });
 
+/* ---------- Ressources → Pour aller plus loin → encadré « Allocations types » (05/11/2026) ----------
+   Préambule demandé par Florian : les allocations types à jour sont sur le salon Discord de la lignée,
+   la page sert à aller plus loin et tester, à faire vérifier par l'expert allocation de la lignée.
+   + 3 recommandations thématiques (fonds retrouvés par ISIN dans le catalogue Vie Plus).
+   Nom, lien et ISIN encodés comme VP_ENC : un nom de la lignée en clair ferait échouer l'audit. */
+const RP_ENC = '*.$$)=$$%-$$($:%-,);),$!&#*()&*$)#),)=$$$:$$*!$$%-$$($:%-,);),$$$:$$)&$$%-$$)+*&*&*!*%%-$?$?)&),*%)%)?*$)&$=)%)?);$?)%)+)#)=)=)():*%$?%#%&%%%!%+%$%*%!%&%%%)%&%(%(%(%+%+%&%,$?%#%&%%%*%+%&%$%+%&%+%#%,%!%+%$%+%)%*%)$$$:$$*$$$%-(.(.$$:%+,)=)(*$)*),)($!*!*$)?*!*$)($$$:$$=$,--#$$$:$$&:((%!%$%+%!%&%%%(%%%+%+$$(;$:(.$$(%)#)=*&:%-,$$$:$$?!,?-,.-$$$:$$&:((%#%#%)%!%%%(%)%!%!%,$$(;$:(.$$&&:%-,)))()=*%)($$$:$$?!,?,.-#=?.++?$$$:$$&:((%$%&%)%)%&%&%+%(%%%$$$(;(;*;';
+let RP = null;
+function rpCharger(){
+  if(RP) return RP;
+  const m = {}; for(let i=0;i<VP_SYM.length;i++) m[VP_SYM[i]] = i;
+  const b = new Uint8Array(RP_ENC.length/2);
+  for(let i=0;i<b.length;i++) b[i] = m[RP_ENC[2*i]]*16 + m[RP_ENC[2*i+1]];
+  RP = JSON.parse(new TextDecoder('utf-8').decode(b)); return RP;
+}
+function buildRpPre(){
+  const el = document.getElementById('rpPre'); if(!el || el.dataset.ok) return;
+  const r = rpCharger(), d = vpCharger();
+  const cartes = r.r.map(([th, ico, isin])=>{
+    const f = d.l.find(x=>x.isin===isin); if(!f) return '';
+    return '<div class="rp-card"><span class="rp-th">'+ico+' '+esc(th)+'</span><b>'+esc(f.nom)+'</b>'
+      +'<span class="vp-isin">'+esc(f.isin)+' · '+esc(f.sgp||'')+'</span>'
+      +'<span class="rp-k">SRI '+(f.sri!=null?f.sri+'/7':'—')+' · 3 ans '+vpPct(f.p3)+' · 5 ans '+vpPct(f.p5)+'</span>'
+      +'<button type="button" class="acc-btn" data-rp-isin="'+esc(f.isin)+'">Voir dans la liste</button></div>';
+  }).join('');
+  el.innerHTML = '<h2>📌 Les allocations types sont sur Discord</h2>'
+    +'<p>Les allocations types, régulièrement mises à jour et recommandées par '+esc(r.n)+', sont sur le Discord de la lignée.</p>'
+    +'<a class="rp-disc" href="'+esc(r.d)+'" target="_blank" rel="noopener">Ouvrir le salon des allocations ↗</a>'
+    +'<p>Cette page te permet d’aller plus loin et de tester. Pense à faire vérifier par '+esc(r.p)+', notre expert sur ces sujets dans la lignée :)</p>'
+    +(cartes ? '<h3>Recommandations thématiques</h3><div class="rp-reco">'+cartes+'</div>' : '');
+  el.dataset.ok = '1';
+}
+document.addEventListener('click', e=>{
+  const bt = e.target.closest && e.target.closest('[data-rp-isin]'); if(!bt) return;
+  const q = document.getElementById('vpQ'); q.value = bt.dataset.rpIsin;
+  q.dispatchEvent(new Event('input', { bubbles: true }));
+  const w = document.querySelector('#rp-vieplus .tbl-wrap'); if(w) w.scrollIntoView({ behavior:'smooth', block:'start' });
+});
+
 /* ---------- Admin → Changelog Kairos (31/10/2026) ----------
    Une ligne courte par évolution : f = fonctionnalité, b = correction de bug. À COMPLÉTER À CHAQUE
    ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
+  ['2026-11-05', [
+    ['f','Ressources → Pour aller plus loin : encadré en tête de page qui renvoie vers les allocations types à jour sur le Discord de la lignée (à faire vérifier par notre expert allocation), et trois recommandations thématiques (énergie propre, santé, défense) avec un bouton « Voir dans la liste ».'],
+  ]],
   ['2026-11-04', [
     ['f','Ressources : nouvelle rubrique « Pour aller plus loin », avec « Supports Vie Plus » : les 439 supports du contrat Cristalliance Avenir (famille, zone, SRI, notation Morningstar, performances 1, 3 et 5 ans, label ESG), avec recherche, filtres, tri et export CSV ; aussi interrogeable depuis ton IA (outil Kairos « chercher_supports »).'],
     ['f','Admin : « Activité » regroupe désormais deux sous-rubriques, « Portail Web » (l’ancienne page Activité) et « MCP ».'],
@@ -15172,7 +15223,7 @@ function showResSub(s){
   RS_SUB=s;
   document.querySelectorAll('#resSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('#v-res .subview').forEach(v=>v.classList.toggle('on', v.id==='sr-'+s));
-  if(s==='plus'){ try{ buildVieplus(); }catch(e){ console.error(e); } }
+  if(s==='plus'){ try{ buildVieplus(); buildRpPre(); }catch(e){ console.error(e); } }
 }
 function buildRes(){
   if(!RS_FAIT){

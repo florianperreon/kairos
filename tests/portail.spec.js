@@ -6346,5 +6346,7 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
     const idx = lire('index.html');
     expect(idx).not.toContain('LU0826452848');
     expect(idx).not.toContain('CRISTALLIANCE');
+    expect(idx).not.toContain('Audrain');        // encadré « Allocations types » (05/11/2026) : nom encodé
+    expect(idx).not.toContain('LU2466448532');   // recommandations thématiques encodées
   });
 });
