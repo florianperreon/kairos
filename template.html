@@ -2533,6 +2533,7 @@ body.ps-open #fbBtn{bottom:64px}
         <button data-s="frm">Forman</button>
         <button data-s="act">Activité</button>
         <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
+        <button data-s="pte">Points d’étape en cours de validation <span class="sub-badge" id="pteBadge" hidden></span></button>
         <button data-s="cnt">Contenu <span class="sub-badge cnt" id="sgBadge" hidden></span><span class="sub-badge" id="sgNonLu" hidden></span></button>
         <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
         <button data-s="mcp">MCP</button>
@@ -2639,6 +2640,14 @@ body.ps-open #fbBtn{bottom:64px}
         <p class="mbr-note" id="mbrNote"></p>
         <p class="mbr-msg" id="mbrMsg" hidden></p>
       </div>
+      </div>
+
+      <div class="subview" id="sv-pte">
+        <div class="panel">
+          <h2>Points d’étape en cours de validation</h2>
+          <p class="mbr-sub">Les demandes de point d’étape qui attendent leur parrain. Un administrateur peut les valider à sa place, avec un mot pour le filleul ; la décision s’affiche dans son parcours, signée de ton nom.</p>
+          <div id="pteListe"><p class="mbr-sub">Chargement…</p></div>
+        </div>
       </div>
 
       <div class="subview" id="sv-dem">
@@ -4473,8 +4482,8 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','frm','ann','act','dem','cnt','stats','nouv','jrn','mcp','log'];
-const ADMIN_SLUG={mbr:'membres',frm:'forman',ann:'annuaire',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
+const ADMIN_SUBS=['mbr','frm','ann','act','pte','dem','cnt','stats','nouv','jrn','mcp','log'];
+const ADMIN_SLUG={mbr:'membres',frm:'forman',pte:'points-d-etape-en-cours-de-validation',ann:'annuaire',act:'activite',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 // Admin → Forman regroupe Annuaire, Statistiques et Nouveautés ; l'adresse garde le sous-onglet précis
@@ -4492,6 +4501,7 @@ function showAdminSub(s){
   document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
   const frm = document.getElementById('sv-frm'); if(frm) frm.classList.toggle('on', top==='frm');
   if(s==='act'){ try{ if(ACT) buildActivite(); else chargerActivite(); }catch(e){ console.error(e); } }
+  if(s==='pte'){ try{ chargerPortesAdmin(); }catch(e){ console.error(e); } }
   if(s==='log'){ try{ buildChangelog(); }catch(e){ console.error(e); } }
   if(s==='mcp'){ try{ buildMcpAdmin(); }catch(e){ console.error(e); } }
   if(s==='cnt'){ try{ showCntSub(CNT_SUB); }catch(e){ console.error(e); } }
@@ -4503,6 +4513,7 @@ function showAdminSub(s){
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
+    ['f','Admin → « Points d’étape en cours de validation » : toutes les demandes en attente, avec leur parrain et l’ancienneté ; un administrateur peut valider (ou répondre « Pas encore ») à la place du parrain, avec un mot pour le filleul.'],
     ['f','Admin : nouvel onglet « Forman » qui regroupe Annuaire, Statistiques et Nouveautés (les adresses #admin?s=annuaire, statistiques et nouveautes restent valables).'],
     ['f','Phase 4 « Objectif Galaxie » : n’est plus « à venir » ; première mission « ESP Manager » ; même affichage que les autres phases tant qu’elle est fermée (point d’étape 2 + passage ADMAN).'],
     ['f','Mon parcours : une phase pas encore ouverte ne montre plus ni ses missions ni son compteur, seulement l’objectif de statut et ce qu’il faut faire pour l’ouvrir (missions de la phase précédente + point d’étape validé par le parrain).'],
@@ -10751,6 +10762,7 @@ async function buildMembres(){
   try{ if(curTab==='fiches') buildFiches(); majParcours(); }catch(e){}
   try{ buildRetours(); }catch(e){}
   buildDemandes();
+  try{ chargerPortesAdmin(); }catch(e){}
   if(EST_PROPRIO) buildContenuAdmin();
   sgCharger();
   buildJournal();
@@ -10977,6 +10989,60 @@ function demSuggestions(d){
   return res.length ? '<div class="dem-sug">'+res.map(x=>'<button type="button" class="dem-s" data-fiche="'+esc(x.m.name)+' · #'+x.m.id+'">'
     + esc(x.m.name)+' <small>#'+x.m.id+(ADH.has(x.m.id)?'':' · invité·e')+'</small></button>').join('')+'</div>' : '';
 }
+/* ---------- Admin → Points d'étape en cours de validation (05/11/2026) ----------
+   Toutes les demandes en attente (RPC portes_en_attente_admin, admins seulement). Un admin peut
+   valider ou répondre « Pas encore » à la place du parrain (porte_traiter l'autorise déjà côté serveur). */
+let PTE = [];
+async function chargerPortesAdmin(){
+  const el = document.getElementById('pteListe');
+  if(!SB || !SBUSER || !EST_ADMIN) return;
+  try{
+    const r = await SB.rpc('portes_en_attente_admin');
+    if(r.error) throw r.error;
+    PTE = r.data || [];
+  }catch(e){ if(el) el.innerHTML = '<p class="mbr-sub">Liste indisponible (fonction portes_en_attente_admin à installer dans Supabase).</p>'; return; }
+  buildPortesAdmin();
+}
+function buildPortesAdmin(){
+  const el = document.getElementById('pteListe'), bd = document.getElementById('pteBadge');
+  if(bd){ bd.hidden = !PTE.length; bd.textContent = PTE.length; }
+  if(!el) return;
+  if(!PTE.length){ el.innerHTML = '<p class="mbr-sub">Aucun point d’étape en attente de validation. 🎉</p>'; return; }
+  el.innerHTML = PTE.map((d,i)=>{
+    const po = (typeof misData === 'function' && misData() ? misPhases().map(p=>p.porte).find(p=>p && p.id===d.porte) : null) || { t:'' };
+    const res = Array.isArray(d.resume) ? d.resume : [];
+    const jours = Math.max(0, Math.round((Date.now() - new Date(d.demande_le)) / 864e5));
+    return '<div class="mi-val" data-pte="'+i+'"><div class="mi-ph"><b>'+esc(d.nom)+'</b><span>'+miPorteNom(d.porte)+(po.t?' — '+esc(po.t):'')+'</span>'
+      + '<span class="mi-ai">demandé le '+fmtD(isoJour(new Date(d.demande_le)))+' · en attente depuis '+jours+' jour'+(jours>1?'s':'')
+      + (d.validateur ? ' · parrain : '+esc(d.validateur) : ' · pas de parrain adhérent identifié')+'</span></div>'
+      + (res.length ? '<details><summary>Ce qui est fait ('+res.length+')</summary><ul class="mi-cr">'
+          + res.map(x=>'<li>'+esc((x.id?x.id+' ':'')+(x.t||''))+(x.d?' <small>· '+esc(fmtD(x.d))+'</small>':'')+'</li>').join('')+'</ul></details>' : '')
+      + '<textarea class="mi-mot" maxlength="1000" placeholder="Un mot pour '+esc(d.nom)+' (obligatoire pour « Pas encore »)"></textarea>'
+      + '<div class="alr-fb"><button type="button" class="alr-b pri" data-pteok="'+i+'">Valider à la place du parrain</button>'
+      + '<button type="button" class="alr-b" data-ptenon="'+i+'">Pas encore</button></div><p class="alr-err" hidden></p></div>';
+  }).join('');
+}
+async function portesAdminTraiter(i, ok){
+  const d = PTE[i]; if(!d || APERCU) return;
+  const bloc = document.querySelector('#pteListe [data-pte="'+i+'"]'); if(!bloc) return;
+  const mot = (bloc.querySelector('.mi-mot').value || '').trim(), err = bloc.querySelector('.alr-err');
+  if(!ok && !mot){ err.hidden = false; err.textContent = 'Dis en un mot à '+d.nom+' ce qui manque encore.'; return; }
+  bloc.querySelectorAll('button').forEach(b=>b.disabled = true);
+  try{
+    const r = await SB.rpc('porte_traiter', { p_membre: d.membre_id, p_porte: d.porte, p_ok: ok, p_mot: mot || null });
+    if(r.error) throw r.error;
+  }catch(e){
+    bloc.querySelectorAll('button').forEach(b=>b.disabled = false);
+    err.hidden = false; err.textContent = 'Impossible d’enregistrer : '+(e.message || e); return;
+  }
+  await chargerPortesAdmin();
+  try{ chargerPortes(); }catch(e){}
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest) return;
+  const a = e.target.closest('[data-pteok]'); if(a){ portesAdminTraiter(+a.dataset.pteok, true); return; }
+  const b = e.target.closest('[data-ptenon]'); if(b){ portesAdminTraiter(+b.dataset.ptenon, false); }
+});
 async function buildDemandes(){
   const body=document.getElementById('demBody');
   if(!SB||!SBUSER||!body) return false;

@@ -6201,3 +6201,41 @@ test.describe('Admin → Forman (05/11/2026)', () => {
     expect(r.retour).toBe('stats');
   });
 });
+
+test.describe('Admin → Points d’étape en cours de validation (05/11/2026)', () => {
+  test('liste les demandes, « Pas encore » exige un mot, valider appelle porte_traiter à la place du parrain', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true; EST_ADMIN = true; APERCU = null;
+      document.querySelectorAll('nav.tabs [data-v="admin"]').forEach(x => x.hidden = false);
+      SBUSER = { id: 'u1', email: 'admin@test.invalid' };
+      let attente = [{ membre_id: 777, nom: 'Léa TEST', porte: 'porte1', demande_le: new Date(Date.now() - 3 * 864e5).toISOString(), resume: [{ id: '1.1', t: 'Cursus' }], validateur: 'Paul PARRAIN' }];
+      window.__appels = [];
+      SB = { rpc: async (nom, args) => { window.__appels.push([nom, args]);
+        if (nom === 'portes_en_attente_admin') return { data: attente, error: null };
+        if (nom === 'porte_traiter') { attente = []; return { data: null, error: null }; }
+        return { data: [], error: null }; } };
+      showTab('admin'); curTab = 'admin'; showAdminSub('pte');
+      await new Promise(r => setTimeout(r, 50));
+      const texte = document.getElementById('pteListe').textContent;
+      const badge = document.getElementById('pteBadge').textContent;
+      document.querySelector('[data-ptenon="0"]').click();
+      const err = document.querySelector('#pteListe .alr-err').textContent;
+      document.querySelector('#pteListe .mi-mot').value = 'Bravo Léa !';
+      document.querySelector('[data-pteok="0"]').click();
+      await new Promise(r => setTimeout(r, 80));
+      const appel = window.__appels.find(a => a[0] === 'porte_traiter');
+      return { texte, badge, err, appel, apres: document.getElementById('pteListe').textContent, lien: hashFor('admin') };
+    });
+    expect(r.texte).toContain('Léa TEST');
+    expect(r.texte).toContain('Paul PARRAIN');
+    expect(r.texte).toContain('3 jours');
+    expect(r.badge).toBe('1');
+    expect(r.err).toContain('Dis en un mot');
+    expect(r.appel[1]).toEqual({ p_membre: 777, p_porte: 'porte1', p_ok: true, p_mot: 'Bravo Léa !' });
+    expect(r.apres).toContain('Aucun point d’étape en attente');
+    expect(r.lien).toBe('#admin?s=points-d-etape-en-cours-de-validation');
+  });
+});
