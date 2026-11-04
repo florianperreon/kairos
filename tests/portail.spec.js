@@ -6313,10 +6313,10 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
       document.getElementById('vpQ').dispatchEvent(new Event('input', { bubbles: true }));
       const dws = [...document.querySelectorAll('#vpBody tr')].map(t => t.textContent);
       document.getElementById('vpQ').value = '';
-      document.getElementById('vpEsg').checked = true;
-      document.getElementById('vpEsg').dispatchEvent(new Event('change', { bubbles: true }));
-      const esg = document.querySelectorAll('#vpBody tr').length;
-      document.getElementById('vpEsg').checked = false;
+      document.getElementById('vpSfdr').value = '9';
+      document.getElementById('vpSfdr').dispatchEvent(new Event('change', { bubbles: true }));
+      const esg = document.querySelectorAll('#vpBody tr.vp-r9').length === document.querySelectorAll('#vpBody tr').length ? document.querySelectorAll('#vpBody tr').length : -1;
+      document.getElementById('vpSfdr').value = '';
       document.querySelector('.vp-tbl th[data-vpt="p5"]').click();
       const premier = document.querySelector('#vpBody tr td b').textContent;
       showResSub('sim');
@@ -6329,15 +6329,15 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
     expect(r.res).toEqual(['sim', 'doc', 'plus']);
     expect(r.dans).toEqual(['Supports Vie Plus']);
     expect(r.vu).toEqual({ plus: true, lien: '#ressources?s=pour-aller-plus-loin' });
-    expect(r.intro).toContain('données au 31/10/2026');
-    expect(r.total).toBe(439);
-    expect(r.exc).toMatchObject({ nom: 'EXCELTIS RENDEMENT DECEMBRE 2026', fam: 'Produit structuré', sri: 5 });
+    expect(r.intro).toContain('données Quantalys au 02/11/2026');
+    expect(r.total).toBe(429);
+    expect(r.exc).toMatchObject({ nom: 'Exceltis Rendement Decembre 2026', fam: 'Produit structuré', sri: 5 });
     expect(r.dws).toHaveLength(1);
-    expect(r.dws[0]).toContain('DWS INVEST II');
-    expect(r.dws[0]).toContain('+109,6 %');
-    expect(r.esg).toBeGreaterThan(100);
-    expect(r.esg).toBeLessThan(439);
-    expect(r.premier).toBe('AXIOM EUROPEAN BANKS');   // meilleure perf 5 ans du catalogue (+242 %)
+    expect(r.dws[0]).toContain('DWS Invest II');
+    expect(r.dws[0]).toContain('+109,0 %');
+    expect(r.dws[0]).toContain('Art. 8');
+    expect(r.esg).toBe(49);                           // les 49 articles 9, tous surlignés (05/11/2026)
+    expect(r.premier).toBe('Axiom European Banks Equity RC EUR(v)');   // meilleure perf 5 ans du catalogue (+231 %)
     expect(r.ailleurs).toBe(false);
     expect(r.slug).toBe('plus');
   });
