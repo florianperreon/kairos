@@ -3954,13 +3954,15 @@ test.describe('Parcours en missions', () => {
         { t:'Prospection & mises en relation', pages:['primo-liste','prise-de-r0'] },
         { t:'Rendez-vous clients', pages:['r1-trame-tips-conseils'] },
         { t:'Produits & solutions', pages:['assurance-vie-maitriser-et-vendre'] } ];
-      CONTENU.fiches_acces = { debut_rayons:['Administratif & statut','Outils & organisation'], sauf:['obligations-du-cif'], debut:['esp','primo-liste'] };
+      CONTENU.pages['passer-en-societe'] = { t:'passer-en-societe', h:'<p>x</p>' }; CONTENU.fiches[0].pages.push('passer-en-societe');
+      CONTENU.fiches_acces = { debut_rayons:['Administratif & statut','Outils & organisation'], sauf:['obligations-du-cif'], debut:['esp','primo-liste'], adman:['passer-en-societe'] };
       const ok = {}; Object.keys(P).forEach(s => { ok[s] = ficheAcces(s).ok; });
+      const societe = ficheAcces('passer-en-societe').ok;
       showTab('fiches'); curTab = 'fiches'; buildFiches();
       const secs = [...document.querySelectorAll('#fichesListe .ff-sec')].map(x => ({ t: x.querySelector('h3').textContent,
         cartes: [...x.querySelectorAll('.ff-card b')].map(b => b.textContent), msg: (x.querySelector('.ff-bientot')||{}).textContent || '',
         lien: !!x.querySelector('.ff-bientot a[href="#mon-parcours"]') }));
-      return { ok, secs, verrous: document.querySelectorAll('#fichesListe .ff-lock').length };
+      return { ok, societe, secs, verrous: document.querySelectorAll('#fichesListe .ff-lock').length };
     }); };
     const neuf = await etat({});
     expect(neuf.ok).toEqual({ 'creation-d-entreprise':true, 'obligations-du-cif':false, esp:true, 'post-examen':false, 'organisation-drive':true,
@@ -3975,8 +3977,14 @@ test.describe('Parcours en missions', () => {
     expect(sec('Rendez-vous').msg).toContain('Cette section s’ouvrira au fil de ton avancement');
     expect(sec('Rendez-vous').t).not.toMatch(/\d/);                       // pas de compteur sur une section fermée
     const beman = await etat({ statut: 'ROLE_BEMAN' });                   // phase 2 ouverte d'office
+    expect(neuf.societe).toBe(false);
+    expect(beman.societe).toBe(false);                                    // BEMAN : pas encore (05/11/2026)
+    expect(beman.secs.find(x => x.t.startsWith('Administratif')).msg).toContain('D’autres fiches');
     expect(Object.values(beman.ok).every(Boolean)).toBe(true);
-    expect(beman.secs.every(x => !x.msg)).toBe(true);
+    const p2 = await etat({ statut: 'ROLE_BEMAN', portes: { porte2: { statut: 'validee' } } });
+    expect(p2.societe).toBe(true);                                        // phase 2 validée par le parrain
+    const adman = await etat({ statut: 'ROLE_ADMAN' });
+    expect(adman.societe).toBe(true);
   });
 
   test('carte d’une fiche débloquée : résumé de quelques mots et mission qui l’a débloquée', async ({ page }) => {

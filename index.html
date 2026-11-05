@@ -4726,7 +4726,7 @@ document.addEventListener('click', e=>{
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
-    ['f','Fiches pratiques : nouvel accès par rayon. Dès le départ : Administratif & statut (sauf Anacofi, Obligations du CIF et Financer les UDP), Outils & organisation, et Tips habilitations, Examens et ESP, Primo-liste ; tout le reste s’ouvre quand le parrain valide la phase 1. Les fiches pas encore ouvertes ne s’affichent plus : un message invite à avancer dans le parcours.'],
+    ['f','Fiches pratiques : nouvel accès par rayon. Dès le départ : Administratif & statut (sauf Anacofi, Obligations du CIF et Financer les UDP), Outils & organisation, et Tips habilitations, Examens et ESP, Primo-liste ; Proxeema et Transférer un dossier attendent la phase 2, « Passer en société » la validation de la phase 2 ou le statut ADMAN ; tout le reste s’ouvre quand le parrain valide la phase 1. Les fiches pas encore ouvertes ne s’affichent plus : un message invite à avancer dans le parcours.'],
     ['f','Ressources → Pour aller plus loin : réservé au statut ADMAN et plus (onglet marqué 🔒 et message d’attente sans détail du contenu) ; la base applique la même règle au catalogue, à l’encadré et à l’outil IA chercher_supports.'],
     ['f','Sécurité : le catalogue des supports Vie Plus et l’encadré « Allocations types » ne sont plus intégrés à la page publique ; ils sont lus en base après connexion (table supports_vieplus et bloc allocations_reco). Les prochaines mises à jour du catalogue se font en base, sans republier.'],
     ['f','Supports Vie Plus : catalogue mis à jour (export Quantalys du 05/11/2026, 429 supports, performances au 02/11/2026). Nouvelles colonnes SFDR (articles 9 surlignés en vert, bouton « Les fonds article 9 ») et labels (ISR, Greenfin, Finansol…) ; la notation Quantalys remplace Morningstar ; ISIN corrigés pour 12 supports.'],
@@ -6701,6 +6701,13 @@ function ficheAcces(slug){
     if(Array.isArray(acc.debut_rayons) || Array.isArray(acc.debut)){
       const debut = ficheDebut(slug, acc);
       if(EST_ADMIN && !APERCU) return { ok:true, via:'admin', socle:debut };
+      // fiches_acces.adman = [slugs] : point d'étape 2 validé par le parrain, ou statut ADMAN et plus
+      // (même seuil que « Pour aller plus loin » ; règle Florian du 05/11/2026)
+      if((acc.adman||[]).includes(slug)){
+        if(miRang() >= MI_RANGS.indexOf('ADMAN')) return { ok:true, via:'statut', statut:MI_RANGS[miRang()] };
+        if(PORTES && PORTES.porte2 && PORTES.porte2.statut==='validee') return { ok:true, via:'porte2' };
+        return { ok:false, ph:misPhases().find(p=>p.id==='p2'), raison:'S’ouvre quand ton parrain valide ta phase 2, ou au passage ADMAN' };
+      }
       if(debut) return { ok:true, via:'socle' };
       const p2 = misPhases().find(p=>p.id==='p2');
       if(!p2 || miPhaseOuverte(p2)) return { ok:true, via:'phase', n:2 };
@@ -6736,6 +6743,7 @@ function ficheOrigine(a){
   if(!a || !a.ok || !a.via) return '';
   if(a.via==='mission') return '🔓 Débloquée avec la mission '+a.m.id+' · '+a.m.t;
   if(a.via==='socle') return '🔓 Ouverte dès le départ';
+  if(a.via==='porte2') return '🔓 Débloquée avec la validation de ta phase 2';
   if(a.via==='phase') return a.n===2 ? '🔓 Débloquée avec la validation de ta phase 1' : '🔓 Débloquée avec la phase '+a.n;
   if(a.via==='statut') return '🔓 Débloquée par ton statut '+a.statut;
   if(a.via==='admin') return a.socle ? 'Ouverte dès le départ' : (a.m ? 'Mission '+a.m.id+' · '+a.m.t : 'S’ouvre avec la validation de la phase 1');
