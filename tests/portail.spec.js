@@ -6004,21 +6004,26 @@ test.describe('Dévoilement progressif (03/11/2026)', () => {
     expect(erreurs).toEqual([]);
   });
 
-  test('la Découverte Métier ouvre Mes sessions, annoncé comme nouveau', async ({ page }) => {
+  // 05/11/2026 (règle Florian) : Mes sessions et Mail Manager attendent le point d'étape 1 (ou BEMAN), comme Ressources et Veille
+  test('la Découverte Métier n’ouvre plus rien ; le point d’étape 1 ouvre Mes sessions, Mail Manager, Ressources et Veille, annoncés comme nouveaux', async ({ page }) => {
     await ouvrir(page);
     await poserDv(page, { sansJ0: true });
     await poserDv(page, { sansJ0: true, etapes: { dm: { d: '2026-10-01' } }, vu: await page.evaluate(() => VU) });
-    expect(await ouverts(page)).toEqual(['surv']);
+    expect(await ouverts(page)).toEqual([]);
+    await poserDv(page, { sansJ0: true, etapes: { dm: { d: '2026-10-01' } }, portes: { porte1: { statut: 'validee' } }, vu: await page.evaluate(() => VU) });
+    expect(await ouverts(page)).toEqual(['surv', 'mm', 'res', 'veille']);
     const r = await page.evaluate(() => ({ neufs: VU.dv.n, carte: document.getElementById('homeDv').textContent,
       pastille: document.querySelector('#side [data-v="surv"]').classList.contains('nv-new') }));
-    expect(r.neufs).toEqual(['surv']);
+    expect(r.neufs).toEqual(expect.arrayContaining(['surv', 'mm']));
     expect(r.carte).toContain('Nouveau pour toi');
     expect(r.pastille).toBe(true);
     // première visite : encart de découverte, la pastille disparaît
     const v = await page.evaluate(() => { document.querySelector('#side [data-v="surv"]').hidden = false; const t = showTab('surv'); return { t, tour: !!document.querySelector('#v-surv .dv-tour'), n: VU.dv.n }; });
     expect(v.t).toBe('surv');
     expect(v.tour).toBe(true);
-    expect(v.n).toEqual([]);
+    expect(v.n).not.toContain('surv');
+    const beman = await (async () => { await poserDv(page, { sansJ0: true, statut: 'ROLE_BEMAN' }); return ouverts(page); })();
+    expect(beman).toEqual(['surv', 'mm', 'res', 'veille']);
   });
 
   test('administrateur : tout est ouvert ; l’aperçu « phase 1 validée » referme et se quitte', async ({ page }) => {
@@ -6029,7 +6034,7 @@ test.describe('Dévoilement progressif (03/11/2026)', () => {
     const ap = await ouverts(page);
     const band = await page.evaluate(() => !!document.getElementById('apercuBand'));
     await page.evaluate(() => apercuChoisir(null));
-    expect(ap).toEqual(['surv', 'mm']);   // phase 1 validée simulée : DM faite et mission 1.5 cochée
+    expect(ap).toEqual([]);   // « phase 1 » simulée : missions faites, point d'étape 1 pas encore validé → rien (05/11/2026)
     expect(band).toBe(true);
     expect((await ouverts(page)).length).toBe(5);
   });

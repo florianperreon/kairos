@@ -4743,8 +4743,8 @@ function rcHtml(){
     ligne('🏠 Accueil, 🧭 Mon parcours, 📚 Fiches pratiques, 👤 Mon profil', [O,O,O,O,O]),
     ligne('💡 Améliorer Kairos', [O,O,O,O,O]),
     ligne('🎓 Ateliers, Parcours Découverte, Autres événements', [L('🔒 grisés, « s’ouvre avec la cotisation »'),O,O,O,O]),
-    ligne('📅 Mes sessions', [L('après la Découverte Métier (mission 1.1)'),L('après la Découverte Métier (mission 1.1)'),O,O,O]),
-    ligne('✉️ Mail Manager', [L('après la demande d’accès MEGA (mission 1.5)'),L('après la demande d’accès MEGA (mission 1.5)'),O,O,O]),
+    ligne('📅 Mes sessions', [N,N,O,O,O]),
+    ligne('✉️ Mail Manager', [N,N,O,O,O]),
     ligne('🧮 Ressources : simulateurs, courriers', [N,N,O,O,O]),
     ligne('📰 Veille', [N,N,O,O,O]),
     ligne('👥 Ma lignée', [L('au premier filleul'),L('au premier filleul'),L('au premier filleul'),L('au premier filleul'),O]),
@@ -4754,9 +4754,9 @@ function rcHtml(){
     ligne('👋 Écran de bienvenue (3 écrans) puis checklist « Ma première semaine »', [L('nouveau : 14 jours max, tant que la checklist n’est pas finie'),L('nouveau : 14 jours max, tant que la checklist n’est pas finie'),N,N,N]),
     ligne('🤝 Carte « Ton parrain » (+ lien Discord)', [L('tant que la phase 1 est en cours'),L('tant que la phase 1 est en cours'),N,N,N]),
     ligne('🧭 « Kairos s’adapte à ton avancement » (espaces encore fermés)', [L('une fois, jusqu’à « J’ai compris »'),L('une fois, jusqu’à « J’ai compris »'),L('s’il reste des espaces fermés'),L('s’il reste des espaces fermés'),N]),
-    ligne('🎉 « Nouveau pour toi » (espace qui vient de s’ouvrir)', [N,L('Mes sessions, Mail Manager…'),L('Ressources, Veille…'),L('Ma lignée…'),N]),
+    ligne('🎉 « Nouveau pour toi » (espace qui vient de s’ouvrir)', [N,N,L('Mes sessions, Mail Manager, Ressources, Veille'),L('Ma lignée…'),N]),
     ligne('✅ Mes actions de la semaine, 📍 Où en es-tu ?, 📅 Les 7 prochains jours', [O,O,O,O,O]),
-    ligne('🔔 Alertes de sessions suivies', [L('si Mes sessions ouvert et alerte'),L('si Mes sessions ouvert et alerte'),L('si alerte'),L('si alerte'),L('si alerte')]),
+    ligne('🔔 Alertes de sessions suivies', [N,N,L('si alerte'),L('si alerte'),L('si alerte')]),
     ligne('🏆 Victoires, ⚡ Raccourcis, 💡 Principes, ❓ Questions fréquentes', [O,O,O,O,O]),
     ligne('🟢 Points d’étape à valider pour mes filleuls', [N,N,L('parrains, si une demande attend'),L('parrains, si une demande attend'),L('si une demande attend')]),
     ligne('✉️ Mail Manager de ma lignée', [N,N,L('parrains (remonté en tête)'),L('parrains (remonté en tête)'),L('si filleuls')]),
@@ -4801,6 +4801,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
+    ['f','Mes sessions et Mail Manager s’ouvrent désormais au point d’étape 1 (phase 2) ou au statut BEMAN, comme Ressources et Veille (avant : après la Découverte Métier / la demande d’accès MEGA).'],
     ['f','Admin → Activité : fiche « Qui voit quoi dans Kairos ? » sous « Voir Kairos comme » : récapitulatif des accès (page d’accueil, onglets, fiches pratiques par rayon, « Pour aller plus loin », outil IA) pour sans cotisation, avec cotisation, phase 1 validée ou BEMAN, phases 2-3 validées ou ADMAN, et admins.'],
     ['f','Fiches pratiques : nouvel accès par rayon. Dès le départ : Administratif & statut (sauf Anacofi, Obligations du CIF et Financer les UDP), Outils & organisation, et Tips habilitations, Examens et ESP, Primo-liste ; Proxeema et Transférer un dossier attendent la phase 2, « Passer en société » la validation de la phase 2 ou le statut ADMAN ; tout le reste s’ouvre quand le parrain valide la phase 1. Les fiches pas encore ouvertes ne s’affichent plus : un message invite à avancer dans le parcours.'],
     ['f','Ressources → Pour aller plus loin : réservé au statut ADMAN et plus (onglet marqué 🔒 et message d’attente sans détail du contenu) ; la base applique la même règle au catalogue, à l’encadré et à l’outil IA chercher_supports.'],
@@ -5191,8 +5192,8 @@ document.addEventListener('click', e=>{
    Les onglets s'ouvrent avec les missions du parcours ; un onglet pas encore ouvert est CACHÉ (menu,
    menu Plus, Ctrl K, adresse tapée à la main). Personne ne peut débloquer en avance. Les membres déjà
    là suivent leur avancement réel ; les administrateurs gardent tout (et ont l'aperçu « comme un nouveau »).
-   - Mes sessions : après la Découverte Métier (mission 1.1) ;
-   - Mail Manager : accès MEGA + mail manager demandés (mission 1.5) ou point d'étape 1 ;
+   - Mes sessions, Mail Manager : point d'étape 1 (phase 2 ouverte) ou BEMAN — règle Florian du 05/11/2026
+     (avant : après la Découverte Métier / la demande d'accès MEGA) ;
    - Ressources, Veille : point d'étape 1 (phase 2 ouverte) ;
    - Ateliers, Parcours Découverte, Autres événements (groupe Forman) : ouverts dès le début, comme sur le
      site FORMAN, mais seulement à un adhérent à jour de cotisation ; sinon l'entrée reste dans le menu,
@@ -5201,8 +5202,8 @@ document.addEventListener('click', e=>{
 var APERCU = null;                    // (var : lu par les fonctions d'enregistrement définies plus haut) aperçu admin : { phase:'j0'|'p1'|'p2'|'p3' } — jamais enregistré
 const DV_GERES = ['surv','mm','res','veille','lig'];
 const DV_INFO = {
-  surv:   { t:'Mes sessions', quand:'après ta Découverte Métier', tour:['Retrouve ici les séances où tu es inscrit et celles que tu suis avec ☆.','Kairos te prévient quand une séance suivie est presque complète.','Astuce : réserve tes prochains ateliers dès qu’ils sont publiés.'] },
-  mm:     { t:'Mail Manager', quand:'quand tu auras demandé ton accès MEGA et mail manager (mission 1.5)', tour:['Chaque lundi, fais le point de ta semaine : contacts, rendez-vous, signatures.','Ta lignée le lit : c’est le meilleur moyen d’être accompagné.','Remplis-le en 5 minutes, même quand la semaine a été calme.'] },
+  surv:   { t:'Mes sessions', quand:'au point d’étape 1', tour:['Retrouve ici les séances où tu es inscrit et celles que tu suis avec ☆.','Kairos te prévient quand une séance suivie est presque complète.','Astuce : réserve tes prochains ateliers dès qu’ils sont publiés.'] },
+  mm:     { t:'Mail Manager', quand:'au point d’étape 1', tour:['Chaque lundi, fais le point de ta semaine : contacts, rendez-vous, signatures.','Ta lignée le lit : c’est le meilleur moyen d’être accompagné.','Remplis-le en 5 minutes, même quand la semaine a été calme.'] },
   res:    { t:'Ressources', quand:'au point d’étape 1', tour:['Simulateurs patrimoniaux et générateurs de courriers, prêts pour tes rendez-vous.','Commence par les simulateurs que tu utiliseras en R2.','Chaque résultat s’exporte en PDF.'] },
   veille: { t:'Veille', quand:'au point d’étape 1', tour:['L’actualité patrimoniale de la semaine, triée pour un conseiller.','Une édition chaque lundi, des alertes quand c’est urgent.','Lis-la pour nourrir tes rendez-vous clients.'] },
   lig:    { t:'Ma lignée', quand:'à ton premier filleul', tour:['Suis l’avancement de tes filleuls : parcours, mail manager, victoires.','Kairos te dit qui a besoin d’un coup de main.','Félicite chaque victoire : ça compte.'] },
@@ -5232,8 +5233,7 @@ function dvOuverts(){                  // null = tout est ouvert
       || !!(typeof LIG !== 'undefined' && LIG && LIG.liste && LIG.liste.some(p=>p.parrain_id===MOI_ID));
   }
   const o = new Set();
-  if(dm || p2) o.add('surv');
-  if(mega || p2) o.add('mm');
+  if(p2) ['surv','mm'].forEach(x=>o.add(x));   // 05/11/2026 (règle Florian) : au point d'étape 1 (phase 2) ou BEMAN, plus avant
   if(p2) ['res','veille'].forEach(x=>o.add(x));
   if(filleul) o.add('lig');
   return o;
