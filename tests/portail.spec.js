@@ -3940,6 +3940,45 @@ test.describe('Parcours en missions', () => {
     expect(verrou).toEqual({ secret: false, cadenas: true, admin: true });
   });
 
+  // 05/11/2026 (règle Florian) : accès par rayon ; les fiches pas encore ouvertes ne s'affichent pas
+  test('accès par rayon : départ / validation de la phase 1, fiches masquées et messages par section', async ({ page }) => {
+    await ouvrir(page);
+    const etat = async (o) => { await poser(page, o); return page.evaluate(() => {
+      const P = { 'creation-d-entreprise':'Admin', 'obligations-du-cif':'Admin', 'esp':'Hab', 'post-examen':'Hab', 'organisation-drive':'Outils',
+                  'primo-liste':'Pros', 'prise-de-r0':'Pros', 'r1-trame-tips-conseils':'RDV', 'assurance-vie-maitriser-et-vendre':'Prod' };
+      Object.keys(P).forEach(s => { CONTENU.pages[s] = { t: s, h: '<p>Contenu '+s+'.</p>' }; });
+      CONTENU.fiches = [
+        { t:'Administratif & statut', pages:['creation-d-entreprise','obligations-du-cif'] },
+        { t:'Habilitations & examens', pages:['esp','post-examen'] },
+        { t:'Outils & organisation', pages:['organisation-drive'] },
+        { t:'Prospection & mises en relation', pages:['primo-liste','prise-de-r0'] },
+        { t:'Rendez-vous clients', pages:['r1-trame-tips-conseils'] },
+        { t:'Produits & solutions', pages:['assurance-vie-maitriser-et-vendre'] } ];
+      CONTENU.fiches_acces = { debut_rayons:['Administratif & statut','Outils & organisation'], sauf:['obligations-du-cif'], debut:['esp','primo-liste'] };
+      const ok = {}; Object.keys(P).forEach(s => { ok[s] = ficheAcces(s).ok; });
+      showTab('fiches'); curTab = 'fiches'; buildFiches();
+      const secs = [...document.querySelectorAll('#fichesListe .ff-sec')].map(x => ({ t: x.querySelector('h3').textContent,
+        cartes: [...x.querySelectorAll('.ff-card b')].map(b => b.textContent), msg: (x.querySelector('.ff-bientot')||{}).textContent || '',
+        lien: !!x.querySelector('.ff-bientot a[href="#mon-parcours"]') }));
+      return { ok, secs, verrous: document.querySelectorAll('#fichesListe .ff-lock').length };
+    }); };
+    const neuf = await etat({});
+    expect(neuf.ok).toEqual({ 'creation-d-entreprise':true, 'obligations-du-cif':false, esp:true, 'post-examen':false, 'organisation-drive':true,
+      'primo-liste':true, 'prise-de-r0':false, 'r1-trame-tips-conseils':false, 'assurance-vie-maitriser-et-vendre':false });
+    expect(neuf.verrous).toBe(0);                                         // aucune carte cadenas : masquées
+    const sec = t => neuf.secs.find(x => x.t.startsWith(t));
+    expect(sec('Administratif').cartes).toEqual(['creation-d-entreprise']);
+    expect(sec('Administratif').msg).toContain('D’autres fiches t’attendent');
+    expect(sec('Administratif').lien).toBe(true);
+    expect(sec('Outils').msg).toBe('');
+    expect(sec('Rendez-vous').cartes).toEqual([]);
+    expect(sec('Rendez-vous').msg).toContain('Cette section s’ouvrira au fil de ton avancement');
+    expect(sec('Rendez-vous').t).not.toMatch(/\d/);                       // pas de compteur sur une section fermée
+    const beman = await etat({ statut: 'ROLE_BEMAN' });                   // phase 2 ouverte d'office
+    expect(Object.values(beman.ok).every(Boolean)).toBe(true);
+    expect(beman.secs.every(x => !x.msg)).toBe(true);
+  });
+
   test('carte d’une fiche débloquée : résumé de quelques mots et mission qui l’a débloquée', async ({ page }) => {
     await ouvrir(page);
     await poser(page, { etapes: { dm: ok, ad: ok } });

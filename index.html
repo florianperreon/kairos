@@ -1189,6 +1189,7 @@ p.mi-ai{margin:4px 0 8px}
 .ff-star:hover{opacity:.9}.ff-star.on{color:#c9a227;opacity:1}
 .ff-card .ff-star{position:absolute;top:8px;right:8px}
 .ps-head h1 .ff-star{font-size:20px;vertical-align:2px}
+.ff-bientot{margin:10px 0 0;padding:10px 14px;border-radius:10px;background:var(--accent-soft);color:var(--ink-2);font-size:13.5px}.ff-bientot .ff-parc{font-weight:600;white-space:nowrap}
 .ff-n{font-size:13px;color:var(--ink-3);margin:0 0 8px}.ff-vide{color:var(--ink-2);font-size:14px}
 @media (max-width:760px){.ff-chips{flex-wrap:nowrap;overflow-x:auto;margin-left:-4px;margin-right:-4px;padding:0 4px 4px;scrollbar-width:none}.ff-chips::-webkit-scrollbar{display:none}.ff-chips button{flex:none}.ff-card>a{padding:12px 40px 12px 12px}}
 /* Admin → Activité */
@@ -4725,6 +4726,7 @@ document.addEventListener('click', e=>{
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
+    ['f','Fiches pratiques : nouvel accès par rayon. Dès le départ : Administratif & statut (sauf Anacofi, Obligations du CIF et Financer les UDP), Outils & organisation, et Tips habilitations, Examens et ESP, Primo-liste ; tout le reste s’ouvre quand le parrain valide la phase 1. Les fiches pas encore ouvertes ne s’affichent plus : un message invite à avancer dans le parcours.'],
     ['f','Ressources → Pour aller plus loin : réservé au statut ADMAN et plus (onglet marqué 🔒 et message d’attente sans détail du contenu) ; la base applique la même règle au catalogue, à l’encadré et à l’outil IA chercher_supports.'],
     ['f','Sécurité : le catalogue des supports Vie Plus et l’encadré « Allocations types » ne sont plus intégrés à la page publique ; ils sont lus en base après connexion (table supports_vieplus et bloc allocations_reco). Les prochaines mises à jour du catalogue se font en base, sans republier.'],
     ['f','Supports Vie Plus : catalogue mis à jour (export Quantalys du 05/11/2026, 429 supports, performances au 02/11/2026). Nouvelles colonnes SFDR (articles 9 surlignés en vert, bouton « Les fonds article 9 ») et labels (ISR, Greenfin, Finansol…) ; la notation Quantalys remplace Morningstar ; ISIN corrigés pour 12 supports.'],
@@ -6681,10 +6683,29 @@ document.addEventListener('click', e=>{
    Verrouillage à l'écran (onglet, Ctrl K, liens entre fiches, pastilles des missions). Sans contenu
    « missions » (ancien parcours, tests), tout reste ouvert. */
 const FICHES_SOCLE = ['contacts-infos-utiles-reseau','outils-prodemial','outils-bureautique','documents-utiles','rappels-importants-a-mettre-en-place'];
+/* 05/11/2026 (règle Florian) : accès par rayon. contenu_blocs.fiches_acces =
+   { debut_rayons:[titres de rayon ouverts dès le départ], sauf:[slugs de ces rayons qui attendent la phase 2],
+     debut:[slugs d'autres rayons ouverts dès le départ] } ; tout le reste s'ouvre quand le parrain valide la
+   phase 1 (phase 2 ouverte, ou statut BEMAN et plus). Admins : tout. Les fiches masquées ne s'affichent pas
+   dans l'onglet (seulement un message « d'autres fiches se débloquent… »). */
+function ficheDebut(slug, acc){
+  if((acc.sauf||[]).includes(slug)) return false;
+  if((acc.debut||[]).includes(slug)) return true;
+  const r = ((CONTENU && CONTENU.fiches) || []).find(x=>(x.pages||[]).includes(slug));
+  return !!(r && (acc.debut_rayons||[]).includes(r.t));
+}
 function ficheAcces(slug){
   try{
     if(!CONTENU || typeof misData!=='function' || !misData()) return { ok:true };
     const acc = CONTENU.fiches_acces || {};
+    if(Array.isArray(acc.debut_rayons) || Array.isArray(acc.debut)){
+      const debut = ficheDebut(slug, acc);
+      if(EST_ADMIN && !APERCU) return { ok:true, via:'admin', socle:debut };
+      if(debut) return { ok:true, via:'socle' };
+      const p2 = misPhases().find(p=>p.id==='p2');
+      if(!p2 || miPhaseOuverte(p2)) return { ok:true, via:'phase', n:2 };
+      return { ok:false, ph:p2, raison:'S’ouvre quand ton parrain valide ta phase 1', detail: miBlocage(p2, (p2.missions||[])[0]||{}) };
+    }
     const phases = misPhases(), rang = miRang();
     // missions qui renvoient à la fiche : la première accessible, sinon la première tout court
     let ouverte = null, premiere = null;
@@ -6715,9 +6736,9 @@ function ficheOrigine(a){
   if(!a || !a.ok || !a.via) return '';
   if(a.via==='mission') return '🔓 Débloquée avec la mission '+a.m.id+' · '+a.m.t;
   if(a.via==='socle') return '🔓 Ouverte dès le départ';
-  if(a.via==='phase') return '🔓 Débloquée avec la phase '+a.n;
+  if(a.via==='phase') return a.n===2 ? '🔓 Débloquée avec la validation de ta phase 1' : '🔓 Débloquée avec la phase '+a.n;
   if(a.via==='statut') return '🔓 Débloquée par ton statut '+a.statut;
-  if(a.via==='admin') return a.socle ? 'Socle commun · ouverte dès le départ' : (a.m ? 'Mission '+a.m.id+' · '+a.m.t : 'Fiche sans mission');
+  if(a.via==='admin') return a.socle ? 'Ouverte dès le départ' : (a.m ? 'Mission '+a.m.id+' · '+a.m.t : 'S’ouvre avec la validation de la phase 1');
   return '';
 }
 const ficheOuverte = s => ficheAcces(s).ok;
@@ -6805,7 +6826,7 @@ function buildFiches(){
   if(!el || !CONTENU || !CONTENU.pages) return;
   const R = fichesRayons(), filtre = (document.getElementById('fichesR')||{}).value || '';
   const q = norm((document.getElementById('fichesQ')||{}).value || '').trim();
-  const favs = Object.keys(CONTENU.pages).filter(ffavOn);
+  const favs = Object.keys(CONTENU.pages).filter(s=>ffavOn(s) && ficheOuverte(s));
   const chips = [['', 'Toutes']].concat(R.map((r,i)=>['r'+i, (r.i?r.i+' ':'')+r.t]));
   // 01/11/2026 : filtre « Ma phase en cours » retiré à la demande de Florian (une ancienne adresse ?r=phase affiche Toutes)
   chips.push(['fav', '★ Mes favoris'+(favs.length?' ('+favs.length+')':'')]);
@@ -6816,20 +6837,26 @@ function buildFiches(){
   else if(/^r\d+$/.test(filtre) && R[+filtre.slice(1)]) { const r = R[+filtre.slice(1)]; sections = [{ t:(r.i?r.i+' ':'')+r.t, pages:r.pages }]; }
   else sections = R.map(r=>({ t:(r.i?r.i+' ':'')+r.t, pages:r.pages }));
   fichesMarquerVues();
-  const nbVerr = Object.keys(CONTENU.pages).filter(s=>!ficheOuverte(s)).length;
-  const info = document.getElementById('fichesVerr');
-  if(info){ info.hidden = !nbVerr; info.textContent = '🔒 '+nbVerr+' fiche'+(nbVerr>1?'s':'')+' encore à débloquer : elles s’ouvrent au fur et à mesure de tes missions.'; }
+  const info = document.getElementById('fichesVerr'); if(info) info.hidden = true;   // 05/11/2026 : message par section
+  const lienParc = '<a href="#mon-parcours" class="ff-parc">Avancer dans mon parcours →</a>';
   if(q){
     const mots = q.split(/\s+/).filter(Boolean);
     const ok = s => mots.every(m=>ffTexte(s).n.includes(m));
     const titre = s => mots.every(m=>norm(CONTENU.pages[s].t).includes(m));
-    const tous = [...new Set(sections.flatMap(x=>x.pages))].filter(ok).sort((a,b)=>titre(b)-titre(a));
+    const tous = [...new Set(sections.flatMap(x=>x.pages))].filter(s=>ficheOuverte(s) && ok(s)).sort((a,b)=>titre(b)-titre(a));
     el.innerHTML = tous.length ? '<p class="ff-n">'+tous.length+' fiche'+(tous.length>1?'s':'')+'</p><div class="ff-grid">'+tous.map(s=>ffCarte(s, rayonDe[s])).join('')+'</div>'
       : '<p class="ff-vide">Aucune fiche ne contient « '+esc(document.getElementById('fichesQ').value)+' ». Essaie un autre mot, ou pose la question à ta lignée.</p>';
     return;
   }
-  el.innerHTML = sections.map(x=>'<section class="ff-sec"><h3>'+esc(x.t)+' <span>'+x.pages.length+'</span></h3>'
-    + (x.pages.length ? '<div class="ff-grid">'+x.pages.map(s=>ffCarte(s)).join('')+'</div>' : '<p class="ff-vide">'+esc(x.vide||'Aucune fiche.')+'</p>')+'</section>').join('');
+  el.innerHTML = sections.map(x=>{
+    const vis = x.pages.filter(ficheOuverte), cache = x.pages.length - vis.length;
+    if(x.pages.length && !vis.length) return '<section class="ff-sec"><h3>'+esc(x.t)+'</h3>'
+      + '<p class="ff-bientot">🔒 Cette section s’ouvrira au fil de ton avancement : continue ton parcours pour la débloquer. '+lienParc+'</p></section>';
+    return '<section class="ff-sec"><h3>'+esc(x.t)+' <span>'+vis.length+'</span></h3>'
+      + (vis.length ? '<div class="ff-grid">'+vis.map(s=>ffCarte(s)).join('')+'</div>' : '<p class="ff-vide">'+esc(x.vide||'Aucune fiche.')+'</p>')
+      + (cache ? '<p class="ff-bientot">✨ D’autres fiches t’attendent dans cette section : elles se débloquent au fil de ton parcours. '+lienParc+'</p>' : '')
+      + '</section>';
+  }).join('');
 }
 document.addEventListener('click', e=>{
   const st = e.target.closest && e.target.closest('[data-ffav]');
