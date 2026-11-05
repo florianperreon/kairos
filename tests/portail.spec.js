@@ -6316,8 +6316,9 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
       SB = { from: (tb) => ({ select: async () => { lues++; return tb === 'supports_vieplus' ? { data: LIGNES, error: null } : { data: [], error: null }; } }) };
       SBUSER = { id: 'test' };
       EST_ADMIN = false; PARCOURS = { statut: 'ROLE_BEMAN' };
+      CONTENU = Object.assign({}, CONTENU || {}, { lien_allocations: { u: 'https://discord.com/channels/1/2' } });
       showTab('res'); curTab = 'res'; showResSub('plus');
-      const ferme = { classe: document.getElementById('sr-plus').classList.contains('rp-ferme'), bouton: document.querySelector('#resSub button[data-s="plus"]').textContent, lues };
+      const ferme = { classe: document.getElementById('sr-plus').classList.contains('rp-ferme'), bouton: document.querySelector('#resSub button[data-s="plus"]').textContent, lues, disc: document.getElementById('rpLockLien').href, discVu: !document.getElementById('rpLockDisc').hidden };
       PARCOURS = { statut: 'ROLE_ADMAN' };
       CONTENU = Object.assign({}, CONTENU || {}, { allocations_reco: { n:'Prénom Nom', p:'Prénom', d:'https://discord.com/channels/1/2', date:'05/11/2026', r:[['Énergie propre','⚡','LU0280435388']] } });
       const admin = [...document.querySelectorAll('#adminSub button, #v-admin nav button')].map(b => b.textContent);
@@ -6348,7 +6349,9 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
     expect(r.admin.join(' ')).not.toContain('Supports Vie Plus');
     expect(r.ferme.classe).toBe(true);                // BEMAN : rubrique fermée (règle du 05/11/2026)
     expect(r.ferme.bouton).toContain('🔒');
-    expect(r.ferme.lues).toBe(0);                     // rien n'est lu en base tant que c'est fermé
+    expect(r.ferme.lues).toBe(0);
+    expect(r.ferme.discVu).toBe(true);                // lien Discord des allocations types (05/11/2026)
+    expect(r.ferme.disc).toBe('https://discord.com/channels/1/2');                     // rien n'est lu en base tant que c'est fermé
     expect(r.res).toEqual(['sim', 'doc', 'plus']);
     expect(r.dans).toEqual(['Supports Vie Plus']);
     expect(r.vu).toEqual({ plus: true, lien: '#ressources?s=pour-aller-plus-loin' });

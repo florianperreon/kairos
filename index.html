@@ -2408,7 +2408,7 @@ body.ps-open #fbBtn{bottom:64px}
       <div class="subview on" id="sr-sim"><div class="rs-cards" id="resSimCards"></div><div id="resSim"></div></div>
       <div class="subview" id="sr-doc"><div class="rs-cards" id="resDocCards"></div><div id="resDoc"></div></div>
       <div class="subview" id="sr-plus">
-        <div class="panel rp-lock" id="rpLock"><h2>🔒 Pour aller plus loin</h2><p>Cette rubrique (catalogue des supports Vie Plus, allocations types et recommandations thématiques) s’ouvre au <b>passage ADMAN</b>.</p><p class="mbr-sub">D’ici là, appuie-toi sur ton parrain pour construire tes allocations.</p></div>
+        <div class="panel rp-lock" id="rpLock"><h2>🔒 Pour aller plus loin</h2><p>Cette rubrique (catalogue des supports Vie Plus, allocations types et recommandations thématiques) s’ouvre au <b>passage ADMAN</b>.</p><p id="rpLockDisc" hidden>📌 Les <b>allocations types de la lignée</b>, régulièrement mises à jour, sont disponibles sur Discord : <a id="rpLockLien" href="#" target="_blank" rel="noopener">ouvrir le salon #allocation-type ↗</a></p><p class="mbr-sub">D’ici là, appuie-toi sur ton parrain pour construire tes allocations.</p></div>
         <nav class="subtabs frm-sub" id="resPlusSub"><button data-rp="vieplus" class="on">Supports Vie Plus</button></nav>
         <div class="panel rp-pre" id="rpPre"></div>
         <div class="rp-v on" id="rp-vieplus">
@@ -4725,7 +4725,7 @@ document.addEventListener('click', e=>{
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
-    ['f','Ressources → Pour aller plus loin : réservé au statut ADMAN et plus (onglet marqué 🔒 et page d’explication avant) ; la base applique la même règle au catalogue, à l’encadré et à l’outil IA chercher_supports.'],
+    ['f','Ressources → Pour aller plus loin : réservé au statut ADMAN et plus (onglet marqué 🔒 et page d’explication avant, avec le lien vers les allocations types de la lignée sur Discord) ; la base applique la même règle au catalogue, à l’encadré et à l’outil IA chercher_supports.'],
     ['f','Sécurité : le catalogue des supports Vie Plus et l’encadré « Allocations types » ne sont plus intégrés à la page publique ; ils sont lus en base après connexion (table supports_vieplus et bloc allocations_reco). Les prochaines mises à jour du catalogue se font en base, sans republier.'],
     ['f','Supports Vie Plus : catalogue mis à jour (export Quantalys du 05/11/2026, 429 supports, performances au 02/11/2026). Nouvelles colonnes SFDR (articles 9 surlignés en vert, bouton « Les fonds article 9 ») et labels (ISR, Greenfin, Finansol…) ; la notation Quantalys remplace Morningstar ; ISIN corrigés pour 12 supports.'],
     ['f','Ressources → Pour aller plus loin : encadré en tête de page qui renvoie vers les allocations types à jour sur le Discord de la lignée (à faire vérifier par notre expert allocation), et quelques recommandations thématiques en date du 05/11/2026 (énergie propre, santé, défense), en pastilles compactes qui filtrent la liste ; placé sous la sous-rubrique « Supports Vie Plus ».'],
@@ -15251,6 +15251,10 @@ function showResSub(s){
   if(s==='plus'){
     const ok = plusOuvert();
     document.getElementById('sr-plus').classList.toggle('rp-ferme', !ok);
+    if(!ok){   // lien du salon : contenu_blocs.lien_allocations (lisible par toute la lignée, rien dans la page)
+      const la = (CONTENU && CONTENU.lien_allocations) || {}, ld = document.getElementById('rpLockDisc');
+      if(ld){ ld.hidden = !/^https:\/\//.test(la.u||''); if(!ld.hidden) document.getElementById('rpLockLien').href = la.u; }
+    }
     if(ok){ try{ buildVieplus(); buildRpPre(); }catch(e){ console.error(e); } }
   }
 }
