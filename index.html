@@ -1190,7 +1190,11 @@ p.mi-ai{margin:4px 0 8px}
 .ff-card .ff-star{position:absolute;top:8px;right:8px}
 .ps-head h1 .ff-star{font-size:20px;vertical-align:2px}
 .ff-bientot{margin:10px 0 0;padding:10px 14px;border-radius:10px;background:var(--accent-soft);color:var(--ink-2);font-size:13.5px}.ff-bientot .ff-parc{font-weight:600;white-space:nowrap}
-.ff-n{font-size:13px;color:var(--ink-3);margin:0 0 8px}.ff-vide{color:var(--ink-2);font-size:14px}
+.ff-n{font-size:13px;color:var(--ink-3);margin:0 0 8px}
+button.rc-carte{display:flex;gap:12px;align-items:flex-start;width:100%;max-width:560px;text-align:left;font:inherit;cursor:pointer;margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}button.rc-carte:hover{border-color:var(--accent)}button.rc-carte .ff-tx{display:flex;flex-direction:column;gap:2px}button.rc-carte .ff-d{font-size:13px;color:var(--ink-2)}
+.nc .rc-tbl{width:100%;min-width:640px;font-size:12.5px;table-layout:fixed}.nc .rc-tbl th:first-child{width:28%}.nc .rc-tbl th,.nc .rc-tbl td{white-space:normal;overflow-wrap:anywhere}.nc .rc-tbl td{text-align:center}.nc .rc-tbl tr:first-child th{text-align:center;font-size:12px}
+.nc .rc-ok{background:color-mix(in srgb, var(--ok) 12%, transparent)}.nc .rc-ou{background:color-mix(in srgb, var(--accent) 10%, transparent);font-size:12.5px}.nc .rc-non{color:var(--ink-3)}
+.nc .rc-tot td,.nc .rc-tot th{font-weight:700}.rc-legende{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}.rc-legende span{padding:2px 8px;border-radius:6px;font-size:12.5px}.ff-vide{color:var(--ink-2);font-size:14px}
 @media (max-width:760px){.ff-chips{flex-wrap:nowrap;overflow-x:auto;margin-left:-4px;margin-right:-4px;padding:0 4px 4px;scrollbar-width:none}.ff-chips::-webkit-scrollbar{display:none}.ff-chips button{flex:none}.ff-card>a{padding:12px 40px 12px 12px}}
 /* Admin → Activité */
 .act-filtres{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
@@ -4720,12 +4724,84 @@ document.addEventListener('click', e=>{
   const w = document.querySelector('#rp-vieplus .tbl-wrap'); if(w) w.scrollIntoView({ behavior:'smooth', block:'start' });
 });
 
+
+/* ---------- Admin → Activité : fiche « Qui voit quoi dans Kairos ? » (05/11/2026, demande Florian) ----------
+   Récapitulatif des accès par étape, ouvert dans le panneau des fiches. Les compteurs de fiches sont
+   calculés sur le contenu réel (contenu_blocs.fiches + fiches_acces), le reste reprend les règles du code :
+   dévoilement progressif (dvOuverts), cotisation FORMAN, ficheAcces, plusOuvert. */
+const RC_ETAPES = ['Sans cotisation','Avec cotisation','Phase 1 validée<br>ou BEMAN','Phases 2-3 validées<br>ou ADMAN','Admins'];
+function rcFiches(){
+  const C = CONTENU || {}, acc = C.fiches_acces || {}, P = C.pages || {};
+  const niv = s => { if((acc.adman||[]).includes(s)) return 3; return ficheDebut(s, acc) ? 0 : 2; };
+  return fichesRayons().map(r=>{ const n = [0,0,0,0,0]; r.pages.filter(s=>P[s]).forEach(s=>{ const v = niv(s); n[0]+= v===0; n[1]+= v===0; n[2]+= v<=2; n[3]++; n[4]++; }); return { t:(r.i?r.i+' ':'')+r.t, tot:r.pages.filter(s=>P[s]).length, n }; });
+}
+function rcHtml(){
+  const O = '<td class="rc-ok">✅</td>', N = '<td class="rc-non">—</td>', L = (x)=>'<td class="rc-ou">'+x+'</td>';
+  const ligne = (t, cases) => '<tr><th>'+t+'</th>'+cases.join('')+'</tr>';
+  const tete = '<tr><th></th>'+RC_ETAPES.map(x=>'<th>'+x+'</th>').join('')+'</tr>';
+  const onglets = [
+    ligne('🏠 Accueil, 🧭 Mon parcours, 📚 Fiches pratiques, 👤 Mon profil', [O,O,O,O,O]),
+    ligne('💡 Améliorer Kairos', [O,O,O,O,O]),
+    ligne('🎓 Ateliers, Parcours Découverte, Autres événements', [L('🔒 grisés, « s’ouvre avec la cotisation »'),O,O,O,O]),
+    ligne('📅 Mes sessions', [L('après la Découverte Métier (mission 1.1)'),L('après la Découverte Métier (mission 1.1)'),O,O,O]),
+    ligne('✉️ Mail Manager', [L('après la demande d’accès MEGA (mission 1.5)'),L('après la demande d’accès MEGA (mission 1.5)'),O,O,O]),
+    ligne('🧮 Ressources : simulateurs, courriers', [N,N,O,O,O]),
+    ligne('📰 Veille', [N,N,O,O,O]),
+    ligne('👥 Ma lignée', [L('au premier filleul'),L('au premier filleul'),L('au premier filleul'),L('au premier filleul'),O]),
+    ligne('🛠️ Admin (Activité, Contenu, Forman…)', [N,N,N,N,O]),
+  ];
+  const accueil = [
+    ligne('👋 Écran de bienvenue (3 écrans) puis checklist « Ma première semaine »', [L('nouveau : 14 jours max, tant que la checklist n’est pas finie'),L('nouveau : 14 jours max, tant que la checklist n’est pas finie'),N,N,N]),
+    ligne('🤝 Carte « Ton parrain » (+ lien Discord)', [L('tant que la phase 1 est en cours'),L('tant que la phase 1 est en cours'),N,N,N]),
+    ligne('🧭 « Kairos s’adapte à ton avancement » (espaces encore fermés)', [L('une fois, jusqu’à « J’ai compris »'),L('une fois, jusqu’à « J’ai compris »'),L('s’il reste des espaces fermés'),L('s’il reste des espaces fermés'),N]),
+    ligne('🎉 « Nouveau pour toi » (espace qui vient de s’ouvrir)', [N,L('Mes sessions, Mail Manager…'),L('Ressources, Veille…'),L('Ma lignée…'),N]),
+    ligne('✅ Mes actions de la semaine, 📍 Où en es-tu ?, 📅 Les 7 prochains jours', [O,O,O,O,O]),
+    ligne('🔔 Alertes de sessions suivies', [L('si Mes sessions ouvert et alerte'),L('si Mes sessions ouvert et alerte'),L('si alerte'),L('si alerte'),L('si alerte')]),
+    ligne('🏆 Victoires, ⚡ Raccourcis, 💡 Principes, ❓ Questions fréquentes', [O,O,O,O,O]),
+    ligne('🟢 Points d’étape à valider pour mes filleuls', [N,N,L('parrains, si une demande attend'),L('parrains, si une demande attend'),L('si une demande attend')]),
+    ligne('✉️ Mail Manager de ma lignée', [N,N,L('parrains (remonté en tête)'),L('parrains (remonté en tête)'),L('si filleuls')]),
+  ];
+  const plus = [
+    ligne('🚀 Ressources → Pour aller plus loin<br><small>catalogue Vie Plus, allocations types, recommandations</small>', [N,N,L('🔒 onglet visible, contenu fermé'),L('statut ADMAN uniquement<br><small>(une phase validée ne suffit pas)</small>'),O]),
+    ligne('🤖 Outil IA : catalogue des supports (chercher_supports)', [N,N,N,L('statut ADMAN uniquement'),O]),
+    ligne('🤖 Outil IA : fiches pratiques (lire_fiche)', [L('mêmes fiches que l’onglet'),L('mêmes fiches que l’onglet'),L('mêmes fiches que l’onglet'),L('mêmes fiches que l’onglet'),O]),
+  ];
+  let fiches = '';
+  try{
+    const R = rcFiches(), tot = [0,1,2,3,4].map(i=>R.reduce((s,r)=>s+r.n[i],0)), T = R.reduce((s,r)=>s+r.tot,0);
+    const cell = (n, t) => n===t ? '<td class="rc-ok">'+n+' / '+t+'</td>' : n ? '<td class="rc-ou">'+n+' / '+t+'</td>' : '<td class="rc-non">🔒 section fermée</td>';
+    fiches = '<h2>📚 Fiches pratiques</h2><div class="tbl"><table class="rc-tbl">'+tete
+      + R.map(r=>'<tr><th>'+esc(r.t)+'</th>'+r.n.map(n=>cell(n, r.tot)).join('')+'</tr>').join('')
+      + '<tr class="rc-tot"><th>Total</th>'+tot.map(n=>'<td>'+n+' / '+T+'</td>').join('')+'</tr></table></div>'
+      + '<p>Les fiches pas encore ouvertes ne s’affichent pas : la section montre « D’autres fiches t’attendent… » ou, si elle est entièrement fermée, « Cette section s’ouvrira au fil de ton avancement », avec un lien vers Mon parcours.</p>'
+      + '<p><b>Ouvertes dès le départ</b> : '+esc(((CONTENU.fiches_acces||{}).debut_rayons||[]).join(', '))+' (sauf '+esc(((CONTENU.fiches_acces||{}).sauf||[]).map(s=>(CONTENU.pages[s]||{}).t||s).join(', '))+'), et '
+      + esc(((CONTENU.fiches_acces||{}).debut||[]).map(s=>(CONTENU.pages[s]||{}).t||s).join(', '))+'.<br><b>Phases 2-3 validées ou ADMAN</b> : '+esc(((CONTENU.fiches_acces||{}).adman||[]).map(s=>(CONTENU.pages[s]||{}).t||s).join(', ')||'—')+'.</p>';
+  }catch(e){ fiches = ''; }
+  return '<div class="rc-legende"><span class="rc-ok">✅ visible</span><span class="rc-ou">sous condition</span><span class="rc-non">— masqué</span></div>'
+    + '<p>« Phase 1 validée » = point d’étape 1 validé par le parrain (le statut BEMAN l’ouvre d’office). « Phases 2-3 validées » = point d’étape 2 validé par le parrain ; le statut ADMAN l’ouvre d’office. Pour vérifier en vrai, utilise « 👁 Voir Kairos comme ».</p>'
+    + '<h2>🏠 Page d’accueil</h2><div class="tbl"><table class="rc-tbl">'+tete+accueil.join('')+'</table></div>'
+    + '<p class="mbr-sub">Chacun peut réordonner ou masquer les blocs du bas de l’accueil ; l’ordre conseillé met le Mail Manager de la lignée en premier pour un parrain.</p>'
+    + '<h2>🗂 Onglets</h2><div class="tbl"><table class="rc-tbl">'+tete+onglets.join('')+'</table></div>'
+    + fiches
+    + '<h2>🚀 Contenus réservés</h2><div class="tbl"><table class="rc-tbl">'+tete+plus.join('')+'</table></div>';
+}
+function showRecapAcces(){
+  const card = document.getElementById('psheetCard'); if(!card) return;
+  card.innerHTML = psOutils()+'<div class="ps-head">'+psBoutons()+'<nav class="crumb"><span>Admin</span> <span class="sep">›</span> <span>Activité</span></nav><h1>🗺️ Qui voit quoi dans Kairos ?</h1></div>'
+    + '<div class="ps-body"><div class="nc">'+rcHtml()+'</div></div><div class="ps-foot"><span class="kbd">Échap pour fermer</span><span></span></div>';
+  const sh = document.getElementById('psheet'); sh.classList.add('on'); sh.setAttribute('aria-hidden','false'); document.body.classList.add('ps-open');
+  psAppliquer(); card.querySelector('.ps-body').scrollTop = 0;
+  document.getElementById('psClose').addEventListener('click', closePage);
+}
+document.addEventListener('click', e=>{ const b = e.target.closest && e.target.closest('[data-recap-acces]'); if(b){ e.preventDefault(); showRecapAcces(); } });
+
 /* ---------- Admin → Changelog Kairos (31/10/2026) ----------
    Une ligne courte par évolution : f = fonctionnalité, b = correction de bug. À COMPLÉTER À CHAQUE
    ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
+    ['f','Admin → Activité : fiche « Qui voit quoi dans Kairos ? » sous « Voir Kairos comme » : récapitulatif des accès (page d’accueil, onglets, fiches pratiques par rayon, « Pour aller plus loin », outil IA) pour sans cotisation, avec cotisation, phase 1 validée ou BEMAN, phases 2-3 validées ou ADMAN, et admins.'],
     ['f','Fiches pratiques : nouvel accès par rayon. Dès le départ : Administratif & statut (sauf Anacofi, Obligations du CIF et Financer les UDP), Outils & organisation, et Tips habilitations, Examens et ESP, Primo-liste ; Proxeema et Transférer un dossier attendent la phase 2, « Passer en société » la validation de la phase 2 ou le statut ADMAN ; tout le reste s’ouvre quand le parrain valide la phase 1. Les fiches pas encore ouvertes ne s’affichent plus : un message invite à avancer dans le parcours.'],
     ['f','Ressources → Pour aller plus loin : réservé au statut ADMAN et plus (onglet marqué 🔒 et message d’attente sans détail du contenu) ; la base applique la même règle au catalogue, à l’encadré et à l’outil IA chercher_supports.'],
     ['f','Sécurité : le catalogue des supports Vie Plus et l’encadré « Allocations types » ne sont plus intégrés à la page publique ; ils sont lus en base après connexion (table supports_vieplus et bloc allocations_reco). Les prochaines mises à jour du catalogue se font en base, sans republier.'],
@@ -6590,6 +6666,7 @@ function buildActivite(){
   const tuile = (v, l) => '<div class="act-t"><b>'+v+'</b><span>'+l+'</span></div>';
   if(vue) vue.innerHTML = '<div class="apercu-ctl"><span>👁 Voir Kairos comme :</span>'
     + [['nonadh','sans cotisation (nouveau)'],['adh','adhérent (nouveau)'],['p1','filleul · phase 1 validée'],['p2','filleul · phase 2 validée'],['p3','parrain · phase 3 validée']].map(x=>'<button type="button" class="mm-b'+(APERCU&&APERCU.phase===x[0]?' pri':'')+'" data-apercu="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>'
+    + '<button type="button" class="ff-card rc-carte" data-recap-acces=""><span class="ff-ic">🗺️</span><span class="ff-tx"><b>Qui voit quoi dans Kairos ?</b><span class="ff-d">Le récapitulatif des accès, étape par étape : page d’accueil, onglets, fiches pratiques, « Pour aller plus loin », outil IA.</span></span></button>'
     + '<div class="act-tuiles">'
     + tuile(tous.filter(c=>c.j7).length+' / '+ACT.length, 'actifs cette semaine')
     + tuile(tous.filter(c=>c.j30).length, 'actifs sur 30 jours')

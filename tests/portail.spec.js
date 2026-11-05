@@ -6341,6 +6341,35 @@ test.describe('Admin → Activité : Portail Web et MCP (04/11/2026)', () => {
   });
 });
 
+test.describe('Admin → fiche « Qui voit quoi dans Kairos ? » (05/11/2026)', () => {
+  test('5 colonnes, accueil, onglets, fiches comptées par rayon, contenus réservés', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      CONTENU = Object.assign({}, CONTENU || {}, {
+        pages: { a:{t:'A'}, b:{t:'Obligations'}, c:{t:'Société'}, d:{t:'R1'}, e:{t:'ESP'} },
+        fiches: [ { t:'Administratif & statut', pages:['a','b','c'] }, { t:'Rendez-vous clients', pages:['d'] }, { t:'Habilitations & examens', pages:['e'] } ],
+        fiches_acces: { debut_rayons:['Administratif & statut'], sauf:['b'], debut:['e'], adman:['c'] } });
+      showRecapAcces();
+      const card = document.getElementById('psheetCard');
+      const lignes = [...card.querySelectorAll('table')].map(tb => [...tb.querySelectorAll('tr')].map(tr => [...tr.children].map(c => c.textContent.trim())));
+      return { titre: card.querySelector('h1').textContent, h2: [...card.querySelectorAll('h2')].map(x => x.textContent), lignes, ouvert: document.getElementById('psheet').classList.contains('on') };
+    });
+    expect(erreurs).toEqual([]);
+    expect(r.ouvert).toBe(true);
+    expect(r.titre).toContain('Qui voit quoi');
+    expect(r.h2).toEqual(['🏠 Page d’accueil', '🗂 Onglets', '📚 Fiches pratiques', '🚀 Contenus réservés']);
+    const fiches = r.lignes[2];
+    expect(fiches[0].slice(1)).toEqual(['Sans cotisation', 'Avec cotisation', 'Phase 1 validéeou BEMAN', 'Phases 2-3 validéesou ADMAN', 'Admins']);
+    expect(fiches[1]).toEqual(['Administratif & statut', '1 / 3', '1 / 3', '2 / 3', '3 / 3', '3 / 3']);
+    expect(fiches[2]).toEqual(['Rendez-vous clients', '🔒 section fermée', '🔒 section fermée', '1 / 1', '1 / 1', '1 / 1']);
+    expect(fiches[4]).toEqual(['Total', '2 / 5', '2 / 5', '4 / 5', '5 / 5', '5 / 5']);
+    expect(r.lignes[1].find(l => l[0].includes('Admin ('))).toEqual([expect.stringContaining('Admin'), '—', '—', '—', '—', '✅']);
+  });
+});
+
 test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/2026)', () => {
   // 05/11/2026 : le catalogue n'est plus dans la page, il est lu dans la table supports_vieplus (RLS).
   // Le test simule la base avec quelques lignes.
