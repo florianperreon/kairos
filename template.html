@@ -242,11 +242,6 @@ nav.botbar a.nv-new .l::after{content:"•";padding:0 4px}
 .j0-pts{display:flex;gap:6px;justify-content:center;margin:16px 0 0}
 .j0-pts span{width:8px;height:8px;border-radius:50%;background:var(--line-2)}
 .j0-pts span.on{background:var(--accent)}
-.j0-ck{display:grid;gap:6px}
-.j0-it{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:var(--surface-2);text-decoration:none;color:inherit;font-size:14px;cursor:pointer}
-.j0-it .ck{flex:0 0 auto;width:18px;height:18px;border-radius:50%;border:2px solid var(--line-2);font-size:11px;line-height:14px;text-align:center;font-weight:800}
-.j0-it.ok{color:var(--ink-2);text-decoration:line-through}
-.j0-it.ok .ck{background:var(--gold);border-color:var(--gold);color:#fff}
 #homeParrain .pr-n{font-size:16px;margin:4px 0}
 .mi-aide{margin:10px 0 0;font-size:13.5px;color:var(--ink-2)}
 .mi-ferme{text-align:center;padding:28px 18px;border:1px dashed var(--line-2);border-radius:12px;background:var(--surface-2)}
@@ -2345,7 +2340,6 @@ body.ps-open #fbBtn{bottom:64px}
       <!-- Accueil « check rapide » (03/11/2026) : à faire à gauche, à venir à droite ; le reste en dessous, personnalisable -->
       <div class="hgrid" id="homeGrid">
         <div class="hcol" id="hcolA">
-          <div class="panel" id="homeJ0" hidden></div>
           <div class="panel" id="homeActionsPanel" hidden>
             <h2>Mes actions de la semaine</h2>
             <p class="acts-n" id="homeActionsNote"></p>
@@ -4751,7 +4745,7 @@ function rcHtml(){
     ligne('🛠️ Admin (Activité, Contenu, Forman…)', [N,N,N,N,O]),
   ];
   const accueil = [
-    ligne('👋 Écran de bienvenue (3 écrans) puis checklist « Ma première semaine »', [L('nouveau : 14 jours max, tant que la checklist n’est pas finie'),L('nouveau : 14 jours max, tant que la checklist n’est pas finie'),N,N,N]),
+    ligne('👋 Écran de bienvenue (3 écrans)', [L('à la première connexion d’un nouveau'),L('à la première connexion d’un nouveau'),N,N,N]),
     ligne('🤝 Carte « Ton parrain » (+ lien Discord)', [L('tant que la phase 1 est en cours'),L('tant que la phase 1 est en cours'),N,N,N]),
     ligne('🧭 « Kairos s’adapte à ton avancement » (espaces encore fermés)', [L('une fois, jusqu’à « J’ai compris »'),L('une fois, jusqu’à « J’ai compris »'),L('s’il reste des espaces fermés'),L('s’il reste des espaces fermés'),N]),
     ligne('🎉 « Nouveau pour toi » (espace qui vient de s’ouvrir)', [N,N,L('Mes sessions, Mail Manager, Ressources, Veille'),L('Ma lignée…'),N]),
@@ -4785,13 +4779,18 @@ function rcHtml(){
     + fiches
     + '<h2>🚀 Contenus réservés</h2><div class="tbl"><table class="rc-tbl">'+tete+plus.join('')+'</table></div>';
 }
+// Adresse partageable : #admin?s=portail-web&fiche=qui-voit-quoi (Admin › Activité › Portail Web en fond)
+var RC_OUVERT = false;
 function showRecapAcces(){
   const card = document.getElementById('psheetCard'); if(!card) return;
+  if(curTab==='admin' && curSub!=='act'){ try{ showAdminSub('act'); }catch(e){} }
+  RC_OUVERT = true;
   card.innerHTML = psOutils()+'<div class="ps-head">'+psBoutons()+'<nav class="crumb"><span>Admin</span> <span class="sep">›</span> <span>Activité</span></nav><h1>🗺️ Qui voit quoi dans Kairos ?</h1></div>'
     + '<div class="ps-body"><div class="nc">'+rcHtml()+'</div></div><div class="ps-foot"><span class="kbd">Échap pour fermer</span><span></span></div>';
   const sh = document.getElementById('psheet'); sh.classList.add('on'); sh.setAttribute('aria-hidden','false'); document.body.classList.add('ps-open');
   psAppliquer(); card.querySelector('.ps-body').scrollTop = 0;
   document.getElementById('psClose').addEventListener('click', closePage);
+  syncHash(true);
 }
 document.addEventListener('click', e=>{ const b = e.target.closest && e.target.closest('[data-recap-acces]'); if(b){ e.preventDefault(); showRecapAcces(); } });
 
@@ -4801,8 +4800,9 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-05', [
+    ['f','Accueil : la checklist « Ma première semaine » est retirée (doublon avec la phase 1 du parcours) ; l’écran de bienvenue renvoie vers « Mon parcours ».'],
     ['f','Mes sessions et Mail Manager s’ouvrent désormais au point d’étape 1 (phase 2) ou au statut BEMAN, comme Ressources et Veille (avant : après la Découverte Métier / la demande d’accès MEGA).'],
-    ['f','Admin → Activité : fiche « Qui voit quoi dans Kairos ? » sous « Voir Kairos comme » : récapitulatif des accès (page d’accueil, onglets, fiches pratiques par rayon, « Pour aller plus loin », outil IA) pour sans cotisation, avec cotisation, phase 1 validée ou BEMAN, phases 2-3 validées ou ADMAN, et admins.'],
+    ['f','Admin → Activité : fiche « Qui voit quoi dans Kairos ? » (adresse partageable #admin?s=portail-web&fiche=qui-voit-quoi) sous « Voir Kairos comme » : récapitulatif des accès (page d’accueil, onglets, fiches pratiques par rayon, « Pour aller plus loin », outil IA) pour sans cotisation, avec cotisation, phase 1 validée ou BEMAN, phases 2-3 validées ou ADMAN, et admins.'],
     ['f','Fiches pratiques : nouvel accès par rayon. Dès le départ : Administratif & statut (sauf Anacofi, Obligations du CIF et Financer les UDP), Outils & organisation, et Tips habilitations, Examens et ESP, Primo-liste ; Proxeema et Transférer un dossier attendent la phase 2, « Passer en société » la validation de la phase 2 ou le statut ADMAN ; tout le reste s’ouvre quand le parrain valide la phase 1. Les fiches pas encore ouvertes ne s’affichent plus : un message invite à avancer dans le parcours.'],
     ['f','Ressources → Pour aller plus loin : réservé au statut ADMAN et plus (onglet marqué 🔒 et message d’attente sans détail du contenu) ; la base applique la même règle au catalogue, à l’encadré et à l’outil IA chercher_supports.'],
     ['f','Sécurité : le catalogue des supports Vie Plus et l’encadré « Allocations types » ne sont plus intégrés à la page publique ; ils sont lus en base après connexion (table supports_vieplus et bloc allocations_reco). Les prochaines mises à jour du catalogue se font en base, sans republier.'],
@@ -4989,6 +4989,7 @@ function tabState(tab){
   sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ if(tab==='admin' && i.closest('.subview:not(.on)')) return; if(i.value) p.set('f_'+i.dataset.f,i.value); });
   if((tab==='ann'||(tab==='admin'&&curSub==='ann'))&&typeof ANN_SORT!=='undefined'&&(ANN_SORT.col!=='date'||ANN_SORT.dir!=='desc')) p.set('tri',ANN_SORT.col+'.'+ANN_SORT.dir);
   if(tab==='admin'&&curSub!=='mbr') p.set('s', ADMIN_SLUG[curSub]);
+  if(tab==='admin'&&typeof RC_OUVERT!=='undefined'&&RC_OUVERT) p.set('fiche', 'qui-voit-quoi');   // 05/11/2026 : lien partageable
   if(tab==='admin'&&curSub==='cnt') sgTabState(p);
   if(tab==='surv'&&typeof SURV_SUB!=='undefined'&&SURV_SUB!=='ins') p.set('s', SURV_SLUG[SURV_SUB]);
   if(tab==='res') rsTabState(p);
@@ -5028,7 +5029,8 @@ function applyState(tab,p){
       for(let pass=0;pass<3;pass++){ let changed=false; chips.forEach(c=>{ if(c.classList.contains('on')!==want.has(c.dataset.t)){ c.click(); changed=true; } }); if(!changed) break; } }
     const vue=p.get('vue')||'list'; const vb=sec.querySelector('.vtoggle button[data-m="'+vue+'"]'); if(vb&&!vb.classList.contains('on')) vb.click();
     sec.querySelectorAll('tr.colf input[data-f]').forEach(i=>{ const want=p.get('f_'+i.dataset.f)||''; if(i.value!==want){ i.value=want; fire(i,['input']); } });
-    if(tab==='admin'){ const s=p.get('s')||''; showAdminSub(SLUG_ADMIN[s]||s||'mbr'); if(curSub==='cnt') sgApplyState(p); }
+    if(tab==='admin'){ const s=p.get('s')||''; showAdminSub(SLUG_ADMIN[s]||s||'mbr'); if(curSub==='cnt') sgApplyState(p);
+      if(p.get('fiche')==='qui-voit-quoi'){ if(!RC_OUVERT) setTimeout(()=>showRecapAcces(), 0); } else if(RC_OUVERT) closePage(); }
     if(tab==='surv'&&typeof showSurvSub==='function'){ const s=p.get('s')||''; showSurvSub(SLUG_SURV[s]||s||'ins'); buildSurv(); }
     if(tab==='res') rsApplyState(p);
     if(tab==='lig') ligApplyState(p);
@@ -5357,7 +5359,7 @@ function majDevoilement(){
   document.querySelectorAll('nav.tabs [data-v], nav.botbar [data-v]').forEach(b=>b.classList.toggle('nv-new', !APERCU && ((VU.dv&&VU.dv.n)||[]).includes(dvTab(b.dataset.v))));
   try{ buildDvAccueil(); }catch(e){ console.error(e); }
   try{ buildApercuBandeau(); }catch(e){}
-  try{ buildPremiereSemaine(); buildParrainCarte(); buildParcoursMini(); dvCelebrer(); }catch(e){ console.error(e); }
+  try{ buildParrainCarte(); buildParcoursMini(); dvCelebrer(); }catch(e){ console.error(e); }
   try{ homeLayout(); }catch(e){}
   if(!APERCU && !J0_MONTRE && dvPremierJour()){ J0_MONTRE = true; try{ j0Ouvrir(); }catch(e){} }
 }
@@ -5403,7 +5405,7 @@ document.addEventListener('click', e=>{
   VU.dv = Object.assign({}, VU.dv||{}, { info:false, t:new Date().toISOString() }); saveVu(); buildDvAccueil();
 });
 
-/* --- Le premier jour : 3 écrans, puis la checklist « Ma première semaine » --- */
+/* --- Le premier jour : 3 écrans de bienvenue (la checklist « Ma première semaine » a été retirée le 05/11/2026) --- */
 const dvPremierJour = () => !VU.j0 && estNouveau() && (APERCU ? (APERCU.phase==='adh' || APERCU.phase==='nonadh') : (()=>{ try{ return miPhaseProg(misPhases()[0]).ok <= 3; }catch(e){ return false; } })());
 let J0_ECRAN = 0;
 function monParrain(){
@@ -5425,7 +5427,7 @@ function j0Ouvrir(){
     '<div class="j0-i">🧭</div><h2>Comment marche Kairos</h2><ul class="j0-l"><li><b>Ton parcours</b> te guide mission par mission, dans l’ordre.</li><li><b>Tes actions de la semaine</b> te disent quoi faire maintenant.</li><li><b>Kairos s’agrandit avec toi</b> : de nouveaux espaces s’ouvrent au fil de tes étapes, pour ne pas te disperser.</li></ul>'
       + (disc ? '<p>Pour échanger vite avec la lignée, c’est sur <a href="'+esc(disc)+'" target="_blank" rel="noopener">le Discord</a>.</p>' : ''),
     '<div class="j0-i">🚀</div><h2>Ta première action</h2>'+(act ? '<div class="j0-a"><b>'+esc(act.t)+'</b><p>'+esc(act.d||'')+'</p></div>' : '<p>Ouvre ton parcours : ta première mission t’y attend.</p>')
-      + '<p class="mbr-sub">Ta checklist « Ma première semaine » t’attend sur l’accueil.</p>'
+      + '<p class="mbr-sub">Ta phase 1 t’attend dans « Mon parcours », mission par mission.</p>'
   ];
   const i = Math.max(0, Math.min(J0_ECRAN, E.length-1));
   m.innerHTML = '<div class="hperso-c j0-c" role="dialog" aria-modal="true" aria-label="Bienvenue">'+E[i]
@@ -5440,33 +5442,10 @@ document.addEventListener('click', e=>{
   if(e.target.closest('[data-j0fin]')){
     const m = document.getElementById('j0'); if(m) m.classList.remove('on');
     if(!APERCU){ VU.j0 = { d: todayIso, t: new Date().toISOString() }; saveVu(); }
-    J0_ECRAN = 0; try{ buildPremiereSemaine(); }catch(e){}
+    J0_ECRAN = 0;
   }
 });
-// « Ma première semaine » : 5 points, cochés par le parcours quand c'est possible, 14 jours au plus
-function premiereSemaineItems(){
-  const disc = lienDiscord();
-  return [
-    { k:'discord', t:'Présente-toi sur le Discord de la lignée', ok: !!(VU.j0 && VU.j0.discord), manuel:true, href: disc || '' },
-    { k:'esp', t:'Fixe ton ESP avec ton parrain', ok: misOk('1.1','esp'), href:'#mon-parcours' },
-    { k:'dm', t:'Participe à ta Découverte Métier', ok: misOk('1.1','dm'), href:'#ateliers' },
-    { k:'mail', t:'Crée ton adresse mail pro et ta signature', ok: misOk('1.5','mail'), href:'#mon-parcours' },
-    { k:'bac', t:'Commence à lire le BAC (Book Administratif du Consultant)', ok: misOk('1.2','bac'), href:'#mon-parcours' },
-  ];
-}
-function buildPremiereSemaine(){
-  const el = document.getElementById('homeJ0'); if(!el) return;
-  const debut = APERCU ? ((APERCU.phase==='adh' || APERCU.phase==='nonadh') ? todayIso : null) : (VU.j0 && VU.j0.d);
-  const items = premiereSemaineItems(), faits = items.filter(x=>x.ok).length;
-  const actif = debut && estNouveau() && vAddDays(debut, 14) >= todayIso && faits < items.length;
-  el.hidden = !actif; if(!actif){ el.innerHTML=''; return; }
-  el.innerHTML = '<h2>Ma première semaine <span class="badge-lig num">'+faits+'/'+items.length+'</span></h2><div class="j0-ck">'
-    + items.map(x=>'<a class="j0-it'+(x.ok?' ok':'')+'"'+(x.href?' href="'+esc(x.href)+'"'+(/^https:/.test(x.href)?' target="_blank" rel="noopener"':''):'')+(x.manuel&&!x.ok?' data-j0ck="'+x.k+'"':'')+'><span class="ck">'+(x.ok?'✓':'')+'</span>'+esc(x.t)+'</a>').join('')+'</div>';
-}
-document.addEventListener('click', e=>{
-  const a = e.target.closest && e.target.closest('[data-j0ck]'); if(!a || APERCU) return;
-  VU.j0 = Object.assign({}, VU.j0||{ d: todayIso }, { [a.dataset.j0ck]: true, t: new Date().toISOString() }); saveVu(); buildPremiereSemaine();
-});
+// « Ma première semaine » retirée le 05/11/2026 (règle Florian : doublon avec la phase 1 du parcours)
 // Ton parrain, sur l'accueil d'un nouveau
 function buildParrainCarte(){
   const el = document.getElementById('homeParrain'); if(!el) return;
@@ -5514,7 +5493,7 @@ function apercuChoisir(ph){
   }
   J0_ECRAN = 0; J0_MONTRE = true;
   try{ majParcours(); }catch(e){ console.error(e); }
-  try{ majDevoilement(); buildActions(); buildParcoursMini(); buildPremiereSemaine(); buildParrainCarte(); homeLayout(); }catch(e){ console.error(e); }
+  try{ majDevoilement(); buildActions(); buildParcoursMini(); buildParrainCarte(); homeLayout(); }catch(e){ console.error(e); }
   try{ buildFiches(); }catch(e){}
   if(APERCU && (APERCU.phase==='adh' || APERCU.phase==='nonadh')){ try{ j0Ouvrir(); }catch(e){} }
   showTab('home'); curTab='home'; syncHash(true); window.scrollTo({top:0});
@@ -6532,7 +6511,7 @@ function freshBanner(p){
   const old=months>=6;
   return '<div class="fresh'+(old?' old':'')+'"><span>'+(old?'⚠️':'⏱')+'</span><div><b>Contenu daté — mis à jour en '+MOIS[mo-1]+' '+y+'.</b> '+(old?'Plus de '+months+' mois : les chiffres (frais, minimums, plafonds, allocations) ont pu changer — vérifie-les avant de les utiliser en rendez-vous.':'Les chiffres (frais, minimums, plafonds, allocations) évoluent : vérifie-les avant de les utiliser en rendez-vous.')+'</div></div>';
 }
-function closePage(){ const sh=document.getElementById('psheet'); sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); document.body.classList.remove('ps-open'); if(location.hash.startsWith('#p/')){ try{ history.replaceState(null,'',hashFor(curTab)); }catch(_){} } }
+function closePage(){ if(typeof RC_OUVERT!=='undefined' && RC_OUVERT){ RC_OUVERT=false; setTimeout(()=>syncHash(false),0); } const sh=document.getElementById('psheet'); sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); document.body.classList.remove('ps-open'); if(location.hash.startsWith('#p/')){ try{ history.replaceState(null,'',hashFor(curTab)); }catch(_){} } }
 // Clic sur le fond : ferme la fiche seulement si le geste a COMMENCÉ sur le fond. Un geste commencé dans la fiche
 // (sélection de texte, tirage du bord) et relâché dehors produit un « click » sur #psheet : il ne doit pas fermer.
 let psDownFond=false;

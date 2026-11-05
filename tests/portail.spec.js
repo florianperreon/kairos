@@ -6039,17 +6039,17 @@ test.describe('Dévoilement progressif (03/11/2026)', () => {
     expect((await ouverts(page)).length).toBe(5);
   });
 
-  test('premier jour : 3 écrans, puis la checklist « Ma première semaine » et la carte du parrain', async ({ page }) => {
+  test('premier jour : 3 écrans, puis la carte du parrain (plus de checklist « Ma première semaine », 05/11/2026)', async ({ page }) => {
     await ouvrir(page);
     await poserDv(page);
     expect(await page.evaluate(() => document.getElementById('j0').classList.contains('on'))).toBe(true);
     await page.click('#j0 [data-j0="1"]');
     await page.click('#j0 [data-j0="1"]');
     await page.click('#j0 [data-j0fin]');
-    const r = await page.evaluate(() => ({ j0: !!VU.j0, ck: document.querySelectorAll('#homeJ0 .j0-it').length, par: document.getElementById('homeParrain').textContent,
+    const r = await page.evaluate(() => ({ j0: !!VU.j0, ck: document.querySelectorAll('#homeJ0, .j0-it').length, par: document.getElementById('homeParrain').textContent,
       autres: !!document.querySelector('#homeActions .sact-autres') || document.querySelectorAll('#homeActions > .sact').length <= 1 }));
     expect(r.j0).toBe(true);
-    expect(r.ck).toBe(5);
+    expect(r.ck).toBe(0);                                   // checklist retirée
     expect(r.par).toContain('Parrain TEST');
     expect(r.autres).toBe(true);
   });
@@ -6372,6 +6372,29 @@ test.describe('Admin → fiche « Qui voit quoi dans Kairos ? » (05/11/2026)', 
     expect(fiches[2]).toEqual(['Rendez-vous clients', '🔒 section fermée', '🔒 section fermée', '1 / 1', '1 / 1', '1 / 1']);
     expect(fiches[4]).toEqual(['Total', '2 / 5', '2 / 5', '4 / 5', '5 / 5', '5 / 5']);
     expect(r.lignes[1].find(l => l[0].includes('Admin ('))).toEqual([expect.stringContaining('Admin'), '—', '—', '—', '—', '✅']);
+  });
+
+  test('adresse partageable : #admin?s=portail-web&fiche=qui-voit-quoi ouvre la fiche sur Activité › Portail Web', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      EST_ADMIN = true; document.querySelectorAll('[data-v="admin"]').forEach(b => b.hidden = false);
+      CONTENU = Object.assign({}, CONTENU || {}, { pages:{ a:{t:'A'} }, fiches:[{ t:'Outils & organisation', pages:['a'] }], fiches_acces:{ debut_rayons:['Outils & organisation'] } });
+      history.replaceState(null, '', '#admin?s=portail-web&fiche=qui-voit-quoi'); routeHash();
+      await new Promise(f => setTimeout(f, 50));
+      const arrivee = { tab: curTab, sub: curSub, ouvert: document.getElementById('psheet').classList.contains('on'), titre: document.querySelector('#psheetCard h1').textContent };
+      closePage(); await new Promise(f => setTimeout(f, 50));
+      const ferme = location.hash;
+      showRecapAcces(); await new Promise(f => setTimeout(f, 50));
+      return { arrivee, ferme, rouvert: location.hash };
+    });
+    expect(erreurs).toEqual([]);
+    expect(r.arrivee).toMatchObject({ tab: 'admin', sub: 'act', ouvert: true });
+    expect(r.arrivee.titre).toContain('Qui voit quoi');
+    expect(r.ferme).toBe('#admin?s=portail-web');
+    expect(r.rouvert).toBe('#admin?s=portail-web&fiche=qui-voit-quoi');
   });
 });
 
