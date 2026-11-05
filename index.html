@@ -1189,7 +1189,7 @@ p.mi-ai{margin:4px 0 8px}
 button.rc-carte{display:flex;gap:12px;align-items:flex-start;width:100%;max-width:560px;text-align:left;font:inherit;cursor:pointer;margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}button.rc-carte:hover{border-color:var(--accent)}button.rc-carte .ff-tx{display:flex;flex-direction:column;gap:2px}button.rc-carte .ff-d{font-size:13px;color:var(--ink-2)}
 .nc .rc-tbl{width:100%;min-width:640px;font-size:12.5px;table-layout:fixed}.nc .rc-tbl th:first-child{width:28%}.nc .rc-tbl th,.nc .rc-tbl td{white-space:normal;overflow-wrap:anywhere}.nc .rc-tbl td{text-align:center}.nc .rc-tbl tr:first-child th{text-align:center;font-size:12px}
 .nc .rc-ok{background:color-mix(in srgb, var(--ok) 12%, transparent)}.nc .rc-ou{background:color-mix(in srgb, var(--accent) 10%, transparent);font-size:12.5px}.nc .rc-non{color:var(--ink-3)}
-.nc .rc-tot td,.nc .rc-tot th{font-weight:700}.rc-legende{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}.rc-legende span{padding:2px 8px;border-radius:6px;font-size:12.5px}.ff-vide{color:var(--ink-2);font-size:14px}
+.nc .rc-tot td,.nc .rc-tot th{font-weight:700}.nc .rc-col{cursor:help}.nc .rc-n{display:block;font-weight:400;font-size:11.5px;color:var(--ink-3);margin-top:2px}.rc-legende{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}.rc-legende span{padding:2px 8px;border-radius:6px;font-size:12.5px}.ff-vide{color:var(--ink-2);font-size:14px}
 @media (max-width:760px){.ff-chips{flex-wrap:nowrap;overflow-x:auto;margin-left:-4px;margin-right:-4px;padding:0 4px 4px;scrollbar-width:none}.ff-chips::-webkit-scrollbar{display:none}.ff-chips button{flex:none}.ff-card>a{padding:12px 40px 12px 12px}}
 /* Admin → Activité */
 .act-filtres{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
@@ -4723,6 +4723,23 @@ document.addEventListener('click', e=>{
    Récapitulatif des accès par étape, ouvert dans le panneau des fiches. Les compteurs de fiches sont
    calculés sur le contenu réel (contenu_blocs.fiches + fiches_acces), le reste reprend les règles du code :
    dévoilement progressif (dvOuverts), cotisation FORMAN, ficheAcces, plusOuvert. */
+var RC_ADMINS = new Set(), RC_ACT_TENTE = false;            // e-mails des admins (membres_connectes)
+// Étape de chaque compte Kairos (Activité) : 0 sans cotisation, 1 avec, 2 phase 1 validée ou BEMAN, 3 phase 2 validée ou ADMAN, 4 admin
+function rcEtapeDe(r){
+  if((r.emails||[]).some(e=>RC_ADMINS.has(String(e).toLowerCase()))) return 4;
+  const st = String((r.parcours||{}).statut||'').toUpperCase().replace('ROLE_',''), rg = MI_RANGS.indexOf(st), po = r.portes || {};
+  const ok = k => po[k] && po[k].statut==='validee';
+  if(rg >= MI_RANGS.indexOf('ADMAN') || ok('porte2')) return 3;
+  if(rg >= MI_RANGS.indexOf('BEMAN') || ok('porte1')) return 2;
+  return ADH.has(+r.membre_id) ? 1 : 0;
+}
+function rcMembres(){
+  if(!ACT) return null;
+  const c = [[],[],[],[],[]];
+  ACT.forEach(r=>{ const st = String((r.parcours||{}).statut||'').replace('ROLE_',''); c[rcEtapeDe(r)].push((r.nom||'?')+(st?' ('+st+')':'')); });
+  c.forEach(l=>l.sort((a,b)=>a.localeCompare(b,'fr')));
+  return c;
+}
 const RC_ETAPES = ['Sans cotisation','Avec cotisation','Phase 1 validée<br>ou BEMAN','Phases 2-3 validées<br>ou ADMAN','Admins'];
 function rcFiches(){
   const C = CONTENU || {}, acc = C.fiches_acces || {}, P = C.pages || {};
@@ -4732,7 +4749,11 @@ function rcFiches(){
 function rcHtml(){
   const O = '<td class="rc-ok">✅</td>', N = '<td class="rc-non">—</td>', L = (x)=>'<td class="rc-ou">'+x+'</td>';
   const ligne = (t, cases) => '<tr><th>'+t+'</th>'+cases.join('')+'</tr>';
-  const tete = '<tr><th></th>'+RC_ETAPES.map(x=>'<th>'+x+'</th>').join('')+'</tr>';
+  const M = rcMembres();
+  const tete = '<tr><th></th>'+RC_ETAPES.map((x,i)=>{
+    const l = M ? M[i] : null;
+    const tip = l ? (l.length ? l.length+' compte'+(l.length>1?'s':'')+' Kairos :\n'+l.join('\n') : 'Aucun compte Kairos à cette étape') : 'Liste des comptes en cours de chargement…';
+    return '<th class="rc-col" title="'+esc(tip)+'">'+x+(l ? '<span class="rc-n">'+l.length+' 👤</span>' : '')+'</th>'; }).join('')+'</tr>';
   const onglets = [
     ligne('🏠 Accueil, 🧭 Mon parcours, 📚 Fiches pratiques, 👤 Mon profil', [O,O,O,O,O]),
     ligne('💡 Améliorer Kairos', [O,O,O,O,O]),
@@ -4771,7 +4792,7 @@ function rcHtml(){
       + '<p><b>Ouvertes dès le départ</b> : '+esc(((CONTENU.fiches_acces||{}).debut_rayons||[]).join(', '))+' (sauf '+esc(((CONTENU.fiches_acces||{}).sauf||[]).map(s=>(CONTENU.pages[s]||{}).t||s).join(', '))+'), et '
       + esc(((CONTENU.fiches_acces||{}).debut||[]).map(s=>(CONTENU.pages[s]||{}).t||s).join(', '))+'.<br><b>Phases 2-3 validées ou ADMAN</b> : '+esc(((CONTENU.fiches_acces||{}).adman||[]).map(s=>(CONTENU.pages[s]||{}).t||s).join(', ')||'—')+'.</p>';
   }catch(e){ fiches = ''; }
-  return '<div class="rc-legende"><span class="rc-ok">✅ visible</span><span class="rc-ou">sous condition</span><span class="rc-non">— masqué</span></div>'
+  return '<p class="mbr-sub">Survole un en-tête de colonne pour voir les comptes Kairos concernés.</p><div class="rc-legende"><span class="rc-ok">✅ visible</span><span class="rc-ou">sous condition</span><span class="rc-non">— masqué</span></div>'
     + '<p>« Phase 1 validée » = point d’étape 1 validé par le parrain (le statut BEMAN l’ouvre d’office). « Phases 2-3 validées » = point d’étape 2 validé par le parrain ; le statut ADMAN l’ouvre d’office. Pour vérifier en vrai, utilise « 👁 Voir Kairos comme ».</p>'
     + '<h2>🏠 Page d’accueil</h2><div class="tbl"><table class="rc-tbl">'+tete+accueil.join('')+'</table></div>'
     + '<p class="mbr-sub">Chacun peut réordonner ou masquer les blocs du bas de l’accueil ; l’ordre conseillé met le Mail Manager de la lignée en premier pour un parrain.</p>'
@@ -4785,6 +4806,7 @@ function showRecapAcces(){
   const card = document.getElementById('psheetCard'); if(!card) return;
   if(curTab==='admin' && curSub!=='act'){ try{ showAdminSub('act'); }catch(e){} }
   RC_OUVERT = true;
+  if(!ACT && EST_ADMIN && !RC_ACT_TENTE){ RC_ACT_TENTE = true; chargerActivite().then(()=>{ if(RC_OUVERT) showRecapAcces(); }).catch(()=>{}); }
   card.innerHTML = psOutils()+'<div class="ps-head">'+psBoutons()+'<nav class="crumb"><span>Admin</span> <span class="sep">›</span> <span>Activité</span></nav><h1>🗺️ Qui voit quoi dans Kairos ?</h1></div>'
     + '<div class="ps-body"><div class="nc">'+rcHtml()+'</div></div><div class="ps-foot"><span class="kbd">Échap pour fermer</span><span></span></div>';
   const sh = document.getElementById('psheet'); sh.classList.add('on'); sh.setAttribute('aria-hidden','false'); document.body.classList.add('ps-open');
@@ -4802,7 +4824,7 @@ const KAIROS_CHANGELOG = [
   ['2026-11-05', [
     ['f','Accueil : la checklist « Ma première semaine » est retirée (doublon avec la phase 1 du parcours) ; l’écran de bienvenue renvoie vers « Mon parcours ».'],
     ['f','Mes sessions et Mail Manager s’ouvrent désormais au point d’étape 1 (phase 2) ou au statut BEMAN, comme Ressources et Veille (avant : après la Découverte Métier / la demande d’accès MEGA).'],
-    ['f','Admin → Activité : fiche « Qui voit quoi dans Kairos ? » (adresse partageable #admin?s=portail-web&fiche=qui-voit-quoi) sous « Voir Kairos comme » : récapitulatif des accès (page d’accueil, onglets, fiches pratiques par rayon, « Pour aller plus loin », outil IA) pour sans cotisation, avec cotisation, phase 1 validée ou BEMAN, phases 2-3 validées ou ADMAN, et admins.'],
+    ['f','Admin → Activité : fiche « Qui voit quoi dans Kairos ? » (au survol de chaque colonne, les comptes Kairos concernés, un par ligne ; adresse partageable #admin?s=portail-web&fiche=qui-voit-quoi) sous « Voir Kairos comme » : récapitulatif des accès (page d’accueil, onglets, fiches pratiques par rayon, « Pour aller plus loin », outil IA) pour sans cotisation, avec cotisation, phase 1 validée ou BEMAN, phases 2-3 validées ou ADMAN, et admins.'],
     ['f','Fiches pratiques : nouvel accès par rayon. Dès le départ : Administratif & statut (sauf Anacofi, Obligations du CIF et Financer les UDP), Outils & organisation, et Tips habilitations, Examens et ESP, Primo-liste ; Proxeema et Transférer un dossier attendent la phase 2, « Passer en société » la validation de la phase 2 ou le statut ADMAN ; tout le reste s’ouvre quand le parrain valide la phase 1. Les fiches pas encore ouvertes ne s’affichent plus : un message invite à avancer dans le parcours.'],
     ['f','Ressources → Pour aller plus loin : réservé au statut ADMAN et plus (onglet marqué 🔒 et message d’attente sans détail du contenu) ; la base applique la même règle au catalogue, à l’encadré et à l’outil IA chercher_supports.'],
     ['f','Sécurité : le catalogue des supports Vie Plus et l’encadré « Allocations types » ne sont plus intégrés à la page publique ; ils sont lus en base après connexion (table supports_vieplus et bloc allocations_reco). Les prochaines mises à jour du catalogue se font en base, sans republier.'],
@@ -11062,6 +11084,7 @@ async function buildMembres(){
   let rows=null;
   try{ const r=await SB.rpc('membres_connectes'); if(r.error) throw r.error; rows=r.data||[]; }
   catch(e){ return masquerAdmin(btn); }
+  RC_ADMINS = new Set(rows.filter(m=>m.est_admin).map(m=>String(m.email||'').toLowerCase()));   // « Qui voit quoi » : survol des colonnes
   if(btn) btn.hidden=false;
   EST_ADMIN=true;
   document.body.classList.add('est-admin');
