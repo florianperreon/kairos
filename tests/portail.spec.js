@@ -6295,49 +6295,76 @@ test.describe('Admin → Activité : Portail Web et MCP (04/11/2026)', () => {
 });
 
 test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/2026)', () => {
-  test('sous-rubrique de Ressources (plus dans l’Admin), 439 supports décodés, données au 31/10/2026, filtres et tri', async ({ page }) => {
+  // 05/11/2026 : le catalogue n'est plus dans la page, il est lu dans la table supports_vieplus (RLS).
+  // Le test simule la base avec quelques lignes.
+  test('sous-rubrique de Ressources, catalogue lu en base, articles 9 mis en avant, filtres, tri et encadré', async ({ page }) => {
     const erreurs = await ouvrir(page);
-    const r = await page.evaluate(() => {
+    const r = await page.evaluate(async () => {
       document.getElementById('lock').style.display = 'none';
       document.getElementById('app').style.display = 'grid';
       window.__booted = true;
+      const L = (isin, nom, famille, p5, sri, sfdr, labels) => ({ isin, nom, famille, categorie:'', theme:'', zone:'Monde', societe:'SGP',
+        perf_1an: 1, perf_3ans: 2, perf_5ans: p5, notation_quantalys: 4, sri, sfdr, labels, contrat:'Cristalliance Avenir', donnees_au:'2026-11-02' });
+      const LIGNES = [
+        L('FR1459ABH750','Exceltis Rendement Decembre 2026','Produit structuré',null,5,null,null),
+        L('LU0826452848','DWS Invest II Gbl Eq Hi Conv. LC','Actions',108.98,4,8,null),
+        L('LU1876459303','Axiom European Banks Equity RC EUR(v)','Actions',231.16,5,8,null),
+        L('LU0280435388','Pictet Clean Energy Transition P EUR Acc','Actions',41.95,5,9,'Towards Sustainability'),
+        L('LU0054578231','BGF Systematic Global SmallCap A2 USD','Actions',50.65,4,9,null),
+      ];
+      let lues = 0;
+      SB = { from: (tb) => ({ select: async () => { lues++; return tb === 'supports_vieplus' ? { data: LIGNES, error: null } : { data: [], error: null }; } }) };
+      SBUSER = { id: 'test' };
+      EST_ADMIN = false; PARCOURS = { statut: 'ROLE_BEMAN' };
+      showTab('res'); curTab = 'res'; showResSub('plus');
+      const ferme = { classe: document.getElementById('sr-plus').classList.contains('rp-ferme'), bouton: document.querySelector('#resSub button[data-s="plus"]').textContent, lues };
+      PARCOURS = { statut: 'ROLE_ADMAN' };
+      CONTENU = Object.assign({}, CONTENU || {}, { allocations_reco: { n:'Prénom Nom', p:'Prénom', d:'https://discord.com/channels/1/2', date:'05/11/2026', r:[['Énergie propre','⚡','LU0280435388']] } });
       const admin = [...document.querySelectorAll('#adminSub button, #v-admin nav button')].map(b => b.textContent);
       const res = [...document.querySelectorAll('#resSub button')].map(b => b.dataset.s);
       const dans = [...document.querySelectorAll('#resPlusSub button')].map(b => b.textContent);
       showTab('res'); curTab = 'res'; showResSub('plus');
+      await vpLoad();
       const vu = { plus: document.getElementById('sr-plus').classList.contains('on'), lien: hashFor('res') };
       const intro = document.getElementById('vpIntro').textContent;
       const total = document.querySelectorAll('#vpBody tr').length;
       const exc = VP.l.find(x => x.isin === 'FR1459ABH750');
+      const encadre = document.getElementById('rpPre').textContent;
       document.getElementById('vpQ').value = 'LU0826452848';
       document.getElementById('vpQ').dispatchEvent(new Event('input', { bubbles: true }));
       const dws = [...document.querySelectorAll('#vpBody tr')].map(t => t.textContent);
       document.getElementById('vpQ').value = '';
       document.getElementById('vpSfdr').value = '9';
       document.getElementById('vpSfdr').dispatchEvent(new Event('change', { bubbles: true }));
-      const esg = document.querySelectorAll('#vpBody tr.vp-r9').length === document.querySelectorAll('#vpBody tr').length ? document.querySelectorAll('#vpBody tr').length : -1;
+      const a9 = document.querySelectorAll('#vpBody tr.vp-r9').length === document.querySelectorAll('#vpBody tr').length ? document.querySelectorAll('#vpBody tr').length : -1;
       document.getElementById('vpSfdr').value = '';
       document.querySelector('.vp-tbl th[data-vpt="p5"]').click();
       const premier = document.querySelector('#vpBody tr td b').textContent;
       showResSub('sim');
       const ailleurs = document.getElementById('sr-plus').classList.contains('on');
-      return { admin, res, dans, vu, intro, total, exc, dws, esg, premier, ailleurs, slug: RS_SLUG_INV['pour-aller-plus-loin'] };
+      return { ferme, admin, res, dans, vu, intro, total, exc, encadre, dws, a9, premier, ailleurs, lues, slug: RS_SLUG_INV['pour-aller-plus-loin'] };
     });
     expect(erreurs).toEqual([]);
-    expect(r.admin.join(' ')).not.toContain('Outils Tech');
     expect(r.admin.join(' ')).not.toContain('Supports Vie Plus');
+    expect(r.ferme.classe).toBe(true);                // BEMAN : rubrique fermée (règle du 05/11/2026)
+    expect(r.ferme.bouton).toContain('🔒');
+    expect(r.ferme.lues).toBe(0);                     // rien n'est lu en base tant que c'est fermé
     expect(r.res).toEqual(['sim', 'doc', 'plus']);
     expect(r.dans).toEqual(['Supports Vie Plus']);
     expect(r.vu).toEqual({ plus: true, lien: '#ressources?s=pour-aller-plus-loin' });
     expect(r.intro).toContain('données Quantalys au 02/11/2026');
-    expect(r.total).toBe(429);
+    expect(r.intro).toContain('2 fonds article 9');
+    expect(r.total).toBe(5);
+    expect(r.lues).toBe(1);                           // une seule lecture en base
     expect(r.exc).toMatchObject({ nom: 'Exceltis Rendement Decembre 2026', fam: 'Produit structuré', sri: 5 });
+    expect(r.encadre).toContain('Prénom Nom');
+    expect(r.encadre).toContain('en date du 05/11/2026');
+    expect(r.encadre).toContain('Pictet Clean Energy');
     expect(r.dws).toHaveLength(1);
-    expect(r.dws[0]).toContain('DWS Invest II');
     expect(r.dws[0]).toContain('+109,0 %');
     expect(r.dws[0]).toContain('Art. 8');
-    expect(r.esg).toBe(49);                           // les 49 articles 9, tous surlignés (05/11/2026)
-    expect(r.premier).toBe('Axiom European Banks Equity RC EUR(v)');   // meilleure perf 5 ans du catalogue (+231 %)
+    expect(r.a9).toBe(2);
+    expect(r.premier).toBe('Axiom European Banks Equity RC EUR(v)');
     expect(r.ailleurs).toBe(false);
     expect(r.slug).toBe('plus');
   });
@@ -6346,7 +6373,8 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
     const idx = lire('index.html');
     expect(idx).not.toContain('LU0826452848');
     expect(idx).not.toContain('CRISTALLIANCE');
-    expect(idx).not.toContain('Audrain');        // encadré « Allocations types » (05/11/2026) : nom encodé
-    expect(idx).not.toContain('LU2466448532');   // recommandations thématiques encodées
+    expect(idx).not.toContain('Audrain');        // encadré « Allocations types » : lu en base (05/11/2026)
+    expect(idx).not.toContain('LU2466448532');   // recommandations : lues en base
+    expect(idx).not.toContain('const VP_ENC');   // plus aucun catalogue intégré à la page (05/11/2026)
   });
 });
