@@ -6604,3 +6604,43 @@ test.describe('Admin → Membres : demandes et désactivation (06/11/2026)', () 
     expect(r.attente).toContain('Accès en attente de validation');
   });
 });
+
+
+test.describe('Admin → Logs Kairos (06/11/2026)', () => {
+  test('Logs Kairos regroupe Journal et Changelog ; les adresses restent valables', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true; EST_ADMIN = true;
+      document.querySelectorAll('nav.tabs [data-v="admin"]').forEach(x => x.hidden = false);
+      const haut = [...document.querySelectorAll('#adminSub button')].map(b => b.dataset.s);
+      const libelle = document.querySelector('#adminSub button[data-s="logs"]').textContent.trim();
+      const dans = [...document.querySelectorAll('#logsSub button')].map(b => b.dataset.s);
+      showTab('admin'); curTab = 'admin'; showAdminSub('log');
+      const log = { grp: document.getElementById('sv-logs').classList.contains('on'), log: document.getElementById('sv-log').classList.contains('on'),
+        jrn: document.getElementById('sv-jrn').classList.contains('on'), bouton: document.querySelector('#adminSub button.on').dataset.s, lien: hashFor('admin'),
+        liste: document.querySelectorAll('#clListe .cl-j').length };
+      showAdminSub('mbr');
+      const ailleurs = document.getElementById('sv-logs').classList.contains('on');
+      showAdminSub('logs'); const retour = curSub;
+      showAdminSub('jrn'); const lienJ = hashFor('admin');
+      majBadgeJrn(2);
+      return { haut, libelle, dans, log, ailleurs, retour, lienJ, pastille: document.getElementById('jrnBadgeTop').textContent,
+               slugs: [SLUG_ADMIN['journal'], SLUG_ADMIN['changelog'], SLUG_ADMIN['logs-kairos']] };
+    });
+    expect(r.haut).toContain('logs');
+    expect(r.haut).not.toContain('jrn');
+    expect(r.haut).not.toContain('log');
+    expect(r.libelle).toBe('Logs Kairos');
+    expect(r.dans).toEqual(['jrn', 'log']);
+    expect(r.log).toMatchObject({ grp: true, log: true, jrn: false, bouton: 'logs', lien: '#admin?s=changelog' });
+    expect(r.log.liste).toBeGreaterThan(0);
+    expect(r.ailleurs).toBe(false);
+    expect(r.retour).toBe('log');
+    expect(r.lienJ).toBe('#admin?s=journal');
+    expect(r.pastille).toBe('2');
+    expect(r.slugs).toEqual(['jrn', 'log', 'logs']);
+    expect(erreurs).toEqual([]);
+  });
+});

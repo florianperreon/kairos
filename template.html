@@ -2589,8 +2589,7 @@ body.ps-open #fbBtn{bottom:64px}
         <button data-s="acti">Activité</button>
         <button data-s="pte">Points d’étape en cours de validation <span class="sub-badge" id="pteBadge" hidden></span></button>
         <button data-s="cnt">Contenu <span class="sub-badge cnt" id="sgBadge" hidden></span><span class="sub-badge" id="sgNonLu" hidden></span></button>
-        <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
-        <button data-s="log">Changelog Kairos</button>
+        <button data-s="logs">Logs Kairos <span class="sub-badge" id="jrnBadgeTop" hidden></span></button>
       </nav>
 
       <!-- Admin → Forman (04/11/2026) : Annuaire, Statistiques, Nouveautés -->
@@ -2650,15 +2649,9 @@ body.ps-open #fbBtn{bottom:64px}
         <div class="subview" id="sv-mcp"><div id="mcpAdmin"></div></div>
       </div>
 
-      <div class="subview" id="sv-log">
-        <div class="panel cl-panel">
-          <h2>Changelog Kairos</h2>
-          <p class="mbr-sub">Les évolutions du portail en bref, les plus récentes en haut.</p>
-          <div class="mm-filtre" id="clFiltre"><button type="button" data-clf="" class="on">Tout</button><button type="button" data-clf="f">Fonctionnalités</button><button type="button" data-clf="b">Corrections</button></div>
-          <div id="clListe"></div>
-        </div>
-      </div>
-
+      <!-- Admin → Logs Kairos (06/11/2026) : Journal des exécutions + Changelog -->
+      <div class="subview-frm" id="sv-logs">
+        <nav class="subtabs frm-sub" id="logsSub"><button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button><button data-s="log">Changelog</button></nav>
       <div class="subview" id="sv-jrn">
       <div class="panel">
         <h2>Journal des exécutions</h2>
@@ -2680,6 +2673,16 @@ body.ps-open #fbBtn{bottom:64px}
             <thead><tr><th>Quand</th><th>Tâche</th><th>Statut</th><th>Durée</th><th>Résultat</th></tr></thead>
             <tbody id="jrnHist"><tr><td colspan="5" style="color:var(--ink-2)">Chargement…</td></tr></tbody>
           </table>
+        </div>
+      </div>
+      </div>
+
+      <div class="subview" id="sv-log">
+        <div class="panel cl-panel">
+          <h2>Changelog Kairos</h2>
+          <p class="mbr-sub">Les évolutions du portail en bref, les plus récentes en haut.</p>
+          <div class="mm-filtre" id="clFiltre"><button type="button" data-clf="" class="on">Tout</button><button type="button" data-clf="f">Fonctionnalités</button><button type="button" data-clf="b">Corrections</button></div>
+          <div id="clListe"></div>
         </div>
       </div>
       </div>
@@ -4578,8 +4581,8 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbg','mbr','frm','acti','ann','act','pte','dem','cnt','stats','nouv','jrn','mcp','log'];
-const ADMIN_SLUG={mbg:'gestion-des-membres',mbr:'membres',frm:'forman',pte:'points-d-etape-en-cours-de-validation',ann:'annuaire',acti:'activite',act:'portail-web',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
+const ADMIN_SUBS=['mbg','logs','mbr','frm','acti','ann','act','pte','dem','cnt','stats','nouv','jrn','mcp','log'];
+const ADMIN_SLUG={mbg:'gestion-des-membres',logs:'logs-kairos',mbr:'membres',frm:'forman',pte:'points-d-etape-en-cours-de-validation',ann:'annuaire',acti:'activite',act:'portail-web',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 // Admin → Forman regroupe Annuaire, Statistiques et Nouveautés ; l'adresse garde le sous-onglet précis
@@ -4587,8 +4590,9 @@ let curSub='mbr';
 // 04/11/2026 : Admin → Activité regroupe Portail Web (#admin?s=portail-web) et MCP (#admin?s=mcp) ;
 // #admin?s=activite (ancienne adresse de la page Activité) rouvre le dernier consulté.
 // 06/11/2026 : Admin → Membres regroupe Liste des membres (#admin, ?s=membres) et Demandes d'accès (#admin?s=demandes).
-const ADMIN_GROUPES = { mbg:['mbr','dem'], frm:['ann','stats','nouv'], acti:['act','mcp'] };
-const ADMIN_GRP_DER = { mbg:'mbr', frm:'ann', acti:'act' };
+// 06/11/2026 : Admin → Logs Kairos regroupe Journal (#admin?s=journal) et Changelog (#admin?s=changelog).
+const ADMIN_GROUPES = { mbg:['mbr','dem'], frm:['ann','stats','nouv'], acti:['act','mcp'], logs:['jrn','log'] };
+const ADMIN_GRP_DER = { mbg:'mbr', frm:'ann', acti:'act', logs:'jrn' };
 const FRM_SUBS = ADMIN_GROUPES.frm;
 const adminGroupeDe = s => Object.keys(ADMIN_GROUPES).find(g=>ADMIN_GROUPES[g].includes(s)) || null;
 function showAdminSub(s){
@@ -4599,7 +4603,7 @@ function showAdminSub(s){
   if(grp) ADMIN_GRP_DER[grp] = s;
   const top = grp || s;
   document.querySelectorAll('#adminSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===top));
-  document.querySelectorAll('#mbgSub button, #frmSub button, #actiSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+  document.querySelectorAll('#mbgSub button, #frmSub button, #actiSub button, #logsSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
   Object.keys(ADMIN_GROUPES).forEach(g=>{ const el = document.getElementById('sv-'+g); if(el) el.classList.toggle('on', top===g); });
   if(s==='act'){ try{ if(ACT) buildActivite(); else chargerActivite(); }catch(e){ console.error(e); } }
@@ -4830,6 +4834,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-06', [
+    ['f','Admin : Journal et Changelog sont réunis dans une rubrique unique « Logs Kairos » ; la pastille des tâches en anomalie s’affiche sur Logs Kairos.'],
     ['f','Admin → Membres : « Demandes d’accès » devient une sous-rubrique de Membres, à côté de la liste des membres ; la pastille des demandes en attente s’affiche sur Membres.'],
     ['f','Admin → Membres : un administrateur peut désactiver (puis réactiver) le compte d’un membre. La personne ne peut plus se connecter ni utiliser Kairos depuis son IA ; ses données sont conservées.'],
   ]],
@@ -4992,7 +4997,7 @@ document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('[data-clf]'); if(!b) return;
   CL_FILTRE = b.dataset.clf; buildChangelog();
 });
-document.querySelectorAll('#adminSub button, #mbgSub button, #frmSub button, #actiSub button').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('#adminSub button, #mbgSub button, #frmSub button, #actiSub button, #logsSub button').forEach(b=>b.addEventListener('click',()=>{
   showAdminSub(b.dataset.s);
   syncHash(true);
   window.scrollTo({top:0});
@@ -11357,8 +11362,7 @@ function majBadgeDem(n){
 }
 function majBadgeJrn(n){
   JRN_N = n || 0;
-  const b=document.getElementById('jrnBadge');
-  if(b){ b.hidden = !n; b.textContent = n || ''; }
+  ['jrnBadge','jrnBadgeTop'].forEach(id=>{ const b=document.getElementById(id); if(b){ b.hidden = !n; b.textContent = n || ''; } });
   majBadgeAdmin();
 }
 // Fiches qui ressemblent au nom de la demande, sans tenir compte des accents ni de la casse
