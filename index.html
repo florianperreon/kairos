@@ -1611,6 +1611,10 @@ nav.tabs .sub-badge,nav.botbar .sub-badge,#plusCard .sub-badge{display:inline-bl
 /* ---------- Admin : rôle des membres ---------- */
 .rol{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--surface-2);color:var(--ink-2)}
 .rol.adm{background:var(--accent-soft);color:var(--accent)}
+.rol.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.rol.off{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+#mbrBody tr.mbr-off td{opacity:.62}
+#mbrBody tr.mbr-off td:last-child{opacity:1}
 .rol.prop{background:var(--gold-soft);color:var(--gold-ink);margin-left:5px}
 .rol-b{display:block;margin-top:5px;font-size:12px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:99px;padding:2px 10px;cursor:pointer;white-space:nowrap}
 .rol-b:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
@@ -2580,10 +2584,9 @@ body.ps-open #fbBtn{bottom:64px}
 
     <section class="view" id="v-admin">
       <nav class="subtabs" id="adminSub">
-        <button data-s="mbr" class="on">Membres</button>
+        <button data-s="mbg" class="on">Membres <span class="sub-badge" id="demBadgeTop" hidden></span></button>
         <button data-s="frm">Forman</button>
         <button data-s="acti">Activité</button>
-        <button data-s="dem">Demandes <span class="sub-badge" id="demBadge" hidden></span></button>
         <button data-s="pte">Points d’étape en cours de validation <span class="sub-badge" id="pteBadge" hidden></span></button>
         <button data-s="cnt">Contenu <span class="sub-badge cnt" id="sgBadge" hidden></span><span class="sub-badge" id="sgNonLu" hidden></span></button>
         <button data-s="jrn">Journal <span class="sub-badge" id="jrnBadge" hidden></span></button>
@@ -2681,27 +2684,22 @@ body.ps-open #fbBtn{bottom:64px}
       </div>
       </div>
 
+      <!-- Admin → Membres (06/11/2026) : Liste des membres + Demandes d’accès -->
+      <div class="subview-frm on" id="sv-mbg">
+        <nav class="subtabs frm-sub" id="mbgSub"><button data-s="mbr" class="on">Liste des membres</button><button data-s="dem">Demandes d’accès <span class="sub-badge" id="demBadge" hidden></span></button></nav>
       <div class="subview on" id="sv-mbr">
       <div class="panel">
         <h2>Qui utilise Kairos</h2>
         <p class="mbr-sub">Les personnes qui se sont connectées au portail avec un compte. <b>Dernier accès</b> = la dernière fois que le portail était ouvert chez elles (relevé toutes les 5 minutes tant qu’il est affiché), même si leur session est restée ouverte depuis des jours ; <b>dernière connexion</b> = la dernière fois qu’elles ont dû s’identifier.</p>
         <div class="tbl-wrap">
           <table id="mbrTbl">
-            <thead><tr><th>Personne</th><th>Rôle</th><th title="Dernière fois que le portail était ouvert (relevé toutes les 5 min)">Dernier accès</th><th title="Dernière identification (lien ou code reçu par e-mail, compte Google)">Dernière connexion</th><th>Premier accès</th></tr></thead>
+            <thead><tr><th>Personne</th><th>Rôle</th><th title="Dernière fois que le portail était ouvert (relevé toutes les 5 min)">Dernier accès</th><th title="Dernière identification (lien ou code reçu par e-mail, compte Google)">Dernière connexion</th><th>Premier accès</th><th title="Un compte désactivé ne peut plus se connecter au portail ni à son IA">Accès</th></tr></thead>
             <tbody id="mbrBody"></tbody>
           </table>
         </div>
         <p class="mbr-note" id="mbrNote"></p>
         <p class="mbr-msg" id="mbrMsg" hidden></p>
       </div>
-      </div>
-
-      <div class="subview" id="sv-pte">
-        <div class="panel">
-          <h2>Points d’étape en cours de validation</h2>
-          <p class="mbr-sub">Les demandes de point d’étape qui attendent leur parrain. Un administrateur peut les valider à sa place, avec un mot pour le filleul ; la décision s’affiche dans son parcours, signée de ton nom.</p>
-          <div id="pteListe"><p class="mbr-sub">Chargement…</p></div>
-        </div>
       </div>
 
       <div class="subview" id="sv-dem">
@@ -2722,6 +2720,15 @@ body.ps-open #fbBtn{bottom:64px}
           <datalist id="demAnnuaire"></datalist>
           <p class="mbr-note" id="demNote"></p>
           <p class="acc-err" id="demErr"></p>
+        </div>
+      </div>
+      </div>
+
+      <div class="subview" id="sv-pte">
+        <div class="panel">
+          <h2>Points d’étape en cours de validation</h2>
+          <p class="mbr-sub">Les demandes de point d’étape qui attendent leur parrain. Un administrateur peut les valider à sa place, avec un mot pour le filleul ; la décision s’affiche dans son parcours, signée de ton nom.</p>
+          <div id="pteListe"><p class="mbr-sub">Chargement…</p></div>
         </div>
       </div>
 
@@ -4571,16 +4578,17 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------- Onglet Admin : sous-menu Membres / Statistiques ---------- */
-const ADMIN_SUBS=['mbr','frm','acti','ann','act','pte','dem','cnt','stats','nouv','jrn','mcp','log'];
-const ADMIN_SLUG={mbr:'membres',frm:'forman',pte:'points-d-etape-en-cours-de-validation',ann:'annuaire',acti:'activite',act:'portail-web',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
+const ADMIN_SUBS=['mbg','mbr','frm','acti','ann','act','pte','dem','cnt','stats','nouv','jrn','mcp','log'];
+const ADMIN_SLUG={mbg:'gestion-des-membres',mbr:'membres',frm:'forman',pte:'points-d-etape-en-cours-de-validation',ann:'annuaire',acti:'activite',act:'portail-web',dem:'demandes',cnt:'contenu',stats:'statistiques',nouv:'nouveautes',jrn:'journal',mcp:'mcp',log:'changelog'};
 const SLUG_ADMIN=Object.fromEntries(Object.entries(ADMIN_SLUG).map(([k,v])=>[v,k]));
 let curSub='mbr';
 // Admin → Forman regroupe Annuaire, Statistiques et Nouveautés ; l'adresse garde le sous-onglet précis
 // (#admin?s=annuaire, ?s=statistiques, ?s=nouveautes) ; #admin?s=forman rouvre le dernier consulté.
 // 04/11/2026 : Admin → Activité regroupe Portail Web (#admin?s=portail-web) et MCP (#admin?s=mcp) ;
 // #admin?s=activite (ancienne adresse de la page Activité) rouvre le dernier consulté.
-const ADMIN_GROUPES = { frm:['ann','stats','nouv'], acti:['act','mcp'] };
-const ADMIN_GRP_DER = { frm:'ann', acti:'act' };
+// 06/11/2026 : Admin → Membres regroupe Liste des membres (#admin, ?s=membres) et Demandes d'accès (#admin?s=demandes).
+const ADMIN_GROUPES = { mbg:['mbr','dem'], frm:['ann','stats','nouv'], acti:['act','mcp'] };
+const ADMIN_GRP_DER = { mbg:'mbr', frm:'ann', acti:'act' };
 const FRM_SUBS = ADMIN_GROUPES.frm;
 const adminGroupeDe = s => Object.keys(ADMIN_GROUPES).find(g=>ADMIN_GROUPES[g].includes(s)) || null;
 function showAdminSub(s){
@@ -4591,7 +4599,7 @@ function showAdminSub(s){
   if(grp) ADMIN_GRP_DER[grp] = s;
   const top = grp || s;
   document.querySelectorAll('#adminSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===top));
-  document.querySelectorAll('#frmSub button, #actiSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
+  document.querySelectorAll('#mbgSub button, #frmSub button, #actiSub button').forEach(b=>b.classList.toggle('on',b.dataset.s===s));
   document.querySelectorAll('#v-admin .subview').forEach(v=>v.classList.toggle('on', v.id==='sv-'+s));
   Object.keys(ADMIN_GROUPES).forEach(g=>{ const el = document.getElementById('sv-'+g); if(el) el.classList.toggle('on', top===g); });
   if(s==='act'){ try{ if(ACT) buildActivite(); else chargerActivite(); }catch(e){ console.error(e); } }
@@ -4821,6 +4829,10 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
+  ['2026-11-06', [
+    ['f','Admin → Membres : « Demandes d’accès » devient une sous-rubrique de Membres, à côté de la liste des membres ; la pastille des demandes en attente s’affiche sur Membres.'],
+    ['f','Admin → Membres : un administrateur peut désactiver (puis réactiver) le compte d’un membre. La personne ne peut plus se connecter ni utiliser Kairos depuis son IA ; ses données sont conservées.'],
+  ]],
   ['2026-11-05', [
     ['f','Parcours, mission 3.3 « Me former chaque mois » : deux actions à cocher soi-même, « Participer à un atelier Boost de la lignée » et « Participer à un CLUB MED de la lignée » (infos sur Discord, #-prochaines-dates).'],
     ['f','Accueil : la checklist « Ma première semaine » est retirée (doublon avec la phase 1 du parcours) ; l’écran de bienvenue renvoie vers « Mon parcours ».'],
@@ -4980,7 +4992,7 @@ document.addEventListener('click', e=>{
   const b = e.target.closest && e.target.closest('[data-clf]'); if(!b) return;
   CL_FILTRE = b.dataset.clf; buildChangelog();
 });
-document.querySelectorAll('#adminSub button, #frmSub button, #actiSub button').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('#adminSub button, #mbgSub button, #frmSub button, #actiSub button').forEach(b=>b.addEventListener('click',()=>{
   showAdminSub(b.dataset.s);
   syncHash(true);
   window.scrollTo({top:0});
@@ -11027,6 +11039,10 @@ function signalerActivite(){
   if(t - ACT_T < ACT_PAS) return false;
   ACT_T = t;
   try{ Promise.resolve(SB.rpc('signaler_activite')).then(()=>{}, ()=>{ ACT_T = 0; }); }catch(e){ ACT_T = 0; }
+  // 06/11/2026 : compte désactivé pendant que le portail est ouvert → retour à l'écran de connexion
+  if(window.__booted && !APERCU){ try{ Promise.resolve(SB.rpc('mon_acces')).then(r=>{
+    if(r && !r.error && r.data && r.data.autorise===false && r.data.desactive_le) location.replace(location.pathname);
+  }, ()=>{}); }catch(e){} }
   return true;
 }
 document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) signalerActivite(); });
@@ -11108,16 +11124,22 @@ async function buildMembres(){
       + '<td>'+celluleRole(m)+'</td>'
       + '<td class="num">'+celluleAcces(m)+'</td>'
       + '<td class="num">'+esc(fmtQuand(m.derniere))+'</td>'
-      + '<td class="num">'+esc(m.creation?fmtD(m.creation.slice(0,10)):'—')+'</td></tr>';
-  }).join('') : '<tr><td colspan="5" style="color:var(--ink-2)">Personne ne s\u2019est encore connecté.</td></tr>';
+      + '<td class="num">'+esc(m.creation?fmtD(m.creation.slice(0,10)):'—')+'</td>'
+      + '<td>'+celluleActif(m)+'</td></tr>';
+  }).join('') : '<tr><td colspan="6" style="color:var(--ink-2)">Personne ne s\u2019est encore connecté.</td></tr>';
+  body.querySelectorAll('tr').forEach((tr,i)=>{ if(rows[i] && rows[i].desactive_le) tr.classList.add('mbr-off'); });
   body.querySelectorAll('.rol-b').forEach(b=>b.addEventListener('click', ()=>
     basculerAdmin(b.dataset.mail, b.dataset.to === '1', b)));
+  body.querySelectorAll('.act-b').forEach(b=>b.addEventListener('click', ()=>
+    basculerActif(b.dataset.mail, b.dataset.to === '1', b)));
   const n=document.getElementById('mbrNote');
   if(n){
     const na = rows.filter(m=>m.est_admin).length;
     const depuis = j => rows.filter(m=>{ const d=m.dernier_acces||m.derniere; return d && (Date.now()-new Date(d))/86400000 < j; }).length;
+    const nd = rows.filter(m=>m.desactive_le).length;
     n.textContent = (rows.length===1 ? '1 personne connectée à ce jour' : rows.length+' personnes connectées à ce jour')
       + ' · ' + (na===1 ? '1 administrateur' : na+' administrateurs')
+      + (nd ? ' · ' + (nd===1 ? '1 compte désactivé' : nd+' comptes désactivés') : '')
       + ' · venus aujourd\u2019hui (24 h) : ' + depuis(1) + ' · sur 7 jours : ' + depuis(7) + ' · sur 30 jours : ' + depuis(30) + '.';
   }
   return true;
@@ -11150,6 +11172,41 @@ function celluleRole(m){
     h += '<span class="rol-fixe">tu ne peux pas modifier ton propre rôle</span>';
   }
   return h;
+}
+// Accès d'un compte (06/11/2026, règle Florian) : actif, ou désactivé (plus aucune connexion au portail
+// ni à son IA). Le serveur (definir_actif) refuse : soi-même, le propriétaire, un administrateur (retirer
+// d'abord son rôle). La désactivation vaut pour toutes les adresses de la même fiche.
+function celluleActif(m){
+  const mail = esc(m.email||'');
+  if(m.desactive_le){
+    const par = m.desactive_par ? ' par '+esc(String(m.desactive_par).split('@')[0]) : '';
+    return '<span class="rol off">Désactivé</span><div class="mbr-act">depuis le '+esc(fmtD(String(m.desactive_le).slice(0,10)))+par+'</div>'
+      + '<button class="rol-b act-b" data-mail="'+mail+'" data-to="1">Réactiver le compte</button>';
+  }
+  let h = '<span class="rol ok">Actif</span>';
+  if(SBUSER && m.email===SBUSER.email) return h + '<span class="rol-fixe">ton propre compte</span>';
+  if(m.proprietaire) return h + '<span class="rol-fixe">non désactivable</span>';
+  if(m.est_admin) return h + '<span class="rol-fixe">retire d\u2019abord l\u2019accès admin</span>';
+  return h + '<button class="rol-b act-b" data-mail="'+mail+'" data-to="0">Désactiver le compte</button>';
+}
+async function basculerActif(mail, actif, btn){
+  if(!mail || !SB || !SBUSER) return;
+  const quoi = actif
+    ? 'Réactiver le compte ' + mail + ' ? La personne retrouvera son espace tel qu\u2019elle l\u2019a laissé (progression, Mail Manager, favoris) dès sa prochaine connexion.'
+    : 'Désactiver le compte ' + mail + ' ? La personne ne pourra plus se connecter à Kairos ni l\u2019utiliser depuis son IA (Claude, ChatGPT). Ses données sont conservées : tu pourras la réactiver à tout moment.';
+  if(!confirm(quoi)) return;
+  if(btn) btn.disabled = true;
+  mbrMsg('');
+  try{
+    const r = await SB.rpc('definir_actif', { p_email: mail, p_actif: actif });
+    if(r.error) throw r.error;
+    await buildMembres();
+    mbrMsg(actif ? 'Le compte ' + mail + ' est de nouveau actif.' : 'Le compte ' + mail + ' est désactivé.');
+  }catch(e){
+    const t = String((e && e.message) || '');
+    mbrMsg(/definir_actif|function|schema cache/i.test(t) ? 'La désactivation n\u2019est pas encore installée en base (script SQL à lancer).' : (t || 'Changement refusé.'), true);
+    if(btn) btn.disabled = false;
+  }
 }
 function mbrMsg(txt, err){
   const e = document.getElementById('mbrMsg');
@@ -11295,8 +11352,7 @@ function majBadgeAdmin(){
 }
 function majBadgeDem(n){
   DEM_N = n || 0;
-  const b=document.getElementById('demBadge');
-  if(b){ b.hidden = !n; b.textContent = n || ''; }
+  ['demBadge','demBadgeTop'].forEach(id=>{ const b=document.getElementById(id); if(b){ b.hidden = !n; b.textContent = n || ''; } });
   majBadgeAdmin();
 }
 function majBadgeJrn(n){
@@ -12958,7 +13014,12 @@ async function demarrer(){
     if(w) w.textContent='Ouverture de ton espace…';
     if(await silentUnlock()){ oauthOuvrir(true); return; }
     const el=document.getElementById('lockErr');
-    if(el) el.innerHTML='<b>Accès en attente de validation</b><br>Ton compte <b>'+esc((SBUSER&&SBUSER.email)||'')
+    let acces=null; try{ const a=await SB.rpc('mon_acces'); if(!a.error) acces=a.data; }catch(_){}
+    if(el && acces && !acces.autorise && acces.desactive_le) el.innerHTML='<b>Compte désactivé</b><br>Ton compte <b>'+esc((SBUSER&&SBUSER.email)||'')
+      +'</b> n’a plus accès à Kairos depuis le '+esc(fmtD(String(acces.desactive_le).slice(0,10)))+'. '
+      +'Si tu penses que c’est une erreur, contacte ton parrain ou un administrateur du portail : tes données sont conservées et l’accès peut être rétabli.'
+      +'<button type="button" id="lockOut">Utiliser un autre compte</button>';
+    else if(el) el.innerHTML='<b>Accès en attente de validation</b><br>Ton compte <b>'+esc((SBUSER&&SBUSER.email)||'')
       +'</b> est bien enregistré, mais il doit encore être rapproché de ta fiche par un administrateur. '
       +'Tu auras accès au portail dès que ce sera fait, sans rien avoir à refaire.'
       +'<button type="button" id="lockOut">Utiliser un autre compte</button>';

@@ -2417,7 +2417,7 @@ test.describe('Menu Admin', () => {
       return { th, l, froid: !!document.querySelector('#mbrBody tr:nth-child(2) .mbr-act.froid'),
                note: document.getElementById('mbrNote').textContent };
     });
-    expect(r.th).toEqual(['Personne', 'Rôle', 'Dernier accès', 'Dernière connexion', 'Premier accès']);
+    expect(r.th).toEqual(['Personne', 'Rôle', 'Dernier accès', 'Dernière connexion', 'Premier accès', 'Accès']);
     expect(r.l[0][2]).toMatch(/^aujourd'hui à|^hier à/);        // venue il y a 2 h, pas « il y a 5 jours »
     expect(r.l[0][2]).toContain('9 jours actifs sur 30 j');
     expect(r.l[0][3]).toContain('il y a 5 jours');
@@ -6496,5 +6496,111 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
     expect(idx).not.toContain('Audrain');        // encadré « Allocations types » : lu en base (05/11/2026)
     expect(idx).not.toContain('LU2466448532');   // recommandations : lues en base
     expect(idx).not.toContain('const VP_ENC');   // plus aucun catalogue intégré à la page (05/11/2026)
+  });
+});
+
+
+test.describe('Admin → Membres : demandes et désactivation (06/11/2026)', () => {
+  test('Membres regroupe la liste et les demandes d’accès ; les adresses restent valables', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true; EST_ADMIN = true;
+      document.querySelectorAll('nav.tabs [data-v="admin"]').forEach(x => x.hidden = false);
+      const haut = [...document.querySelectorAll('#adminSub button')].map(b => b.dataset.s);
+      const dans = [...document.querySelectorAll('#mbgSub button')].map(b => b.dataset.s);
+      showTab('admin'); curTab = 'admin'; showAdminSub('dem');
+      const dem = { grp: document.getElementById('sv-mbg').classList.contains('on'), dem: document.getElementById('sv-dem').classList.contains('on'),
+        liste: document.getElementById('sv-mbr').classList.contains('on'), bouton: document.querySelector('#adminSub button.on').dataset.s, lien: hashFor('admin') };
+      showAdminSub('frm');
+      const ailleurs = document.getElementById('sv-mbg').classList.contains('on');
+      showAdminSub('mbg'); const retour = curSub;
+      showAdminSub('mbr'); const liste = hashFor('admin');
+      majBadgeDem(3);
+      const pastille = document.getElementById('demBadgeTop').textContent;
+      return { haut, dans, dem, ailleurs, retour, liste, pastille, slug: SLUG_ADMIN['demandes'] };
+    });
+    expect(r.haut).toContain('mbg');
+    expect(r.haut).not.toContain('dem');
+    expect(r.haut).not.toContain('mbr');
+    expect(r.dans).toEqual(['mbr', 'dem']);
+    expect(r.dem).toEqual({ grp: true, dem: true, liste: false, bouton: 'mbg', lien: '#admin?s=demandes' });
+    expect(r.ailleurs).toBe(false);
+    expect(r.retour).toBe('dem');
+    expect(r.liste).toBe('#admin');
+    expect(r.pastille).toBe('3');
+    expect(r.slug).toBe('dem');
+  });
+
+  test('désactiver / réactiver un compte depuis la liste des membres', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      SBUSER = { id: 'u1', email: 'a@test.invalid' };
+      const il = h => new Date(Date.now() - h * 3600000).toISOString();
+      let rows = [
+        { email: 'a@test.invalid', nom: 'Alice', derniere: il(5), creation: il(500), est_admin: true, proprietaire: true },
+        { email: 'c@test.invalid', nom: 'Chef', derniere: il(5), creation: il(500), est_admin: true, modifiable: true },
+        { email: 'b@test.invalid', nom: 'Bruno', derniere: il(5), creation: il(500), est_admin: false, modifiable: true },
+      ];
+      const appels = [];
+      SB = { rpc: async (nom, args) => {
+               if (nom === 'est_admin') return { data: true, error: null };
+               if (nom === 'membres_connectes') return { data: rows, error: null };
+               if (nom === 'definir_actif') { appels.push(args);
+                 rows = rows.map(m => m.email === args.p_email ? Object.assign({}, m, { desactive_le: args.p_actif ? null : '2026-11-06T09:00:00Z', desactive_par: args.p_actif ? null : 'a@test.invalid' }) : m);
+                 return { data: { ok: true }, error: null }; }
+               return { data: null, error: null }; },
+             from: () => ({ select() { return this; }, order() { return this; }, eq() { return this; },
+                            in() { return this; }, gte() { return this; }, limit() { return this; },
+                            then(r) { return Promise.resolve({ data: [], error: null }).then(r); } }) };
+      window.confirm = () => true;
+      await buildMembres();
+      const cell = i => document.querySelectorAll('#mbrBody tr')[i].lastElementChild.textContent;
+      const avant = [cell(0), cell(1), cell(2)];
+      document.querySelector('#mbrBody tr:nth-child(3) .act-b').click();
+      await new Promise(f => setTimeout(f, 50));
+      const apres = { cell: cell(2), off: document.querySelector('#mbrBody tr:nth-child(3)').classList.contains('mbr-off'),
+                      note: document.getElementById('mbrNote').textContent, msg: document.getElementById('mbrMsg').textContent };
+      document.querySelector('#mbrBody tr:nth-child(3) .act-b').click();
+      await new Promise(f => setTimeout(f, 50));
+      return { avant, apres, appels, fin: cell(2) };
+    });
+    expect(r.avant[0]).toContain('ton propre compte');
+    expect(r.avant[1]).toContain('retire d’abord l’accès admin');
+    expect(r.avant[2]).toContain('Désactiver le compte');
+    expect(r.apres.cell).toContain('Désactivé');
+    expect(r.apres.cell).toContain('depuis le 06/11/2026 par a');
+    expect(r.apres.cell).toContain('Réactiver le compte');
+    expect(r.apres.off).toBe(true);
+    expect(r.apres.note).toContain('1 compte désactivé');
+    expect(r.apres.msg).toContain('est désactivé');
+    expect(r.appels).toEqual([{ p_email: 'b@test.invalid', p_actif: false }, { p_email: 'b@test.invalid', p_actif: true }]);
+    expect(r.fin).toContain('Désactiver le compte');
+    expect(erreurs).toEqual([]);
+  });
+
+  test('un compte désactivé voit « Compte désactivé » à la connexion', async ({ page }) => {
+    await ouvrir(page);
+    const r = await page.evaluate(async () => {
+      const lire = async (acces) => {
+        initSync = async () => true; silentUnlock = async () => false; oauthOuvrir = () => {};
+        SBUSER = { id: 'u9', email: 'zoe@test.invalid' };
+        SB = { rpc: async (nom) => nom === 'mon_acces' ? { data: acces, error: null } : { data: null, error: null }, auth: {} };
+        document.getElementById('lockErr').innerHTML = '';
+        await demarrer();
+        return document.getElementById('lockErr').textContent;
+      };
+      return { off: await lire({ autorise: false, desactive_le: '2026-11-06T09:00:00Z' }),
+               attente: await lire({ autorise: false, desactive_le: null }) };
+    });
+    expect(r.off).toContain('Compte désactivé');
+    expect(r.off).toContain('zoe@test.invalid');
+    expect(r.off).toContain('06/11/2026');
+    expect(r.off).toContain('Utiliser un autre compte');
+    expect(r.attente).toContain('Accès en attente de validation');
   });
 });
