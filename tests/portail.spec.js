@@ -6546,8 +6546,8 @@ test.describe('Admin → Membres : demandes et désactivation (06/11/2026)', () 
         { email: 'c@test.invalid', nom: 'Chef', derniere: il(5), creation: il(500), est_admin: true, modifiable: true },
         { email: 'b@test.invalid', nom: 'Bruno', derniere: il(5), creation: il(500), est_admin: false, modifiable: true },
       ];
-      const appels = [];
-      SB = { rpc: async (nom, args) => {
+      const appels = [], confirmations = [], rpcs = [];
+      SB = { rpc: async (nom, args) => { rpcs.push(nom);
                if (nom === 'est_admin') return { data: true, error: null };
                if (nom === 'membres_connectes') return { data: rows, error: null };
                if (nom === 'definir_actif') { appels.push(args);
@@ -6557,7 +6557,7 @@ test.describe('Admin → Membres : demandes et désactivation (06/11/2026)', () 
              from: () => ({ select() { return this; }, order() { return this; }, eq() { return this; },
                             in() { return this; }, gte() { return this; }, limit() { return this; },
                             then(r) { return Promise.resolve({ data: [], error: null }).then(r); } }) };
-      window.confirm = () => true;
+      window.confirm = (t) => { confirmations.push(t); return true; };
       await buildMembres();
       const cell = i => document.querySelectorAll('#mbrBody tr')[i].lastElementChild.textContent;
       const avant = [cell(0), cell(1), cell(2)];
@@ -6567,7 +6567,7 @@ test.describe('Admin → Membres : demandes et désactivation (06/11/2026)', () 
                       note: document.getElementById('mbrNote').textContent, msg: document.getElementById('mbrMsg').textContent };
       document.querySelector('#mbrBody tr:nth-child(3) .act-b').click();
       await new Promise(f => setTimeout(f, 50));
-      return { avant, apres, appels, fin: cell(2) };
+      return { avant, apres, appels, fin: cell(2), confirmations, admin: rpcs.filter(n => n === 'definir_admin').length };
     });
     expect(r.avant[0]).toContain('ton propre compte');
     expect(r.avant[1]).toContain('retire d’abord l’accès admin');
@@ -6580,6 +6580,10 @@ test.describe('Admin → Membres : demandes et désactivation (06/11/2026)', () 
     expect(r.apres.msg).toContain('est désactivé');
     expect(r.appels).toEqual([{ p_email: 'b@test.invalid', p_actif: false }, { p_email: 'b@test.invalid', p_actif: true }]);
     expect(r.fin).toContain('Désactiver le compte');
+    // une seule confirmation par clic, jamais celle du rôle administrateur (bug du 06/11/2026)
+    expect(r.confirmations.length).toBe(2);
+    expect(r.confirmations.join(' ')).not.toContain('administrateur');
+    expect(r.admin).toBe(0);
     expect(erreurs).toEqual([]);
   });
 
@@ -6641,6 +6645,94 @@ test.describe('Admin → Logs Kairos (06/11/2026)', () => {
     expect(r.lienJ).toBe('#admin?s=journal');
     expect(r.pastille).toBe('2');
     expect(r.slugs).toEqual(['jrn', 'log', 'logs']);
+    expect(erreurs).toEqual([]);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+test.describe('Sommaire et liens de section des fiches (17/11/2026)', () => {
+  const contenu = () => {
+    CONTENU = Object.assign(CONTENU || {}, {
+      pages: {
+        'longue': { t: 'Fiche longue', i: '🧾', n: 1, h: '<p>Intro.</p>'
+          + '<h2 id="s-qui-est-concerne">Qui est concerné ?</h2>' + '<p>x</p>'.repeat(30)
+          + '<h2>Démarches &amp; délais</h2>' + '<p>y</p>'.repeat(30)
+          + '<details class="h2"><summary>Bloc</summary><div class="dbody"><h2>Cœur caché</h2><p>z</p></div></details>'
+          + '<h2 id="acc">Démarches &amp; délais</h2>' + '<p>w</p>'.repeat(30) },
+        'courte': { t: 'Fiche courte', i: '🧾', n: 2, h: '<h2>Un</h2><p>a</p><h2>Deux</h2><p>b</p>' },
+      },
+      fiches: [{ t: 'Outils', i: '🛠️', pages: ['longue', 'courte'] }],
+    });
+  };
+  test('ids figés, sommaire, lien direct vers une section repliée, icône de copie', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate((f) => {
+      eval('(' + f + ')')(); localStorage.removeItem('kairos_ps'); PS_PREF.som = false;
+      showPage('longue');
+      const c = document.getElementById('psheetCard');
+      return { ids: [...c.querySelectorAll('.nc h2')].map(h => h.id), som: [...c.querySelectorAll('.ps-som li a')].map(a => a.getAttribute('href')),
+        n: c.querySelector('.ps-som-n').textContent, liens: c.querySelectorAll('.nc h2 .h-lien').length,
+        acc: document.getElementById('acc') && document.getElementById('acc').tagName };
+    }, contenu.toString());
+    // l'id existant est gardé, les autres sont calculés depuis le titre (sans accents), dédoublonnés, préfixés « s- »
+    expect(r.ids).toEqual(['s-qui-est-concerne', 's-demarches-delais', 's-coeur-cache', 's-demarches-delais-2']);
+    expect(r.som).toEqual(['#p/longue/qui-est-concerne', '#p/longue/demarches-delais', '#p/longue/coeur-cache', '#p/longue/demarches-delais-2']);
+    expect(r.n).toContain('4 sections');
+    expect(r.liens).toBe(4);
+    expect(r.acc).toBe('DIV');           // un titre ne vole jamais l'id d'un élément du portail
+    // clic dans le sommaire : on défile jusqu'à la section, l'adresse suit, la fiche n'est pas redessinée
+    await page.evaluate(() => { document.querySelector('#psheetCard .ps-body').dataset.t = '1'; });
+    await page.click('#psheet .ps-som a[href="#p/longue/coeur-cache"]');
+    await page.waitForTimeout(700);
+    const s = await page.evaluate(() => {
+      const b = document.querySelector('#psheetCard .ps-body'), h = document.getElementById('s-coeur-cache');
+      return { hash: location.hash, meme: b.dataset.t === '1', ouvert: h.closest('details').open,
+        visible: h.getBoundingClientRect().top - b.getBoundingClientRect().top };
+    });
+    expect(s.hash).toBe('#p/longue/coeur-cache');
+    expect(s.meme).toBe(true);
+    expect(s.ouvert).toBe(true);
+    expect(s.visible).toBeLessThan(60);
+    // sommaire replié : retenu sur l'appareil
+    await page.click('#psheet .ps-som-t');
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('kairos_ps')).som)).toBe(true);
+    // icône lien : copie l'adresse complète de la section
+    await page.evaluate(() => { window.__copie = null; copierTexte = t => { window.__copie = t; return Promise.resolve(true); }; });
+    await page.hover('#s-demarches-delais-2');
+    await page.click('#s-demarches-delais-2 .h-lien');
+    await page.waitForTimeout(100);
+    const k = await page.evaluate(() => ({ copie: window.__copie, hash: location.hash, toast: (document.getElementById('lienToast') || {}).textContent }));
+    expect(k.copie).toMatch(/#p\/longue\/demarches-delais-2$/);
+    expect(k.hash).toBe('#p/longue/demarches-delais-2');
+    expect(k.toast).toContain('copié');
+    expect(erreurs).toEqual([]);
+  });
+  test('lien partagé vers une section : la fiche s’ouvre à la section ; section inconnue : en haut ; pas de sommaire sous 3 titres', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async (f) => {
+      eval('(' + f + ')')(); localStorage.removeItem('kairos_ps');
+      const b = document.querySelector('nav.tabs [data-v="fiches"]'); if (b) b.hidden = false;
+      history.replaceState(null, '', '#p/longue/demarches-delais-2'); HASH_INITIAL = location.hash; PS_FOND_FAIT = false;
+      routeHash();
+      await new Promise(ok => setTimeout(ok, 300));
+      const body = document.querySelector('#psheetCard .ps-body'), h = document.getElementById('s-demarches-delais-2');
+      const a = { ouvert: document.getElementById('psheet').classList.contains('on'), tab: curTab, ecart: Math.round(h.getBoundingClientRect().top - body.getBoundingClientRect().top), defile: body.scrollTop > 0 };
+      closePage();
+      history.replaceState(null, '', '#p/longue/titre-renomme'); routeHash();
+      await new Promise(ok => setTimeout(ok, 200));
+      const inconnu = { ouvert: document.getElementById('psheet').classList.contains('on'), haut: document.querySelector('#psheetCard .ps-body').scrollTop };
+      closePage(); showPage('courte');
+      const courte = { som: !!document.querySelector('#psheetCard .ps-som'), liens: document.querySelectorAll('#psheetCard .nc h2 .h-lien').length };
+      return { a, inconnu, courte, figer: ancresFiger('<h2>Été 2026</h2><p>x</p><h2 id="s-garde">Autre</h2>'), intact: ancresFiger('<h2 id="s-a">A</h2>') };
+    }, contenu.toString());
+    expect(r.a).toMatchObject({ ouvert: true, tab: 'fiches', defile: true });
+    expect(Math.abs(r.a.ecart)).toBeLessThan(30);
+    expect(r.inconnu).toEqual({ ouvert: true, haut: 0 });
+    expect(r.courte).toEqual({ som: false, liens: 2 });
+    expect(r.figer).toBe('<h2 id="s-ete-2026">Été 2026</h2><p>x</p><h2 id="s-garde">Autre</h2>');
+    expect(r.intact).toBe('<h2 id="s-a">A</h2>');
     expect(erreurs).toEqual([]);
   });
 });

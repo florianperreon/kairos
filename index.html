@@ -1184,6 +1184,26 @@ p.mi-ai{margin:4px 0 8px}
 .ff-star:hover{opacity:.9}.ff-star.on{color:#c9a227;opacity:1}
 .ff-card .ff-star{position:absolute;top:8px;right:8px}
 .ps-head h1 .ff-star{font-size:20px;vertical-align:2px}
+/* Sommaire et liens de section des fiches pratiques (17/11/2026) */
+.ps-som{border:1px solid var(--line);border-radius:12px;background:var(--surface-2);margin:0 0 18px;font-size:14px}
+.ps-som-t{display:flex;align-items:center;gap:6px;width:100%;border:0;background:none;font:inherit;font-weight:700;color:var(--ink);padding:10px 14px;cursor:pointer;text-align:left;border-radius:12px}
+.ps-som-n{color:var(--ink-3);font-weight:600}
+.ps-som-c{margin-left:auto;color:var(--ink-3);font-size:12px;transition:transform .15s}
+.ps-som.replie .ps-som-c{transform:rotate(-90deg)}
+.ps-som.replie ol{display:none}
+.ps-som ol{margin:0;padding:0 14px 12px 38px;display:flex;flex-direction:column;gap:4px}
+.ps-som li::marker{color:var(--ink-3);font-size:12.5px;font-weight:600}
+.ps-som.sans-num ol{list-style:none;padding-left:16px}
+.ps-som a{color:var(--ink-2);text-decoration:none;line-height:1.45}
+.ps-som a:hover{color:var(--accent);text-decoration:underline}
+.nc h2.ps-ancre{scroll-margin-top:12px}
+.nc .h-lien{display:inline-flex;vertical-align:middle;margin-left:6px;padding:3px;border-radius:6px;color:var(--ink-3);opacity:0;transition:opacity .12s;text-decoration:none}
+.nc h2:hover .h-lien,.nc .h-lien:focus-visible{opacity:1}
+.nc .h-lien:hover{color:var(--accent);background:var(--accent-soft)}
+.nc .h-lien svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (hover:none){.nc .h-lien{opacity:.6}}
+@keyframes psFlash{from{background:var(--accent-soft)}to{background:transparent}}
+.nc h2.ps-flash{animation:psFlash 1.8s ease-out;border-radius:8px}
 .ff-bientot{margin:10px 0 0;padding:10px 14px;border-radius:10px;background:var(--accent-soft);color:var(--ink-2);font-size:13.5px}.ff-bientot .ff-parc{font-weight:600;white-space:nowrap}
 .ff-n{font-size:13px;color:var(--ink-3);margin:0 0 8px}
 button.rc-carte{display:flex;gap:12px;align-items:flex-start;width:100%;max-width:560px;text-align:left;font:inherit;cursor:pointer;margin:0 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}button.rc-carte:hover{border-color:var(--accent)}button.rc-carte .ff-tx{display:flex;flex-direction:column;gap:2px}button.rc-carte .ff-d{font-size:13px;color:var(--ink-2)}
@@ -4833,7 +4853,11 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
+  ['2026-11-17', [
+    ['f','Fiches pratiques : sommaire repliable en haut de chaque fiche (dès 3 sections) et lien direct vers chaque section — icône 🔗 au survol d’un titre pour copier l’adresse (#p/fiche/section). Les adresses sont figées : renommer un titre ne casse pas les liens déjà partagés.'],
+  ]],
   ['2026-11-06', [
+    ['b','Admin → Membres : « Désactiver le compte » n’ouvre plus d’abord, par erreur, la confirmation « Retirer l’accès administrateur ».'],
     ['f','Admin : Journal et Changelog sont réunis dans une rubrique unique « Logs Kairos » ; la pastille des tâches en anomalie s’affiche sur Logs Kairos.'],
     ['f','Admin → Membres : « Demandes d’accès » devient une sous-rubrique de Membres, à côté de la liste des membres ; la pastille des demandes en attente s’affiche sur Membres.'],
     ['f','Admin → Membres : un administrateur peut désactiver (puis réactiver) le compte d’un membre. La personne ne peut plus se connecter ni utiliser Kairos depuis son IA ; ses données sont conservées.'],
@@ -5123,7 +5147,9 @@ function psFondFiches(h){
 }
 function routeHash(){
   const h=location.hash||'';
-  if(h.startsWith('#p/')){ const slug=decodeURIComponent(h.slice(3)); if(CONTENU&&CONTENU.pages&&CONTENU.pages[slug]){ psFondFiches(h); showPage(slug); } return; }
+  if(h.startsWith('#p/')){ const c=psCible(h); if(CONTENU&&CONTENU.pages&&CONTENU.pages[c.slug]){
+      if(c.sec && psOuverte(c.slug)){ psAller(c.sec, true); return; }
+      psFondFiches(h); showPage(c.slug, c.sec); } return; }
   if(h==='#faq-apercu'){ buildFaq(true); return; }
   const m=h.match(/^#([a-z-]+)(?:\?(.*))?$/); const tab=m?tabFromSlug(m[1]):null;
   if(tab){ const btn=document.querySelector('nav.tabs [data-v="'+tab+'"]'); if(btn&&(btn.hidden||btn.classList.contains('nv-lock'))) return;
@@ -6518,8 +6544,9 @@ let psFinTirage=0;   // fin du dernier tirage : le clic qui suit (relâché sur 
   document.addEventListener('pointerup', fin); document.addEventListener('pointercancel', fin);
   document.addEventListener('dblclick', e=>{ if(e.target.closest && e.target.closest('#psheet .ps-resize')){ PS_PREF.w=0; psSauver(); psAppliquer(); } });
 })();
-function showPage(slug){
+function showPage(slug, sec){
   const C=CONTENU; const p=C.pages[slug]; if(!p) return;
+  PS_SLUG = slug;
   const acc=ficheAcces(slug);
   if(!acc.ok){
     const card=document.getElementById('psheetCard'); card.innerHTML=psOutils()+ficheVerrouHtml(slug, acc);
@@ -6539,6 +6566,8 @@ function showPage(slug){
   const sh=document.getElementById('psheet'); sh.classList.add('on'); sh.setAttribute('aria-hidden','false'); document.body.classList.add('ps-open');
   psAppliquer();
   card.querySelector('.ps-body').scrollTop=0;
+  try{ psAncres(card, slug); }catch(e){ console.error(e); }
+  if(sec) requestAnimationFrame(()=>psAller(sec, false));
   document.getElementById('psClose').addEventListener('click',closePage);
   if(card.querySelector('#objTrain')) initObjections(card);
   noterUsage('fiche', slug);
@@ -6551,7 +6580,7 @@ function freshBanner(p){
   const old=months>=6;
   return '<div class="fresh'+(old?' old':'')+'"><span>'+(old?'⚠️':'⏱')+'</span><div><b>Contenu daté — mis à jour en '+MOIS[mo-1]+' '+y+'.</b> '+(old?'Plus de '+months+' mois : les chiffres (frais, minimums, plafonds, allocations) ont pu changer — vérifie-les avant de les utiliser en rendez-vous.':'Les chiffres (frais, minimums, plafonds, allocations) évoluent : vérifie-les avant de les utiliser en rendez-vous.')+'</div></div>';
 }
-function closePage(){ if(typeof RC_OUVERT!=='undefined' && RC_OUVERT){ RC_OUVERT=false; setTimeout(()=>syncHash(false),0); } const sh=document.getElementById('psheet'); sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); document.body.classList.remove('ps-open'); if(location.hash.startsWith('#p/')){ try{ history.replaceState(null,'',hashFor(curTab)); }catch(_){} } }
+function closePage(){ PS_SLUG = null; if(typeof RC_OUVERT!=='undefined' && RC_OUVERT){ RC_OUVERT=false; setTimeout(()=>syncHash(false),0); } const sh=document.getElementById('psheet'); sh.classList.remove('on'); sh.setAttribute('aria-hidden','true'); document.body.classList.remove('ps-open'); if(location.hash.startsWith('#p/')){ try{ history.replaceState(null,'',hashFor(curTab)); }catch(_){} } }
 // Clic sur le fond : ferme la fiche seulement si le geste a COMMENCÉ sur le fond. Un geste commencé dans la fiche
 // (sélection de texte, tirage du bord) et relâché dehors produit un « click » sur #psheet : il ne doit pas fermer.
 let psDownFond=false;
@@ -6564,8 +6593,12 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('click',e=>{
   const a=e.target.closest('a[href^="#p/"]');
-  if(a){ e.preventDefault(); const h=a.getAttribute('href'); try{ history.pushState(null,'',h); }catch(_){}
-    const slug=decodeURIComponent(h.slice(3)); if(CONTENU&&CONTENU.pages&&CONTENU.pages[slug]) showPage(slug);
+  if(a){ e.preventDefault(); const h=a.getAttribute('href'); const c=psCible(h);
+    if(a.classList.contains('h-lien')){ psCopierLien(c.slug, c.sec); return; }
+    // lien vers une section de la fiche déjà ouverte (sommaire, renvoi interne) : on défile, sans redessiner
+    if(c.sec && psOuverte(c.slug)){ try{ history.replaceState(null,'',h); }catch(_){} psAller(c.sec, true); return; }
+    try{ history.pushState(null,'',h); }catch(_){}
+    if(CONTENU&&CONTENU.pages&&CONTENU.pages[c.slug]) showPage(c.slug, c.sec);
     return; }
   const b=e.target.closest('.tpl .copy');
   if(b){ const pre=b.parentElement.querySelector('pre'); const txt=pre.innerText;
@@ -6575,6 +6608,100 @@ document.addEventListener('click',e=>{
     if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(ok,fallback); } else fallback();
   }
 });
+
+/* ---------- Sommaire et liens de section des fiches pratiques (17/11/2026, demande Florian) ----------
+   Chaque titre de niveau 2 d'une fiche porte un identifiant « s-… » posé une fois à partir du titre et
+   enregistré avec la fiche (l'éditeur le pose à l'enregistrement) : renommer le titre ne casse pas les
+   liens déjà partagés. Le préfixe « s- » évite toute collision avec les id du portail (#acc, #modal…).
+   Adresse d'une section : #p/<fiche>/<section> (l'id sans son préfixe). Dès 3 titres, un sommaire
+   repliable s'affiche en haut de la fiche (replié ou non : retenu sur l'appareil). Au survol d'un
+   titre, l'icône lien copie l'adresse de la section. Un titre sans id (contenu pas encore réenregistré)
+   en reçoit un au rendu, calculé de la même façon. */
+const PS_SOMMAIRE_MIN = 3;
+let PS_SLUG = null;
+const PS_ICO_LIEN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>';
+// Même calcul que la migration SQL du 17/11/2026 : minuscules sans accents, tout le reste devient « - »
+function ancreSlug(t){
+  const s = norm(String(t||'').replace(/œ/g,'oe').replace(/Œ/g,'oe').replace(/æ/g,'ae').replace(/Æ/g,'ae'))
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60).replace(/-+$/,'');
+  return 's-'+(s||'section');
+}
+// Pose (ou répare) les id des titres de niveau 2 d'un fragment : préfixe « s- », uniques dans la fiche
+function ancresPoser(racine){
+  const vus = new Set();
+  [...racine.querySelectorAll('h2')].forEach(h=>{
+    let id = /^s-[a-z0-9-]+$/.test(h.id||'') ? h.id : '';
+    if(!id || vus.has(id)){ const b = ancreSlug(h.textContent); id = b; for(let n=2; vus.has(id); n++) id = b+'-'+n; }
+    vus.add(id); h.id = id;
+  });
+  return racine;
+}
+// HTML d'une fiche avec ses ancres figées (appelé à l'enregistrement par l'éditeur)
+function ancresFiger(html){
+  if(!html || html.indexOf('<h2') < 0) return html;
+  const t = document.createElement('template'); t.innerHTML = html;
+  const avant = [...t.content.querySelectorAll('h2')].map(h=>h.id||'');
+  ancresPoser(t.content);
+  const apres = [...t.content.querySelectorAll('h2')].map(h=>h.id||'');
+  return avant.join('|') === apres.join('|') ? html : t.innerHTML;
+}
+function psCible(h){
+  let r = String(h||'').replace(/^#p\//,''); try{ r = decodeURIComponent(r); }catch(_){}
+  const i = r.indexOf('/');
+  return i < 0 ? { slug:r, sec:'' } : { slug:r.slice(0,i), sec:r.slice(i+1).replace(/^s-/,'') };
+}
+function psOuverte(slug){ return !!slug && PS_SLUG === slug && document.getElementById('psheet').classList.contains('on'); }
+function psAdresse(slug, sec){ return location.href.split('#')[0]+'#p/'+slug+(sec?'/'+sec:''); }
+function psAncres(card, slug){
+  const nc = card.querySelector('.ps-body > .nc'); if(!nc) return;
+  ancresPoser(nc);
+  const hs = [...nc.querySelectorAll('h2')];
+  hs.forEach(h=>{
+    h.classList.add('ps-ancre');
+    const a = document.createElement('a'); a.className = 'h-lien'; a.href = '#p/'+slug+'/'+h.id.slice(2);
+    a.title = 'Copier le lien vers cette section'; a.setAttribute('aria-label', 'Copier le lien vers la section « '+h.textContent.trim()+' »');
+    a.innerHTML = PS_ICO_LIEN; h.appendChild(a);
+  });
+  if(hs.length < PS_SOMMAIRE_MIN) return;
+  const replie = !!PS_PREF.som;
+  // titres déjà numérotés (« 1. Comment ça marche ») : pas de seconde numérotation dans le sommaire
+  const numerotes = hs.some(h=>/^\s*\d+\s*[.)\-–]/.test(h.textContent));
+  const nav = document.createElement('nav'); nav.className = 'ps-som'+(replie?' replie':'')+(numerotes?' sans-num':''); nav.setAttribute('aria-label','Sommaire de la fiche');
+  nav.innerHTML = '<button type="button" class="ps-som-t" aria-expanded="'+(replie?'false':'true')+'"><span>🗂 Sommaire</span><span class="ps-som-n">· '+hs.length+' sections</span><span class="ps-som-c" aria-hidden="true">▾</span></button>'
+    + '<ol>'+hs.map(h=>'<li><a href="#p/'+esc(slug)+'/'+h.id.slice(2)+'">'+esc(h.textContent.trim())+'</a></li>').join('')+'</ol>';
+  nav.querySelector('.ps-som-t').addEventListener('click', ()=>{
+    PS_PREF.som = !PS_PREF.som; psSauver();
+    nav.classList.toggle('replie', !!PS_PREF.som); nav.querySelector('.ps-som-t').setAttribute('aria-expanded', PS_PREF.som?'false':'true');
+  });
+  nc.parentNode.insertBefore(nav, nc);
+}
+// Fait défiler le panneau jusqu'à la section (en ouvrant les blocs repliables qui la contiennent)
+function psAller(sec, lisse){
+  const card = document.getElementById('psheetCard'), body = card && card.querySelector('.ps-body'); if(!body || !sec) return false;
+  const h = [...body.querySelectorAll('.nc h2')].find(x=>x.id === 's-'+sec); if(!h) return false;
+  for(let d = h.parentElement && h.parentElement.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true;
+  const top = h.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - 10;
+  try{ body.scrollTo({ top, behavior: lisse ? 'smooth' : 'auto' }); }catch(_){ body.scrollTop = top; }
+  h.classList.remove('ps-flash'); void h.offsetWidth; h.classList.add('ps-flash');
+  return true;
+}
+function copierTexte(txt){
+  const repli = ()=>{ const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly',''); ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, txt.length); let ok = false; try{ ok = document.execCommand('copy'); }catch(_){} document.body.removeChild(ta); return ok; };
+  if(navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt).then(()=>true, ()=>repli());
+  return Promise.resolve(repli());
+}
+function petitToast(html){
+  let t = document.getElementById('lienToast');
+  if(!t){ t = document.createElement('div'); t.id = 'lienToast'; t.className = 'bravo-toast'; t.setAttribute('role','status'); document.body.appendChild(t); }
+  t.innerHTML = html; t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('on'), 2200);
+}
+function psCopierLien(slug, sec){
+  const url = psAdresse(slug, sec);
+  try{ history.replaceState(null,'','#p/'+slug+(sec?'/'+sec:'')); }catch(_){}
+  if(sec) psAller(sec, true);
+  copierTexte(url).then(ok=> petitToast(ok ? '🔗 Lien de la section copié' : '🔗 Copie impossible : le lien est dans la barre d’adresse'));
+}
 
 /* ---------- Mesure d'usage et Admin → Activité (21/10/2026, règle Florian) ----------
    noterUsage : chaque ouverture de fiche, d'onglet ou de simulateur est comptée par jour (RPC noter_usage,
@@ -11133,7 +11260,7 @@ async function buildMembres(){
       + '<td>'+celluleActif(m)+'</td></tr>';
   }).join('') : '<tr><td colspan="6" style="color:var(--ink-2)">Personne ne s\u2019est encore connecté.</td></tr>';
   body.querySelectorAll('tr').forEach((tr,i)=>{ if(rows[i] && rows[i].desactive_le) tr.classList.add('mbr-off'); });
-  body.querySelectorAll('.rol-b').forEach(b=>b.addEventListener('click', ()=>
+  body.querySelectorAll('.rol-b:not(.act-b)').forEach(b=>b.addEventListener('click', ()=>
     basculerAdmin(b.dataset.mail, b.dataset.to === '1', b)));
   body.querySelectorAll('.act-b').forEach(b=>b.addEventListener('click', ()=>
     basculerActif(b.dataset.mail, b.dataset.to === '1', b)));
@@ -12016,7 +12143,7 @@ async function cntCreer(copie){
   const r = await edModal(copie ? 'Dupliquer la fiche' : 'Nouvelle fiche', [{ k:'titre', l:'Titre', v: copie ? (cntEl('cntTitre').value+' (copie)') : '' }, { k:'icone', l:'Icône (un émoji)', v: copie ? cntEl('cntIcone').value : '📄' }]);
   if(!r || !r.titre.trim()) return;
   const slug = await regSlugLibre(regSlug(r.titre));
-  const ligne = { slug, titre:r.titre.trim(), icone:(r.icone||'').trim(), html: copie ? cntHtmlCourant() : '<p></p>', ordre: copie ? (cntEl('cntMin').value ? +cntEl('cntMin').value : null) : 99 };
+  const ligne = { slug, titre:r.titre.trim(), icone:(r.icone||'').trim(), html: copie ? ancresFiger(cntHtmlCourant()) : '<p></p>', ordre: copie ? (cntEl('cntMin').value ? +cntEl('cntMin').value : null) : 99 };
   const ins = await SB.from('contenu_pages').insert(ligne);
   if(ins.error){ cntMsg('Création refusée : '+ins.error.message, true); return; }
   CNT_SALE = false;
@@ -12625,7 +12752,7 @@ async function cntEnregistrer(){
   btn.disabled = true; cntMsg('Enregistrement…');
   if(!(await hiVerifPage())){ btn.disabled = false; cntMsg('Enregistrement annulé.'); return; }
   const maj = { titre: cntEl('cntTitre').value.trim(), icone: cntEl('cntIcone').value.trim(),
-                html: cntHtmlCourant(), ordre: cntEl('cntMin').value ? +cntEl('cntMin').value : null };
+                html: ancresFiger(cntHtmlCourant()), ordre: cntEl('cntMin').value ? +cntEl('cntMin').value : null };
   const r = await SB.from('contenu_pages').update(maj).eq('slug', CNT_SLUG).select('maj,par');
   btn.disabled = false;
   if(r.error){ cntMsg('Enregistrement refusé : '+r.error.message, true); return; }
