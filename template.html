@@ -4854,6 +4854,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-17', [
+    ['b','Lien de section ouvert directement (nouvel onglet) : la fiche ne reste plus affichée « pas encore débloquée » ; la copie du lien affiche bien « Lien de la section copié ».'],
     ['f','Fiches pratiques : sommaire repliable en haut de chaque fiche (dès 3 sections) et lien direct vers chaque section — icône 🔗 au survol d’un titre pour copier l’adresse (#p/fiche/section). Les adresses sont figées : renommer un titre ne casse pas les liens déjà partagés.'],
   ]],
   ['2026-11-06', [
@@ -5148,7 +5149,9 @@ function psFondFiches(h){
 function routeHash(){
   const h=location.hash||'';
   if(h.startsWith('#p/')){ const c=psCible(h); if(CONTENU&&CONTENU.pages&&CONTENU.pages[c.slug]){
-      if(c.sec && psOuverte(c.slug)){ psAller(c.sec, true); return; }
+      // même fiche déjà affichée : on ne redessine pas, et on ne redéfile que si la section a changé
+      // (routeHash repasse à chaque arrivée de données : ne pas ramener le lecteur en arrière)
+      if(c.sec && psOuverte(c.slug)){ if(c.sec !== PS_SEC){ PS_SEC = c.sec; psAller(c.sec, true); } return; }
       psFondFiches(h); showPage(c.slug, c.sec); } return; }
   if(h==='#faq-apercu'){ buildFaq(true); return; }
   const m=h.match(/^#([a-z-]+)(?:\?(.*))?$/); const tab=m?tabFromSlug(m[1]):null;
@@ -6567,6 +6570,7 @@ function showPage(slug, sec){
   psAppliquer();
   card.querySelector('.ps-body').scrollTop=0;
   try{ psAncres(card, slug); }catch(e){ console.error(e); }
+  PS_SEC = sec || '';
   if(sec) requestAnimationFrame(()=>psAller(sec, false));
   document.getElementById('psClose').addEventListener('click',closePage);
   if(card.querySelector('#objTrain')) initObjections(card);
@@ -6596,7 +6600,7 @@ document.addEventListener('click',e=>{
   if(a){ e.preventDefault(); const h=a.getAttribute('href'); const c=psCible(h);
     if(a.classList.contains('h-lien')){ psCopierLien(c.slug, c.sec); return; }
     // lien vers une section de la fiche déjà ouverte (sommaire, renvoi interne) : on défile, sans redessiner
-    if(c.sec && psOuverte(c.slug)){ try{ history.replaceState(null,'',h); }catch(_){} psAller(c.sec, true); return; }
+    if(c.sec && psOuverte(c.slug)){ try{ history.replaceState(null,'',h); }catch(_){} PS_SEC = c.sec; psAller(c.sec, true); return; }
     try{ history.pushState(null,'',h); }catch(_){}
     if(CONTENU&&CONTENU.pages&&CONTENU.pages[c.slug]) showPage(c.slug, c.sec);
     return; }
@@ -6650,7 +6654,10 @@ function psCible(h){
   const i = r.indexOf('/');
   return i < 0 ? { slug:r, sec:'' } : { slug:r.slice(0,i), sec:r.slice(i+1).replace(/^s-/,'') };
 }
-function psOuverte(slug){ return !!slug && PS_SLUG === slug && document.getElementById('psheet').classList.contains('on'); }
+// Fiche ouverte ET affichée en clair : une fiche rendue verrouillée au démarrage (droits pas encore chargés)
+// doit être redessinée quand routeHash() repasse une fois les données arrivées (régression du 17/11/2026)
+function psOuverte(slug){ return !!slug && PS_SLUG === slug && document.getElementById('psheet').classList.contains('on') && !!document.querySelector('#psheetCard .ps-body > .nc'); }
+let PS_SEC = '';
 function psAdresse(slug, sec){ return location.href.split('#')[0]+'#p/'+slug+(sec?'/'+sec:''); }
 function psAncres(card, slug){
   const nc = card.querySelector('.ps-body > .nc'); if(!nc) return;
@@ -6688,8 +6695,11 @@ function psAller(sec, lisse){
 function copierTexte(txt){
   const repli = ()=>{ const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly',''); ta.style.cssText = 'position:fixed;left:-9999px;top:0';
     document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, txt.length); let ok = false; try{ ok = document.execCommand('copy'); }catch(_){} document.body.removeChild(ta); return ok; };
-  if(navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt).then(()=>true, ()=>repli());
-  return Promise.resolve(repli());
+  // copie synchrone d'abord (dans le geste de l'utilisateur, fiable partout) ; l'API presse-papiers peut
+  // rester sans réponse (constaté le 17/11/2026 dans Chrome) : en secours seulement, bornée à 1,5 s
+  if(repli()) return Promise.resolve(true);
+  if(!(navigator.clipboard && navigator.clipboard.writeText)) return Promise.resolve(false);
+  return Promise.race([ navigator.clipboard.writeText(txt).then(()=>true, ()=>false), new Promise(ok=>setTimeout(()=>ok(false), 1500)) ]);
 }
 function petitToast(html){
   let t = document.getElementById('lienToast');
@@ -6699,7 +6709,7 @@ function petitToast(html){
 function psCopierLien(slug, sec){
   const url = psAdresse(slug, sec);
   try{ history.replaceState(null,'','#p/'+slug+(sec?'/'+sec:'')); }catch(_){}
-  if(sec) psAller(sec, true);
+  if(sec){ PS_SEC = sec; psAller(sec, true); }
   copierTexte(url).then(ok=> petitToast(ok ? '🔗 Lien de la section copié' : '🔗 Copie impossible : le lien est dans la barre d’adresse'));
 }
 

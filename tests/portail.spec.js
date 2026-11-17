@@ -6735,4 +6735,28 @@ test.describe('Sommaire et liens de section des fiches (17/11/2026)', () => {
     expect(r.intact).toBe('<h2 id="s-a">A</h2>');
     expect(erreurs).toEqual([]);
   });
+  test('régression du 17/11/2026 : lien de section ouvert avant le chargement des droits, puis redessiné en clair ; copie sans réponse du presse-papiers', async ({ page }) => {
+    await page.setViewportSize({ width: 1300, height: 900 });
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async (f) => {
+      eval('(' + f + ')')(); localStorage.removeItem('kairos_ps');
+      const vrai = ficheAcces; ficheAcces = () => ({ ok: false, raison: 'S’ouvre quand ton parrain valide ta phase 1' });
+      history.replaceState(null, '', '#p/longue/demarches-delais-2'); routeHash();
+      const avant = !!document.querySelector('#psheetCard .ff-verrou');
+      ficheAcces = vrai; routeHash();                       // les droits arrivent : routeHash repasse
+      await new Promise(ok => setTimeout(ok, 300));
+      const apres = { verrou: !!document.querySelector('#psheetCard .ff-verrou'), section: !!document.getElementById('s-demarches-delais-2') };
+      // presse-papiers qui ne répond jamais : la copie passe quand même et le message s'affiche
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: () => new Promise(() => {}) } });
+      document.querySelector('#s-qui-est-concerne .h-lien').click();
+      await new Promise(ok => setTimeout(ok, 1800));
+      const t = document.getElementById('lienToast');
+      return { avant, apres, toast: t && t.textContent, on: !!t && t.classList.contains('on') };
+    }, contenu.toString());
+    expect(r.avant).toBe(true);
+    expect(r.apres).toEqual({ verrou: false, section: true });
+    expect(r.toast).toContain('🔗');
+    expect(r.on).toBe(true);
+    expect(erreurs).toEqual([]);
+  });
 });
