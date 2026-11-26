@@ -6471,7 +6471,7 @@ test.describe('Ressources → Pour aller plus loin → Supports Cristalliance Av
     expect(r.ferme.texte).toContain('s’ouvre au passage ADMAN');
     expect(r.ferme.texte).not.toContain('Vie Plus');   // rien sur le contenu (05/11/2026)                     // rien n'est lu en base tant que c'est fermé
     expect(r.res).toEqual(['sim', 'doc', 'plus']);
-    expect(r.dans).toEqual(['Supports Cristalliance Avenir']);
+    expect(r.dans).toEqual(['Supports Cristalliance Avenir', 'Supports PERtinence Retraite']);
     expect(r.vu).toEqual({ plus: true, lien: '#ressources?s=pour-aller-plus-loin' });
     expect(r.intro).not.toContain('Quantalys');           // 26/11/2026 : source unique, l'export de l'assureur
     expect(r.intro).toContain('2 fonds article 9');
@@ -6618,6 +6618,61 @@ test.describe('Ressources → Pour aller plus loin → Supports Cristalliance Av
     expect(r.autre).toEqual(['Support', 'Morningstar', 'PEA']);   // ordre du catalogue, clé inconnue écartée
     expect(r.ancien).toEqual(['Support', 'Morningstar', 'PEA']);
     expect(r.pousse.vpc.c).toEqual(['pea', 'ms', 'inconnue']);
+  });
+
+  test('deux contrats : PERtinence Retraite lu dans sa propre table, filtres remis à zéro, colonnes conservées, encadré sur Cristalliance', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserVP(page);
+    const r = await page.evaluate(async () => {
+      const tables = [];
+      const PER = [1, 2].map(i => ({ isin: 'LU000000000' + i, nom: 'Fonds PER ' + i, famille: i === 1 ? 'Immobilier' : 'Actions', categorie: '', theme: '', zone: i === 1 ? 'Japon' : 'Monde', societe: 'SGP',
+        perf_1an: 1, perf_3ans: 2, perf_5ans: 3, morningstar: 3, sri: 3 + i, sfdr: 8, labels: null, pea: false, contrat: 'PERtinence Retraite', donnees_au: '2026-11-26', source: 'espaceclient.suravenir.fr' }));
+      const base = SB.from;
+      SB = { from: (tb) => { tables.push(tb); return tb === 'supports_pertinence' ? { select: async () => ({ data: PER, error: null }) } : base(tb); } };
+      CONTENU = Object.assign({}, CONTENU || {}, { allocations_reco: { n: 'Prénom Nom', p: 'Prénom', d: 'https://discord.com/channels/1/2', date: '05/11/2026', r: [['Test', '⚡', 'FR0000000001']] } });
+      buildRpPre();
+      const boutons = [...document.querySelectorAll('#resPlusSub button')].map(b => b.textContent);
+      document.getElementById('vpColBtn').click();
+      const c = document.querySelector('#vpColPan input[data-vpcol="fg"]'); c.checked = true; c.dispatchEvent(new Event('change', { bubbles: true }));
+      document.getElementById('vpQ').value = 'Cinq'; document.getElementById('vpQ').dispatchEvent(new Event('input', { bubbles: true }));
+      document.getElementById('vpFam').value = 'Actions'; document.getElementById('vpFam').dispatchEvent(new Event('change', { bubbles: true }));
+      const avant = document.querySelectorAll('#vpBody tr').length;
+      document.querySelector('#resPlusSub button[data-rp="per"]').click();
+      await vpLoad();
+      const per = { titre: document.getElementById('vpTitre').textContent, on: document.querySelector('#resPlusSub button.on').dataset.rp, lignes: [...document.querySelectorAll('#vpBody tr td b')].map(x => x.textContent),
+        intro: document.getElementById('vpIntro').textContent, src: document.getElementById('vpSrc').textContent, q: document.getElementById('vpQ').value, fam: document.getElementById('vpFam').value,
+        familles: [...document.getElementById('vpFam').options].map(o => o.value), zones: [...document.getElementById('vpZone').options].map(o => o.value),
+        tetes: [...document.querySelectorAll('#vpHead th')].map(t => t.textContent), compte: document.getElementById('vpCount').textContent };
+      const lus = tables.filter(t => t.startsWith('supports_')).slice();
+      document.querySelector('#resPlusSub button[data-rp="vieplus"]').click();
+      const retour = { titre: document.getElementById('vpTitre').textContent, n: document.querySelectorAll('#vpBody tr').length, relu: tables.filter(t => t.startsWith('supports_')).length - lus.length,
+        familles: [...document.getElementById('vpFam').options].map(o => o.value) };
+      document.querySelector('#resPlusSub button[data-rp="per"]').click();
+      document.querySelector('#rpPre [data-rp-isin]').click();
+      const reco = { titre: document.getElementById('vpTitre').textContent, lignes: [...document.querySelectorAll('#vpBody tr td b')].map(x => x.textContent) };
+      return { boutons, avant, per, lus, retour, reco };
+    });
+    expect(erreurs).toEqual([]);
+    expect(r.boutons).toEqual(['Supports Cristalliance Avenir', 'Supports PERtinence Retraite']);
+    expect(r.avant).toBe(1);
+    expect(r.per.titre).toBe('Supports PERtinence Retraite');
+    expect(r.per.on).toBe('per');
+    expect(r.per.lignes).toEqual(['Fonds PER 2', 'Fonds PER 1']);   // ordre des familles : Actions avant Immobilier
+    expect(r.per.intro).toContain('Contrat PERtinence Retraite : les 2 supports');
+    expect(r.per.src).toContain('espaceclient.suravenir.fr');
+    expect(r.per.q).toBe('');                                      // filtres remis à zéro
+    expect(r.per.fam).toBe('');
+    expect(r.per.familles).toEqual(['', 'Actions', 'Immobilier']);   // listes refaites pour ce contrat
+    expect(r.per.zones).toEqual(['', 'Japon', 'Monde']);
+    expect(r.per.tetes).toContain('Frais gestion');                // le choix de colonnes vaut pour les deux contrats
+    expect(r.per.compte).toBe('2 supports sur 2');
+    expect(r.lus).toEqual(['supports_pertinence']);                // Cristalliance était déjà lu : seule la table du PER est demandée
+    expect(r.retour.titre).toBe('Supports Cristalliance Avenir');
+    expect(r.retour.n).toBe(4);
+    expect(r.retour.relu).toBe(0);                                 // chaque catalogue n'est lu qu'une fois
+    expect(r.retour.familles).toEqual(['', 'Actions', 'Obligataire', 'Obligataire daté']);
+    expect(r.reco.titre).toBe('Supports Cristalliance Avenir');    // une recommandation ramène sur Cristalliance
+    expect(r.reco.lignes).toEqual(['Fonds Cinq Etoiles']);
   });
 
   test('les données des supports n’apparaissent pas en clair dans la page (audit)', () => {

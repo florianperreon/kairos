@@ -2456,11 +2456,11 @@ body.ps-open #fbBtn{bottom:64px}
       <div class="subview" id="sr-doc"><div class="rs-cards" id="resDocCards"></div><div id="resDoc"></div></div>
       <div class="subview" id="sr-plus">
         <div class="panel rp-lock" id="rpLock"><h2>🔒 Pour aller plus loin</h2><p>Cette rubrique s’ouvre au <b>passage ADMAN</b>.</p><p class="mbr-sub">D’ici là, continue à monter en compétence, participer aux événements, échanger sur Discord et solliciter ton parrain pour avancer sereinement !</p></div>
-        <nav class="subtabs frm-sub" id="resPlusSub"><button data-rp="vieplus" class="on">Supports Cristalliance Avenir</button></nav>
+        <nav class="subtabs frm-sub" id="resPlusSub"><button data-rp="vieplus" class="on">Supports Cristalliance Avenir</button><button data-rp="per">Supports PERtinence Retraite</button></nav>
         <div class="panel rp-pre" id="rpPre"></div>
         <div class="rp-v on" id="rp-vieplus">
           <div class="panel">
-            <h2>Supports Cristalliance Avenir</h2>
+            <h2 id="vpTitre">Supports Cristalliance Avenir</h2>
             <p class="vp-src" id="vpSrc" hidden></p>
             <p class="mbr-sub" id="vpIntro"></p>
             <button type="button" class="vp9-btn" id="vp9">🌱 Les fonds article 9</button>
@@ -4668,9 +4668,25 @@ function showAdminSub(s){
    26/11/2026 : renommée « Supports Cristalliance Avenir ». Source unique : l'export de l'espace client de
    l'assureur (colonne source, date dans donnees_au), repris avec TOUTES ses colonnes. Le tableau en montre
    une sélection ; chacun choisit les siennes (bouton « Colonnes »), choix mémorisé sur son compte (etat.vpc).
-   Mettre à jour le catalogue = mettre à jour la table, sans republier la page. */
+   Mettre à jour le catalogue = mettre à jour la table, sans republier la page.
+   26/11/2026 (soir) : second catalogue, « Supports PERtinence Retraite » (table supports_pertinence, même structure,
+   mêmes droits). Un seul tableau, deux boutons : VP_CTR dit quel contrat est affiché, VP est son catalogue. */
+const VP_CONTRATS = { ca:{ table:'supports_vieplus', nom:'Cristalliance Avenir' }, per:{ table:'supports_pertinence', nom:'PERtinence Retraite' } };
+let VP_CTR = 'ca';                      // contrat affiché
+const VP_CACHE = {};                    // catalogues déjà lus, par contrat
 let VP = null, VP_TRI = { col:'fam', dir:1 };
-let VP_ETAT = '';                       // '' | 'charge' | 'ok' | 'erreur'
+let VP_ETAT = '';                       // '' | 'charge' | 'ok' | 'erreur' (du contrat affiché)
+function vpContrat(c){   // change de contrat : filtres remis à zéro, colonnes choisies conservées
+  if(!VP_CONTRATS[c] || c===VP_CTR) return;
+  VP_CTR = c; VP = VP_CACHE[c] || null; VP_ETAT = VP ? 'ok' : ''; VP_TRI = { col:'fam', dir:1 };
+  ['vpQ','vpSfdr','vpMs'].forEach(id=>{ const e = document.getElementById(id); if(e) e.value = ''; });
+  ['vpLab','vpPea'].forEach(id=>{ const e = document.getElementById(id); if(e) e.checked = false; });
+  ['vpFam','vpZone','vpSri'].forEach(id=>{ const e = document.getElementById(id); if(!e) return; e.value = ''; while(e.options.length > 1) e.remove(1); delete e.dataset.ok; });
+  document.querySelectorAll('#resPlusSub button').forEach(b=>b.classList.toggle('on', (b.dataset.rp==='per' ? 'per' : 'ca')===c));
+  const h = document.getElementById('vpTitre'); if(h) h.textContent = 'Supports '+VP_CONTRATS[c].nom;
+  buildVieplus();
+}
+document.addEventListener('click', e=>{ const b = e.target.closest && e.target.closest('#resPlusSub button[data-rp]'); if(b) vpContrat(b.dataset.rp==='per' ? 'per' : 'ca'); });
 function vpCharger(){ return VP; }
 // Colonnes : [clé, colonne en base, en-tête, libellé complet, type, groupe].
 // Types : txt, date, sri, star, sfdr, int, bool, pct (performance signée), pc (pourcentage simple), num, vl, actif.
@@ -4752,9 +4768,10 @@ function vpColsPoser(c){   // c = liste de clés, ou null pour revenir aux colon
 async function vpLoad(){
   if(VP || VP_ETAT==='charge') return VP;
   VP_ETAT = 'charge';
+  const ctr = VP_CTR;
   try{
     if(!SB || !SBUSER) throw new Error('non connecté');
-    const r = await SB.from('supports_vieplus').select('*');
+    const r = await SB.from(VP_CONTRATS[ctr].table).select('*');
     if(r.error) throw r.error;
     const NUM = new Set(['pct','pc','num','vl','actif']);
     const l = (r.data||[]).map(x=>{
@@ -4765,9 +4782,9 @@ async function vpLoad(){
     });
     if(!l.length) throw new Error('catalogue vide');
     const p = (r.data[0]||{});
-    VP = { contrat:p.contrat||'Cristalliance Avenir', maj: vpDate(p.donnees_au), source:p.source||'', l };
-    VP_ETAT = 'ok';
-  }catch(e){ console.error(e); VP_ETAT = 'erreur'; }
+    VP_CACHE[ctr] = { contrat:p.contrat||VP_CONTRATS[ctr].nom, maj: vpDate(p.donnees_au), source:p.source||'', l };
+    if(ctr===VP_CTR){ VP = VP_CACHE[ctr]; VP_ETAT = 'ok'; }   // on a pu changer de contrat pendant la lecture
+  }catch(e){ console.error(e); if(ctr===VP_CTR) VP_ETAT = 'erreur'; }
   try{ buildVieplus(); buildRpPre(); }catch(e){ console.error(e); }
   return VP;
 }
@@ -4895,7 +4912,7 @@ document.addEventListener('click', e=>{
 function rpCharger(){ return (CONTENU && CONTENU.allocations_reco) || null; }   // contenu_blocs.allocations_reco (RLS)
 function buildRpPre(){
   const el = document.getElementById('rpPre'); if(!el || el.dataset.ok) return;
-  const r = rpCharger(), d = vpCharger(); if(!r){ el.hidden = true; return; } el.hidden = false; if(!d) return;
+  const r = rpCharger(), d = VP_CACHE.ca || (VP_CTR==='ca' ? vpCharger() : null); if(!r){ el.hidden = true; return; } el.hidden = false; if(!d) return;
   const cartes = r.r.map(([th, ico, isin])=>{
     const f = d.l.find(x=>x.isin===isin); if(!f) return '';
     return '<button type="button" class="rp-chip" data-rp-isin="'+esc(f.isin)+'" title="'+esc(f.isin)+' · '+esc(f.sgp||'')+' · 3 ans '+vpPct(f.p3)+' · 5 ans '+vpPct(f.p5)+' : voir dans la liste">'
@@ -4908,6 +4925,7 @@ function buildRpPre(){
 }
 document.addEventListener('click', e=>{
   const bt = e.target.closest && e.target.closest('[data-rp-isin]'); if(!bt) return;
+  if(VP_CTR!=='ca') vpContrat('ca');   // les recommandations portent sur Cristalliance Avenir
   const q = document.getElementById('vpQ'); q.value = bt.dataset.rpIsin;
   q.dispatchEvent(new Event('input', { bubbles: true }));
   const w = document.querySelector('#rp-vieplus .tbl-wrap'); if(w) w.scrollIntoView({ behavior:'smooth', block:'start' });
@@ -5020,6 +5038,7 @@ const KAIROS_CHANGELOG = [
     ['f','Ressources → Pour aller plus loin : « Supports Vie Plus » devient « Supports Cristalliance Avenir ». Catalogue mis à jour (458 supports) depuis une seule source, l’export de l’espace client de l’assureur, indiquée en tête de page avec sa date.'],
     ['f','Supports Cristalliance Avenir : la notation Morningstar est affichée (colonne et filtre par nombre d’étoiles) ; la notation Quantalys, absente de la nouvelle source, est retirée. Nouveau filtre « Éligibles PEA » et mention de la date de fin des entrées sous le nom du support.'],
     ['f','Supports Cristalliance Avenir : bouton « Colonnes » pour choisir les colonnes du tableau parmi toutes les données de l’export (performances de 1 semaine à 10 ans et par année depuis 2019, volatilités, Sharpe, valeur liquidative, actif net, frais de gestion, dates, éligibilités PEA / PEA-PME / Fourgous, options de gestion, labels, taxonomie, PAI…). Le choix est enregistré sur le compte de chacun et le suit d’un appareil à l’autre.'],
+    ['f','Ressources → Pour aller plus loin : nouveau catalogue « Supports PERtinence Retraite » (1 055 supports du PER, même source et mêmes colonnes au choix), à côté de « Supports Cristalliance Avenir ». L’outil IA chercher_supports couvre les deux contrats (paramètre contrat).'],
     ['f','Outil IA chercher_supports : mêmes données que la page, avec la notation Morningstar, un filtre par étoiles et par éligibilité PEA, et le détail complet d’un support sur demande.'],
   ]],
   ['2026-11-17', [
@@ -13199,7 +13218,7 @@ document.addEventListener('click', async e=>{
 
 // --- Admin → MCP : historique d'utilisation par membre ---
 let MCP_ADM = { membres:[], journal:[], actif:true, f:{ user:'', outil:'', ia:'', statut:'', type:'' } };
-const MCP_OUTIL_LIB = { chercher_supports:'Supports Cristalliance Avenir', chercher_sessions:'Chercher des sessions', detail_session:'Détail d’une session', mes_sessions:'Mes sessions', chercher_fiches:'Chercher des fiches',
+const MCP_OUTIL_LIB = { chercher_supports:'Supports des contrats', chercher_sessions:'Chercher des sessions', detail_session:'Détail d’une session', mes_sessions:'Mes sessions', chercher_fiches:'Chercher des fiches',
   lire_fiche:'Lire une fiche', faq_objections:'FAQ / objections', liens_utiles:'Liens utiles', veille:'Veille', mes_actions:'Mes actions', ma_progression:'Ma progression',
   mon_mail_manager:'Mon mail manager', mur_mail_manager:'Mur du mail manager', ma_lignee:'Ma lignée', enregistrer_session:'Enregistrer une session',
   cocher_parcours:'Cocher le parcours', deposer_retour:'Déposer un retour', suggerer_contenu:'Suggérer un contenu', remplir_mail_manager:'Remplir le mail manager',
