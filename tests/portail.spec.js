@@ -4462,6 +4462,68 @@ test.describe('Veille — affichage « brief » (proposition A, 28/09/2026)', ()
     expect(r.sources).toBeGreaterThan(0);
     expect(r.hauteur, 'replié, ça tient sur un écran').toBeLessThan(700);
   });
+
+  test('veille à deux niveaux : l’essentiel pour la lignée en tête (rubriques, statut, frise des étapes), le reste replié (26/11/2026)', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      const frise = [{ l: 'Dépôt', s: 'ok', d: '01/10' }, { l: 'Assemblée', s: 'rejet', d: '04/11' }, { l: 'Sénat', s: 'cours' }, { l: 'Vote définitif', s: 'avenir' }];
+      const gen = { sujet: { t: 'CAC 40 : semaine de baisse', r: 'Résumé.', i: 'Rassure tes clients. Et la suite.', src: [] }, breves: [] };
+      VEILLE = { maj: '2026-11-23T04:10', editions: [{ du: '2026-11-16', au: '2026-11-22', items: { marches: gen,
+        essentiel: { sujet: {}, breves: [
+          { t: 'Assurance vie : abattement en débat au Sénat', r: 'Ancien état du texte.', i: 'Rien n’est voté.', rub: 'produits', st: 'discussion', dossier: 'plf-av', et: frise },
+          { t: 'Déficit foncier : le décret est <publié>', r: 'Journal officiel du 20/11, en vigueur le 21/11.', i: 'Applicable dès maintenant. Vérifie les DPE.', rub: 'produits', st: 'acte', u: 'https://x.fr', s: 'JO' },
+          { t: 'Formation continue : nouvelle règle', r: 'Détail.', i: 'À anticiper.', rub: 'habilitations', st: 'projet', pe: 'Consultation jusqu’au 15/12' },
+          { t: 'Partenaire : nouveau support référencé', r: 'Détail.', i: 'À regarder.', rub: 'partenaires', st: 'info' }] } } },
+        { du: '2026-11-09', au: '2026-11-15', items: { marches: gen } }],
+        breaking: [
+          { d: todayIso, axe: 'fisca', t: 'Assurance vie : le Sénat vote l’abattement à 100 000 €', r: 'Vote du jour.', i: 'Rien n’est acté. Attends la suite.', prio: true, rub: 'produits', st: 'discussion', dossier: 'plf-av', et: frise, pe: 'Vote d’ensemble le 9 décembre' },
+          { d: todayIso, axe: 'marches', t: 'Nasdaq : forte baisse', r: 'Séance du jour.', i: 'Pas d’arbitrage dans l’urgence.', prio: false }] };
+      buildVeille(); showTab('veille');
+      const E = document.getElementById('veilleEss'), items = [...E.querySelectorAll('details.vess')], p = items[0];
+      const ess = { visible: !E.hidden, rub: [...E.querySelectorAll('.vrub')].map(x => x.textContent), titres: items.map(d => d.querySelector('b').textContent),
+        statuts: items.map(d => d.querySelector('.vst').textContent), ouvert: p.open, alerte: !!p.querySelector('.vess-al'),
+        frise: [...p.querySelectorAll('summary .vfr li')].map(li => li.className + ':' + li.textContent), pe: p.querySelector('summary .vpe').textContent,
+        acteFrise: items[1].querySelectorAll('.vfr').length, acteTitre: items[1].querySelector('b').innerHTML, source: items[1].querySelectorAll('.vdet .vsrc').length,
+        badge: E.querySelector('.badge-lig').textContent };
+      const G = document.querySelector('#veilleLast details.vgen');
+      const gen2 = { existe: !!G, ouvert: G && G.open, resume: G && G.querySelector('summary').textContent, alertes: G ? G.querySelectorAll('.vbk').length : -1,
+        lignes: G ? G.querySelectorAll('details.vrow').length : -1, bloc: document.getElementById('veilleBreak').hidden, tete: document.getElementById('veilleHead').textContent };
+      window.__booted = true; try { buildActions(); } catch (e) {}
+      const action = document.body.textContent.includes('Lire l’essentiel de la veille') ? 'oui' : '';
+      const idx = (buildSearchIndex(), SIDX.filter(x => x.g === 'Veille' && x.ic === '⭐').length);
+      // sans item essentiel ni alerte prioritaire : affichage d'avant
+      VEILLE.editions[0].items.essentiel.breves = []; VEILLE.breaking.forEach(b => { b.prio = false; });
+      buildVeille();
+      const avant = { ess: document.getElementById('veilleEss').hidden, gen: !!document.querySelector('#veilleLast details.vgen'), alertes: document.querySelectorAll('#veilleBreak .vbk').length };
+      return { ess, gen2, action: !!action, idx, avant };
+    });
+    expect(erreurs).toEqual([]);
+    expect(r.ess.visible).toBe(true);
+    expect(r.ess.rub).toEqual(['🧰 Nos produits', '🤝 Nos partenaires', '🎓 Habilitations et formations']);
+    expect(r.ess.titres).toEqual(['Assurance vie : le Sénat vote l’abattement à 100 000 €', 'Déficit foncier : le décret est <publié>', 'Partenaire : nouveau support référencé', 'Formation continue : nouvelle règle']);   // l'alerte remplace l'item du même dossier
+    expect(r.ess.statuts).toEqual(['En discussion', 'Acté', 'Info', 'Projet']);
+    expect(r.ess.ouvert).toBe(false);
+    expect(r.ess.alerte).toBe(true);
+    expect(r.ess.frise).toEqual(['ok:Dépôt01/10', 'rejet:Assemblée04/11', 'cours:Sénat', 'avenir:Vote définitif']);   // étapes validées, en cours, à venir
+    expect(r.ess.pe).toBe('Prochaine étape : Vote d’ensemble le 9 décembre');
+    expect(r.ess.acteFrise).toBe(0);                                  // un texte acté n'a plus de frise
+    expect(r.ess.acteTitre).toBe('Déficit foncier : le décret est &lt;publié&gt;');
+    expect(r.ess.source).toBe(1);
+    expect(r.ess.badge).toBe('4 à retenir');
+    expect(r.gen2.existe).toBe(true);
+    expect(r.gen2.ouvert).toBe(false);                                // la veille généraliste est repliée
+    expect(r.gen2.resume).toContain('Pour aller plus loin');
+    expect(r.gen2.resume).toContain('1 alerte');
+    expect(r.gen2.alertes).toBe(1);                                   // l'alerte hors périmètre est rangée avec le reste
+    expect(r.gen2.lignes).toBe(1);
+    expect(r.gen2.bloc).toBe(true);
+    expect(r.gen2.tete).toContain('D’abord l’essentiel pour la lignée');
+    expect(r.action).toBe(true);
+    expect(r.idx).toBe(4);
+    expect(r.avant).toEqual({ ess: true, gen: false, alertes: 2 });
+  });
 });
 
 /* ------------------------------------------------------------------ */

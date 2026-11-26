@@ -402,6 +402,26 @@ nav.botbar a.nv-new .l::after{content:"•";padding:0 4px}
 .vbr-t{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:700;margin-bottom:4px}
 .vempty{font-size:14px;color:var(--ink-3);margin:0}
 .vrows{margin-top:4px}
+/* 26/11/2026 : l'essentiel pour la lignée (statut d'avancement, frise des étapes) et veille généraliste repliée */
+.vessp{border-color:var(--gold);box-shadow:inset 4px 0 0 var(--gold)}
+.vrub{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin:14px 0 2px}
+.vess{border-top:1px solid var(--line)}.vrub+.vess{border-top:0}
+.vess>summary{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:start;padding:10px 0;cursor:pointer;list-style:none}.vess>summary::-webkit-details-marker{display:none}
+.vess .vtt b{display:block;font-size:14.5px;line-height:1.4}.vess .vdet{padding:0 0 12px}.vess .vdet p{font-size:14px;margin:6px 0}
+.vst{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap;margin-top:1px;border:1px solid var(--line-2);color:var(--ink-2);background:var(--surface-2)}
+.vst.ok{color:var(--ok);border-color:var(--ok);background:var(--gold-soft)}.vst.warn{color:var(--encours-ink);border-color:var(--encours);background:var(--vac-soft)}.vst.bad{color:var(--bad);border-color:var(--bad);background:var(--fer-soft)}
+.vess-al{display:inline-block;font-size:11px;font-weight:700;color:var(--bad);margin-top:3px}
+.vfr{grid-column:1/-1;list-style:none;display:flex;gap:2px;margin:6px 0 0;padding:0;overflow-x:auto}
+.vfr li{flex:1 1 0;min-width:74px;text-align:center;font-size:11px;line-height:1.3;color:var(--ink-3)}
+.vfr-p{display:block;width:13px;height:13px;border-radius:50%;margin:0 auto 4px;border:1.5px solid var(--line-2);background:var(--surface)}
+.vfr li.ok .vfr-p{background:var(--ok);border-color:var(--ok)}.vfr li.ok{color:var(--ink-2)}
+.vfr li.cours .vfr-p{background:var(--encours);border-color:var(--encours)}.vfr li.cours{color:var(--encours-ink);font-weight:700}
+.vfr li.rejet .vfr-p{background:var(--bad);border-color:var(--bad)}.vfr li.rejet{color:var(--bad)}
+.vfr i{display:block;font-style:normal;font-size:10.5px;opacity:.85}
+.vpe{grid-column:1/-1;font-size:12.5px;color:var(--ink-2);margin:4px 0 0}
+.vgen>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}.vgen>summary::-webkit-details-marker{display:none}
+.vgen>summary h2{display:inline}.vgen>summary span{font-size:13.5px;color:var(--ink-2)}.vgen>summary::after{content:"▾";margin-left:auto;color:var(--ink-3)}.vgen[open]>summary::after{content:"▴"}
+.vgen[open]>summary{margin-bottom:10px}.vgen .vbks{margin-bottom:12px}
 .vrow{border-top:1px solid var(--line)}.vrow:first-child{border-top:0}
 .vrow>summary,.vrow.off{display:grid;grid-template-columns:26px 88px minmax(0,1fr) auto;gap:10px;align-items:start;padding:12px 2px;cursor:pointer;list-style:none}
 .vrow>summary::-webkit-details-marker,.vbrv>summary::-webkit-details-marker,.vbk-det>summary::-webkit-details-marker{display:none}
@@ -2455,6 +2475,7 @@ body.ps-open #fbBtn{bottom:64px}
 
     <section class="view" id="v-veille">
       <div class="panel" id="veilleHead"></div>
+      <div class="panel vessp" id="veilleEss" hidden></div>
       <div class="panel vbreak" id="veilleBreak"></div>
       <div id="veilleLast"></div>
       <div class="panel" id="veilleHistoPanel" hidden><h2>Historique</h2><div id="veilleHisto"></div></div>
@@ -4155,8 +4176,10 @@ function buildActions(){
   if(eds.length){
     evaluable = true;
     const der = eds[0];
-    actions.push({ cle:'veille', t:'Lire la veille de la semaine',
-      d:'Édition ' + vPeriode(der.du, der.au) + ' — fiscalité, marchés, produits, profession, clients.',
+    const aEss = (((der.items||{}).essentiel||{}).breves||[]).length;
+    actions.push({ cle:'veille', t: aEss ? 'Lire l’essentiel de la veille' : 'Lire la veille de la semaine',
+      d: aEss ? 'Édition ' + vPeriode(der.du, der.au) + ' — ' + aEss + ' news à retenir sur nos produits, nos partenaires et nos habilitations.'
+              : 'Édition ' + vPeriode(der.du, der.au) + ' — fiscalité, marchés, produits, profession, clients.',
       href:'#veille', fait:semFait('veille'), go:'Ouvrir' });
   }
 
@@ -5126,6 +5149,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-26', [
+    ['f','Veille : nouvelle rubrique « L’essentiel pour la lignée » en tête de l’onglet — nos produits, nos partenaires, nos habilitations —, alimentée dès la prochaine édition. Chaque news indique son statut (acté, en discussion, projet, rejeté) et, pour un texte en cours, la frise de ses étapes avec la prochaine échéance. La veille généraliste reste disponible, repliée sous « Pour aller plus loin ».'],
     ['f','Fiches pratiques : la fiche « Mise en relation — Méthode préconisée par la lignée » (nouveau nom) ressort dans la liste, avec un fond de couleur et l’étiquette « ⭐ Préconisée par la lignée ». Les deux autres méthodes renvoient vers elle. Les anciens liens vers la fiche restent valables.'],
     ['f','Admin → Contenu : nouvel onglet « Supports ». Un administrateur y dépose l’export à jour de l’assureur (.xls) pour Cristalliance Avenir ou PERtinence Retraite : contrôle du fichier, aperçu de ce qui change (supports ajoutés, retirés, modifiés, nouveaux supports à classer), import en un clic, historique des 10 dernières versions avec restauration. Un tutoriel indique où trouver le fichier.'],
     ['f','Supports Cristalliance Avenir et PERtinence Retraite : un support qui disparaît de l’export de l’assureur est conservé, marqué « retiré du contrat » et masqué par défaut ; le filtre « Afficher les retirés » le montre, en gris, en bas de liste.'],
@@ -7993,6 +8017,39 @@ function vBkHtml(b){
     + ((b.r||b.u)?'<details class="vbk-det"><summary>Détail et source</summary>'+(b.r?'<p>'+esc(b.r)+'</p>':'')+vImpSuite(b.i)+(b.u?vLink(b.u,b.s||'source'):'')+'</details>':'')
     + '</div>';
 }
+/* 26/11/2026 (règle Florian) : veille à deux niveaux. « L'essentiel pour la lignée » = alertes prioritaires de la
+   semaine en cours (veille_breaking.prio) + axe « essentiel » de la dernière édition, rangés par rubrique
+   (nos produits, nos partenaires, habilitations). Chaque item porte un statut — acté, en discussion, projet,
+   rejeté, info — et, pour un texte en cours, la frise de ses étapes (et) et la prochaine étape (pe).
+   Le reste (5 axes, alertes hors périmètre) est replié sous « Pour aller plus loin ».
+   Tant qu'aucun item essentiel n'existe, l'onglet garde son affichage d'avant. */
+const VST = { acte:['Acté','ok'], discussion:['En discussion','warn'], projet:['Projet',''], rejete:['Rejeté','bad'], info:['Info',''] };
+const VRUB = [['produits','🧰','Nos produits'],['partenaires','🤝','Nos partenaires'],['habilitations','🎓','Habilitations et formations']];
+function vFrise(et){
+  if(!Array.isArray(et) || !et.length) return '';
+  return '<ol class="vfr">'+et.map(e=>'<li class="'+(['ok','cours','rejet'].includes(e.s)?e.s:'avenir')+'"><span class="vfr-p"></span>'+esc(e.l||'')+(e.d?'<i>'+esc(e.d)+'</i>':'')+'</li>').join('')+'</ol>';
+}
+function vEssHtml(b){
+  const st = VST[b.st] || VST.info, enCours = b.st==='discussion' || b.st==='projet';
+  return '<details class="vess"><summary><span class="vst '+st[1]+'">'+st[0]+'</span><span class="vtt"><b>'+esc(b.t)+'</b>'+vImp1(b.i)
+    + (b.alerte?'<span class="vess-al">Alerte · '+esc(fmtD(b.d))+'</span>':'')+'</span>'
+    + (enCours ? vFrise(b.et) + (b.pe?'<p class="vpe"><b>Prochaine étape :</b> '+esc(b.pe)+'</p>':'') : '')
+    + '</summary><div class="vdet">'+(b.r?'<p>'+esc(b.r)+'</p>':'')+vImpSuite(b.i)
+    + (!enCours && b.pe?'<p class="vpe"><b>Prochaine étape :</b> '+esc(b.pe)+'</p>':'')
+    + (b.u?'<div class="vsrcs">'+vLink(b.u,b.s||'source')+'</div>':'')+'</div></details>';
+}
+// items essentiels à afficher : alertes prioritaires d'abord, puis l'édition, sans redite (même dossier ou même news)
+function vEssItems(ed, alertes){
+  const al = (alertes||[]).map(b=>Object.assign({}, b, {alerte:true}));
+  const br = ((((ed||{}).items||{}).essentiel||{}).breves||[]).filter(b=>b && b.t && !al.some(a=>(a.dossier && a.dossier===b.dossier) || vProches(a,b)));
+  return al.concat(br);
+}
+function vEssListe(items){
+  return VRUB.map(([id, ic, nom])=>{
+    const l = items.filter(b=>(VRUB.some(r=>r[0]===b.rub) ? b.rub : 'produits')===id);
+    return l.length ? '<span class="vrub">'+ic+' '+nom+'</span>'+l.map(vEssHtml).join('') : '';
+  }).join('');
+}
 function buildVeille(){
   const btn = document.querySelector('nav.tabs [data-v="veille"]');
   if(!VEILLE || !VEILLE.editions){ if(btn) btn.hidden = true; return; }
@@ -8001,24 +8058,38 @@ function buildVeille(){
   const last = eds[0] || null;
   const lundi = vMonday(todayIso);
   const bk = (VEILLE.breaking||[]).filter(b=>b.d>=lundi).sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  const ess = vEssItems(last, bk.filter(b=>b.prio)), hasEss = ess.length>0;
+  const bkG = hasEss ? bk.filter(b=>!b.prio) : bk;   // alertes hors périmètre prioritaire
+  const essEl = document.getElementById('veilleEss');
+  if(essEl){ essEl.hidden = !hasEss;
+    essEl.innerHTML = hasEss ? '<div class="vhead-t"><h2>⭐ L’essentiel pour la lignée</h2>'+(last?'<span class="badge-lig">'+ess.length+' à retenir</span>':'')+'</div>'
+      + '<p class="vhead-s">Acté = publié, applicable. En discussion = texte en cours d’examen, rien n’est décidé. Projet = annoncé, pas encore déposé.</p>'+vEssListe(ess) : ''; }
   document.getElementById('veilleHead').innerHTML =
     '<div class="vhead-t"><h2>Veille patrimoniale</h2></div>'
-    + '<p class="vhead-s">L’essentiel en une minute : une ligne par thème, clique pour le détail et les autres news.</p>'
+    + '<p class="vhead-s">'+(hasEss ? 'D’abord l’essentiel pour la lignée — nos produits, nos partenaires, nos habilitations —, avec l’état d’avancement de chaque texte. Le reste est plus bas, pour aller plus loin.' : 'L’essentiel en une minute : une ligne par thème, clique pour le détail et les autres news.')+'</p>'
     + (VEILLE.maj ? '<p class="vhead-m">Dernière mise à jour le '+esc(fmtD(VEILLE.maj.slice(0,10)))+' à '+esc(VEILLE.maj.slice(11,16).replace(':','h'))+'</p>' : '');
   const bkEl = document.getElementById('veilleBreak');
   // Bloc « Breaking news » affiché seulement quand il y a une alerte cette semaine (règle Florian 13/09/2026)
-  bkEl.hidden = bk.length===0;
-  bkEl.innerHTML = bk.length ? '<h2><span class="vdot"></span>Alertes de la semaine</h2><div class="vbks">'+bk.map(vBkHtml).join('')+'</div>' : '';
-  bkEl.classList.toggle('hot', bk.length>0);
+  const bkVu = hasEss ? [] : bk;   // avec l'essentiel, les autres alertes passent dans « Pour aller plus loin »
+  bkEl.hidden = bkVu.length===0;
+  bkEl.innerHTML = bkVu.length ? '<h2><span class="vdot"></span>Alertes de la semaine</h2><div class="vbks">'+bkVu.map(vBkHtml).join('')+'</div>' : '';
+  bkEl.classList.toggle('hot', bkVu.length>0);
+  const semaine = last ? '<div class="vhead-t"><h2>La semaine '+esc(vPeriode(last.du,last.au))+'</h2><span class="badge-lig">Semaine passée</span></div>'+vEditionHtml(vSansDoublons(last, bk.concat(ess))) : '';
   document.getElementById('veilleLast').innerHTML = last
-    ? '<div class="panel vlast"><div class="vhead-t"><h2>La semaine '+esc(vPeriode(last.du,last.au))+'</h2><span class="badge-lig">Semaine passée</span></div>'+vEditionHtml(vSansDoublons(last, bk))+'</div>'
+    ? (hasEss
+      ? '<details class="panel vgen"><summary><h2>Pour aller plus loin</h2><span>La veille généraliste, facultative : fiscalité, marchés, produits, profession, clients'+(bkG.length?' · '+bkG.length+' alerte'+(bkG.length>1?'s':''):'')+'</span></summary>'
+        + (bkG.length?'<div class="vbks">'+bkG.map(vBkHtml).join('')+'</div>':'')+'<div class="vlast">'+semaine+'</div></details>'
+      : '<div class="panel vlast">'+semaine+'</div>')
     : '<div class="panel"><p class="vempty">Première édition attendue lundi matin à 4 h.</p></div>';
   const hist = eds.slice(1);
   document.getElementById('veilleHistoPanel').hidden = hist.length===0;
   document.getElementById('veilleHisto').innerHTML = hist.map(ed=>{
     const hbk = (VEILLE.breaking||[]).filter(b=>b.d>vAddDays(ed.au,0) && b.d<=vAddDays(ed.au,7)).sort((a,b)=>(a.d||'').localeCompare(b.d||''));
+    const he = vEssItems(ed, []);
     return '<details class="vhist"><summary>Semaine '+esc(vPeriode(ed.du,ed.au))+(hbk.length?' · '+hbk.length+' alerte'+(hbk.length>1?'s':''):'')+'</summary>'
-      + '<div class="vhist-b">'+vEditionHtml(vSansDoublons(ed))
+      + '<div class="vhist-b">'
+      + (he.length ? '<span class="vbr-t">L’essentiel pour la lignée</span>'+vEssListe(he)+'<span class="vbr-t" style="margin-top:12px">Pour aller plus loin</span>' : '')
+      + vEditionHtml(vSansDoublons(ed, he))
       + (hbk.length?'<div class="vbks arch"><span class="vbr-t">Alertes de la semaine suivante</span>'+hbk.map(vBkHtml).join('')+'</div>':'')
       + '</div></details>';
   }).join('');
@@ -8033,6 +8104,7 @@ function vSearchIndex(){
       if(it.sujet) add(it.sujet.t, it.sujet.r, it.sujet.i);
       (it.breves||[]).forEach(b=>add(b.t,b.r,b.i));
     });
+    ((((ed.items||{}).essentiel||{}).breves)||[]).forEach(b=>{ if(b && b.t) SIDX.push({g:'Veille',ic:'⭐',t:b.t,s:'L’essentiel · '+vPeriode(ed.du,ed.au),k:norm(b.t),kx:norm((b.r||'')+' '+(b.i||'')),act:go}); });
   });
   (VEILLE.breaking||[]).forEach(b=>SIDX.push({g:'Veille',ic:'🔴',t:b.t,s:'Alerte du '+fmtD(b.d),k:norm(b.t),kx:norm((b.r||'')+' '+(b.i||'')),act:go}));
 }
@@ -13478,7 +13550,7 @@ async function chargerVeille(){
     if(SB && SBUSER){
       const [e,b] = await Promise.all([
         SB.from('veille_editions').select('du,au,axe,sujet,breves,maj').order('du',{ascending:false}),
-        SB.from('veille_breaking').select('d,axe,t,r,i,u,s').order('d',{ascending:false})
+        SB.from('veille_breaking').select('d,axe,t,r,i,u,s,prio,rub,st,et,pe,dossier').order('d',{ascending:false})
       ]);
       if(e.error||b.error) return false;
       lignes = e.data||[]; alertes = b.data||[];
