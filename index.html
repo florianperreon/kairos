@@ -1087,6 +1087,13 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .vp-tbl td:first-child{min-width:230px}
 .vp-tbl .vp-fin{display:block;font-size:11.5px;color:var(--warn,#b45309);font-weight:600}
 .vp-tbl td.vp-l{font-size:12.5px;min-width:150px}
+.vp-tbl .vp-rec{display:block;margin-top:3px;font-size:12px;font-weight:700;color:var(--accent)}
+.vp-rectag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--accent);background:var(--accent-soft);border-radius:4px;padding:0 5px;white-space:nowrap}
+.vp-tbl tr.vp-reco td{background:color-mix(in srgb, var(--accent) 6%, transparent)}.vp-tbl tr.vp-reco td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.vp-tbl tr.vp-reco.vp-r9 td:first-child{box-shadow:inset 3px 0 0 var(--accent), inset 6px 0 0 var(--ok)}
+@media(min-width:900px){.vp-tbl tr.vp-reco td:first-child{background:color-mix(in srgb, var(--accent) 6%, var(--surface))}}
+.vp-tbl .vp-desc{margin-top:3px;font-size:12.5px;color:var(--ink-2);max-width:420px}.vp-tbl .vp-desc summary{cursor:pointer;color:var(--accent);font-weight:600}.vp-tbl .vp-desc p{margin:4px 0 2px;line-height:1.45;color:var(--ink)}
+.vp-recleg{margin:0 0 12px;padding:8px 12px;font-size:13.5px;line-height:1.6;color:var(--ink);background:var(--accent-soft);border-radius:8px}.vp-recleg[hidden]{display:none}
 .vp-tbl td.vp-b{white-space:nowrap}.vp-tbl .vp-oui{color:var(--ok);font-weight:700}.vp-tbl .vp-non{color:var(--ink-2)}
 @media(min-width:900px){.vp-tbl th:first-child,.vp-tbl td:first-child{position:sticky;left:0;z-index:1;background:var(--surface)}
   .vp-tbl tr.vp-r9 td:first-child{background:color-mix(in srgb, var(--ok) 9%, var(--surface))}}
@@ -2473,9 +2480,11 @@ body.ps-open #fbBtn{bottom:64px}
               <select id="vpMs" title="Notation Morningstar"><option value="">Toutes les notes Morningstar</option></select>
               <label class="chk" title="ISR, Relance, Greenfin, Finansol, Towards Sustainability, LuxFLAG, FNG…"><input type="checkbox" id="vpLab"> Labellisés</label>
               <label class="chk"><input type="checkbox" id="vpPea"> Éligibles PEA</label>
+              <label class="chk" id="vpRecLbl" hidden><input type="checkbox" id="vpRec"> ⭐ Recommandés</label>
             </div>
             <div class="count-line"><span id="vpCount"></span><button type="button" class="vp-colbtn" id="vpColBtn" aria-expanded="false" aria-controls="vpColPan" title="Choisir les colonnes à afficher">⚙️ Colonnes</button></div>
             <div class="vp-colpan" id="vpColPan" hidden></div>
+            <p class="vp-recleg" id="vpRecLeg" hidden></p>
             <div class="tbl-wrap"><table class="vp-tbl"><thead><tr id="vpHead"></tr></thead><tbody id="vpBody"></tbody></table></div>
           </div>
         </div>
@@ -4680,7 +4689,7 @@ function vpContrat(c){   // change de contrat : filtres remis à zéro, colonnes
   if(!VP_CONTRATS[c] || c===VP_CTR) return;
   VP_CTR = c; VP = VP_CACHE[c] || null; VP_ETAT = VP ? 'ok' : ''; VP_TRI = { col:'fam', dir:1 };
   ['vpQ','vpSfdr','vpMs'].forEach(id=>{ const e = document.getElementById(id); if(e) e.value = ''; });
-  ['vpLab','vpPea'].forEach(id=>{ const e = document.getElementById(id); if(e) e.checked = false; });
+  ['vpLab','vpPea','vpRec'].forEach(id=>{ const e = document.getElementById(id); if(e) e.checked = false; });
   ['vpFam','vpZone','vpSri'].forEach(id=>{ const e = document.getElementById(id); if(!e) return; e.value = ''; while(e.options.length > 1) e.remove(1); delete e.dataset.ok; });
   document.querySelectorAll('#resPlusSub button').forEach(b=>b.classList.toggle('on', (b.dataset.rp==='per' ? 'per' : 'ca')===c));
   const h = document.getElementById('vpTitre'); if(h) h.textContent = 'Supports '+VP_CONTRATS[c].nom;
@@ -4788,6 +4797,19 @@ async function vpLoad(){
   try{ buildVieplus(); buildRpPre(); }catch(e){ console.error(e); }
   return VP;
 }
+/* 26/11/2026 : supports recommandés par l'expert allocation de la lignée, en tête du listing.
+   contenu_blocs.allocations_reco.liste = { date, g:[{ k:'VI', t:'Versement initial', isins:[…] }, …], note:{ isin:'TECH' }, desc:{ isin:'…' } }
+   (noms, ISIN et descriptions restent en base). Un support peut figurer dans plusieurs groupes. */
+function vpRecos(){
+  const r = rpCharger(), L = r && r.liste; if(!L || !Array.isArray(L.g)) return null;
+  if(L._m) return L._m;
+  const m = {};
+  L.g.forEach((g, i)=>(g.isins||[]).forEach((isin, j)=>{
+    const o = m[isin] || (m[isin] = { rang: i*1000+j, tags: [], desc: (L.desc||{})[isin] || '' });
+    o.tags.push(g.k + ((L.note||{})[isin] && /ESG/.test(g.k) ? ' · '+L.note[isin] : ''));
+  }));
+  return (L._m = m);
+}
 function vpOptions(sel, vals){
   const el = document.getElementById(sel); if(!el || el.dataset.ok) return;
   el.insertAdjacentHTML('beforeend', vals.map(v=>'<option value="'+esc(String(v))+'">'+esc(String(v))+'</option>').join(''));
@@ -4799,12 +4821,15 @@ function vpFiltre(){
   const f = document.getElementById('vpFam').value, z = document.getElementById('vpZone').value;
   const s = document.getElementById('vpSri').value, a = document.getElementById('vpSfdr').value, e = document.getElementById('vpLab').checked;
   const m = document.getElementById('vpMs').value, pe = document.getElementById('vpPea').checked;
+  const rec = vpRecos(), sr = !!rec && document.getElementById('vpRec').checked;
   const l = d.l.filter(r=>(!f||r.fam===f) && (!z||r.zone===z) && (!s||String(r.sri)===s) && (!a||String(r.sfdr)===a) && (!e||r.lab)
-    && (!m || (m==='0' ? !r.ms : (r.ms||0) >= +m)) && (!pe || r.pea===true)
+    && (!m || (m==='0' ? !r.ms : (r.ms||0) >= +m)) && (!pe || r.pea===true) && (!sr || rec[r.isin])
     && (!q || norm([r.nom,r.isin,r.sgp,r.theme,r.cat,r.fam,r.zone,r.lab].join(' ')).includes(q)));
   const c = VP_TRI.col, dir = VP_TRI.dir;
   const cle = r => { const v = c==='fam' ? VP_FAM_ORDRE.indexOf(r.fam) : r[c]; return v==='' ? null : v===true ? 1 : v===false ? 0 : v; };
   return l.sort((a,b)=>{
+    if(rec){ const ra = rec[a.isin], rb = rec[b.isin];   // les supports recommandés d'abord, dans l'ordre des allocations
+      if(ra || rb){ if(!rb) return -1; if(!ra) return 1; if(VP_TRI.col==='fam' && VP_TRI.dir===1) return ra.rang - rb.rang; } }
     let x = cle(a), y = cle(b);
     if(x==null && y==null) return a.nom.localeCompare(b.nom,'fr');
     if(x==null) return 1; if(y==null) return -1;
@@ -4872,19 +4897,29 @@ function buildVieplus(){
   vpOptions('vpSri', [...new Set(d.l.map(r=>r.sri).filter(x=>x!=null))].sort((a,b)=>a-b));
   const sf = document.getElementById('vpSfdr'); if(sf && !sf.dataset.ok){ sf.insertAdjacentHTML('beforeend', [9,8,6].map(x=>'<option value="'+x+'">Article '+x+'</option>').join('')); sf.dataset.ok='1'; }
   const ms = document.getElementById('vpMs'); if(ms && !ms.dataset.ok){ ms.insertAdjacentHTML('beforeend', '<option value="5">★★★★★ uniquement</option><option value="4">★★★★ et plus</option><option value="3">★★★ et plus</option><option value="0">Non notés</option>'); ms.dataset.ok='1'; }
+  const rec = vpRecos(), rp = rpCharger() || {};
+  const nrec = rec ? d.l.filter(r=>rec[r.isin]).length : 0;
+  const lb = document.getElementById('vpRecLbl'), lg = document.getElementById('vpRecLeg');
+  if(lb) lb.hidden = !nrec;
+  if(lg){ lg.hidden = !nrec;
+    if(nrec) lg.innerHTML = '⭐ <b>En tête de liste : les '+nrec+' supports recommandés par '+esc(rp.n||rp.p||'la lignée')+'</b>'+(rp.liste.date?' (allocations du '+esc(rp.liste.date)+')':'')+'. '
+      +rp.liste.g.map(g=>'<span class="vp-rectag">'+esc(g.k)+'</span> '+esc(g.t)).join(' · ')+'. Descriptions indicatives, à vérifier sur les DIC avant usage en clientèle.'; }
   const cols = vpColsActives();
   const th = (k, t, long) => '<th data-vpt="'+k+'" title="'+esc(VP_TITRES[k]||long||t)+'" class="sortable'+(VP_TRI.col===k?(VP_TRI.dir>0?' asc':' desc'):'')+'">'+esc(t)+'</th>';
   document.getElementById('vpHead').innerHTML = th('nom','Support','Nom du support') + cols.map(k=>th(k, VP_PAR_CLE[k][2], VP_PAR_CLE[k][3])).join('');
   const l = vpFiltre();
   document.getElementById('vpCount').textContent = l.length+' support'+(l.length>1?'s':'')+' sur '+d.l.length;
   vpColsCompte();
-  document.getElementById('vpBody').innerHTML = l.map(r=>'<tr'+(r.sfdr===9?' class="vp-r9"':'')+'><td><b>'+esc(r.nom)+'</b><span class="vp-isin">'+esc(r.isin)+(r.theme?' · '+esc(r.theme):'')+'</span>'
+  const recLigne = r => { const o = rec && rec[r.isin]; if(!o) return '';
+    return '<span class="vp-rec">⭐ Recommandé par '+esc(rp.p||rp.n||'la lignée')+' '+o.tags.map(t=>'<span class="vp-rectag">'+esc(t)+'</span>').join(' ')+'</span>'
+      +(o.desc?'<details class="vp-desc"><summary>Description</summary><p>'+esc(o.desc)+'</p></details>':''); };
+  document.getElementById('vpBody').innerHTML = l.map(r=>'<tr class="'+(r.sfdr===9?'vp-r9':'')+(rec&&rec[r.isin]?' vp-reco':'')+'"><td><b>'+esc(r.nom)+'</b><span class="vp-isin">'+esc(r.isin)+(r.theme?' · '+esc(r.theme):'')+'</span>'+recLigne(r)
     +(r.lab && !cols.includes('lab')?'<span class="vp-lab">🏷️ '+esc(r.lab)+'</span>':'')
     +(r.dfin?'<span class="vp-fin">⏳ Entrées jusqu’au '+vpDate(r.dfin)+'</span>':'')+'</td>'
     +cols.map(k=>vpCell(r,k)).join('')+'</tr>').join('')
     || '<tr><td colspan="'+(cols.length+1)+'" class="mbr-sub">Aucun support ne correspond.</td></tr>';
 }
-const VP_FILTRES = ['vpQ','vpFam','vpZone','vpSri','vpSfdr','vpMs','vpLab','vpPea'];
+const VP_FILTRES = ['vpQ','vpFam','vpZone','vpSri','vpSfdr','vpMs','vpLab','vpPea','vpRec'];
 document.addEventListener('input', e=>{ if(e.target && VP_FILTRES.includes(e.target.id)) buildVieplus(); });
 document.addEventListener('change', e=>{
   if(e.target && VP_FILTRES.slice(1).includes(e.target.id)){ buildVieplus(); return; }
@@ -5038,6 +5073,7 @@ const KAIROS_CHANGELOG = [
     ['f','Ressources → Pour aller plus loin : « Supports Vie Plus » devient « Supports Cristalliance Avenir ». Catalogue mis à jour (458 supports) depuis une seule source, l’export de l’espace client de l’assureur, indiquée en tête de page avec sa date.'],
     ['f','Supports Cristalliance Avenir : la notation Morningstar est affichée (colonne et filtre par nombre d’étoiles) ; la notation Quantalys, absente de la nouvelle source, est retirée. Nouveau filtre « Éligibles PEA » et mention de la date de fin des entrées sous le nom du support.'],
     ['f','Supports Cristalliance Avenir : bouton « Colonnes » pour choisir les colonnes du tableau parmi toutes les données de l’export (performances de 1 semaine à 10 ans et par année depuis 2019, volatilités, Sharpe, valeur liquidative, actif net, frais de gestion, dates, éligibilités PEA / PEA-PME / Fourgous, options de gestion, labels, taxonomie, PAI…). Le choix est enregistré sur le compte de chacun et le suit d’un appareil à l’autre.'],
+    ['f','Supports Cristalliance Avenir et PERtinence Retraite : les supports recommandés par notre expert allocation sont en tête de liste (⭐, surlignés), avec leur usage — versement initial (VI), versements programmés (VP), profil ESG — et une courte description à déplier. Nouveau filtre « ⭐ Recommandés ». Trier une colonne garde les recommandés en haut.'],
     ['f','Ressources → Pour aller plus loin : nouveau catalogue « Supports PERtinence Retraite » (1 055 supports du PER, même source et mêmes colonnes au choix), à côté de « Supports Cristalliance Avenir ». L’outil IA chercher_supports couvre les deux contrats (paramètre contrat).'],
     ['f','Outil IA chercher_supports : mêmes données que la page, avec la notation Morningstar, un filtre par étoiles et par éligibilité PEA, et le détail complet d’un support sur demande.'],
   ]],

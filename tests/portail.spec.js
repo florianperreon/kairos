@@ -6675,6 +6675,46 @@ test.describe('Ressources → Pour aller plus loin → Supports Cristalliance Av
     expect(r.reco.lignes).toEqual(['Fonds Cinq Etoiles']);
   });
 
+  test('supports recommandés : en tête du listing, étiquetés VI / VP / ESG, description à déplier, filtre, et rien sans liste', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserVP(page);
+    const r = await page.evaluate(() => {
+      const noms = () => [...document.querySelectorAll('#vpBody tr td b')].map(x => x.textContent);
+      const sans = { noms: noms(), filtre: document.getElementById('vpRecLbl').hidden, legende: document.getElementById('vpRecLeg').hidden, reco: document.querySelectorAll('#vpBody tr.vp-reco').length };
+      CONTENU = Object.assign({}, CONTENU || {}, { allocations_reco: { n: 'Prénom Nom', p: 'Prénom', d: 'https://discord.com/channels/1/2', date: '05/11/2026', r: [],
+        liste: { date: '26/11/2026', g: [{ k: 'VI', t: 'Versement initial', isins: ['FR0000000003', 'FR0000000099'] }, { k: 'VP', t: 'Versements programmés', isins: ['FR0000000004'] }, { k: 'ESG · VP', t: 'Profil ESG, versements programmés', isins: ['FR0000000004'] }],
+          note: { FR0000000004: 'TECH' }, desc: { FR0000000003: 'Fonds <b>obligataire</b> de test.' } } } });
+      buildVieplus();
+      const avec = { noms: noms(), filtre: document.getElementById('vpRecLbl').hidden, legende: document.getElementById('vpRecLeg').textContent, reco: document.querySelectorAll('#vpBody tr.vp-reco').length,
+        l1: document.querySelector('#vpBody tr').textContent, l2: document.querySelectorAll('#vpBody tr')[1].textContent, desc: document.querySelector('#vpBody .vp-desc p').innerHTML, ouvert: document.querySelector('#vpBody .vp-desc').open };
+      document.querySelector('.vp-tbl th[data-vpt="ms"]').click(); const triMs = noms();
+      document.querySelector('.vp-tbl th[data-vpt="nom"]').click(); const triNom = noms();
+      const c = document.getElementById('vpRec'); c.checked = true; c.dispatchEvent(new Event('change', { bubbles: true }));
+      const seuls = { noms: noms(), compte: document.getElementById('vpCount').textContent };
+      return { sans, avec, triMs, triNom, seuls };
+    });
+    expect(erreurs).toEqual([]);
+    expect(r.sans.filtre).toBe(true);                               // sans liste en base : rien ne change
+    expect(r.sans.legende).toBe(true);
+    expect(r.sans.reco).toBe(0);
+    expect(r.avec.noms).toEqual(['Fonds Deux Etoiles', 'Fonds Daté Sans Note', 'Fonds Cinq Etoiles', 'Fonds Quatre Etoiles']);   // ordre des allocations, puis le reste
+    expect(r.avec.reco).toBe(2);                                    // un ISIN absent du catalogue est ignoré
+    expect(r.avec.filtre).toBe(false);
+    expect(r.avec.legende).toContain('les 2 supports recommandés par Prénom Nom');
+    expect(r.avec.legende).toContain('allocations du 26/11/2026');
+    expect(r.avec.legende).toContain('VI Versement initial');
+    expect(r.avec.l1).toContain('⭐ Recommandé par Prénom VI');
+    expect(r.avec.l2).toContain('VP');
+    expect(r.avec.l2).toContain('ESG · VP · TECH');                  // la précision (TECH, US…) suit l'étiquette ESG
+    expect(r.avec.desc).toBe('Fonds &lt;b&gt;obligataire&lt;/b&gt; de test.');   // texte de la base échappé
+    expect(r.avec.ouvert).toBe(false);
+    expect(r.triMs.slice(0, 2)).toEqual(['Fonds Deux Etoiles', 'Fonds Daté Sans Note']);   // un tri garde les recommandés en haut, triés entre eux
+    expect(r.triMs.slice(2)).toEqual(['Fonds Cinq Etoiles', 'Fonds Quatre Etoiles']);
+    expect(r.triNom.slice(0, 2)).toEqual(['Fonds Daté Sans Note', 'Fonds Deux Etoiles']);
+    expect(r.seuls.noms).toHaveLength(2);
+    expect(r.seuls.compte).toBe('2 supports sur 4');
+  });
+
   test('les données des supports n’apparaissent pas en clair dans la page (audit)', () => {
     const idx = lire('index.html');
     expect(idx).not.toContain('LU0826452848');
