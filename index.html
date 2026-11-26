@@ -5149,6 +5149,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-26', [
+    ['f','Accueil : les anniversaires de la lignée ne s’affichent plus que dans les 3 jours qui précèdent, et le jour même.'],
     ['f','Veille : nouvelle rubrique « L’essentiel pour la lignée » en tête de l’onglet — nos produits, nos partenaires, nos habilitations —, alimentée dès la prochaine édition. Chaque news indique son statut (acté, en discussion, projet, rejeté) et, pour un texte en cours, la frise de ses étapes avec la prochaine échéance. La veille généraliste reste disponible, repliée sous « Pour aller plus loin ».'],
     ['f','Fiches pratiques : la fiche « Mise en relation — Méthode préconisée par la lignée » (nouveau nom) ressort dans la liste, avec un fond de couleur et l’étiquette « ⭐ Préconisée par la lignée ». Les deux autres méthodes renvoient vers elle. Les anciens liens vers la fiche restent valables.'],
     ['f','Admin → Contenu : nouvel onglet « Supports ». Un administrateur y dépose l’export à jour de l’assureur (.xls) pour Cristalliance Avenir ou PERtinence Retraite : contrôle du fichier, aperçu de ce qui change (supports ajoutés, retirés, modifiés, nouveaux supports à classer), import en un clic, historique des 10 dernières versions avec restauration. Un tutoriel indique où trouver le fichier.'],
@@ -6062,10 +6063,11 @@ function buildHome(){
     '<div class="ev"><div><b class="num">'+fmtD(a.start)+'</b></div><div class="hor num">'+esc(a.hor)+'</div><div class="body"><a class="t" href="'+urlAtelier(a.id)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a><div class="meta">'+lieuHtml(a.lieu)+' · <span class="pilotes">'+pilotesHtml(a.pilotes)+'</span></div>'+evExtras(a)+'</div></div>'
   ).join('') : '<p style="color:var(--ink-2)">Aucun atelier à venir piloté par ta lignée.</p>';
 
-  // Anniversaires de la lignée (7 prochains jours, comme « Les 7 prochains jours ») — bandeau en haut de l'accueil depuis le 17/11/2026
+  // Anniversaires de la lignée — bandeau en haut de l'accueil depuis le 17/11/2026.
+  // 26/11/2026 (règle Florian) : affichés seulement de J-3 au jour J (4 jours), et non plus sur 7 jours.
   const bds=[];
   const mmdd=d=>String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  for(let i=0;i<7;i++){ const d=new Date(TODAY); d.setDate(d.getDate()+i); const k=mmdd(d);
+  for(let i=0;i<=3;i++){ const d=new Date(TODAY); d.setDate(d.getDate()+i); const k=mmdd(d);
     M.forEach(m=>{ const x=EXTRA[m.id]; if(x&&x.bd===k&&LIGNEE_IDS.has(m.id)&&ADH.has(m.id)) bds.push({m,d,i}); }); }
   const bdEl=document.getElementById('homeBd');
   if(bdEl){ bdEl.hidden=!bds.length;

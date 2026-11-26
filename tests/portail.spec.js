@@ -7283,14 +7283,14 @@ test.describe('Sommaire et liens de section des fiches (17/11/2026)', () => {
 
 /* ------------------------------------------------------------------ */
 test.describe('Anniversaires de la lignée (17/11/2026)', () => {
-  test('bandeau en haut de l’accueil, sous le message de bienvenue, sur 7 jours, aujourd’hui mis en avant', async ({ page }) => {
+  test('bandeau en haut de l’accueil, sous le message de bienvenue, de J-3 au jour J, aujourd’hui mis en avant', async ({ page }) => {
     await page.setViewportSize({ width: 1300, height: 900 });
     const erreurs = await ouvrir(page);
     await poser(page, { atelier: ATELIER_SEMAINE_PASSEE });
     const r = await page.evaluate(() => {
       const md = n => { const d = new Date(TODAY); d.setDate(d.getDate() + n); return String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
       const ajout = (id, name, n) => { const m = { id, name, nn: norm(name) }; M.push(m); byId.set(id, m); LIGNEE_IDS.add(id); ADH.add(id); EXTRA[id] = Object.assign(EXTRA[id] || {}, { bd: md(n) }); };
-      ajout(70001, 'Alice Fete', 0); ajout(70002, 'Bruno Bientot', 5); ajout(70003, 'Chloe Tard', 9);
+      ajout(70001, 'Alice Fete', 0); ajout(70002, 'Bruno Bientot', 3); ajout(70003, 'Chloe Tard', 4); ajout(70004, 'Denis Passe', -1);
       buildHome();
       const bd = document.getElementById('homeBd');
       return { visible: !bd.hidden, apresBienvenue: bd.previousElementSibling && bd.previousElementSibling.id, dansLeBas: !!bd.closest('#homeMore'),
@@ -7299,7 +7299,7 @@ test.describe('Anniversaires de la lignée (17/11/2026)', () => {
     expect(r.visible).toBe(true);
     expect(r.apresBienvenue).toBe('welcome');
     expect(r.dansLeBas).toBe(false);
-    expect(r.noms.length).toBe(2);                      // 9 jours : hors de la fenêtre
+    expect(r.noms.length).toBe(2);                      // J-4 et la veille : hors de la fenêtre (règle du 26/11/2026)
     expect(r.noms[0]).toContain('Alice Fete');
     expect(r.auj).toEqual([r.noms[0]]);
     expect(r.noms[1]).toContain('Bruno Bientot');
