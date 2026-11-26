@@ -7282,6 +7282,30 @@ test.describe('Sommaire et liens de section des fiches (17/11/2026)', () => {
 });
 
 /* ------------------------------------------------------------------ */
+test.describe('Parcours : première formation réservée (26/11/2026)', () => {
+  test('une inscription à une formation à venir valide la case ; les autres étapes attendent la séance', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(() => {
+      PARCOURS = { etapes: { formation_reservee: { d: null, f: '2026-12-10', src: 'formation' }, dm: { d: null, f: '2026-12-12', src: 'atelier' }, ad: { d: '2026-10-02', f: null } } };
+      const e = miAction({ id: '1.1' }, { id: 'form1', v: 'auto', auto: 'formation_reservee' });
+      const passee = (PARCOURS.etapes.formation_reservee = { d: '2026-11-02', f: '2026-12-10' }, faitAuto('formation_reservee'));
+      PARCOURS.etapes.formation_reservee = { d: null, f: '2026-12-10' };
+      return { resa: estValide(faitAuto('formation_reservee')), ok: e.ok, d: e.d, mention: autoMention('formation_reservee'), dm: estValide(faitAuto('dm')), dmMention: autoMention('dm'),
+        ad: estValide(faitAuto('ad')), passee: [passee.d, !!passee.res], rien: (PARCOURS.etapes.formation_reservee = { d: null, f: null }, estValide(faitAuto('formation_reservee'))) };
+    });
+    expect(erreurs).toEqual([]);
+    expect(r.resa).toBe(true);
+    expect(r.ok).toBe(true);
+    expect(r.d).toBe('');
+    expect(r.mention).toContain('Réservée pour le');
+    expect(r.dm).toBe(false);                            // une Découverte Métier à venir n'est pas validée
+    expect(r.dmMention).toContain('validé après la séance');
+    expect(r.ad).toBe(true);
+    expect(r.passee).toEqual(['2026-11-02', false]);     // une formation déjà suivie garde sa date
+    expect(r.rien).toBe(false);
+  });
+});
+
 test.describe('Anniversaires de la lignée (17/11/2026)', () => {
   test('bandeau en haut de l’accueil, sous le message de bienvenue, de J-3 au jour J, aujourd’hui mis en avant', async ({ page }) => {
     await page.setViewportSize({ width: 1300, height: 900 });

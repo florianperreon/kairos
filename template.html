@@ -5149,6 +5149,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-26', [
+    ['b','Parcours : « Première formation FORMAN réservée » se valide dès l’inscription à une formation, même si elle n’a pas encore eu lieu (elle attendait à tort la date de la séance).'],
     ['f','Accueil : les anniversaires de la lignée ne s’affichent plus que dans les 3 jours qui précèdent, et le jour même.'],
     ['f','Veille : nouvelle rubrique « L’essentiel pour la lignée » en tête de l’onglet — nos produits, nos partenaires, nos habilitations —, alimentée dès la prochaine édition. Chaque news indique son statut (acté, en discussion, projet, rejeté) et, pour un texte en cours, la frise de ses étapes avec la prochaine échéance. La veille généraliste reste disponible, repliée sous « Pour aller plus loin ».'],
     ['f','Fiches pratiques : la fiche « Mise en relation — Méthode préconisée par la lignée » (nouveau nom) ressort dans la liste, avec un fond de couleur et l’étiquette « ⭐ Préconisée par la lignée ». Les deux autres méthodes renvoient vers elle. Les anciens liens vers la fiche restent valables.'],
@@ -6138,7 +6139,11 @@ function cleAuto(lib){
 const faitAuto = cle => {
   const e = PARCOURS && PARCOURS.etapes;
   if(!e) return null;
-  return e[cle] || e[cle.replace('objectifs_','objectifs_role_')] || null;
+  const f = e[cle] || e[cle.replace('objectifs_','objectifs_role_')] || null;
+  // 26/11/2026 (règle Florian) : « Première formation réservée » est acquise dès l'inscription, même si la
+  // séance est à venir (le réseau range alors sa date dans f.f). Les autres étapes attendent la séance.
+  if(cle==='formation_reservee' && f && !f.d && f.f) return Object.assign({}, f, { ok:true, res:true });
+  return f;
 };
 // validé = séance déjà passée, drapeau du réseau, ou objectifs tous atteints
 const estValide = f => !!(f && (f.d || f.ok));
@@ -6158,6 +6163,7 @@ function autoMention(cle){
                        : '<small class="auto att">Automatique — connecte-toi avec ton compte</small>';
   if(estValide(f)){
     if(f.d) return '<small class="auto ok">Validé par le réseau le '+esc(fmtD(f.d))+'</small>';
+    if(f.res) return '<small class="auto ok">Réservée pour le '+esc(fmtD(f.f))+'</small>';
     if(f.tot) return '<small class="auto ok">Validé par le réseau — '+f.n+' objectifs sur '+f.tot+'</small>';
     return '<small class="auto ok">Validé par le réseau</small>';
   }
@@ -6416,7 +6422,7 @@ function miActionHtml(ph, m, a){
   let tag, info = '';
   if(a.v==='auto' && a.auto){
     tag = '<span class="mi-v auto" title="Relevé automatiquement dans les données du réseau">Auto</span>';
-    info = e.ok ? (e.src==='moi' ? 'Coché'+(e.d?' le '+fmtD(e.d):'')+' avant le relevé automatique' : e.d ? 'Relevé par le réseau le '+fmtD(e.d) : 'Relevé par le réseau')
+    info = e.ok ? (e.src==='moi' ? 'Coché'+(e.d?' le '+fmtD(e.d):'')+' avant le relevé automatique' : e.d ? 'Relevé par le réseau le '+fmtD(e.d) : (e.f && e.f.res) ? 'Réservée pour le '+fmtD(e.f.f) : 'Relevé par le réseau')
                 : (e.f && e.f.f ? 'Inscrit pour le '+fmtD(e.f.f)+' — validé après la séance' : 'Se valide tout seul dès que le réseau le relève');
   } else if(a.v==='auto'){
     tag = '<span class="mi-v auto" title="Calculé par Kairos à partir de tes données">Auto</span>';
@@ -10183,7 +10189,7 @@ function ligParcActionHtml(ph, m, a, prenom){
   let src, info;
   if(a.v==='auto' && a.auto){
     src = '<span class="mi-v auto" title="Relevé dans les données du réseau">Auto · réseau</span>';
-    info = e.ok ? (e.d ? 'relevé le '+fmtD(e.d) : 'relevé par le réseau')
+    info = e.ok ? (e.d ? 'relevé le '+fmtD(e.d) : (e.f && e.f.res) ? 'réservée pour le '+fmtD(e.f.f) : 'relevé par le réseau')
                 : (e.f && e.f.f ? 'inscrit pour le '+fmtD(e.f.f) : 'pas encore relevé');
   } else if(a.v==='auto'){
     src = '<span class="mi-v auto" title="Calculé par Kairos">Auto · Kairos</span>';
