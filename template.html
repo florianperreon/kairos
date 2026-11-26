@@ -1092,6 +1092,25 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .vp-tbl tr.vp-reco td{background:color-mix(in srgb, var(--accent) 6%, transparent)}.vp-tbl tr.vp-reco td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .vp-tbl tr.vp-reco.vp-r9 td:first-child{box-shadow:inset 3px 0 0 var(--accent), inset 6px 0 0 var(--ok)}
 @media(min-width:900px){.vp-tbl tr.vp-reco td:first-child{background:color-mix(in srgb, var(--accent) 6%, var(--surface))}}
+.vp-tbl tr.vp-ret td{color:var(--ink-3,#8a8f98);background:color-mix(in srgb, var(--ink) 4%, transparent)}.vp-tbl tr.vp-ret td b{font-weight:600}.vp-tbl tr.vp-ret .vp-st,.vp-tbl tr.vp-ret .vp-a9,.vp-tbl tr.vp-ret .vp-a8,.vp-tbl tr.vp-ret .vp-oui,.vp-tbl tr.vp-ret .vp-neg{color:inherit;background:none;filter:grayscale(1);opacity:.75}
+.vp-tbl .vp-retire{display:block;font-size:11.5px;font-weight:700}
+.si-cartes{display:grid;gap:16px;grid-template-columns:1fr}@media(min-width:1100px){.si-cartes{grid-template-columns:1fr 1fr;align-items:start}}
+.si-carte:has(.si-ap){grid-column:1/-1}
+.si-carte{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--surface);min-width:0}.si-carte h3{margin:0 0 4px;font-size:17px}
+.si-etat{margin:0 0 10px;font-size:13.5px;color:var(--ink-2)}
+.si-tuto,.si-hist,.si-bloc{margin:10px 0;font-size:13.5px}.si-tuto summary,.si-hist summary,.si-bloc summary{cursor:pointer;font-weight:700}
+.si-tuto ol{margin:8px 0 0;padding-left:20px;display:grid;gap:5px}
+.si-depot{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;border:2px dashed var(--line-2);border-radius:var(--r);padding:18px 12px;cursor:pointer;font-size:14px}
+.si-depot:hover{border-color:var(--accent);background:var(--accent-soft)}.si-depot span{font-size:12px;color:var(--ink-2)}.si-depot.lecture{cursor:progress;opacity:.7}
+.si-msg{margin:10px 0 0;font-size:13.5px;font-weight:600;color:var(--ok)}.si-msg.err{color:var(--bad)}
+.si-ap{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.si-ap h4{margin:0 0 8px;font-size:15px;overflow-wrap:anywhere}
+.si-puces{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.si-puce{border:1px solid var(--line-2);border-radius:999px;padding:3px 10px;font-size:12.5px}.si-puce.ok{border-color:var(--ok);color:var(--ok)}.si-puce.warn{border-color:var(--warn,#b45309);color:var(--warn,#b45309)}
+.si-alerte{margin:6px 0;font-size:13px;color:var(--warn,#b45309);font-weight:600}
+.si-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.si-tbl th,.si-tbl td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}.si-tbl .vp-isin{display:block;font-size:11px;color:var(--ink-2)}
+.si-tbl select,.si-tbl input{font:inherit;font-size:12.5px;padding:4px 6px;border:1px solid var(--line-2);border-radius:6px;background:var(--surface);color:var(--ink);max-width:170px}
+.si-tbl .mm-b{padding:5px 9px;font-size:12px;white-space:nowrap}.si-cour{font-size:12px;font-weight:700;color:var(--ok)}.si-hist table{margin-top:8px;display:block;overflow-x:auto}
+.si-liste{margin:6px 0 0;padding-left:18px;max-height:260px;overflow:auto;display:grid;gap:3px;font-size:12.5px}.si-liste .vp-isin{color:var(--ink-2);font-size:11px}
+.si-valider{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}.si-valider label{font-size:13px;font-weight:600}.si-valider input{font:inherit;padding:6px 8px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink)}
 .vp-tbl .vp-desc{margin-top:3px;font-size:12.5px;color:var(--ink-2);max-width:420px}.vp-tbl .vp-desc summary{cursor:pointer;color:var(--accent);font-weight:600}.vp-tbl .vp-desc p{margin:4px 0 2px;line-height:1.45;color:var(--ink)}
 .vp-recleg{margin:0 0 12px;padding:8px 12px;font-size:13.5px;line-height:1.6;color:var(--ink);background:var(--accent-soft);border-radius:8px}.vp-recleg[hidden]{display:none}
 .vp-tbl td.vp-b{white-space:nowrap}.vp-tbl .vp-oui{color:var(--ok);font-weight:700}.vp-tbl .vp-non{color:var(--ink-2)}
@@ -2481,6 +2500,7 @@ body.ps-open #fbBtn{bottom:64px}
               <label class="chk" title="ISR, Relance, Greenfin, Finansol, Towards Sustainability, LuxFLAG, FNG…"><input type="checkbox" id="vpLab"> Labellisés</label>
               <label class="chk"><input type="checkbox" id="vpPea"> Éligibles PEA</label>
               <label class="chk" id="vpRecLbl" hidden><input type="checkbox" id="vpRec"> ⭐ Recommandés</label>
+              <label class="chk" id="vpRetLbl" hidden title="Supports qui ne figurent plus dans le dernier export de l’assureur"><input type="checkbox" id="vpRet"> Afficher les retirés</label>
             </div>
             <div class="count-line"><span id="vpCount"></span><button type="button" class="vp-colbtn" id="vpColBtn" aria-expanded="false" aria-controls="vpColPan" title="Choisir les colonnes à afficher">⚙️ Colonnes</button></div>
             <div class="vp-colpan" id="vpColPan" hidden></div>
@@ -2795,6 +2815,7 @@ body.ps-open #fbBtn{bottom:64px}
       <div class="subview" id="sv-cnt">
         <nav class="subtabs sg-sub" id="cntSub" aria-label="Contenu">
           <button type="button" data-cs="sug" class="on">Suggestions <span class="sub-badge cnt" id="sgBadgeIn" hidden></span><span class="sub-badge" id="sgNonLuIn" hidden></span></button>
+          <button type="button" data-cs="sup">Supports</button>
         </nav>
         <div class="cs-view on" id="csv-sug">
           <div class="panel">
@@ -2811,6 +2832,13 @@ body.ps-open #fbBtn{bottom:64px}
             <p class="sg-info" id="sgInfo"></p>
           </div>
           <button type="button" id="sgFlot" class="sg-flot" hidden>💬 Commenter ce passage</button>
+        </div>
+        <div class="cs-view" id="csv-sup">
+          <div class="panel">
+            <h2>Supports des contrats</h2>
+            <p class="mbr-sub">Mets à jour les catalogues affichés dans Ressources → Pour aller plus loin (et lus par l’outil IA) en déposant l’export à jour de l’assureur. Le fichier est lu dans ton navigateur ; tu vois ce qui change avant de valider, et chaque import peut être annulé depuis l’historique.</p>
+            <div class="si-cartes" id="siCartes"></div>
+          </div>
         </div>
         <div class="cs-view" id="csv-edi">
         <div class="panel">
@@ -4689,7 +4717,7 @@ function vpContrat(c){   // change de contrat : filtres remis à zéro, colonnes
   if(!VP_CONTRATS[c] || c===VP_CTR) return;
   VP_CTR = c; VP = VP_CACHE[c] || null; VP_ETAT = VP ? 'ok' : ''; VP_TRI = { col:'fam', dir:1 };
   ['vpQ','vpSfdr','vpMs'].forEach(id=>{ const e = document.getElementById(id); if(e) e.value = ''; });
-  ['vpLab','vpPea','vpRec'].forEach(id=>{ const e = document.getElementById(id); if(e) e.checked = false; });
+  ['vpLab','vpPea','vpRec','vpRet'].forEach(id=>{ const e = document.getElementById(id); if(e) e.checked = false; });
   ['vpFam','vpZone','vpSri'].forEach(id=>{ const e = document.getElementById(id); if(!e) return; e.value = ''; while(e.options.length > 1) e.remove(1); delete e.dataset.ok; });
   document.querySelectorAll('#resPlusSub button').forEach(b=>b.classList.toggle('on', (b.dataset.rp==='per' ? 'per' : 'ca')===c));
   const h = document.getElementById('vpTitre'); if(h) h.textContent = 'Supports '+VP_CONTRATS[c].nom;
@@ -4774,24 +4802,41 @@ function vpColsPoser(c){   // c = liste de clés, ou null pour revenir aux colon
   if(!vpColsActives().includes(VP_TRI.col) && VP_TRI.col!=='nom') VP_TRI = { col:'fam', dir:1 };
   buildVieplus();
 }
-async function vpLoad(){
-  if(VP || VP_ETAT==='charge') return VP;
+// Lit toute une table de supports, par pages de 1 000 lignes (limite de l'API par requête)
+async function vpTout(table, cols){
+  const q0 = SB.from(table).select(cols);
+  if(!q0 || typeof q0.order!=='function'){ const r = await q0; if(r.error) throw r.error; return r.data||[]; }
+  const l = [];
+  for(let i=0; i<20; i++){
+    const r = await (i ? SB.from(table).select(cols) : q0).order('isin').range(i*1000, i*1000+999);
+    if(r.error) throw r.error;
+    l.push(...(r.data||[]));
+    if((r.data||[]).length < 1000) break;
+  }
+  return l;
+}
+let VP_PROM = null;   // lecture en cours : un second appel attend la même
+function vpLoad(){
+  if(VP) return Promise.resolve(VP);
+  if(VP_ETAT==='charge' && VP_PROM) return VP_PROM;
+  return (VP_PROM = vpLire());
+}
+async function vpLire(){
   VP_ETAT = 'charge';
   const ctr = VP_CTR;
   try{
     if(!SB || !SBUSER) throw new Error('non connecté');
-    const r = await SB.from(VP_CONTRATS[ctr].table).select('*');
-    if(r.error) throw r.error;
+    const r = { data: await vpTout(VP_CONTRATS[ctr].table, '*') };
     const NUM = new Set(['pct','pc','num','vl','actif']);
     const l = (r.data||[]).map(x=>{
-      const o = { nom:x.nom, isin:x.isin };
+      const o = { nom:x.nom, isin:x.isin, ret:x.retire_le||null };
       VP_DEF.forEach(([k,col,,,ty])=>{ const v = x[col];
         o[k] = (v==null || v==='') ? (ty==='txt' && ['fam','zone','theme','cat','sgp','lab'].includes(k) ? '' : null) : NUM.has(ty) ? +v : v; });
       return o;
     });
     if(!l.length) throw new Error('catalogue vide');
-    const p = (r.data[0]||{});
-    VP_CACHE[ctr] = { contrat:p.contrat||VP_CONTRATS[ctr].nom, maj: vpDate(p.donnees_au), source:p.source||'', l };
+    const act = r.data.filter(x=>!x.retire_le), p = (act[0]||r.data[0]||{});   // la date des données est celle du dernier import (supports en cours)
+    VP_CACHE[ctr] = { contrat:p.contrat||VP_CONTRATS[ctr].nom, maj: vpDate(act.reduce((m, x)=>(x.donnees_au && String(x.donnees_au) > m) ? String(x.donnees_au) : m, '') || p.donnees_au), source:p.source||'', l };
     if(ctr===VP_CTR){ VP = VP_CACHE[ctr]; VP_ETAT = 'ok'; }   // on a pu changer de contrat pendant la lecture
   }catch(e){ console.error(e); if(ctr===VP_CTR) VP_ETAT = 'erreur'; }
   try{ buildVieplus(); buildRpPre(); }catch(e){ console.error(e); }
@@ -4822,12 +4867,14 @@ function vpFiltre(){
   const s = document.getElementById('vpSri').value, a = document.getElementById('vpSfdr').value, e = document.getElementById('vpLab').checked;
   const m = document.getElementById('vpMs').value, pe = document.getElementById('vpPea').checked;
   const rec = vpRecos(), sr = !!rec && document.getElementById('vpRec').checked;
-  const l = d.l.filter(r=>(!f||r.fam===f) && (!z||r.zone===z) && (!s||String(r.sri)===s) && (!a||String(r.sfdr)===a) && (!e||r.lab)
+  const rt = !!(document.getElementById('vpRet')||{}).checked;   // les supports retirés du contrat sont masqués par défaut
+  const l = d.l.filter(r=>(rt||!r.ret) && (!f||r.fam===f) && (!z||r.zone===z) && (!s||String(r.sri)===s) && (!a||String(r.sfdr)===a) && (!e||r.lab)
     && (!m || (m==='0' ? !r.ms : (r.ms||0) >= +m)) && (!pe || r.pea===true) && (!sr || rec[r.isin])
     && (!q || norm([r.nom,r.isin,r.sgp,r.theme,r.cat,r.fam,r.zone,r.lab].join(' ')).includes(q)));
   const c = VP_TRI.col, dir = VP_TRI.dir;
   const cle = r => { const v = c==='fam' ? VP_FAM_ORDRE.indexOf(r.fam) : r[c]; return v==='' ? null : v===true ? 1 : v===false ? 0 : v; };
   return l.sort((a,b)=>{
+    if(!a.ret !== !b.ret) return a.ret ? 1 : -1;   // les retirés toujours en bas
     if(rec){ const ra = rec[a.isin], rb = rec[b.isin];   // les supports recommandés d'abord, dans l'ordre des allocations
       if(ra || rb){ if(!rb) return -1; if(!ra) return 1; if(VP_TRI.col==='fam' && VP_TRI.dir===1) return ra.rang - rb.rang; } }
     let x = cle(a), y = cle(b);
@@ -4886,19 +4933,23 @@ function buildVieplus(){
   }
   if(src){ src.hidden = false;
     src.innerHTML = '<span class="vp-src-i">📄</span> <b>Source : '+esc(d.source||'export de l’assureur')+'</b>'+(d.maj?' · données au <b>'+esc(d.maj)+'</b>':''); }
-  const n9 = d.l.filter(r=>r.sfdr===9).length, n8 = d.l.filter(r=>r.sfdr===8).length, nms = d.l.filter(r=>r.ms).length;
-  document.getElementById('vpIntro').innerHTML = 'Contrat '+esc(d.contrat)+' : les '+d.l.length+' supports du catalogue, dont '+nms+' notés par Morningstar. '
+  const A = d.l.filter(r=>!r.ret), nret = d.l.length - A.length;   // A = supports en cours ; les retirés ne comptent nulle part
+  const lr = document.getElementById('vpRetLbl'), cr = document.getElementById('vpRet');
+  if(lr) lr.hidden = !nret; if(cr && !nret) cr.checked = false;
+  const n9 = A.filter(r=>r.sfdr===9).length, n8 = A.filter(r=>r.sfdr===8).length, nms = A.filter(r=>r.ms).length;
+  document.getElementById('vpIntro').innerHTML = 'Contrat '+esc(d.contrat)+' : les '+A.length+' supports du catalogue, dont '+nms+' notés par Morningstar. '
     +'<b>'+n9+' fonds article 9</b> (objectif d’investissement durable, surlignés en vert) et '+n8+' article 8 (caractéristiques environnementales ou sociales). '
     +'Performances cumulées, nettes des frais des fonds mais hors frais du contrat ; elles ne préjugent pas des performances futures. Famille, thème et zone sont déduits de la catégorie et du nom du support. '
-    +'Toutes les données de l’export sont disponibles : choisis celles à afficher avec « Colonnes ».';
+    +'Toutes les données de l’export sont disponibles : choisis celles à afficher avec « Colonnes ».'
+    +(nret ? ' '+nret+' support'+(nret>1?'s ne figurent':' ne figure')+' plus dans le dernier export : coche « Afficher les retirés » pour '+(nret>1?'les':'le')+' voir.' : '');
   const b9 = document.getElementById('vp9'); if(b9){ b9.textContent = '🌱 Les '+n9+' fonds article 9'; b9.classList.toggle('on', document.getElementById('vpSfdr').value==='9'); }
-  vpOptions('vpFam', VP_FAM_ORDRE.filter(x=>d.l.some(r=>r.fam===x)));
-  vpOptions('vpZone', [...new Set(d.l.map(r=>r.zone).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr')));
-  vpOptions('vpSri', [...new Set(d.l.map(r=>r.sri).filter(x=>x!=null))].sort((a,b)=>a-b));
+  vpOptions('vpFam', VP_FAM_ORDRE.filter(x=>A.some(r=>r.fam===x)));
+  vpOptions('vpZone', [...new Set(A.map(r=>r.zone).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr')));
+  vpOptions('vpSri', [...new Set(A.map(r=>r.sri).filter(x=>x!=null))].sort((a,b)=>a-b));
   const sf = document.getElementById('vpSfdr'); if(sf && !sf.dataset.ok){ sf.insertAdjacentHTML('beforeend', [9,8,6].map(x=>'<option value="'+x+'">Article '+x+'</option>').join('')); sf.dataset.ok='1'; }
   const ms = document.getElementById('vpMs'); if(ms && !ms.dataset.ok){ ms.insertAdjacentHTML('beforeend', '<option value="5">★★★★★ uniquement</option><option value="4">★★★★ et plus</option><option value="3">★★★ et plus</option><option value="0">Non notés</option>'); ms.dataset.ok='1'; }
   const rec = vpRecos(), rp = rpCharger() || {};
-  const nrec = rec ? d.l.filter(r=>rec[r.isin]).length : 0;
+  const nrec = rec ? A.filter(r=>rec[r.isin]).length : 0;
   const lb = document.getElementById('vpRecLbl'), lg = document.getElementById('vpRecLeg');
   if(lb) lb.hidden = !nrec;
   if(lg){ lg.hidden = !nrec;
@@ -4908,18 +4959,19 @@ function buildVieplus(){
   const th = (k, t, long) => '<th data-vpt="'+k+'" title="'+esc(VP_TITRES[k]||long||t)+'" class="sortable'+(VP_TRI.col===k?(VP_TRI.dir>0?' asc':' desc'):'')+'">'+esc(t)+'</th>';
   document.getElementById('vpHead').innerHTML = th('nom','Support','Nom du support') + cols.map(k=>th(k, VP_PAR_CLE[k][2], VP_PAR_CLE[k][3])).join('');
   const l = vpFiltre();
-  document.getElementById('vpCount').textContent = l.length+' support'+(l.length>1?'s':'')+' sur '+d.l.length;
+  const montreRet = !!(cr && cr.checked);
+  document.getElementById('vpCount').textContent = l.length+' support'+(l.length>1?'s':'')+' sur '+(montreRet ? d.l.length+' (dont '+nret+' retiré'+(nret>1?'s':'')+')' : A.length);
   vpColsCompte();
-  const recLigne = r => { const o = rec && rec[r.isin]; if(!o) return '';
+  const recLigne = r => { const o = !r.ret && rec && rec[r.isin]; if(!o) return '';
     return '<span class="vp-rec">⭐ Recommandé par '+esc(rp.p||rp.n||'la lignée')+' '+o.tags.map(t=>'<span class="vp-rectag">'+esc(t)+'</span>').join(' ')+'</span>'
       +(o.desc?'<details class="vp-desc"><summary>Description</summary><p>'+esc(o.desc)+'</p></details>':''); };
-  document.getElementById('vpBody').innerHTML = l.map(r=>'<tr class="'+(r.sfdr===9?'vp-r9':'')+(rec&&rec[r.isin]?' vp-reco':'')+'"><td><b>'+esc(r.nom)+'</b><span class="vp-isin">'+esc(r.isin)+(r.theme?' · '+esc(r.theme):'')+'</span>'+recLigne(r)
+  document.getElementById('vpBody').innerHTML = l.map(r=>'<tr class="'+(r.ret?'vp-ret':(r.sfdr===9?'vp-r9':'')+(rec&&rec[r.isin]?' vp-reco':''))+'"><td><b>'+esc(r.nom)+'</b><span class="vp-isin">'+esc(r.isin)+(r.theme?' · '+esc(r.theme):'')+'</span>'+(r.ret?'<span class="vp-retire">Retiré du contrat'+(vpDate(r.ret)?' le '+vpDate(r.ret):'')+'</span>':'')+recLigne(r)
     +(r.lab && !cols.includes('lab')?'<span class="vp-lab">🏷️ '+esc(r.lab)+'</span>':'')
-    +(r.dfin?'<span class="vp-fin">⏳ Entrées jusqu’au '+vpDate(r.dfin)+'</span>':'')+'</td>'
+    +(r.dfin&&!r.ret?'<span class="vp-fin">⏳ Entrées jusqu’au '+vpDate(r.dfin)+'</span>':'')+'</td>'
     +cols.map(k=>vpCell(r,k)).join('')+'</tr>').join('')
     || '<tr><td colspan="'+(cols.length+1)+'" class="mbr-sub">Aucun support ne correspond.</td></tr>';
 }
-const VP_FILTRES = ['vpQ','vpFam','vpZone','vpSri','vpSfdr','vpMs','vpLab','vpPea','vpRec'];
+const VP_FILTRES = ['vpQ','vpFam','vpZone','vpSri','vpSfdr','vpMs','vpLab','vpPea','vpRec','vpRet'];
 document.addEventListener('input', e=>{ if(e.target && VP_FILTRES.includes(e.target.id)) buildVieplus(); });
 document.addEventListener('change', e=>{
   if(e.target && VP_FILTRES.slice(1).includes(e.target.id)){ buildVieplus(); return; }
@@ -4949,7 +5001,7 @@ function buildRpPre(){
   const el = document.getElementById('rpPre'); if(!el || el.dataset.ok) return;
   const r = rpCharger(), d = VP_CACHE.ca || (VP_CTR==='ca' ? vpCharger() : null); if(!r){ el.hidden = true; return; } el.hidden = false; if(!d) return;
   const cartes = r.r.map(([th, ico, isin])=>{
-    const f = d.l.find(x=>x.isin===isin); if(!f) return '';
+    const f = d.l.find(x=>x.isin===isin && !x.ret); if(!f) return '';
     return '<button type="button" class="rp-chip" data-rp-isin="'+esc(f.isin)+'" title="'+esc(f.isin)+' · '+esc(f.sgp||'')+' · 3 ans '+vpPct(f.p3)+' · 5 ans '+vpPct(f.p5)+' : voir dans la liste">'
       +'<span class="rp-th">'+ico+' '+esc(th)+'</span><span class="rp-nom">'+esc(f.nom)+'</span><span class="rp-k">SRI '+(f.sri!=null?f.sri+'/7':'—')+(f.sfdr?' · art. '+f.sfdr:'')+'</span></button>';
   }).join('');
@@ -5070,6 +5122,8 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-26', [
+    ['f','Admin → Contenu : nouvel onglet « Supports ». Un administrateur y dépose l’export à jour de l’assureur (.xls) pour Cristalliance Avenir ou PERtinence Retraite : contrôle du fichier, aperçu de ce qui change (supports ajoutés, retirés, modifiés, nouveaux supports à classer), import en un clic, historique des 10 dernières versions avec restauration. Un tutoriel indique où trouver le fichier.'],
+    ['f','Supports Cristalliance Avenir et PERtinence Retraite : un support qui disparaît de l’export de l’assureur est conservé, marqué « retiré du contrat » et masqué par défaut ; le filtre « Afficher les retirés » le montre, en gris, en bas de liste.'],
     ['f','Ressources → Pour aller plus loin : « Supports Vie Plus » devient « Supports Cristalliance Avenir ». Catalogue mis à jour (458 supports) depuis une seule source, l’export de l’espace client de l’assureur, indiquée en tête de page avec sa date.'],
     ['f','Supports Cristalliance Avenir : la notation Morningstar est affichée (colonne et filtre par nombre d’étoiles) ; la notation Quantalys, absente de la nouvelle source, est retirée. Nouveau filtre « Éligibles PEA » et mention de la date de fin des entrées sous le nom du support.'],
     ['f','Supports Cristalliance Avenir : bouton « Colonnes » pour choisir les colonnes du tableau parmi toutes les données de l’export (performances de 1 semaine à 10 ans et par année depuis 2019, volatilités, Sharpe, valeur liquidative, actif net, frais de gestion, dates, éligibilités PEA / PEA-PME / Fourgous, options de gestion, labels, taxonomie, PAI…). Le choix est enregistré sur le compte de chacun et le suit d’un appareil à l’autre.'],
@@ -10735,8 +10789,8 @@ document.addEventListener('keydown', e=>{
    plat dont le premier message est le corps. Ancre = passage cité { texte, avant, apres } dans le texte
    de l'aperçu (espaces repliés) : on le retrouve et on le surligne (mark.sg-hl). Non lu = un message d'un
    autre créé ou modifié après ma dernière ouverture du fil (contenu_suggestions_vues, par mon_uid()). */
-const CNT_SUBS = ['sug','edi'];
-const CNT_SUB_SLUG = { sug:'suggestions', edi:'edition' };
+const CNT_SUBS = ['sug','sup','edi'];
+const CNT_SUB_SLUG = { sug:'suggestions', sup:'supports', edi:'edition' };
 const SLUG_CNT_SUB = Object.fromEntries(Object.entries(CNT_SUB_SLUG).map(([k,v])=>[v,k]));
 let CNT_SUB = 'sug';
 let SG = { ok:false, s:[], m:[], v:{}, uid:null };
@@ -10813,6 +10867,7 @@ function showCntSub(s){
   document.querySelectorAll('#sv-cnt .cs-view').forEach(v=>v.classList.toggle('on', v.id==='csv-'+s));
   if(s==='sug'){ try{ sgRendre(); }catch(e){ console.error(e); } }
   else { const f = document.getElementById('sgFlot'); if(f) f.hidden = true; }
+  if(s==='sup'){ try{ siRendre(); }catch(e){ console.error(e); } }
   if(repli) setTimeout(()=>syncHash(false), 0);   // l'adresse qui menait à l'Édition retombe sur Suggestions
 }
 function sgTabState(p){
@@ -11893,6 +11948,351 @@ document.addEventListener('click', e=>{
   const tr=(ok||no).closest('tr');
   if(tr) traiterDemande(tr, !!ok);
 });
+
+/* ---------- Admin → Contenu → Supports : import de l'export de l'assureur (26/11/2026, règle Florian) ----------
+   Le fichier .xls (feuille « Catalogue », nom du contrat en A1, en-têtes en ligne 2) est lu dans le navigateur
+   par xlsx.js (SheetJS 0.18.5, chargé seulement ici), converti en lignes de la table, comparé au catalogue en
+   base, puis envoyé à supports_importer() (réservé aux admins côté serveur). Rien du fichier n'est conservé
+   ailleurs que dans la table. Famille, thème et zone ne sont pas dans l'export : un support déjà connu garde
+   son classement ; un nouveau est classé par vote sur sa catégorie Morningstar, puis par les mots de son nom,
+   puis par des règles de secours — et reste corrigeable dans l'aperçu avant l'import. */
+const SI_FAM = ['Produit structuré','Fonds euros','Actions','Diversifié / flexible','Performance absolue','Obligataire','Obligataire daté','Immobilier','Private equity / non coté'];
+const SI_LAB = [['ISR','Label ISR'],['Relance','Relance'],['Finansol','Finansol'],['Towards Sustainability','Towards Sustainability'],['ESG Lux Flag','LuxFLAG ESG'],['Lux Flag Climate Finance','LuxFLAG Climate Finance'],['Lux Flag Environment','LuxFLAG Environment'],['Greenfin','Greenfin'],['ICMA Green Bond Principles','ICMA Green Bond Principles'],['FNG Spiegel','FNG']];
+const SI_B = s => new RegExp(s.replace(/\\b/g, '(?<![\\p{L}\\p{N}_])').replace(/\(\?<!\[\\p\{L\}\\p\{N\}_\]\)(?=\||\)|$)/g, '(?![\\p{L}\\p{N}_])'), 'u');
+// mots du nom → thème (frontières de mots sensibles aux accents : « trésor » ne contient pas le mot « or »)
+const SI_MOTS = [['health|sant[ée]|biotech|medtech|pharma','Santé'],['water|\\beaux?\\b|aqua','Eau'],['\\bgold\\b|\\bor\\b|precious|métaux précieux','Or / mines d\'or'],
+  ['d[ée]fen[sc]e|souverainet','Défense / souveraineté'],['robot','Robotique / automatisation'],['artificial intelligence|intelligence artificielle|\\bai\\b|\\bia\\b','Intelligence artificielle'],
+  ['tech|digital|num[ée]rique|nasdaq|semicond','Technologie'],['clima|transition|green|carbon|paris.aligned|énergies? ','Climat / transition'],['luxe|luxury|brands|consum|consomm','Marques / consommation'],
+  ['dividend','Dividendes'],['small|mid.?cap|\\bpme\\b|\\beti\\b|micro','Small & mid caps'],['infrastructure','Infrastructures'],['immobili|real estate|pierre|foncier','Immobilier']]
+  .map(([rx, th])=>[SI_B(rx), th]);
+const SI_ZONES = [['zone euro','Zone euro'],['france','France'],['allemagne','Allemagne'],['suisse','Suisse'],['italie','Italie'],['europe du nord','Europe du Nord'],['europe','Europe'],[' eur ','Europe'],
+  ['etats-unis','États-Unis'],['usd','États-Unis'],['japon','Japon'],['japan','Japon'],['grande chine','Chine'],['chine','Chine'],['inde','Inde'],['asie-pacifique','Asie-Pacifique'],
+  ['asie','Asie'],['asean','Asie'],['taiwan','Asie'],['corée','Asie'],['indonésie','Asie'],['australie','Asie-Pacifique'],['emergents','Émergents'],['amérique latine','Émergents'],['brésil','Émergents']];
+const SI_THEME_DEFAUT = { 'Actions':'Cœur de portefeuille','Diversifié / flexible':'Allocation flexible','Obligataire':'Obligataire','Obligataire daté':'Portage obligataire',
+  'Performance absolue':'Décorrélation','Immobilier':'Immobilier','Private equity / non coté':'Non coté','Produit structuré':'Autocall / rendement','Fonds euros':'Capital garanti (hors frais)' };
+const SI_COLS = { isin:'Code Isin', nom:'Unité de compte', societe:'Gestionnaire', cat:'Catégorie MorningStar', morningstar:'Notation MorningStar', sri:'Indice de risque',
+  date_creation:'Date création du fonds', date_ouverture:"Date d'ouverture", date_fermeture:'Date de fermeture commerciale', date_fin_entrees:'Date de fin des entrées',
+  periodicite:'Périodicité de cotation', preavis:'Préavis', pea:'Eligibilité PEA', pea_pme:'Eligibilité PEA PME', fourgous:'Eligibilité Fourgous',
+  perf_1sem:'Performances glissantes 1 semaine', perf_1mois:'Performances glissantes 1 mois', perf_3mois:'Performances glissantes 3 mois', perf_ytd:'Performances glissantes Depuis début année',
+  perf_1an:'Performances glissantes 1 an', perf_3ans:'Performances glissantes 3 ans', perf_5ans:'Performances glissantes 5 ans', perf_10ans:'Performances glissantes 10 ans',
+  vol_1an:'Volatilités 1 an', vol_3ans:'Volatilités 3 ans', vol_5ans:'Volatilités 5 ans', sharpe:'Ratio de Sharpe', actif_net:'Actifs net de la part', frais_gestion:'Frais de gestion',
+  devise:"Devise d'origine du fonds", sfdr:'Classification SFDR', inv_durables:'Investissements durables SFDR', taxonomie:'Taxonomie (part verte exprimée en %)', pai:'PAI', classification_amf:'Classification au sens AMF',
+  inv_prog_arrivee:'Eligibilité Investissement progressif Arrivée', inv_prog_depart:'Eligibilité Investissement progressif Départ',
+  secu_pv_arrivee:'Eligibilité Sécurisation plus-values Arrivée', secu_pv_depart:'Eligibilité Sécurisation plus-values Départ',
+  dyna_pv_arrivee:'Eligibilité Dynamisation plus-values Arrivée', dyna_pv_depart:'Eligibilité Dynamisation plus-values Départ',
+  stop_loss_arrivee:'Eligibilité Stop-loss relatif Arrivée', stop_loss_depart:'Eligibilité Stop-loss relatif Départ',
+  reequilibrage_arrivee:'Eligibilité Rééquilibrage automatique Arrivée', reequilibrage_depart:'Eligibilité Rééquilibrage automatique Départ' };
+const SI_ANNEES = [2019,2020,2021,2022,2023,2024,2025];   // colonnes perf_AAAA de la table
+const siCle = s => String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const siT = v => { if(v==null) return null; const s = String(v).replace(/\s+/g,' ').trim(); return (s==='' || s==='nan') ? null : s; };
+function siF(v, mult, nd){
+  if(v==null) return null;
+  let x;
+  if(typeof v==='number') x = v;
+  else { const s = String(v).replace(/%/g,'').replace(',','.').replace(/[\s  ]/g,''); if(['','nan','nc','NC','-'].includes(s)) return null; x = Number(s); }
+  if(!isFinite(x)) return null;
+  const p = Math.pow(10, nd==null ? 2 : nd), r = Math.round(x*(mult||1)*p + (x<0 ? -1e-9 : 1e-9))/p;
+  return Object.is(r, -0) ? 0 : r;
+}
+const siI = v => { const r = siF(v, 1, 2); return r==null ? null : Math.trunc(r); };
+function siD(v){   // date Excel (numéro de série) ou texte → AAAA-MM-JJ ; 31/12/9999 = pas de date
+  if(v==null || v==='') return null;
+  let s;
+  if(typeof v==='number'){ if(v < 2 || v >= 2958465) return null; const d = new Date(Date.UTC(1899, 11, 30) + Math.round(v)*86400000); s = d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0'); }
+  else if(v instanceof Date){ s = v.getFullYear()+'-'+String(v.getMonth()+1).padStart(2,'0')+'-'+String(v.getDate()).padStart(2,'0'); }
+  else { const t = String(v).trim(), m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(t); s = m ? m[3]+'-'+m[2]+'-'+m[1] : t.slice(0,10); if(!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null; }
+  return (s.startsWith('9999') || s.startsWith('1899')) ? null : s;
+}
+const siBool = v => { const s = String(v==null?'':v).trim().toUpperCase(); return (s==='O' || s==='OUI') ? true : (s==='N' || s==='NON') ? false : null; };
+function siThemeNom(nom, fam){
+  if(fam!=='Actions' && fam!=='Immobilier') return null;
+  const n = (nom||'').toLowerCase(), m = SI_MOTS.find(([rx])=>rx.test(n));
+  return m ? m[1] : null;
+}
+function siRegles(cat, nom){   // classement de secours quand la catégorie Morningstar n'a encore aucun support classé
+  const c = (cat||'').toLowerCase(), n = (nom||'').toLowerCase(), deb = (...l) => l.some(x=>c.startsWith(x));
+  if(n.includes('fonds euros')) return ['Fonds euros','France','Capital garanti (hors frais)'];
+  let fam;
+  if(c.includes('capital') || c.includes('garanti')) fam = 'Produit structuré';
+  else if(c.includes('fcpr')) fam = 'Private equity / non coté';
+  else if(c.includes('immobilier')) fam = 'Immobilier';
+  else if(c.includes('échéance')) fam = 'Obligataire daté';
+  else if(deb('alt -','multistrategy','macro trading') || c.includes('market neutral')) fam = 'Performance absolue';
+  else if(deb('allocation','fonds à horizon','convertibles','matières premières')) fam = 'Diversifié / flexible';
+  else if(c.startsWith('obligations') || c.includes('bond') || c.includes('monétaire')) fam = 'Obligataire';
+  else if(deb('actions','trading') || c.includes('equity')) fam = 'Actions';
+  else fam = c ? 'Diversifié / flexible' : 'Actions';
+  const z = SI_ZONES.find(([k])=>(' '+c+' ').includes(k));
+  const zone = z ? z[1] : (c.endsWith(' eur') ? 'Europe' : 'Monde');
+  const T = [['fonds à horizon','Gestion à horizon'],['leveraged','ETF à effet de levier'],['agriculture','Agriculture / alimentation'],['infrastructures','Infrastructures'],['energie','Énergie'],
+    ['metaux precieux','Or / mines d\'or'],['métaux précieux','Or / mines d\'or'],['matières premières','Matières premières'],['chariah','Finance islamique'],
+    ['petites','Small & mid caps'],['moyennes','Small & mid caps'],['moy.','Small & mid caps'], fam==='Actions' ? ['rendement','Dividendes'] : ['haut rendement','High yield'],
+    ['inflation','Inflation'],["emprunts d'etat",'Souverain'],['"value"','Value'],['garanti','Capital garanti (hors frais)']];
+  const t = T.find(([k])=>c.includes(k));
+  return [fam, zone, t ? t[1] : SI_THEME_DEFAUT[fam]];
+}
+/* Convertit le classeur. connus = { isin: { famille, zone, theme } } (classement actuel de la table).
+   Renvoie { contrat (cellule A1), lignes, nouveaux:[isin], alertes:[texte] } ou lève une erreur lisible. */
+function siConvertir(XLSX, donnees, connus){
+  let wb;
+  try{ wb = XLSX.read(donnees, { type:'array' }); }catch(e){ throw new Error('Ce fichier n’est pas un classeur Excel lisible.'); }
+  const ws = wb.Sheets['Catalogue'] || wb.Sheets[wb.SheetNames[0]];
+  if(!ws) throw new Error('Le classeur ne contient aucune feuille.');
+  const a = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval:null });
+  const contrat = siT((a[0]||[])[0]) || '';
+  const lh = a.findIndex((r, i)=>i < 6 && (r||[]).some(x=>siCle(x)==='code isin'));
+  if(lh < 0) throw new Error('Colonne « Code Isin » introuvable : ce n’est pas l’export « liste de tous les supports ».');
+  const pos = {}; a[lh].forEach((h, i)=>{ const k = siCle(h); if(k && !(k in pos)) pos[k] = i; });
+  const alertes = [];
+  const col = nom => pos[siCle(nom)];
+  const manque = Object.values(SI_COLS).concat(SI_LAB.map(l=>l[0])).filter(n=>col(n)===undefined);
+  if(manque.length) throw new Error('Colonnes absentes du fichier : '+manque.join(', ')+'. Le format de l’export a changé : l’import doit être adapté.');
+  // colonnes datées : performances annuelles, dernières VL
+  const ans = {}, vls = {}; let vlDate = null, vlDateAn = 0;
+  Object.keys(pos).forEach(k=>{ let m;
+    if((m = /^performances annuelles (\d{4})$/.exec(k))) ans[+m[1]] = pos[k];
+    else if((m = /^date derniere vl (\d{4})$/.exec(k))){ if(+m[1] > vlDateAn){ vlDateAn = +m[1]; vlDate = pos[k]; } }
+    else if((m = /^derniere vl (\d{4})$/.exec(k))) vls[+m[1]] = pos[k]; });
+  const anVl = Object.keys(vls).map(Number).sort((x,y)=>y-x);
+  if(!anVl.length || vlDate==null) throw new Error('Colonnes « Dernière VL » absentes du fichier.');
+  const horsTable = Object.keys(ans).map(Number).filter(y=>!SI_ANNEES.includes(y));
+  if(horsTable.length) alertes.push('Performances annuelles '+horsTable.join(', ')+' : présentes dans le fichier mais pas encore prévues dans Kairos, elles ne sont pas reprises.');
+  const absentes = SI_ANNEES.filter(y=>ans[y]===undefined);
+  if(absentes.length) alertes.push('Performances annuelles '+absentes.join(', ')+' : absentes du fichier, elles seront vides.');
+  if(anVl.length > 1 && anVl[1] !== 2025) alertes.push('La colonne « VL fin 2025 » recevra la dernière VL de '+anVl[1]+'.');
+  const lignes0 = a.slice(lh+1).filter(r=>r && siT(r[col(SI_COLS.isin)]));
+  const v = (r, nom) => r[col(nom)];
+  // vote par catégorie Morningstar sur les supports déjà classés (ordre du fichier ; à égalité, le premier rencontré)
+  const votes = { famille:{}, zone:{}, theme:{} };
+  lignes0.forEach(r=>{ const k = connus[siT(v(r, SI_COLS.isin))], cat = siT(v(r, SI_COLS.cat)); if(!k || cat==null) return;
+    ['famille','zone','theme'].forEach(c=>{ const o = votes[c][cat] || (votes[c][cat] = new Map()); o.set(k[c], (o.get(k[c])||0)+1); }); });
+  const gagnant = m => { let best = null, n = 0, tot = 0; m.forEach((x, k)=>{ tot += x; if(x > n){ n = x; best = k; } }); return { v:best, part: tot ? n/tot : 0 }; };
+  const vu = new Set(), lignes = [], nouveaux = [];
+  lignes0.forEach(r=>{
+    const isin = siT(v(r, SI_COLS.isin)); if(vu.has(isin)){ alertes.push('ISIN en double dans le fichier, seule la première ligne est gardée : '+isin); return; } vu.add(isin);
+    const nom = siT(v(r, SI_COLS.nom)); let cat = siT(v(r, SI_COLS.cat)); if(cat==='0') cat = null;
+    let fam, zone, theme;
+    const k = connus[isin];
+    if(k && k.famille && k.zone && k.theme){ fam = k.famille; zone = k.zone; theme = k.theme; }
+    else {
+      nouveaux.push(isin);
+      if(cat!=null && votes.famille[cat] && !String(nom||'').toLowerCase().includes('fonds euros')){
+        fam = gagnant(votes.famille[cat]).v; zone = gagnant(votes.zone[cat]).v;
+        const g = gagnant(votes.theme[cat]);   // un thème voté n'est repris que s'il domine sa catégorie (60 %)
+        theme = siThemeNom(nom, fam) || (g.part >= 0.6 ? g.v : siRegles(cat, '')[2]);
+      } else {
+        [fam, zone, theme] = siRegles(cat, nom); theme = siThemeNom(nom, fam) || theme;
+        if(fam==='Diversifié / flexible' && zone==='États-Unis') zone = 'Monde';
+      }
+    }
+    const labs = SI_LAB.filter(([c])=>siBool(v(r, c))).map(l=>l[1]);
+    const sf = /(\d)/.exec(String(v(r, SI_COLS.sfdr)==null ? '' : v(r, SI_COLS.sfdr)));
+    const o = { isin, nom, famille:fam, famille_ordre: SI_FAM.includes(fam) ? SI_FAM.indexOf(fam)+1 : null, categorie:cat, theme, zone, societe: siT(v(r, SI_COLS.societe)),
+      morningstar: siI(v(r, SI_COLS.morningstar)), sri: siI(v(r, SI_COLS.sri)), sfdr: sf ? +sf[1] : null, labels: labs.join(' · ') || null, label_esg: !!labs.length };
+    ['perf_1sem','perf_1mois','perf_3mois','perf_ytd','perf_1an','perf_3ans','perf_5ans','perf_10ans','vol_1an','vol_3ans','vol_5ans','inv_durables','taxonomie'].forEach(c=>{ o[c] = siF(v(r, SI_COLS[c]), 100, 2); });
+    SI_ANNEES.forEach(y=>{ o['perf_'+y] = ans[y]===undefined ? null : siF(r[ans[y]], 100, 2); });
+    o.sharpe = siF(v(r, SI_COLS.sharpe), 1, 2);
+    o.vl = siF(r[vls[anVl[0]]], 1, 4); o.vl_date = siD(r[vlDate]); o.vl_fin_2025 = anVl.length > 1 ? siF(r[vls[anVl[1]]], 1, 4) : null;
+    o.actif_net = siF(v(r, SI_COLS.actif_net), 1, 0); o.frais_gestion = siF(v(r, SI_COLS.frais_gestion), 1, 3); o.devise = siT(v(r, SI_COLS.devise));
+    ['date_creation','date_ouverture','date_fermeture','date_fin_entrees'].forEach(c=>{ o[c] = siD(v(r, SI_COLS[c])); });
+    o.periodicite = siT(v(r, SI_COLS.periodicite)); o.preavis = siI(v(r, SI_COLS.preavis));
+    ['pea','pea_pme','fourgous','inv_prog_arrivee','inv_prog_depart','secu_pv_arrivee','secu_pv_depart','dyna_pv_arrivee','dyna_pv_depart','stop_loss_arrivee','stop_loss_depart','reequilibrage_arrivee','reequilibrage_depart','pai']
+      .forEach(c=>{ o[c] = siBool(v(r, SI_COLS[c])); });
+    o.classification_amf = siI(v(r, SI_COLS.classification_amf));
+    lignes.push(o);
+  });
+  return { contrat, lignes, nouveaux, alertes };
+}
+/* --- l'onglet --- */
+const SI_VERSION = '0.18.5-1';
+let SI_XLSX = null;
+function siMoteur(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  if(SI_XLSX) return SI_XLSX;
+  SI_XLSX = new Promise((ok, ko)=>{
+    const s = document.createElement('script');
+    s.src = 'xlsx.js?v='+SI_VERSION;
+    s.onload = ()=> window.XLSX ? ok(window.XLSX) : ko(new Error('xlsx'));
+    s.onerror = ()=>{ SI_XLSX = null; ko(new Error('xlsx')); };
+    document.head.appendChild(s);
+  });
+  return SI_XLSX;
+}
+const SI_TUTO = { ca:{ url:'https://placement.stellium.fr/t3/cristalliance-avenir?onglet=gestion-financiere', page:'Cristalliance Avenir (9E)' },
+  per:{ url:'https://placement.stellium.fr/t3/pertinence-retraite?onglet=gestion-financiere', page:'Pertinence Retraite (B7)' } };
+// champs comparés pour compter les supports « modifiés » (les performances et les VL changent à chaque export)
+const SI_CHAMPS = [['nom','Nom'],['societe','Société de gestion'],['categorie','Catégorie Morningstar'],['morningstar','Morningstar'],['sri','SRI'],['sfdr','SFDR'],['labels','Labels'],
+  ['frais_gestion','Frais de gestion'],['date_fin_entrees','Fin des entrées'],['date_fermeture','Fermeture commerciale'],['pea','PEA']];
+let SI = { ok:false, charge:false, err:false, t:{ ca:[], per:[] }, h:[], ap:null, msg:null, envoi:false, restau:null };
+const siAuj = () => new Intl.DateTimeFormat('en-CA', { timeZone:'Europe/Paris' }).format(new Date());
+const siMoi = () => { try{ return (byId.get(MOI_ID)||{}).name || prenomUser() || ''; }catch(e){ return ''; } };
+async function siCharger(){
+  if(!SB || !SBUSER || !EST_ADMIN || SI.charge) return;
+  SI.charge = true;
+  try{
+    const cols = 'isin,'+SI_CHAMPS.map(c=>c[0]).join(',')+',famille,zone,theme,donnees_au,retire_le';
+    const [ca, per, h] = await Promise.all([ vpTout('supports_vieplus', cols), vpTout('supports_pertinence', cols),
+      SB.from('supports_imports').select('id,contrat,type,fait_le,par,donnees_au,nb,ajoutes,retires,modifies,reactives,note').order('fait_le', { ascending:false }) ]);
+    SI.t = { ca, per }; SI.h = (h && !h.error && h.data) || []; SI.ok = true; SI.err = false;
+  }catch(e){ console.error(e); SI.err = true; }
+  SI.charge = false;
+  siRendre();
+}
+function siEcart(ctr, lignes){   // compare les lignes du fichier au catalogue en base
+  const base = {}; (SI.t[ctr]||[]).forEach(x=>{ base[x.isin] = x; });
+  const dans = new Set(lignes.map(o=>o.isin));
+  const eg = (p, q) => (p==null || p==='') ? (q==null || q==='') : (typeof p==='number' || typeof q==='number') ? (q!=null && q!=='' && Math.abs(+p - +q) < 1e-9) : String(p)===String(q);
+  const ajoutes = [], reactives = [], modifies = [];
+  lignes.forEach(o=>{ const x = base[o.isin];
+    if(!x){ ajoutes.push(o); return; }
+    if(x.retire_le){ reactives.push(o); return; }
+    const ch = SI_CHAMPS.filter(([c])=>!eg(o[c], x[c])).map(([c, lib])=>({ lib, avant:x[c], apres:o[c] }));
+    if(ch.length) modifies.push({ o, ch });
+  });
+  const retires = (SI.t[ctr]||[]).filter(x=>!x.retire_le && !dans.has(x.isin));
+  const rec = (typeof vpRecos==='function' && vpRecos()) || {};
+  return { ajoutes, reactives, modifies, retires, actifs: (SI.t[ctr]||[]).filter(x=>!x.retire_le).length, recoPerdus: retires.filter(x=>rec[x.isin]) };
+}
+async function siFichier(ctr, fichier){   // lit le fichier déposé et prépare l'aperçu (rien n'est écrit en base)
+  if(!VP_CONTRATS[ctr] || !fichier) return;
+  SI.msg = null; SI.ap = null; SI.lecture = ctr; siRendre();
+  try{
+    if(!SI.ok) throw new Error('Le catalogue actuel n’a pas pu être lu : recharge la page avant d’importer.');
+    if(fichier.size > 20e6) throw new Error('Fichier trop volumineux pour être un export de supports.');
+    const X = await siMoteur().catch(()=>{ throw new Error('Le lecteur Excel n’a pas pu être chargé. Vérifie ta connexion puis réessaie.'); });
+    const connus = {}; (SI.t[ctr]||[]).forEach(x=>{ connus[x.isin] = x; });
+    const r = siConvertir(X, new Uint8Array(await fichier.arrayBuffer()), connus);
+    const autre = ctr==='ca' ? 'per' : 'ca', cle = siCle(r.contrat);
+    if(cle === siCle(VP_CONTRATS[autre].nom)) throw new Error('Ce fichier est l’export de '+VP_CONTRATS[autre].nom+' : dépose-le dans la carte « '+VP_CONTRATS[autre].nom+' ».');
+    if(cle !== siCle(VP_CONTRATS[ctr].nom)) throw new Error('Ce fichier n’est pas l’export de '+VP_CONTRATS[ctr].nom+' (la première cellule indique « '+(r.contrat||'rien')+' »).');
+    const e = siEcart(ctr, r.lignes);
+    if(r.lignes.length < 50) throw new Error('Le fichier ne contient que '+r.lignes.length+' supports : il est incomplet.');
+    if(r.lignes.length < e.actifs*0.5) throw new Error('Le fichier ne contient que '+r.lignes.length+' supports, contre '+e.actifs+' dans le catalogue actuel : il semble incomplet, rien n’est importé.');
+    SI.ap = Object.assign({ ctr, nomFichier: fichier.name||'', date: siAuj(), lignes: r.lignes, nouveaux: new Set(r.nouveaux), alertes: r.alertes }, e);
+  }catch(e){ SI.msg = { ctr, err:true, t: (e && e.message) || 'Fichier illisible.' }; }   // erreurs attendues (mauvais fichier) : affichées, pas journalisées
+  SI.lecture = null;
+  siRendre();
+}
+async function siImporter(){
+  const a = SI.ap; if(!a || SI.envoi) return;
+  const d = (document.getElementById('siDate')||{}).value || a.date;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > siAuj()){ SI.msg = { ctr:a.ctr, err:true, t:'La date des données doit être aujourd’hui ou une date passée.' }; siRendre(); return; }
+  a.date = d; SI.envoi = true; SI.msg = null; siRendre();
+  try{
+    const r = await SB.rpc('supports_importer', { p_contrat:a.ctr, p_lignes:a.lignes, p_donnees_au:d, p_modifies:a.modifies.length, p_par:siMoi() });
+    if(r.error) throw r.error;
+    const x = r.data || {};
+    SI.msg = { ctr:a.ctr, t:'Import terminé : '+(x.nb||a.lignes.length)+' supports au catalogue, '+(x.ajoutes||0)+' ajouté'+(x.ajoutes>1?'s':'')+', '+(x.retires||0)+' retiré'+(x.retires>1?'s':'')
+      +', '+(a.modifies.length)+' modifié'+(a.modifies.length>1?'s':'')+(x.reactives?', '+x.reactives+' de retour':'')+'. La page des supports et l’outil IA sont à jour.' };
+    SI.ap = null; siApres(a.ctr);
+  }catch(e){ console.warn(e); SI.msg = { ctr:a.ctr, err:true, t:'L’import a échoué, rien n’a été modifié : '+((e && e.message) || 'erreur inconnue')+'.' }; }
+  SI.envoi = false; siRendre();
+}
+function siApres(ctr){   // le catalogue affiché dans Ressources est relu à la prochaine ouverture
+  delete VP_CACHE[ctr]; if(VP_CTR===ctr){ VP = null; VP_ETAT = ''; }
+  const rp = document.getElementById('rpPre'); if(rp) delete rp.dataset.ok;
+  SI.ok = false; siCharger();
+}
+async function siRestaurer(id){
+  const h = SI.h.find(x=>+x.id===+id); if(!h || SI.envoi) return;
+  if(SI.restau !== h.id){ SI.restau = h.id; siRendre(); return; }   // premier clic : demande de confirmation
+  SI.restau = null; SI.envoi = true; SI.msg = null; siRendre();
+  try{
+    const r = await SB.rpc('supports_restaurer', { p_id:h.id, p_par:siMoi() });
+    if(r.error) throw r.error;
+    SI.msg = { ctr:h.contrat, t:'Version du '+siQuand(h.fait_le)+' restaurée ('+((r.data||{}).nb||h.nb)+' supports).' };
+    SI.ap = null; siApres(h.contrat);
+  }catch(e){ console.warn(e); SI.msg = { ctr:h.contrat, err:true, t:'La restauration a échoué : '+((e && e.message) || 'erreur inconnue')+'.' }; }
+  SI.envoi = false; siRendre();
+}
+const siQuand = iso => { try{ return new Date(iso).toLocaleString('fr-FR', { timeZone:'Europe/Paris', day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }).replace(' ', ' à '); }catch(e){ return String(iso||''); } };
+const siVal = v => v==null || v==='' ? '—' : v===true ? 'Oui' : v===false ? 'Non' : /^\d{4}-\d{2}-\d{2}$/.test(String(v)) ? vpDate(v) : String(v);
+function siCarte(ctr){
+  const c = VP_CONTRATS[ctr], t = SI.t[ctr]||[], actifs = t.filter(x=>!x.retire_le), ret = t.length - actifs.length, tu = SI_TUTO[ctr];
+  const maj = actifs.reduce((m, x)=>(x.donnees_au && x.donnees_au > m) ? x.donnees_au : m, '');
+  const hist = SI.h.filter(x=>x.contrat===ctr);
+  const msg = SI.msg && SI.msg.ctr===ctr ? '<p class="si-msg'+(SI.msg.err?' err':'')+'" role="status">'+esc(SI.msg.t)+'</p>' : '';
+  const lib = h => h.type==='initial' ? 'Chargement initial' : h.type==='restauration' ? 'Restauration · '+esc(h.note||'') :
+    'Import · +'+(h.ajoutes||0)+' ajouté'+(h.ajoutes>1?'s':'')+', '+(h.retires||0)+' retiré'+(h.retires>1?'s':'')+', '+(h.modifies==null?'?':h.modifies)+' modifié'+(h.modifies>1?'s':'')+(h.reactives?', '+h.reactives+' de retour':'');
+  return '<section class="si-carte" data-si="'+ctr+'">'
+    +'<h3>'+esc(c.nom)+'</h3>'
+    +'<p class="si-etat">'+(SI.ok ? '<b>'+actifs.length+' supports</b> au catalogue'+(ret?' · '+ret+' retiré'+(ret>1?'s':''):'')+(maj?' · données au <b>'+vpDate(maj)+'</b>':'')
+      : SI.err ? 'Le catalogue n’a pas pu être lu.' : 'Lecture du catalogue…')+'</p>'
+    +'<details class="si-tuto"><summary>Où trouver le fichier ?</summary><ol>'
+      +'<li>Ouvre la page du contrat sur Stellium Placement, onglet « Gestion financière » : <a href="'+tu.url+'" target="_blank" rel="noopener">'+esc(c.nom)+' ↗</a>.</li>'
+      +'<li>Dans « Unités de compte financières », clique sur « Liste des supports paramétrés sur le contrat » : l’espace de l’assureur s’ouvre sur « '+esc(tu.page)+' ».</li>'
+      +'<li>Clique sur « Télécharger la liste de tous les supports (.xls) ».</li>'
+      +'<li>Dépose ce fichier ci-dessous, tel quel.</li></ol></details>'
+    +'<label class="si-depot'+(SI.lecture===ctr?' lecture':'')+'"><input type="file" accept=".xls,.xlsx,application/vnd.ms-excel" data-si-f="'+ctr+'" hidden>'
+      +(SI.lecture===ctr ? 'Lecture du fichier…' : '📂 <b>Déposer l’export à jour (.xls)</b><span>ou glisse le fichier ici — rien n’est importé avant ta validation</span>')+'</label>'
+    +msg
+    +(SI.ap && SI.ap.ctr===ctr ? siApercu() : '')
+    +(hist.length ? '<details class="si-hist"'+(SI.restau && hist.some(h=>h.id===SI.restau)?' open':'')+'><summary>Historique ('+hist.length+')</summary><table class="si-tbl"><thead><tr><th>Date</th><th>Par</th><th>Opération</th><th>Supports</th><th>Données au</th><th></th></tr></thead><tbody>'
+      +hist.map((h, i)=>'<tr><td>'+esc(siQuand(h.fait_le))+'</td><td>'+esc(h.par||'—')+'</td><td>'+lib(h)+'</td><td class="vp-n">'+(h.nb==null?'—':h.nb)+'</td><td class="vp-n">'+(vpDate(h.donnees_au)||'—')+'</td>'
+        +'<td>'+(i===0 ? '<span class="si-cour">En ligne</span>' : '<button type="button" class="mm-b'+(SI.restau===h.id?' pri':'')+'" data-si-r="'+h.id+'"'+(SI.envoi?' disabled':'')+'>'+(SI.restau===h.id?'Confirmer la restauration':'Restaurer cette version')+'</button>')+'</td></tr>').join('')
+      +'</tbody></table><p class="mbr-sub">Les 10 dernières versions de chaque contrat sont gardées. Restaurer remet le catalogue exactement dans l’état de la version choisie.</p></details>' : '')
+    +'</section>';
+}
+function siApercu(){
+  const a = SI.ap, n = a.lignes.length;
+  const puce = (k, t, cl) => '<span class="si-puce'+(cl?' '+cl:'')+'"><b>'+k+'</b> '+t+'</span>';
+  const zones = [...new Set((SI.t[a.ctr]||[]).map(x=>x.zone).filter(Boolean))].sort((x,y)=>x.localeCompare(y,'fr'));
+  const themes = [...new Set((SI.t[a.ctr]||[]).map(x=>x.theme).filter(Boolean))].sort((x,y)=>x.localeCompare(y,'fr'));
+  const nouveaux = a.lignes.filter(o=>a.nouveaux.has(o.isin));
+  const bloc = (titre, corps, ouvert) => '<details class="si-bloc"'+(ouvert?' open':'')+'><summary>'+titre+'</summary>'+corps+'</details>';
+  return '<div class="si-ap" id="siAp">'
+    +'<h4>Aperçu avant import'+(a.nomFichier?' — '+esc(a.nomFichier):'')+'</h4>'
+    +'<p class="si-puces">'+puce(n, 'supports dans le fichier')+puce('+'+a.ajoutes.length, 'ajouté'+(a.ajoutes.length>1?'s':''), a.ajoutes.length?'ok':'')
+      +puce(a.retires.length, 'retiré'+(a.retires.length>1?'s':''), a.retires.length?'warn':'')+puce(a.modifies.length, 'modifié'+(a.modifies.length>1?'s':''))
+      +(a.reactives.length?puce(a.reactives.length, 'de retour au catalogue', 'ok'):'')+'</p>'
+    +(a.recoPerdus.length ? '<p class="si-alerte">⚠️ '+a.recoPerdus.length+' support'+(a.recoPerdus.length>1?'s recommandés ne sont':' recommandé n’est')+' plus dans le fichier : '+a.recoPerdus.map(x=>esc(x.nom)+' ('+esc(x.isin)+')').join(', ')+'. Pense à mettre à jour les recommandations.</p>' : '')
+    +a.alertes.map(t=>'<p class="si-alerte">⚠️ '+esc(t)+'</p>').join('')
+    +(nouveaux.length ? bloc('Nouveaux supports à classer ('+nouveaux.length+')', '<p class="mbr-sub">Famille, zone et thème ne sont pas dans l’export : ils sont proposés d’après la catégorie Morningstar et le nom. Corrige si besoin avant d’importer.</p>'
+      +'<div class="tbl-wrap"><table class="si-tbl"><thead><tr><th>Support</th><th>Catégorie Morningstar</th><th>Famille</th><th>Zone</th><th>Thème</th></tr></thead><tbody>'
+      +nouveaux.map(o=>'<tr data-si-n="'+esc(o.isin)+'"><td><b>'+esc(o.nom||'')+'</b><span class="vp-isin">'+esc(o.isin)+'</span></td><td>'+esc(o.categorie||'—')+'</td>'
+        +'<td><select data-si-c="famille" aria-label="Famille">'+SI_FAM.map(f=>'<option'+(f===o.famille?' selected':'')+'>'+esc(f)+'</option>').join('')+'</select></td>'
+        +'<td><input data-si-c="zone" list="siZones" value="'+esc(o.zone||'')+'" aria-label="Zone"></td>'
+        +'<td><input data-si-c="theme" list="siThemes" value="'+esc(o.theme||'')+'" aria-label="Thème"></td></tr>').join('')
+      +'</tbody></table></div><datalist id="siZones">'+zones.map(z=>'<option value="'+esc(z)+'">').join('')+'</datalist><datalist id="siThemes">'+themes.map(z=>'<option value="'+esc(z)+'">').join('')+'</datalist>', nouveaux.length <= 30) : '')
+    +(a.retires.length ? bloc('Supports absents du fichier ('+a.retires.length+')', '<p class="mbr-sub">Ils restent en base, marqués « retiré », masqués par défaut dans la page (filtre « Afficher les retirés »). S’ils reviennent dans un export, ils redeviennent actifs.</p><ul class="si-liste">'
+      +a.retires.map(x=>'<li>'+esc(x.nom)+' <span class="vp-isin">'+esc(x.isin)+'</span></li>').join('')+'</ul>', a.retires.length <= 30) : '')
+    +(a.reactives.length ? bloc('Supports de retour au catalogue ('+a.reactives.length+')', '<ul class="si-liste">'+a.reactives.map(x=>'<li>'+esc(x.nom)+' <span class="vp-isin">'+esc(x.isin)+'</span></li>').join('')+'</ul>') : '')
+    +(a.modifies.length ? bloc('Supports modifiés ('+a.modifies.length+')', '<p class="mbr-sub">Hors performances et valeurs liquidatives, qui changent à chaque export.</p><ul class="si-liste">'
+      +a.modifies.slice(0, 300).map(m=>'<li>'+esc(m.o.nom)+' <span class="vp-isin">'+esc(m.o.isin)+'</span> : '+m.ch.map(c=>esc(c.lib)+' '+esc(siVal(c.avant))+' → <b>'+esc(siVal(c.apres))+'</b>').join(' ; ')+'</li>').join('')
+      +(a.modifies.length > 300 ? '<li>… et '+(a.modifies.length-300)+' autres</li>' : '')+'</ul>') : '')
+    +'<div class="si-valider"><label>Données au <input type="date" id="siDate" value="'+esc(a.date)+'" max="'+siAuj()+'"></label>'
+      +'<button type="button" class="mm-b pri" data-si-a="importer"'+(SI.envoi?' disabled':'')+'>'+(SI.envoi?'Import en cours…':'Importer les '+n+' supports')+'</button>'
+      +'<button type="button" class="mm-b" data-si-a="annuler"'+(SI.envoi?' disabled':'')+'>Annuler</button></div>'
+    +'</div>';
+}
+function siRendre(){
+  const el = document.getElementById('siCartes'); if(!el) return;
+  if(!SI.ok && !SI.err && !SI.charge){ siCharger(); }
+  const d = document.getElementById('siDate'); if(d && SI.ap && d.value) SI.ap.date = d.value;   // garde la date saisie
+  const ouverts = [...el.querySelectorAll('details[open]')].map(x=>x.className+'|'+((x.closest('.si-carte')||{}).dataset||{}).si+'|'+(x.querySelector('summary')||{}).textContent);
+  el.innerHTML = ['ca','per'].map(siCarte).join('');
+  el.querySelectorAll('details').forEach(x=>{ if(ouverts.includes(x.className+'|'+((x.closest('.si-carte')||{}).dataset||{}).si+'|'+(x.querySelector('summary')||{}).textContent)) x.open = true; });
+}
+document.addEventListener('change', e=>{
+  const t = e.target; if(!t || !t.closest) return;
+  if(t.matches('input[data-si-f]')){ const f = t.files && t.files[0]; if(f) siFichier(t.dataset.siF, f); t.value = ''; return; }
+  const c = t.closest('#siAp [data-si-c]');
+  if(c && SI.ap){ const tr = c.closest('tr[data-si-n]'), o = tr && SI.ap.lignes.find(x=>x.isin===tr.dataset.siN); if(!o) return;
+    const v = String(c.value||'').replace(/\s+/g,' ').trim(), k = c.dataset.siC;
+    if(!v){ c.value = o[k]||''; return; }   // un classement vide n'est pas accepté
+    o[k] = v; if(k==='famille') o.famille_ordre = SI_FAM.indexOf(v)+1; }
+});
+document.addEventListener('click', e=>{
+  const t = e.target; if(!t || !t.closest || !t.closest('#csv-sup')) return;
+  const a = t.closest('[data-si-a]'); if(a){ if(a.dataset.siA==='importer') siImporter(); else { SI.ap = null; SI.msg = null; siRendre(); } return; }
+  const r = t.closest('[data-si-r]'); if(r){ siRestaurer(r.dataset.siR); return; }
+  if(SI.restau && !t.closest('.si-hist')){ SI.restau = null; siRendre(); }
+});
+['dragover','drop'].forEach(ev=>document.addEventListener(ev, e=>{
+  const z = e.target && e.target.closest && e.target.closest('#csv-sup .si-carte'); if(!z) return;
+  e.preventDefault();
+  if(ev==='drop'){ const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if(f) siFichier(z.dataset.si, f); }
+}));
 
 /* ---------- Éditeur de contenu (TipTap, 21/10/2026, règle Florian) ----------
    Le moteur (editeur.js, TipTap 2.27.3 regroupé) n'est chargé que dans Admin → Contenu.

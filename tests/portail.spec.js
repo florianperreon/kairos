@@ -6726,6 +6726,202 @@ test.describe('Ressources → Pour aller plus loin → Supports Cristalliance Av
 });
 
 
+test.describe('Supports des contrats : retirés et import depuis l’admin (26/11/2026)', () => {
+  const LIGNE = (isin, nom, famille, extra) => Object.assign({ isin, nom, famille, categorie: 'Actions International Gdes Cap. Mixte', theme: 'Cœur de portefeuille', zone: 'Monde', societe: 'SGP',
+    perf_1an: 1, perf_3ans: 2, perf_5ans: 3, morningstar: 3, sri: 4, sfdr: 8, labels: null, pea: false, frais_gestion: 1.6, date_fin_entrees: null, date_fermeture: null,
+    contrat: 'Cristalliance Avenir', donnees_au: '2026-11-26', source: 'espaceclient.suravenir.fr', retire_le: null }, extra || {});
+
+  test('un support retiré du contrat est masqué par défaut ; « Afficher les retirés » le montre en gris, en bas ; lecture par pages de 1 000', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async (LIGNE_SRC) => {
+      const LIGNE = new Function('return ' + LIGNE_SRC)();
+      document.getElementById('lock').style.display = 'none'; document.getElementById('app').style.display = 'grid'; window.__booted = true;
+      try { localStorage.removeItem('kairos_vpc'); } catch (e) {}
+      VPC = null; VP = null; VP_ETAT = '';
+      const L = [LIGNE('FR0000000001', 'Fonds Actif Un', 'Actions'), LIGNE('FR0000000002', 'Fonds Retiré', 'Actions', { retire_le: '2026-11-20', donnees_au: '2026-10-01', sfdr: 9, date_fin_entrees: '2026-12-31' }),
+        LIGNE('FR0000000003', 'Fonds Actif Deux', 'Obligataire', { donnees_au: '2026-11-27' })];
+      const appels = [];
+      // l'API rend au plus 1 000 lignes par requête : la page lit par plages
+      const GROS = Array.from({ length: 1002 }, (_, i) => LIGNE('XX' + String(i).padStart(10, '0'), 'Fonds ' + i, 'Actions', { contrat: 'PERtinence Retraite' }));
+      SB = { from: (tb) => ({ select: () => ({ order: () => ({ range: async (a, b) => { appels.push([tb, a, b]); return { data: (tb === 'supports_vieplus' ? L : tb === 'supports_pertinence' ? GROS : []).slice(a, b + 1), error: null }; } }) }) }) };
+      SBUSER = { id: 'test' }; EST_ADMIN = false; PARCOURS = { statut: 'ROLE_ADMAN' };
+      showTab('res'); curTab = 'res'; showResSub('plus');
+      await vpLoad();
+      const noms = () => [...document.querySelectorAll('#vpBody tr td b')].map(x => x.textContent);
+      const defaut = { noms: noms(), compte: document.getElementById('vpCount').textContent, filtre: document.getElementById('vpRetLbl').hidden, intro: document.getElementById('vpIntro').textContent, src: document.getElementById('vpSrc').textContent };
+      const c = document.getElementById('vpRet'); c.checked = true; c.dispatchEvent(new Event('change', { bubbles: true }));
+      const tr = document.querySelectorAll('#vpBody tr')[2];
+      const avec = { noms: noms(), compte: document.getElementById('vpCount').textContent, classe: tr.className, texte: tr.textContent };
+      document.querySelector('.vp-tbl th[data-vpt="nom"]').click(); document.querySelector('.vp-tbl th[data-vpt="nom"]').click();
+      const trie = noms();
+      document.querySelector('#resPlusSub button[data-rp="per"]').click();
+      await vpLoad();
+      const per = { compte: document.getElementById('vpCount').textContent, filtre: document.getElementById('vpRetLbl').hidden, coche: document.getElementById('vpRet').checked };
+      return { defaut, avec, trie, per, appels };
+    }, LIGNE.toString());
+    expect(erreurs).toEqual([]);
+    expect(r.defaut.noms).toEqual(['Fonds Actif Un', 'Fonds Actif Deux']);
+    expect(r.defaut.compte).toBe('2 supports sur 2');
+    expect(r.defaut.filtre).toBe(false);
+    expect(r.defaut.intro).toContain('les 2 supports du catalogue');
+    expect(r.defaut.intro).toContain('1 support ne figure plus dans le dernier export');
+    expect(r.defaut.src).toContain('27/11/2026');                    // date du dernier import, pas celle d'un support retiré
+    expect(r.avec.noms).toEqual(['Fonds Actif Un', 'Fonds Actif Deux', 'Fonds Retiré']);
+    expect(r.avec.compte).toBe('3 supports sur 3 (dont 1 retiré)');
+    expect(r.avec.classe).toBe('vp-ret');                            // gris, sans surlignage article 9
+    expect(r.avec.texte).toContain('Retiré du contrat le 20/11/2026');
+    expect(r.avec.texte).not.toContain('Entrées jusqu’au');
+    expect(r.trie).toEqual(['Fonds Actif Un', 'Fonds Actif Deux', 'Fonds Retiré']);   // un tri laisse les retirés en bas
+    expect(r.per.compte).toBe('1002 supports sur 1002');             // au-delà de 1 000 lignes, une deuxième plage est lue
+    expect(r.per.filtre).toBe(true);
+    expect(r.per.coche).toBe(false);
+    expect(r.appels).toEqual([['supports_vieplus', 0, 999], ['supports_pertinence', 0, 999], ['supports_pertinence', 1000, 1999]]);
+  });
+
+  // Fabrique dans la page un export .xls au format de l'assureur (noms et ISIN fictifs)
+  const FABRIQUE = `(async (contrat, lignes) => {
+    const X = await siMoteur();
+    const C = Object.values(SI_COLS).concat(SI_LAB.map(l => l[0]), SI_ANNEES.map(y => 'Performances annuelles ' + y), ['Dernière VL 2025', 'Dernière VL 2026', 'Date dernière VL 2026']);
+    const rangs = [[contrat], C].concat(lignes.map(l => C.map(c => {
+      if (c === 'Code Isin') return l.isin; if (c === 'Unité de compte') return l.nom; if (c === 'Gestionnaire') return 'SGP';
+      if (c === 'Catégorie MorningStar') return l.cat === undefined ? 'Actions International Gdes Cap. Mixte' : l.cat;
+      if (c === 'Notation MorningStar') return '3'; if (c === 'Indice de risque') return String(l.sri || 4); if (c === 'Classification SFDR') return 'Article 8';
+      if (c === 'Frais de gestion') return '1,6%'; if (c === 'ISR') return l.isr ? 'O' : 'N'; if (c === 'Date de fin des entrées' || c === 'Date de fermeture commerciale') return 2958465;
+      if (c === 'Date dernière VL 2026') return 46350; if (/^Date/.test(c)) return 39027; if (/^Performances|^Volatilit/.test(c)) return 0.1234; if (/VL|Actifs/.test(c)) return 100.5;
+      if (/^Eligibilit|^PAI$/.test(c)) return 'N'; if (c === 'Préavis' || /AMF/.test(c)) return '0'; if (/^Devise/.test(c)) return 'EUR'; if (/^Périodicité/.test(c)) return 'Journalière';
+      if (/SFDR|Taxonomie|Sharpe/.test(c)) return 0.5; return 'N'; })));
+    const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(rangs), 'Catalogue');
+    return new File([X.write(wb, { type: 'array', bookType: 'biff8' })], contrat + '.xls');
+  })`;
+
+  test('Admin → Contenu → Supports : dépôt de l’export, contrôles, aperçu, classement des nouveaux, import, historique et restauration', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async ([LIGNE_SRC, FABRIQUE]) => {
+      const LIGNE = new Function('return ' + LIGNE_SRC)(), fabriquer = eval(FABRIQUE);
+      document.getElementById('lock').style.display = 'none'; document.getElementById('app').style.display = 'grid'; window.__booted = true;
+      const isin = i => 'ZZ' + String(i).padStart(10, '0');
+      // en base : 58 supports en cours (n° 1 à 58), 1 en cours absent du prochain fichier (n° 900), 1 retiré qui revient (n° 59)
+      let BASE = Array.from({ length: 58 }, (_, i) => LIGNE(isin(i + 1), 'Fonds ' + (i + 1), 'Actions'));
+      BASE.push(LIGNE(isin(900), 'Fonds Disparu', 'Actions'), LIGNE(isin(59), 'Fonds 59', 'Obligataire', { retire_le: '2026-10-01', zone: 'Europe', theme: 'Obligataire' }));
+      let HIST = [{ id: 2, contrat: 'ca', type: 'import', fait_le: '2026-11-26T10:00:00Z', par: 'Admin Test', donnees_au: '2026-11-26', nb: 59, ajoutes: 2, retires: 1, modifies: 3, reactives: 0, note: null },
+        { id: 1, contrat: 'ca', type: 'initial', fait_le: '2026-11-20T10:00:00Z', par: 'Claude', donnees_au: '2026-11-20', nb: 58, note: 'Chargement initial' }];
+      const rpc = [], lus = [];
+      const liste = (tb) => tb === 'supports_vieplus' ? BASE : [];
+      SB = { from: (tb) => ({ select: (cols) => { lus.push([tb, cols]); return {
+          order: (c) => tb === 'supports_imports' ? Promise.resolve({ data: HIST, error: null }) : ({ range: async (a, b) => ({ data: liste(tb).slice(a, b + 1), error: null }) }) }; } }),
+        rpc: async (nom, args) => { if (!nom.startsWith('supports_')) return { data: null, error: null }; rpc.push([nom, args]); if (window.__rpcErr) return { data: null, error: { message: 'réservé aux administrateurs' } };
+          return { data: nom === 'supports_importer' ? { id: 3, nb: args.p_lignes.length, ajoutes: 1, retires: 1, reactives: 1, modifies: args.p_modifies } : { id: 4, nb: 58 }, error: null }; } };
+      SBUSER = { id: 'test' }; EST_ADMIN = true; EST_PROPRIO = false; MOI_ID = null;
+      CONTENU = Object.assign({}, CONTENU || {}, { allocations_reco: { n: 'Prénom Nom', p: 'Prénom', r: [], liste: { date: '26/11/2026', g: [{ k: 'VI', t: 'Versement initial', isins: [isin(900)] }], note: {}, desc: {} } } });
+      VP_CACHE.ca = { contrat: 'x', maj: '', source: '', l: [] }; VP = VP_CACHE.ca; VP_ETAT = 'ok';
+      document.querySelectorAll('nav.tabs [data-v="admin"]').forEach(x => x.hidden = false);
+      showTab('admin'); curTab = 'admin'; showAdminSub('cnt'); showCntSub('sup');
+      const attendre = async (f) => { for (let i = 0; i < 200 && !f(); i++) await new Promise(r => setTimeout(r, 25)); };
+      await attendre(() => SI.ok);
+      const cartes = [...document.querySelectorAll('#siCartes .si-carte')];
+      const onglets = [...document.querySelectorAll('#cntSub button')].map(b => b.dataset.cs);
+      const carte = { n: cartes.length, titres: cartes.map(c => c.querySelector('h3').textContent), etat: cartes[0].querySelector('.si-etat').textContent,
+        tuto: cartes[0].querySelector('.si-tuto').textContent, liens: cartes.map(c => c.querySelector('.si-tuto a').href), hist: cartes[0].querySelectorAll('.si-hist tbody tr').length,
+        histPer: cartes[1].querySelectorAll('.si-hist').length, lien: hashFor('admin') };
+      // 1. mauvais contrat, puis fichier tronqué : rien n'est proposé
+      const fichier = (n, plus) => Array.from({ length: n }, (_, i) => ({ isin: isin(i + 1), nom: 'Fonds ' + (i + 1) })).concat(plus || []);
+      await siFichier('ca', await fabriquer('Pertinence Retraite', fichier(59)));
+      const mauvais = { msg: document.querySelector('#siCartes .si-msg').textContent, ap: !!document.getElementById('siAp') };
+      await siFichier('ca', await fabriquer('Cristalliance Avenir', fichier(20)));
+      const court = document.querySelector('#siCartes .si-msg').textContent;
+      await siFichier('ca', new File(['pas un classeur'], 'x.xls'));
+      const illisible = document.querySelector('#siCartes .si-msg').textContent;
+      // 2. bon fichier : 59 connus (dont 1 retiré qui revient, 1 dont le SRI change) + 1 nouveau ; le n° 900 n'y est plus
+      const L = fichier(59, [{ isin: isin(77), nom: 'Nouveau Fonds Santé Europe', cat: 'Actions Secteur Santé' }]); L[2].sri = 6; L[4].isr = true;
+      await siFichier('ca', await fabriquer('Cristalliance Avenir', L));
+      const ap = document.getElementById('siAp');
+      const apercu = { puces: [...ap.querySelectorAll('.si-puce')].map(x => x.textContent), alertes: [...ap.querySelectorAll('.si-alerte')].map(x => x.textContent),
+        nouveaux: [...ap.querySelectorAll('tr[data-si-n]')].map(t => [t.dataset.siN, t.querySelector('[data-si-c="famille"]').value, t.querySelector('[data-si-c="zone"]').value, t.querySelector('[data-si-c="theme"]').value]),
+        blocs: [...ap.querySelectorAll('.si-bloc summary')].map(x => x.textContent), modif: ap.textContent.includes('SRI 4 → 6'), date: document.getElementById('siDate').value, rpcAvant: rpc.length,
+        bouton: ap.querySelector('[data-si-a="importer"]').textContent };
+      // 3. correction du classement du nouveau support, date, puis import
+      const z = ap.querySelector('tr[data-si-n] [data-si-c="zone"]'); z.value = ' Europe '; z.dispatchEvent(new Event('change', { bubbles: true }));
+      const th = ap.querySelector('tr[data-si-n] [data-si-c="theme"]'); th.value = ''; th.dispatchEvent(new Event('change', { bubbles: true }));
+      const vide = th.value;
+      const fa = ap.querySelector('tr[data-si-n] [data-si-c="famille"]'); fa.value = 'Diversifié / flexible'; fa.dispatchEvent(new Event('change', { bubbles: true }));
+      document.getElementById('siDate').value = '2026-11-25';
+      window.__rpcErr = true; document.querySelector('#siAp [data-si-a="importer"]').click(); await attendre(() => !SI.envoi && SI.msg);
+      const refus = { msg: document.querySelector('#siCartes .si-msg').textContent, ap: !!document.getElementById('siAp'), date: document.getElementById('siDate').value };
+      window.__rpcErr = false; document.querySelector('#siAp [data-si-a="importer"]').click(); await attendre(() => !SI.envoi && !SI.ap);
+      const a = rpc[rpc.length - 1][1], nv = a.p_lignes.find(x => x.isin === isin(77)), un = a.p_lignes[0];
+      const importe = { nom: rpc[rpc.length - 1][0], contrat: a.p_contrat, n: a.p_lignes.length, date: a.p_donnees_au, modifies: a.p_modifies, nv: [nv.famille, nv.famille_ordre, nv.zone, nv.theme, nv.categorie],
+        un: [un.famille, un.zone, un.theme, un.sri, un.sfdr, un.frais_gestion, un.perf_1an, un.vl, un.vl_date, un.date_creation, un.date_fin_entrees, un.pea, un.labels, a.p_lignes[4].labels, a.p_lignes[2].sri],
+        cles: Object.keys(un).length, msg: document.querySelector('#siCartes .si-msg').textContent, ap: !!document.getElementById('siAp'), cache: VP_CACHE.ca === undefined && VP === null };
+      // 4. historique : la version en ligne ne se restaure pas ; l'autre demande une confirmation
+      await attendre(() => SI.ok);
+      const boutons = () => [...document.querySelectorAll('#siCartes .si-hist [data-si-r]')];
+      const hist = { cour: document.querySelector('#siCartes .si-hist .si-cour').textContent, lignes: [...document.querySelectorAll('#siCartes .si-hist tbody tr')].map(t => t.textContent), n: boutons().length };
+      const avantRest = rpc.length; boutons()[0].click();
+      const conf = { rpc: rpc.length - avantRest, texte: boutons()[0].textContent };
+      boutons()[0].click(); await attendre(() => !SI.envoi && SI.msg);
+      const rest = { appel: rpc[rpc.length - 1], msg: document.querySelector('#siCartes .si-msg').textContent };
+      return { onglets, carte, mauvais, court, illisible, apercu, vide, refus, importe, hist, conf, rest, cols: lus.find(x => x[0] === 'supports_imports')[1] };
+    }, [LIGNE.toString(), FABRIQUE]);
+    expect(erreurs).toEqual([]);
+    expect(r.onglets).toEqual(['sug', 'sup']);                        // tous les admins ; « Édition » reste au propriétaire
+    expect(r.carte.n).toBe(2);
+    expect(r.carte.titres).toEqual(['Cristalliance Avenir', 'PERtinence Retraite']);
+    expect(r.carte.etat).toContain('59 supports au catalogue · 1 retiré · données au 26/11/2026');
+    expect(r.carte.tuto).toContain('Télécharger la liste de tous les supports (.xls)');
+    expect(r.carte.liens).toEqual(['https://placement.stellium.fr/t3/cristalliance-avenir?onglet=gestion-financiere', 'https://placement.stellium.fr/t3/pertinence-retraite?onglet=gestion-financiere']);
+    expect(r.carte.hist).toBe(2);
+    expect(r.carte.histPer).toBe(0);
+    expect(r.carte.lien).toBe('#admin?s=contenu&c=supports');
+    expect(r.cols).not.toContain('instantane');                       // l'historique se liste sans les copies du catalogue
+    expect(r.mauvais.msg).toContain('Ce fichier est l’export de PERtinence Retraite');
+    expect(r.mauvais.ap).toBe(false);
+    expect(r.court).toContain('ne contient que 20 supports');
+    expect(r.illisible).toMatch(/introuvable|lisible/);
+    expect(r.apercu.puces).toEqual(['60 supports dans le fichier', '+1 ajouté', '1 retiré', '2 modifiés', '1 de retour au catalogue']);
+    expect(r.apercu.alertes).toHaveLength(1);
+    expect(r.apercu.alertes[0]).toContain('1 support recommandé n’est plus dans le fichier : Fonds Disparu');
+    expect(r.apercu.nouveaux).toEqual([['ZZ0000000077', 'Actions', 'Monde', 'Santé']]);    // règles de secours (la zone vient de la catégorie) + mots du nom
+    expect(r.apercu.blocs).toEqual(['Nouveaux supports à classer (1)', 'Supports absents du fichier (1)', 'Supports de retour au catalogue (1)', 'Supports modifiés (2)']);
+    expect(r.apercu.modif).toBe(true);
+    expect(r.apercu.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(r.apercu.rpcAvant).toBe(0);                                // rien n'est écrit avant la validation
+    expect(r.apercu.bouton).toBe('Importer les 60 supports');
+    expect(r.vide).toBe('Santé');                                     // un classement vide est refusé
+    expect(r.refus.msg).toContain('L’import a échoué, rien n’a été modifié : réservé aux administrateurs');
+    expect(r.refus.ap).toBe(true);                                    // l'aperçu reste, avec la date saisie
+    expect(r.refus.date).toBe('2026-11-25');
+    expect(r.importe.nom).toBe('supports_importer');
+    expect(r.importe.contrat).toBe('ca');
+    expect(r.importe.n).toBe(60);
+    expect(r.importe.date).toBe('2026-11-25');
+    expect(r.importe.modifies).toBe(2);                              // SRI du n° 3, label du n° 5
+    expect(r.importe.nv).toEqual(['Diversifié / flexible', 4, 'Europe', 'Santé', 'Actions Secteur Santé']);
+    expect(r.importe.un).toEqual(['Actions', 'Monde', 'Cœur de portefeuille', 4, 8, 1.6, 12.34, 100.5, '2026-11-24', '2006-11-06', null, false, null, 'Label ISR', 6]);
+    expect(r.importe.cles).toBe(61);                                  // toutes les colonnes de la table, hors contrat / date / source posés par le serveur
+    expect(r.importe.msg).toContain('Import terminé : 60 supports au catalogue, 1 ajouté, 1 retiré, 2 modifiés, 1 de retour');
+    expect(r.importe.ap).toBe(false);
+    expect(r.importe.cache).toBe(true);                               // la page des supports relira le catalogue
+    expect(r.hist.cour).toBe('En ligne');
+    expect(r.hist.lignes[0]).toContain('Import · +2 ajoutés, 1 retiré, 3 modifiés');
+    expect(r.hist.lignes[1]).toContain('Chargement initial');
+    expect(r.hist.n).toBe(1);
+    expect(r.conf).toEqual({ rpc: 0, texte: 'Confirmer la restauration' });
+    expect(r.rest.appel[0]).toBe('supports_restaurer');
+    expect(r.rest.appel[1].p_id).toBe(1);
+    expect(r.rest.msg).toContain('restaurée (58 supports)');
+  });
+
+  test('le lecteur Excel n’est chargé que dans l’onglet Supports et la page ne contient aucune donnée de catalogue', () => {
+    const idx = lire('index.html');
+    expect(idx).not.toMatch(/<script[^>]+xlsx\.js/);                 // chargé à la demande par siMoteur()
+    expect(idx).toContain("s.src = 'xlsx.js?v='+SI_VERSION");
+    expect(fs.existsSync(path.join(RACINE, 'xlsx.js'))).toBe(true);
+    expect(lire('publier.cmd')).toContain('editeur.js xlsx.js update.py');
+    expect(idx).not.toContain('espaceclient.suravenir.fr/web');      // pas de lien à jeton personnel dans la page
+    expect(idx).not.toContain('token=');
+  });
+});
+
 test.describe('Admin → Membres : demandes et désactivation (06/11/2026)', () => {
   test('Membres regroupe la liste et les demandes d’accès ; les adresses restent valables', async ({ page }) => {
     await ouvrir(page);
