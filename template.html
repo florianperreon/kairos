@@ -5149,6 +5149,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-26', [
+    ['f','Accueil : « Mes actions de la semaine » ne répète plus les prochaines missions du parcours, déjà affichées juste en dessous.'],
     ['b','Parcours : « Première formation FORMAN réservée » se valide dès l’inscription à une formation, même si elle n’a pas encore eu lieu (elle attendait à tort la date de la séance).'],
     ['f','Accueil : les anniversaires de la lignée ne s’affichent plus que dans les 3 jours qui précèdent, et le jour même.'],
     ['f','Veille : nouvelle rubrique « L’essentiel pour la lignée » en tête de l’onglet — nos produits, nos partenaires, nos habilitations —, alimentée dès la prochaine édition. Chaque news indique son statut (acté, en discussion, projet, rejeté) et, pour un texte en cours, la frise de ses étapes avec la prochaine échéance. La veille généraliste reste disponible, repliée sous « Pour aller plus loin ».'],
@@ -6579,13 +6580,8 @@ function miActionsAccueil(){
                      : 'Prêt : demande la validation à ton parrain',
         href:'#accueil', mialler:s.ph.id, fait:false, go:'Voir' });
     });
-  miProchaines(3).forEach(x=>{
-    const pr = miProg(x.m), a = (x.m.actions||[]).find(a=>!a.opt && !miAction(x.m,a).ok);
-    out.push({ cle:'mi-'+x.m.id, t:'Mission '+x.m.id+' — '+x.m.t,
-      urg: x.e==='encours' ? 'en cours' : '',
-      d: (a ? 'Prochaine action : '+a.t+' · ' : '')+pr.ok+'/'+pr.tot,
-      href:'#accueil', mialler:x.ph.id, mimis:x.m.id, fait:false, go:'Ouvrir' });
-  });
+  // 26/11/2026 (règle Florian) : les prochaines missions ne sont plus reprises ici, elles sont déjà affichées
+  // juste en dessous sur l'accueil (« Mon parcours »). Seuls les points d'étape à demander ou en attente restent.
   return out;
 }
 function miReflexeSemaine(){

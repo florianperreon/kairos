@@ -4045,6 +4045,7 @@ test.describe('Parcours en missions', () => {
       bl12: document.querySelector('[data-mi="1.2"] .mi-bl').textContent,
       porte: document.querySelector('.mi-porte .mi-e').textContent,
       prochaines: [...document.querySelectorAll('#homeActions .sact[data-mimis]')].map(x => x.dataset.mimis),
+      suivantes: miProchaines(3).map(x => x.m.id),
     }));
     expect(r.puces).toEqual([false, true, true, true]);
     expect(r.bac).toBe(true);                       // attend la DM
@@ -4052,7 +4053,8 @@ test.describe('Parcours en missions', () => {
     expect(r.mail).toBe(false);                     // 1.5 n'a pas de prérequis
     expect(r.bl12).toContain('Découverte Métier');
     expect(r.porte).toContain('missions avant');
-    expect(r.prochaines).toEqual(['1.1', '1.5']);   // 1.1 : la DM est la prochaine action ; 1.5 n'attend rien
+    expect(r.suivantes).toEqual(['1.1', '1.5']);    // 1.1 : la DM est la prochaine action ; 1.5 n'attend rien
+    expect(r.prochaines).toEqual([]);               // 26/11/2026 : plus de redite dans « Mes actions de la semaine », le parcours est juste en dessous
     expect(erreurs).toEqual([]);
   });
 
@@ -4102,8 +4104,8 @@ test.describe('Parcours en missions', () => {
       etat: document.querySelector('[data-mi="1.5"] .mi-e').textContent }));
     expect(apres.coche).toBe(true);
     expect(apres.etat).toContain('Faite');
-    expect(apres.prochaines).toBeLessThan(avant.prochaines);        // le bloc du haut a bien rétréci…
-    expect(Math.abs(apres.y - avant.y)).toBeLessThan(1);            // …et la case n'a pas bougé
+    expect(avant.prochaines + apres.prochaines).toBe(0);            // les missions ne sont plus reprises dans les actions de la semaine (26/11/2026)
+    expect(Math.abs(apres.y - avant.y)).toBeLessThan(1);            // la case n'a pas bougé
     expect(apres.ouverts.sort()).toEqual(avant.ouverts.sort());      // mêmes blocs dépliés, pas un de plus
   });
 
