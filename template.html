@@ -1085,6 +1085,22 @@ nav.subtabs button.on{color:var(--accent-ink);background:var(--accent);border-co
 .vp-tbl tr.vp-r9 td{background:color-mix(in srgb, var(--ok) 9%, transparent)}.vp-tbl tr.vp-r9 td:first-child{box-shadow:inset 3px 0 0 var(--ok)}
 .vp-tbl .vp-lab{display:block;font-size:11.5px;color:var(--ink-2)}
 .vp-tbl td:first-child{min-width:230px}
+.vp-tbl .vp-fin{display:block;font-size:11.5px;color:var(--warn,#b45309);font-weight:600}
+.vp-tbl td.vp-l{font-size:12.5px;min-width:150px}
+.vp-tbl td.vp-b{white-space:nowrap}.vp-tbl .vp-oui{color:var(--ok);font-weight:700}.vp-tbl .vp-non{color:var(--ink-2)}
+@media(min-width:900px){.vp-tbl th:first-child,.vp-tbl td:first-child{position:sticky;left:0;z-index:1;background:var(--surface)}
+  .vp-tbl tr.vp-r9 td:first-child{background:color-mix(in srgb, var(--ok) 9%, var(--surface))}}
+.vp-src{display:inline-flex;align-items:center;gap:6px;margin:2px 0 10px;padding:6px 12px;font-size:14px;color:var(--ink);background:color-mix(in srgb, var(--accent) 8%, transparent);border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);border-radius:8px}
+.vp-src[hidden]{display:none}
+.vp-colbtn{margin-left:auto;font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:transparent;border:1.5px solid var(--accent);border-radius:99px;padding:4px 12px;cursor:pointer}
+.vp-colbtn:hover,.vp-colbtn[aria-expanded="true"]{background:var(--accent);color:var(--accent-ink)}
+.vp-colpan{margin:0 0 14px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.vp-colhead{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:4px}.vp-coln{font-size:13px;color:var(--ink-2);margin-right:auto}
+.vp-colact{font:inherit;font-size:12.5px;color:var(--ink);background:var(--ground);border:1px solid var(--line-2);border-radius:6px;padding:3px 10px;cursor:pointer}
+.vp-colact:hover{border-color:var(--accent);color:var(--accent)}
+.vp-colgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px 18px}
+.vp-colgrid fieldset{border:0;padding:0;margin:0;min-width:0}.vp-colgrid legend{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2);padding:0;margin-bottom:4px}
+.vp-colgrid label.chk{display:flex;gap:6px;align-items:flex-start;font-size:13.5px;color:var(--ink);cursor:pointer;padding:2px 0}
 .vp9-btn{display:inline-block;margin:4px 0 10px;font:inherit;font-size:13px;font-weight:700;color:var(--ok);background:transparent;border:1.5px solid var(--ok);border-radius:99px;padding:4px 12px;cursor:pointer}
 .vp9-btn.on,.vp9-btn:hover{background:var(--ok);color:#fff}
 .vp-tbl th[data-vpt]{cursor:pointer;white-space:nowrap}
@@ -2440,11 +2456,12 @@ body.ps-open #fbBtn{bottom:64px}
       <div class="subview" id="sr-doc"><div class="rs-cards" id="resDocCards"></div><div id="resDoc"></div></div>
       <div class="subview" id="sr-plus">
         <div class="panel rp-lock" id="rpLock"><h2>🔒 Pour aller plus loin</h2><p>Cette rubrique s’ouvre au <b>passage ADMAN</b>.</p><p class="mbr-sub">D’ici là, continue à monter en compétence, participer aux événements, échanger sur Discord et solliciter ton parrain pour avancer sereinement !</p></div>
-        <nav class="subtabs frm-sub" id="resPlusSub"><button data-rp="vieplus" class="on">Supports Vie Plus</button></nav>
+        <nav class="subtabs frm-sub" id="resPlusSub"><button data-rp="vieplus" class="on">Supports Cristalliance Avenir</button></nav>
         <div class="panel rp-pre" id="rpPre"></div>
         <div class="rp-v on" id="rp-vieplus">
           <div class="panel">
-            <h2>Supports Vie Plus</h2>
+            <h2>Supports Cristalliance Avenir</h2>
+            <p class="vp-src" id="vpSrc" hidden></p>
             <p class="mbr-sub" id="vpIntro"></p>
             <button type="button" class="vp9-btn" id="vp9">🌱 Les fonds article 9</button>
             <div class="filters">
@@ -2453,9 +2470,12 @@ body.ps-open #fbBtn{bottom:64px}
               <select id="vpZone"><option value="">Toutes les zones</option></select>
               <select id="vpSri"><option value="">Tous les SRI</option></select>
               <select id="vpSfdr"><option value="">Tous les articles SFDR</option></select>
-              <label class="chk" title="ISR, Greenfin, Finansol, Towards Sustainability, LuxFLAG, FNG…"><input type="checkbox" id="vpLab"> Labellisés</label>
+              <select id="vpMs" title="Notation Morningstar"><option value="">Toutes les notes Morningstar</option></select>
+              <label class="chk" title="ISR, Relance, Greenfin, Finansol, Towards Sustainability, LuxFLAG, FNG…"><input type="checkbox" id="vpLab"> Labellisés</label>
+              <label class="chk"><input type="checkbox" id="vpPea"> Éligibles PEA</label>
             </div>
-            <div class="count-line"><span id="vpCount"></span></div>
+            <div class="count-line"><span id="vpCount"></span><button type="button" class="vp-colbtn" id="vpColBtn" aria-expanded="false" aria-controls="vpColPan" title="Choisir les colonnes à afficher">⚙️ Colonnes</button></div>
+            <div class="vp-colpan" id="vpColPan" hidden></div>
             <div class="tbl-wrap"><table class="vp-tbl"><thead><tr id="vpHead"></tr></thead><tbody id="vpBody"></tbody></table></div>
           </div>
         </div>
@@ -4641,36 +4661,116 @@ function showAdminSub(s){
   if(s==='cnt'){ try{ showCntSub(CNT_SUB); }catch(e){ console.error(e); } }
 }
 
-/* ---------- Ressources → Pour aller plus loin → Supports Vie Plus (04/11/2026 ; lu en base depuis le 05/11/2026) ----------
-   Catalogue des supports du contrat Cristalliance Avenir (export Quantalys du 05/11/2026, performances au 02/11/2026).
-   05/11/2026 : les données ne sont plus intégrées à la page (elles étaient seulement encodées, donc décodables
-   par quiconque ouvrait le code source de mykairos.fr). Elles sont lues à la demande dans la table
-   supports_vieplus, protégée par RLS (comptes autorisés de la lignée) — la même que lit l'outil MCP
-   chercher_supports. Mettre à jour le catalogue = mettre à jour la table, sans republier la page. */
-const VP_SYM = '!#$%&()*+,-.:;=?';   // encore utilisé par d'anciens encodages ; plus de données ici
+/* ---------- Ressources → Pour aller plus loin → Supports Cristalliance Avenir ----------
+   04/11/2026 : création (« Supports Vie Plus »). 05/11/2026 : les données ne sont plus intégrées à la page,
+   elles sont lues à la demande dans la table supports_vieplus, protégée par RLS (comptes autorisés de la
+   lignée, statut ADMAN et plus) — la même que lit l'outil MCP chercher_supports.
+   26/11/2026 : renommée « Supports Cristalliance Avenir ». Source unique : l'export de l'espace client de
+   l'assureur (colonne source, date dans donnees_au), repris avec TOUTES ses colonnes. Le tableau en montre
+   une sélection ; chacun choisit les siennes (bouton « Colonnes »), choix mémorisé sur son compte (etat.vpc).
+   Mettre à jour le catalogue = mettre à jour la table, sans republier la page. */
 let VP = null, VP_TRI = { col:'fam', dir:1 };
 let VP_ETAT = '';                       // '' | 'charge' | 'ok' | 'erreur'
 function vpCharger(){ return VP; }
+// Colonnes : [clé, colonne en base, en-tête, libellé complet, type, groupe].
+// Types : txt, date, sri, star, sfdr, int, bool, pct (performance signée), pc (pourcentage simple), num, vl, actif.
+const VP_DEF = [
+  ['fam','famille','Famille','Famille','txt','Identité'],
+  ['zone','zone','Zone','Zone géographique','txt','Identité'],
+  ['theme','theme','Thème','Thème','txt','Identité'],
+  ['cat','categorie','Catégorie','Catégorie Morningstar','txt','Identité'],
+  ['sgp','societe','Société de gestion','Société de gestion','txt','Identité'],
+  ['isin','isin','ISIN','Code ISIN','txt','Identité'],
+  ['dev','devise','Devise','Devise d’origine du fonds','txt','Identité'],
+  ['sri','sri','SRI','Indice de risque (SRI, de 1 à 7)','sri','Risque et notation'],
+  ['ms','morningstar','Morningstar','Notation Morningstar (1 à 5 étoiles)','star','Risque et notation'],
+  ['v1','vol_1an','Vol. 1 an','Volatilité 1 an','pc','Risque et notation'],
+  ['v3','vol_3ans','Vol. 3 ans','Volatilité 3 ans','pc','Risque et notation'],
+  ['v5','vol_5ans','Vol. 5 ans','Volatilité 5 ans','pc','Risque et notation'],
+  ['sh','sharpe','Sharpe','Ratio de Sharpe','num','Risque et notation'],
+  ['p1s','perf_1sem','1 sem.','Performance 1 semaine','pct','Performances glissantes'],
+  ['p1m','perf_1mois','1 mois','Performance 1 mois','pct','Performances glissantes'],
+  ['p3m','perf_3mois','3 mois','Performance 3 mois','pct','Performances glissantes'],
+  ['pytd','perf_ytd','Depuis janv.','Performance depuis le début de l’année','pct','Performances glissantes'],
+  ['p1','perf_1an','1 an','Performance 1 an','pct','Performances glissantes'],
+  ['p3','perf_3ans','3 ans','Performance 3 ans','pct','Performances glissantes'],
+  ['p5','perf_5ans','5 ans','Performance 5 ans','pct','Performances glissantes'],
+  ['p10','perf_10ans','10 ans','Performance 10 ans','pct','Performances glissantes'],
+  ['a25','perf_2025','2025','Performance de l’année 2025','pct','Performances annuelles'],
+  ['a24','perf_2024','2024','Performance de l’année 2024','pct','Performances annuelles'],
+  ['a23','perf_2023','2023','Performance de l’année 2023','pct','Performances annuelles'],
+  ['a22','perf_2022','2022','Performance de l’année 2022','pct','Performances annuelles'],
+  ['a21','perf_2021','2021','Performance de l’année 2021','pct','Performances annuelles'],
+  ['a20','perf_2020','2020','Performance de l’année 2020','pct','Performances annuelles'],
+  ['a19','perf_2019','2019','Performance de l’année 2019','pct','Performances annuelles'],
+  ['vl','vl','Dernière VL','Dernière valeur liquidative','vl','Valorisation et frais'],
+  ['vld','vl_date','Date VL','Date de la dernière valeur liquidative','date','Valorisation et frais'],
+  ['vl25','vl_fin_2025','VL fin 2025','Dernière valeur liquidative de 2025','vl','Valorisation et frais'],
+  ['an','actif_net','Actif net','Actif net de la part','actif','Valorisation et frais'],
+  ['fg','frais_gestion','Frais gestion','Frais de gestion du fonds','pc','Valorisation et frais'],
+  ['per','periodicite','Cotation','Périodicité de cotation','txt','Valorisation et frais'],
+  ['pre','preavis','Préavis','Préavis','int','Valorisation et frais'],
+  ['dcre','date_creation','Création','Date de création du fonds','date','Dates'],
+  ['douv','date_ouverture','Ouverture','Date d’ouverture','date','Dates'],
+  ['dfer','date_fermeture','Fermeture','Date de fermeture commerciale','date','Dates'],
+  ['dfin','date_fin_entrees','Fin des entrées','Date de fin des entrées','date','Dates'],
+  ['pea','pea','PEA','Éligible PEA','bool','Éligibilités'],
+  ['peapme','pea_pme','PEA-PME','Éligible PEA-PME','bool','Éligibilités'],
+  ['fou','fourgous','Fourgous','Éligible Fourgous','bool','Éligibilités'],
+  ['ipa','inv_prog_arrivee','Inv. prog. (arr.)','Investissement progressif — en arrivée','bool','Options de gestion'],
+  ['ipd','inv_prog_depart','Inv. prog. (dép.)','Investissement progressif — au départ','bool','Options de gestion'],
+  ['spa','secu_pv_arrivee','Sécu. PV (arr.)','Sécurisation des plus-values — en arrivée','bool','Options de gestion'],
+  ['spd','secu_pv_depart','Sécu. PV (dép.)','Sécurisation des plus-values — au départ','bool','Options de gestion'],
+  ['dpa','dyna_pv_arrivee','Dyna. PV (arr.)','Dynamisation des plus-values — en arrivée','bool','Options de gestion'],
+  ['dpd','dyna_pv_depart','Dyna. PV (dép.)','Dynamisation des plus-values — au départ','bool','Options de gestion'],
+  ['sla','stop_loss_arrivee','Stop-loss (arr.)','Stop-loss relatif — en arrivée','bool','Options de gestion'],
+  ['sld','stop_loss_depart','Stop-loss (dép.)','Stop-loss relatif — au départ','bool','Options de gestion'],
+  ['raa','reequilibrage_arrivee','Rééquil. (arr.)','Rééquilibrage automatique — en arrivée','bool','Options de gestion'],
+  ['rad','reequilibrage_depart','Rééquil. (dép.)','Rééquilibrage automatique — au départ','bool','Options de gestion'],
+  ['sfdr','sfdr','SFDR','Classification SFDR','sfdr','Durabilité'],
+  ['lab','labels','Labels','Labels (ISR, Relance, Finansol, Towards Sustainability, LuxFLAG, Greenfin, FNG…)','txt','Durabilité'],
+  ['invd','inv_durables','Inv. durables','Investissements durables (SFDR)','pc','Durabilité'],
+  ['tax','taxonomie','Taxonomie','Taxonomie — part verte','pc','Durabilité'],
+  ['pai','pai','PAI','Prise en compte des principales incidences négatives (PAI)','bool','Durabilité'],
+  ['amf','classification_amf','Classif. AMF','Classification au sens AMF','int','Durabilité'],
+];
+const VP_PAR_CLE = Object.fromEntries(VP_DEF.map(c=>[c[0], c]));
+const VP_COLS_DEFAUT = ['fam','zone','sgp','sri','ms','p1','p3','p5','sfdr'];
+const VP_TITRES = { sfdr:'Classification SFDR (règlement européen) : article 9 = objectif d’investissement durable, article 8 = promeut des caractéristiques environnementales ou sociales, article 6 = aucune des deux',
+  ms:'Notation Morningstar, de 1 à 5 étoiles, telle qu’elle figure dans l’export de l’assureur. Les supports sans note (fonds récents, fonds datés, immobilier, non coté, structurés) affichent « — ».' };
+const VP_FAM_ORDRE = ['Produit structuré','Fonds euros','Actions','Diversifié / flexible','Performance absolue','Obligataire','Obligataire daté','Immobilier','Private equity / non coté'];
+// Choix des colonnes : { t: horodatage, c: [clés] } — propre à chaque membre (localStorage + etat.donnees.vpc)
+let VPC = null; try{ VPC = JSON.parse(localStorage.getItem('kairos_vpc')||'null'); }catch(e){}
+function vpColsValides(c){ return Array.isArray(c) ? VP_DEF.map(d=>d[0]).filter(k=>c.includes(k)) : null; }   // ordre du catalogue, clés inconnues écartées
+function vpColsActives(){ return (VPC && vpColsValides(VPC.c)) || VP_COLS_DEFAUT.slice(); }
+function vpColsPoser(c){   // c = liste de clés, ou null pour revenir aux colonnes par défaut
+  VPC = { t:new Date().toISOString(), c: c ? vpColsValides(c) : null };
+  if(!APERCU){ try{ localStorage.setItem('kairos_vpc', JSON.stringify(VPC)); }catch(e){} try{ planSync(); }catch(e){} }
+  if(!vpColsActives().includes(VP_TRI.col) && VP_TRI.col!=='nom') VP_TRI = { col:'fam', dir:1 };
+  buildVieplus();
+}
 async function vpLoad(){
   if(VP || VP_ETAT==='charge') return VP;
   VP_ETAT = 'charge';
   try{
     if(!SB || !SBUSER) throw new Error('non connecté');
-    const r = await SB.from('supports_vieplus').select('isin,nom,famille,categorie,theme,zone,societe,perf_1an,perf_3ans,perf_5ans,notation_quantalys,sri,sfdr,labels,contrat,donnees_au');
+    const r = await SB.from('supports_vieplus').select('*');
     if(r.error) throw r.error;
-    const l = (r.data||[]).map(x=>({ nom:x.nom, isin:x.isin, fam:x.famille, cat:x.categorie||'', theme:x.theme||'', zone:x.zone||'', sgp:x.societe||'',
-      p1:x.perf_1an==null?null:+x.perf_1an, p3:x.perf_3ans==null?null:+x.perf_3ans, p5:x.perf_5ans==null?null:+x.perf_5ans,
-      ql:x.notation_quantalys, sri:x.sri, sfdr:x.sfdr, lab:x.labels||'' }));
+    const NUM = new Set(['pct','pc','num','vl','actif']);
+    const l = (r.data||[]).map(x=>{
+      const o = { nom:x.nom, isin:x.isin };
+      VP_DEF.forEach(([k,col,,,ty])=>{ const v = x[col];
+        o[k] = (v==null || v==='') ? (ty==='txt' && ['fam','zone','theme','cat','sgp','lab'].includes(k) ? '' : null) : NUM.has(ty) ? +v : v; });
+      return o;
+    });
     if(!l.length) throw new Error('catalogue vide');
-    const dm = String((r.data[0]||{}).donnees_au||'').split('-');
-    VP = { contrat:(r.data[0]||{}).contrat||'Cristalliance Avenir', maj: dm.length===3 ? dm[2]+'/'+dm[1]+'/'+dm[0] : '', l };
+    const p = (r.data[0]||{});
+    VP = { contrat:p.contrat||'Cristalliance Avenir', maj: vpDate(p.donnees_au), source:p.source||'', l };
     VP_ETAT = 'ok';
   }catch(e){ console.error(e); VP_ETAT = 'erreur'; }
   try{ buildVieplus(); buildRpPre(); }catch(e){ console.error(e); }
   return VP;
 }
-const VP_COLS = [['nom','Support'],['fam','Famille'],['zone','Zone'],['sgp','Société de gestion'],['sri','SRI'],['ql','Quantalys'],['p1','1 an'],['p3','3 ans'],['p5','5 ans'],['sfdr','SFDR']];
-const VP_FAM_ORDRE = ['Produit structuré','Fonds euros','Actions','Diversifié / flexible','Performance absolue','Obligataire','Obligataire daté','Immobilier','Private equity / non coté'];
 function vpOptions(sel, vals){
   const el = document.getElementById(sel); if(!el || el.dataset.ok) return;
   el.insertAdjacentHTML('beforeend', vals.map(v=>'<option value="'+esc(String(v))+'">'+esc(String(v))+'</option>').join(''));
@@ -4681,10 +4781,12 @@ function vpFiltre(){
   const q = norm(document.getElementById('vpQ').value||'');
   const f = document.getElementById('vpFam').value, z = document.getElementById('vpZone').value;
   const s = document.getElementById('vpSri').value, a = document.getElementById('vpSfdr').value, e = document.getElementById('vpLab').checked;
+  const m = document.getElementById('vpMs').value, pe = document.getElementById('vpPea').checked;
   const l = d.l.filter(r=>(!f||r.fam===f) && (!z||r.zone===z) && (!s||String(r.sri)===s) && (!a||String(r.sfdr)===a) && (!e||r.lab)
+    && (!m || (m==='0' ? !r.ms : (r.ms||0) >= +m)) && (!pe || r.pea===true)
     && (!q || norm([r.nom,r.isin,r.sgp,r.theme,r.cat,r.fam,r.zone,r.lab].join(' ')).includes(q)));
   const c = VP_TRI.col, dir = VP_TRI.dir;
-  const cle = r => c==='fam' ? VP_FAM_ORDRE.indexOf(r.fam) : r[c];
+  const cle = r => { const v = c==='fam' ? VP_FAM_ORDRE.indexOf(r.fam) : r[c]; return v==='' ? null : v===true ? 1 : v===false ? 0 : v; };
   return l.sort((a,b)=>{
     let x = cle(a), y = cle(b);
     if(x==null && y==null) return a.nom.localeCompare(b.nom,'fr');
@@ -4694,41 +4796,94 @@ function vpFiltre(){
   });
 }
 const vpPct = v => v==null ? '—' : (v>0?'+':'')+String(v.toFixed(1)).replace('.',',')+' %';
+const vpDate = v => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v||'')); return m ? m[3]+'/'+m[2]+'/'+m[1] : ''; };
+const vpNb = (v, min, max) => v.toLocaleString('fr-FR', { minimumFractionDigits:min, maximumFractionDigits:max });
+function vpCell(r, k){
+  const ty = VP_PAR_CLE[k][4], v = r[k];
+  if(ty==='pct') return '<td class="vp-n'+(v!=null&&v<0?' vp-neg':'')+'">'+vpPct(v)+'</td>';
+  if(ty==='sri') return '<td class="vp-n">'+(v!=null?v+'/7':'—')+'</td>';
+  if(ty==='star') return '<td><span class="vp-st"'+(v?' title="'+v+' étoile'+(v>1?'s':'')+' sur 5"':'')+'>'+(v?'★'.repeat(v)+'☆'.repeat(5-v):'—')+'</span></td>';
+  if(ty==='sfdr') return '<td>'+(v===9?'<span class="vp-a9">🌱 Art. 9</span>':v===8?'<span class="vp-a8">Art. 8</span>':v===6?'<span class="vp-a6">Art. 6</span>':'—')+'</td>';
+  if(ty==='bool') return '<td class="vp-b">'+(v===true?'<span class="vp-oui">Oui</span>':v===false?'<span class="vp-non">Non</span>':'—')+'</td>';
+  if(v==null || v==='') return '<td'+(ty==='txt'?'':' class="vp-n"')+'>—</td>';
+  if(ty==='pc') return '<td class="vp-n">'+vpNb(v,0,2)+' %</td>';
+  if(ty==='num') return '<td class="vp-n'+(v<0?' vp-neg':'')+'">'+vpNb(v,2,2)+'</td>';
+  if(ty==='vl') return '<td class="vp-n">'+vpNb(v,2,2)+'</td>';
+  if(ty==='actif'){ const u = (r.dev && r.dev!=='EUR') ? ' '+esc(r.dev) : '€';
+    return '<td class="vp-n">'+(v>=1e9 ? vpNb(v/1e9,2,2)+' Md'+u : v>=1e6 ? vpNb(v/1e6,1,1)+' M'+u : vpNb(v/1e3,0,0)+' k'+u)+'</td>'; }
+  if(ty==='date') return '<td class="vp-n">'+(vpDate(v)||'—')+'</td>';
+  if(ty==='int') return '<td class="vp-n">'+esc(String(v))+'</td>';
+  return '<td'+(k==='lab'||k==='cat'||k==='per'?' class="vp-l"':'')+'>'+esc(String(v))+'</td>';
+}
+function buildVpCols(){   // panneau « Colonnes » : une case par colonne, rangées par groupe
+  const pan = document.getElementById('vpColPan'); if(!pan) return;
+  const act = vpColsActives(), groupes = [...new Set(VP_DEF.map(c=>c[5]))];
+  pan.innerHTML = '<div class="vp-colhead"><b>Colonnes du tableau</b><span class="vp-coln" id="vpColN"></span>'
+    +'<button type="button" class="vp-colact" data-vpc="defaut">Colonnes par défaut</button>'
+    +'<button type="button" class="vp-colact" data-vpc="tout">Tout afficher</button>'
+    +'<button type="button" class="vp-colact" data-vpc="fermer">Fermer</button></div>'
+    +'<p class="mbr-sub">Coche les colonnes à afficher. Le nom du support reste toujours visible. Ton choix est enregistré sur ton compte et te suit d’un appareil à l’autre.</p>'
+    +'<div class="vp-colgrid">'+groupes.map(g=>'<fieldset><legend>'+esc(g)+'</legend>'
+      +VP_DEF.filter(c=>c[5]===g).map(c=>'<label class="chk"><input type="checkbox" data-vpcol="'+c[0]+'"'+(act.includes(c[0])?' checked':'')+'> '+esc(c[3])+'</label>').join('')+'</fieldset>').join('')+'</div>';
+  vpColsCompte();
+}
+function vpColsCompte(){
+  const n = vpColsActives().length, el = document.getElementById('vpColN'), bt = document.getElementById('vpColBtn');
+  if(el) el.textContent = n+' colonne'+(n>1?'s':'')+' affichée'+(n>1?'s':'')+' sur '+VP_DEF.length;
+  if(bt) bt.textContent = '⚙️ Colonnes ('+n+')';
+}
 function buildVieplus(){
   const d = vpCharger();
+  const src = document.getElementById('vpSrc');
   if(!d){
     document.getElementById('vpIntro').textContent = VP_ETAT==='erreur' ? 'Le catalogue des supports n’a pas pu être chargé. Vérifie ta connexion puis rouvre la page.' : 'Chargement du catalogue des supports…';
     document.getElementById('vpBody').innerHTML = ''; document.getElementById('vpCount').textContent = '';
+    if(src) src.hidden = true;
     if(VP_ETAT!=='erreur') vpLoad();
     return;
   }
-  const n9 = d.l.filter(r=>r.sfdr===9).length, n8 = d.l.filter(r=>r.sfdr===8).length;
-  document.getElementById('vpIntro').innerHTML = 'Contrat '+esc(d.contrat)+' : les '+d.l.length+' supports disponibles, données Quantalys au '+esc(d.maj||'')+'. '
+  if(src){ src.hidden = false;
+    src.innerHTML = '<span class="vp-src-i">📄</span> <b>Source : '+esc(d.source||'export de l’assureur')+'</b>'+(d.maj?' · données au <b>'+esc(d.maj)+'</b>':''); }
+  const n9 = d.l.filter(r=>r.sfdr===9).length, n8 = d.l.filter(r=>r.sfdr===8).length, nms = d.l.filter(r=>r.ms).length;
+  document.getElementById('vpIntro').innerHTML = 'Contrat '+esc(d.contrat)+' : les '+d.l.length+' supports du catalogue, dont '+nms+' notés par Morningstar. '
     +'<b>'+n9+' fonds article 9</b> (objectif d’investissement durable, surlignés en vert) et '+n8+' article 8 (caractéristiques environnementales ou sociales). '
-    +'Performances cumulées, nettes des frais des fonds mais hors frais du contrat. Famille, thème et zone sont déduits du libellé.';
+    +'Performances cumulées, nettes des frais des fonds mais hors frais du contrat ; elles ne préjugent pas des performances futures. Famille, thème et zone sont déduits de la catégorie et du nom du support. '
+    +'Toutes les données de l’export sont disponibles : choisis celles à afficher avec « Colonnes ».';
   const b9 = document.getElementById('vp9'); if(b9){ b9.textContent = '🌱 Les '+n9+' fonds article 9'; b9.classList.toggle('on', document.getElementById('vpSfdr').value==='9'); }
   vpOptions('vpFam', VP_FAM_ORDRE.filter(x=>d.l.some(r=>r.fam===x)));
-  vpOptions('vpZone', [...new Set(d.l.map(r=>r.zone))].sort((a,b)=>a.localeCompare(b,'fr')));
+  vpOptions('vpZone', [...new Set(d.l.map(r=>r.zone).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr')));
   vpOptions('vpSri', [...new Set(d.l.map(r=>r.sri).filter(x=>x!=null))].sort((a,b)=>a-b));
   const sf = document.getElementById('vpSfdr'); if(sf && !sf.dataset.ok){ sf.insertAdjacentHTML('beforeend', [9,8,6].map(x=>'<option value="'+x+'">Article '+x+'</option>').join('')); sf.dataset.ok='1'; }
-  document.getElementById('vpHead').innerHTML = VP_COLS.map(([k,t])=>'<th data-vpt="'+k+'"'+(k==='sfdr'?' title="Classification SFDR (règlement européen) : article 9 = objectif d’investissement durable, article 8 = promeut des caractéristiques environnementales ou sociales, article 6 = aucune des deux"':'')+' class="sortable'+(VP_TRI.col===k?(VP_TRI.dir>0?' asc':' desc'):'')+'">'+esc(t)+'</th>').join('');
+  const ms = document.getElementById('vpMs'); if(ms && !ms.dataset.ok){ ms.insertAdjacentHTML('beforeend', '<option value="5">★★★★★ uniquement</option><option value="4">★★★★ et plus</option><option value="3">★★★ et plus</option><option value="0">Non notés</option>'); ms.dataset.ok='1'; }
+  const cols = vpColsActives();
+  const th = (k, t, long) => '<th data-vpt="'+k+'" title="'+esc(VP_TITRES[k]||long||t)+'" class="sortable'+(VP_TRI.col===k?(VP_TRI.dir>0?' asc':' desc'):'')+'">'+esc(t)+'</th>';
+  document.getElementById('vpHead').innerHTML = th('nom','Support','Nom du support') + cols.map(k=>th(k, VP_PAR_CLE[k][2], VP_PAR_CLE[k][3])).join('');
   const l = vpFiltre();
   document.getElementById('vpCount').textContent = l.length+' support'+(l.length>1?'s':'')+' sur '+d.l.length;
-  const n = v => '<td class="vp-n'+(v!=null&&v<0?' vp-neg':'')+'">'+vpPct(v)+'</td>';
-  document.getElementById('vpBody').innerHTML = l.map(r=>'<tr'+(r.sfdr===9?' class="vp-r9"':'')+'><td><b>'+esc(r.nom)+'</b><span class="vp-isin">'+esc(r.isin)+(r.theme?' · '+esc(r.theme):'')+'</span>'+(r.lab?'<span class="vp-lab">🏷️ '+esc(r.lab)+'</span>':'')+'</td>'
-    +'<td>'+esc(r.fam)+'</td><td>'+esc(r.zone)+'</td><td>'+esc(r.sgp||'')+'</td>'
-    +'<td class="vp-n">'+(r.sri!=null?r.sri+'/7':'—')+'</td>'
-    +'<td><span class="vp-st">'+(r.ql?'★'.repeat(r.ql)+'☆'.repeat(5-r.ql):'—')+'</span></td>'
-    +n(r.p1)+n(r.p3)+n(r.p5)
-    +'<td>'+(r.sfdr===9?'<span class="vp-a9">🌱 Art. 9</span>':r.sfdr===8?'<span class="vp-a8">Art. 8</span>':r.sfdr===6?'<span class="vp-a6">Art. 6</span>':'—')+'</td></tr>').join('')
-    || '<tr><td colspan="10" class="mbr-sub">Aucun support ne correspond.</td></tr>';
+  vpColsCompte();
+  document.getElementById('vpBody').innerHTML = l.map(r=>'<tr'+(r.sfdr===9?' class="vp-r9"':'')+'><td><b>'+esc(r.nom)+'</b><span class="vp-isin">'+esc(r.isin)+(r.theme?' · '+esc(r.theme):'')+'</span>'
+    +(r.lab && !cols.includes('lab')?'<span class="vp-lab">🏷️ '+esc(r.lab)+'</span>':'')
+    +(r.dfin?'<span class="vp-fin">⏳ Entrées jusqu’au '+vpDate(r.dfin)+'</span>':'')+'</td>'
+    +cols.map(k=>vpCell(r,k)).join('')+'</tr>').join('')
+    || '<tr><td colspan="'+(cols.length+1)+'" class="mbr-sub">Aucun support ne correspond.</td></tr>';
 }
-document.addEventListener('input', e=>{ if(e.target && ['vpQ','vpFam','vpZone','vpSri','vpSfdr','vpLab'].includes(e.target.id)) buildVieplus(); });
-document.addEventListener('change', e=>{ if(e.target && ['vpFam','vpZone','vpSri','vpSfdr','vpLab'].includes(e.target.id)) buildVieplus(); });
+const VP_FILTRES = ['vpQ','vpFam','vpZone','vpSri','vpSfdr','vpMs','vpLab','vpPea'];
+document.addEventListener('input', e=>{ if(e.target && VP_FILTRES.includes(e.target.id)) buildVieplus(); });
+document.addEventListener('change', e=>{
+  if(e.target && VP_FILTRES.slice(1).includes(e.target.id)){ buildVieplus(); return; }
+  const cb = e.target && e.target.closest && e.target.closest('#vpColPan input[data-vpcol]');
+  if(cb) vpColsPoser([...document.querySelectorAll('#vpColPan input[data-vpcol]:checked')].map(x=>x.dataset.vpcol));
+});
 document.addEventListener('click', e=>{
   const th = e.target.closest && e.target.closest('.vp-tbl th[data-vpt]');
-  if(th){ const c = th.dataset.vpt; VP_TRI = { col:c, dir: VP_TRI.col===c ? -VP_TRI.dir : (['p1','p3','p5','ql','sfdr'].includes(c)?-1:1) }; buildVieplus(); return; }
-  if(e.target.closest && e.target.closest('#vp9')){ const sf = document.getElementById('vpSfdr'); sf.value = sf.value==='9' ? '' : '9'; buildVieplus(); }
+  if(th){ const c = th.dataset.vpt, ty = (VP_PAR_CLE[c]||[])[4];
+    VP_TRI = { col:c, dir: VP_TRI.col===c ? -VP_TRI.dir : (['pct','pc','num','vl','actif','star','sfdr','bool'].includes(ty)?-1:1) }; buildVieplus(); return; }
+  if(e.target.closest && e.target.closest('#vp9')){ const sf = document.getElementById('vpSfdr'); sf.value = sf.value==='9' ? '' : '9'; buildVieplus(); return; }
+  const ouvrir = e.target.closest && e.target.closest('#vpColBtn'), act = e.target.closest && e.target.closest('[data-vpc]');
+  if(ouvrir || (act && act.dataset.vpc==='fermer')){
+    const pan = document.getElementById('vpColPan'), bt = document.getElementById('vpColBtn'); const montrer = ouvrir ? pan.hidden : false;
+    if(montrer) buildVpCols(); pan.hidden = !montrer; bt.setAttribute('aria-expanded', montrer ? 'true' : 'false'); return; }
+  if(act){ vpColsPoser(act.dataset.vpc==='tout' ? VP_DEF.map(c=>c[0]) : null); buildVpCols(); }
 });
 
 /* ---------- Ressources → Pour aller plus loin → encadré « Allocations types » (05/11/2026) ----------
@@ -4861,6 +5016,12 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    ÉVOLUTION (en tête de liste, date du jour). Les entrées d'avant le 31/10/2026 sont reconstituées
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
+  ['2026-11-26', [
+    ['f','Ressources → Pour aller plus loin : « Supports Vie Plus » devient « Supports Cristalliance Avenir ». Catalogue mis à jour (458 supports) depuis une seule source, l’export de l’espace client de l’assureur, indiquée en tête de page avec sa date.'],
+    ['f','Supports Cristalliance Avenir : la notation Morningstar est affichée (colonne et filtre par nombre d’étoiles) ; la notation Quantalys, absente de la nouvelle source, est retirée. Nouveau filtre « Éligibles PEA » et mention de la date de fin des entrées sous le nom du support.'],
+    ['f','Supports Cristalliance Avenir : bouton « Colonnes » pour choisir les colonnes du tableau parmi toutes les données de l’export (performances de 1 semaine à 10 ans et par année depuis 2019, volatilités, Sharpe, valeur liquidative, actif net, frais de gestion, dates, éligibilités PEA / PEA-PME / Fourgous, options de gestion, labels, taxonomie, PAI…). Le choix est enregistré sur le compte de chacun et le suit d’un appareil à l’autre.'],
+    ['f','Outil IA chercher_supports : mêmes données que la page, avec la notation Morningstar, un filtre par étoiles et par éligibilité PEA, et le détail complet d’un support sur demande.'],
+  ]],
   ['2026-11-17', [
     ['f','Accueil : les anniversaires de la lignée s’affichent en bandeau tout en haut, sous le message de bienvenue (et non plus en bas de page), sur les 7 prochains jours, avec le jour de la fête ; ceux du jour sont mis en avant.'],
     ['b','Lien de section ouvert directement (nouvel onglet) : la fiche ne reste plus affichée « pas encore débloquée » ; la copie du lien affiche bien « Lien de la section copié ».'],
@@ -11039,7 +11200,7 @@ const saveSem = ()=>{ if(APERCU) return; try{ localStorage.setItem('kairos_sem',
 // { etapes:[clés d'étapes annoncées], bk:'AAAA-MM-JJ de la dernière alerte lue' }
 let VU = {}; try{ VU = JSON.parse(localStorage.getItem('kairos_vu')||'{}'); }catch(e){}
 const saveVu = ()=>{ if(APERCU) return; try{ localStorage.setItem('kairos_vu', JSON.stringify(VU)); }catch(e){} planSync(); };
-const etatLocal = ()=>({ ffav:FFAV, favs:[...FAVS], check:CHECK, mis:MIS, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM, vu:VU, zone:ZONE_CHOISIE||undefined });
+const etatLocal = ()=>({ ffav:FFAV, favs:[...FAVS], check:CHECK, mis:MIS, obj:[...OBJ_OK], nav:NAV_REPLIE, sem:SEM, vu:VU, zone:ZONE_CHOISIE||undefined, vpc:VPC||undefined });
 let ACC_NOM_AFF = null;
 // Prénom de la personne connectée (Google), pour personnaliser l'accueil
 function prenomUser(){
@@ -11143,6 +11304,8 @@ async function syncPull(){
   if(v.hp && v.hp.t && v.hp.t > ((VU.hp||{}).t||'')){ VU.hp = v.hp; chg=true; try{ hpPoser(); }catch(e){} }
   // Zone scolaire : le choix fait sur un autre appareil est repris tant qu'aucun choix n'a été fait ici
   if(/^[ABC]$/.test(d.zone||'') && !ZONE_CHOISIE){ ZONE_CHOISIE=d.zone; try{ localStorage.setItem('kairos_zone', d.zone); }catch(e){} try{ calRafraichir(); }catch(e){} }
+  // Colonnes du tableau des supports : le choix le plus récent l'emporte (26/11/2026)
+  if(d.vpc && typeof d.vpc.t==='string' && d.vpc.t > ((VPC||{}).t||'')){ VPC = { t:d.vpc.t, c:Array.isArray(d.vpc.c) ? d.vpc.c : null }; try{ localStorage.setItem('kairos_vpc', JSON.stringify(VPC)); }catch(e){} try{ if(VP) buildVieplus(); }catch(e){} }
   if(chg){
     try{
       localStorage.setItem('kairos_favs', JSON.stringify([...FAVS]));
@@ -13036,7 +13199,7 @@ document.addEventListener('click', async e=>{
 
 // --- Admin → MCP : historique d'utilisation par membre ---
 let MCP_ADM = { membres:[], journal:[], actif:true, f:{ user:'', outil:'', ia:'', statut:'', type:'' } };
-const MCP_OUTIL_LIB = { chercher_supports:'Supports Vie Plus', chercher_sessions:'Chercher des sessions', detail_session:'Détail d’une session', mes_sessions:'Mes sessions', chercher_fiches:'Chercher des fiches',
+const MCP_OUTIL_LIB = { chercher_supports:'Supports Cristalliance Avenir', chercher_sessions:'Chercher des sessions', detail_session:'Détail d’une session', mes_sessions:'Mes sessions', chercher_fiches:'Chercher des fiches',
   lire_fiche:'Lire une fiche', faq_objections:'FAQ / objections', liens_utiles:'Liens utiles', veille:'Veille', mes_actions:'Mes actions', ma_progression:'Ma progression',
   mon_mail_manager:'Mon mail manager', mur_mail_manager:'Mur du mail manager', ma_lignee:'Ma lignée', enregistrer_session:'Enregistrer une session',
   cocher_parcours:'Cocher le parcours', deposer_retour:'Déposer un retour', suggerer_contenu:'Suggérer un contenu', remplir_mail_manager:'Remplir le mail manager',

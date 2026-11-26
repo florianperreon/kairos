@@ -6412,7 +6412,7 @@ test.describe('Admin → fiche « Qui voit quoi dans Kairos ? » (05/11/2026)', 
   });
 });
 
-test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/2026)', () => {
+test.describe('Ressources → Pour aller plus loin → Supports Cristalliance Avenir (04/11/2026, refonte du 26/11/2026)', () => {
   // 05/11/2026 : le catalogue n'est plus dans la page, il est lu dans la table supports_vieplus (RLS).
   // Le test simule la base avec quelques lignes.
   test('sous-rubrique de Ressources, catalogue lu en base, articles 9 mis en avant, filtres, tri et encadré', async ({ page }) => {
@@ -6422,7 +6422,7 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
       document.getElementById('app').style.display = 'grid';
       window.__booted = true;
       const L = (isin, nom, famille, p5, sri, sfdr, labels) => ({ isin, nom, famille, categorie:'', theme:'', zone:'Monde', societe:'SGP',
-        perf_1an: 1, perf_3ans: 2, perf_5ans: p5, notation_quantalys: 4, sri, sfdr, labels, contrat:'Cristalliance Avenir', donnees_au:'2026-11-02' });
+        perf_1an: 1, perf_3ans: 2, perf_5ans: p5, morningstar: 4, sri, sfdr, labels, contrat:'Cristalliance Avenir', donnees_au:'2026-11-26', source:'espaceclient.suravenir.fr' });
       const LIGNES = [
         L('FR1459ABH750','Exceltis Rendement Decembre 2026','Produit structuré',null,5,null,null),
         L('LU0826452848','DWS Invest II Gbl Eq Hi Conv. LC','Actions',108.98,4,8,null),
@@ -6464,15 +6464,16 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
     });
     expect(erreurs).toEqual([]);
     expect(r.admin.join(' ')).not.toContain('Supports Vie Plus');
+    expect(r.admin.join(' ')).not.toContain('Supports Cristalliance Avenir');
     expect(r.ferme.classe).toBe(true);                // BEMAN : rubrique fermée (règle du 05/11/2026)
     expect(r.ferme.bouton).toContain('🔒');
     expect(r.ferme.lues).toBe(0);
     expect(r.ferme.texte).toContain('s’ouvre au passage ADMAN');
     expect(r.ferme.texte).not.toContain('Vie Plus');   // rien sur le contenu (05/11/2026)                     // rien n'est lu en base tant que c'est fermé
     expect(r.res).toEqual(['sim', 'doc', 'plus']);
-    expect(r.dans).toEqual(['Supports Vie Plus']);
+    expect(r.dans).toEqual(['Supports Cristalliance Avenir']);
     expect(r.vu).toEqual({ plus: true, lien: '#ressources?s=pour-aller-plus-loin' });
-    expect(r.intro).toContain('données Quantalys au 02/11/2026');
+    expect(r.intro).not.toContain('Quantalys');           // 26/11/2026 : source unique, l'export de l'assureur
     expect(r.intro).toContain('2 fonds article 9');
     expect(r.total).toBe(5);
     expect(r.lues).toBe(1);                           // une seule lecture en base
@@ -6487,6 +6488,136 @@ test.describe('Ressources → Pour aller plus loin → Supports Vie Plus (04/11/
     expect(r.premier).toBe('Axiom European Banks Equity RC EUR(v)');
     expect(r.ailleurs).toBe(false);
     expect(r.slug).toBe('plus');
+  });
+
+  // 26/11/2026 : source unique (export de l'assureur), Morningstar, colonnes au choix mémorisées par membre.
+  async function poserVP(page) {
+    return page.evaluate(async () => {
+      document.getElementById('lock').style.display = 'none';
+      document.getElementById('app').style.display = 'grid';
+      window.__booted = true;
+      try { localStorage.removeItem('kairos_vpc'); } catch (e) {}
+      VPC = null; VP = null; VP_ETAT = '';
+      const L = (isin, nom, famille, ms, pea, extra) => Object.assign({ isin, nom, famille, categorie:'Actions International Gdes Cap. Mixte', theme:'Cœur de portefeuille', zone:'Monde', societe:'SGP',
+        perf_1an: 1, perf_3ans: 2, perf_5ans: 3, perf_2025: 12.5, morningstar: ms, sri: 4, sfdr: 8, labels: null, pea, vol_1an: 14.45, frais_gestion: 1.6, actif_net: 95639551.48, devise:'EUR',
+        vl: 359.81, vl_date:'2026-11-24', date_fin_entrees: null, contrat:'Cristalliance Avenir', donnees_au:'2026-11-26', source:'espaceclient.suravenir.fr' }, extra || {});
+      const LIGNES = [
+        L('FR0000000001','Fonds Cinq Etoiles','Actions',5,true),
+        L('FR0000000002','Fonds Quatre Etoiles','Actions',4,false,{ labels:'Label ISR · Relance' }),
+        L('FR0000000003','Fonds Deux Etoiles','Obligataire',2,false,{ frais_gestion: 0.85, actif_net: 1742662902.73 }),
+        L('FR0000000004','Fonds Daté Sans Note','Obligataire daté',null,null,{ date_fin_entrees:'2026-12-31', perf_2025: null }),
+      ];
+      window.__etat = { vpc: null }; window.__sync = 0; window.__upserts = [];
+      SB = { from: (tb) => tb === 'supports_vieplus'
+        ? { select: async () => ({ data: LIGNES, error: null }) }
+        : { select: () => ({ maybeSingle: async () => ({ data: { donnees: window.__etat }, error: null }) }), upsert: async (x) => { window.__upserts.push(x); return { error: null }; } } };
+      SBUSER = { id: 'test' };
+      EST_ADMIN = false; PARCOURS = { statut: 'ROLE_ADMAN' };
+      planSync = () => { window.__sync++; };
+      showTab('res'); curTab = 'res'; showResSub('plus');
+      await vpLoad();
+    });
+  }
+  const tetes = () => [...document.querySelectorAll('#vpHead th')].map(t => t.textContent);
+
+  test('source affichée en tête avec sa date, Morningstar dans le tableau, filtres étoiles et PEA', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserVP(page);
+    const r = await page.evaluate(() => {
+      const tetes = [...document.querySelectorAll('#vpHead th')].map(t => t.textContent);
+      const src = document.getElementById('vpSrc');
+      const lignes = () => [...document.querySelectorAll('#vpBody tr')].map(t => t.textContent);
+      const tout = lignes();
+      const pose = (id, v) => { const e = document.getElementById(id); if (e.type === 'checkbox') e.checked = v; else e.value = v; e.dispatchEvent(new Event('change', { bubbles: true })); };
+      pose('vpMs', '4'); const quatrePlus = lignes().length;
+      pose('vpMs', '0'); const nonNotes = lignes();
+      pose('vpMs', ''); pose('vpPea', true); const pea = lignes();
+      pose('vpPea', false);
+      document.querySelector('.vp-tbl th[data-vpt="ms"]').click();
+      const premier = document.querySelector('#vpBody tr td b').textContent, dernier = [...document.querySelectorAll('#vpBody tr td b')].pop().textContent;
+      return { tetes, srcVisible: !src.hidden && getComputedStyle(src).display !== 'none', src: src.textContent, h2: document.querySelector('#rp-vieplus h2').textContent,
+        intro: document.getElementById('vpIntro').textContent, tout, quatrePlus, nonNotes, pea, premier, dernier, quantalys: document.getElementById('rp-vieplus').textContent.includes('Quantalys') };
+    });
+    expect(erreurs).toEqual([]);
+    expect(r.h2).toBe('Supports Cristalliance Avenir');
+    expect(r.srcVisible).toBe(true);
+    expect(r.src).toContain('Source : espaceclient.suravenir.fr');
+    expect(r.src).toContain('26/11/2026');
+    expect(r.tetes).toEqual(['Support', 'Famille', 'Zone', 'Société de gestion', 'SRI', 'Morningstar', '1 an', '3 ans', '5 ans', 'SFDR']);
+    expect(r.quantalys).toBe(false);
+    expect(r.intro).toContain('3 notés par Morningstar');
+    expect(r.tout.find(t => t.includes('Fonds Cinq Etoiles'))).toContain('★★★★★');
+    expect(r.tout.find(t => t.includes('Fonds Deux Etoiles'))).toContain('★★☆☆☆');
+    expect(r.tout.find(t => t.includes('Fonds Daté Sans Note'))).toContain('Entrées jusqu’au 31/12/2026');
+    expect(r.quatrePlus).toBe(2);
+    expect(r.nonNotes).toHaveLength(1);
+    expect(r.nonNotes[0]).toContain('Fonds Daté Sans Note');
+    expect(r.pea).toHaveLength(1);
+    expect(r.pea[0]).toContain('Fonds Cinq Etoiles');
+    expect(r.premier).toBe('Fonds Cinq Etoiles');          // tri Morningstar : les mieux notés d'abord
+    expect(r.dernier).toBe('Fonds Daté Sans Note');        // les non notés en dernier
+  });
+
+  test('colonnes au choix : toutes les données de l’export, choix mémorisé sur le compte et repris d’un autre appareil', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    await poserVP(page);
+    const r = await page.evaluate(async () => {
+      const tetes = () => [...document.querySelectorAll('#vpHead th')].map(t => t.textContent);
+      const pan = document.getElementById('vpColPan'), bt = document.getElementById('vpColBtn');
+      const ferme = pan.hidden;
+      bt.click();
+      const ouvert = !pan.hidden, cases = pan.querySelectorAll('input[data-vpcol]').length, groupes = [...pan.querySelectorAll('legend')].map(x => x.textContent);
+      const coche = (k, v) => { const c = pan.querySelector('input[data-vpcol="' + k + '"]'); c.checked = v; c.dispatchEvent(new Event('change', { bubbles: true })); };
+      coche('fg', true); coche('a25', true); coche('an', true); coche('pea', true); coche('zone', false);
+      const apres = tetes();
+      const l1 = [...document.querySelectorAll('#vpBody tr')].find(t => t.textContent.includes('Fonds Cinq Etoiles')).textContent;
+      const l3 = [...document.querySelectorAll('#vpBody tr')].find(t => t.textContent.includes('Fonds Deux Etoiles')).textContent;
+      const local = JSON.parse(localStorage.getItem('kairos_vpc')), envoye = etatLocal().vpc, sync = window.__sync, panneauOuvert = !pan.hidden;
+      const compteur = document.getElementById('vpColN').textContent, bouton = bt.textContent;
+      // le choix survit à un rechargement des données
+      VP = null; VP_ETAT = ''; await vpLoad(); const recharge = tetes();
+      pan.querySelector('[data-vpc="tout"]').click(); const tout = tetes().length;
+      pan.querySelector('[data-vpc="defaut"]').click(); const defaut = tetes(), casesDefaut = pan.querySelectorAll('input[data-vpcol]:checked').length;
+      pan.querySelector('[data-vpc="fermer"]').click(); const referme = pan.hidden;
+      // un choix plus récent fait sur un autre appareil est repris à la synchronisation ; un plus ancien est ignoré
+      window.__etat = { vpc: { t: '2099-01-01T00:00:00.000Z', c: ['pea', 'ms', 'inconnue'] } };
+      await syncPull(); const autre = tetes();
+      window.__etat = { vpc: { t: '2000-01-01T00:00:00.000Z', c: ['fam'] } };
+      await syncPull(); const ancien = tetes();
+      const pousse = (window.__upserts.pop() || {}).donnees;
+      return { ferme, ouvert, cases, total: VP_DEF.length, groupes, apres, l1, l3, local, envoye, sync, panneauOuvert, compteur, bouton, recharge, tout, defaut, casesDefaut, referme, autre, ancien, pousse,
+        colonnesBase: VP_DEF.map(c => c[1]) };
+    });
+    expect(erreurs).toEqual([]);
+    expect(r.ferme).toBe(true);
+    expect(r.ouvert).toBe(true);
+    expect(r.cases).toBe(r.total);
+    expect(r.total).toBeGreaterThanOrEqual(55);
+    expect(r.groupes).toEqual(['Identité', 'Risque et notation', 'Performances glissantes', 'Performances annuelles', 'Valorisation et frais', 'Dates', 'Éligibilités', 'Options de gestion', 'Durabilité']);
+    // toutes les colonnes de l'export sont proposées
+    for (const c of ['morningstar', 'perf_10ans', 'perf_2019', 'vol_5ans', 'sharpe', 'vl', 'actif_net', 'frais_gestion', 'date_fin_entrees', 'pea_pme', 'fourgous', 'stop_loss_depart', 'reequilibrage_arrivee', 'taxonomie', 'pai', 'classification_amf'])
+      expect(r.colonnesBase).toContain(c);
+    expect(r.apres).toEqual(['Support', 'Famille', 'Société de gestion', 'SRI', 'Morningstar', '1 an', '3 ans', '5 ans', '2025', 'Actif net', 'Frais gestion', 'PEA', 'SFDR']);
+    expect(r.l1).toContain('+12,5 %');
+    expect(r.l1).toContain('95,6 M€');
+    expect(r.l1).toContain('1,6 %');
+    expect(r.l1).toContain('Oui');
+    expect(r.l3).toContain('1,74 Md€');
+    expect(r.l3).toContain('0,85 %');
+    expect(r.local.c).toEqual(['fam', 'sgp', 'sri', 'ms', 'p1', 'p3', 'p5', 'a25', 'an', 'fg', 'pea', 'sfdr']);
+    expect(r.envoye.c).toEqual(r.local.c);                 // part dans etat.donnees : le choix suit le compte
+    expect(r.sync).toBeGreaterThanOrEqual(5);              // chaque case déclenche l'enregistrement
+    expect(r.panneauOuvert).toBe(true);                    // cocher ne referme pas le panneau
+    expect(r.compteur).toContain('12 colonnes affichées sur ' + r.total);
+    expect(r.bouton).toContain('(12)');
+    expect(r.recharge).toEqual(r.apres);
+    expect(r.tout).toBe(r.total + 1);
+    expect(r.defaut).toEqual(['Support', 'Famille', 'Zone', 'Société de gestion', 'SRI', 'Morningstar', '1 an', '3 ans', '5 ans', 'SFDR']);
+    expect(r.casesDefaut).toBe(9);
+    expect(r.referme).toBe(true);
+    expect(r.autre).toEqual(['Support', 'Morningstar', 'PEA']);   // ordre du catalogue, clé inconnue écartée
+    expect(r.ancien).toEqual(['Support', 'Morningstar', 'PEA']);
+    expect(r.pousse.vpc.c).toEqual(['pea', 'ms', 'inconnue']);
   });
 
   test('les données des supports n’apparaissent pas en clair dans la page (audit)', () => {
