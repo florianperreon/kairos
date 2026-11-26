@@ -4500,6 +4500,42 @@ test.describe('Fiches pratiques (20/10/2026)', () => {
     expect(r.desc).toContain('Utiliser dans Chrome et pas l’application Zoom.');
     expect(erreurs).toEqual([]);
   });
+  test('fiche préconisée par la lignée : fond et étiquette dans la liste et la recherche, étiquette sur la fiche, ancienne adresse conservée (26/11/2026)', async ({ page }) => {
+    const erreurs = await ouvrir(page);
+    const r = await page.evaluate(async (f) => {
+      eval('(' + f + ')')();
+      showTab('fiches'); curTab = 'fiches';
+      const sans = document.querySelectorAll('#fichesListe .ff-preco, #fichesListe .ff-pre').length;
+      CONTENU.fiches_preco = { l: { relances: 'Préconisée par <la> lignée' }, alias: { 'ancienne-adresse': 'relances', 'vers-rien': 'inexistante' } };
+      buildFiches();
+      const cartes = [...document.querySelectorAll('#fichesListe .ff-card.ff-preco')];
+      const liste = { n: cartes.length, titre: cartes[0].querySelector('b').textContent, pre: cartes[0].querySelector('.ff-pre').innerHTML, avant: cartes[0].querySelector('.ff-tx').firstElementChild.className,
+        fond: getComputedStyle(cartes[0]).backgroundColor !== getComputedStyle(document.querySelector('#fichesListe .ff-card:not(.ff-preco)')).backgroundColor };
+      const q = document.getElementById('fichesQ'); q.value = 'relances'; q.dispatchEvent(new Event('input'));
+      const cherche = document.querySelectorAll('#fichesListe .ff-card.ff-preco').length;
+      q.value = ''; q.dispatchEvent(new Event('input'));
+      location.hash = '#p/ancienne-adresse'; routeHash(); await new Promise(r => setTimeout(r, 120));
+      const fiche = { ouverte: document.getElementById('psheet').classList.contains('on'), h1: document.querySelector('#psheetCard h1').textContent, pre: (document.querySelector('#psheetCard .ps-preco') || {}).textContent };
+      closePage();
+      location.hash = '#p/examens-qcm'; routeHash(); await new Promise(r => setTimeout(r, 120));
+      const autre = !!document.querySelector('#psheetCard .ps-preco');
+      return { sans, liste, cherche, fiche, autre, rien: psCible('#p/vers-rien').slug, nom: sgNomBloc('fiches_preco') };
+    }, contenu.toString());
+    expect(erreurs).toEqual([]);
+    expect(r.sans).toBe(0);                                          // sans bloc en base : rien ne change
+    expect(r.liste.n).toBe(1);
+    expect(r.liste.titre).toBe('Relances & templates : prospects sans réponse');
+    expect(r.liste.pre).toBe('⭐ Préconisée par &lt;la&gt; lignée');   // texte de la base échappé
+    expect(r.liste.avant).toBe('ff-pre');                            // l'étiquette précède le titre
+    expect(r.liste.fond).toBe(true);
+    expect(r.cherche).toBe(1);
+    expect(r.fiche.ouverte).toBe(true);                              // un lien partagé avant le renommage ouvre toujours la fiche
+    expect(r.fiche.h1).toContain('Relances & templates');
+    expect(r.fiche.pre).toBe('⭐ Préconisée par <la> lignée');
+    expect(r.autre).toBe(false);
+    expect(r.rien).toBe('vers-rien');                                // un alias vers une fiche absente est ignoré
+    expect(r.nom).toBe('Fiches mises en avant');
+  });
   test('recherche sans accents dans le titre et le contenu, puis favoris ★', async ({ page }) => {
     await ouvrir(page);
     const r = await page.evaluate((f) => {

@@ -1226,6 +1226,10 @@ p.mi-ai{margin:4px 0 8px}
 .ff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .ff-card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;transition:border-color .15s,box-shadow .15s}
 .ff-card:hover{border-color:var(--accent);box-shadow:0 2px 10px rgba(0,0,0,.06)}
+/* fiche préconisée par la lignée (contenu_blocs.fiches_preco) : fond de couleur et étiquette */
+.ff-card.ff-preco{background:var(--gold-soft);border-color:var(--gold);box-shadow:inset 4px 0 0 var(--gold)}.ff-card.ff-preco:hover{border-color:var(--gold);box-shadow:inset 4px 0 0 var(--gold),0 2px 10px rgba(0,0,0,.08)}
+.ff-pre,.ps-preco{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--gold-ink);background:var(--gold-soft);border:1px solid var(--gold);border-radius:999px;padding:1px 8px}
+.ff-pre{margin-bottom:4px;background:var(--surface);align-self:flex-start}.ps-preco{margin-top:8px;font-size:12px;padding:2px 10px}
 .ff-card>a{display:flex;gap:12px;padding:13px 42px 13px 14px;color:inherit;text-decoration:none;height:100%;box-sizing:border-box}
 .ff-ic{font-size:22px;line-height:1.1;flex:none}.ff-tx{display:flex;flex-direction:column;gap:3px;min-width:0}
 .ff-tx b{font-size:14.5px}.ff-d{font-size:12.5px;color:var(--ink-2);line-height:1.4}.ff-ray{font-size:11.5px;color:var(--accent);font-weight:700}
@@ -5122,6 +5126,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
    d'après les notes et les commentaires datés du code. */
 const KAIROS_CHANGELOG = [
   ['2026-11-26', [
+    ['f','Fiches pratiques : la fiche « Mise en relation — Méthode préconisée par la lignée » (nouveau nom) ressort dans la liste, avec un fond de couleur et l’étiquette « ⭐ Préconisée par la lignée ». Les deux autres méthodes renvoient vers elle. Les anciens liens vers la fiche restent valables.'],
     ['f','Admin → Contenu : nouvel onglet « Supports ». Un administrateur y dépose l’export à jour de l’assureur (.xls) pour Cristalliance Avenir ou PERtinence Retraite : contrôle du fichier, aperçu de ce qui change (supports ajoutés, retirés, modifiés, nouveaux supports à classer), import en un clic, historique des 10 dernières versions avec restauration. Un tutoriel indique où trouver le fichier.'],
     ['f','Supports Cristalliance Avenir et PERtinence Retraite : un support qui disparaît de l’export de l’assureur est conservé, marqué « retiré du contrat » et masqué par défaut ; le filtre « Afficher les retirés » le montre, en gris, en bas de liste.'],
     ['f','Ressources → Pour aller plus loin : « Supports Vie Plus » devient « Supports Cristalliance Avenir ». Catalogue mis à jour (458 supports) depuis une seule source, l’export de l’espace client de l’assureur, indiquée en tête de page avec sa date.'],
@@ -6843,7 +6848,7 @@ function showPage(slug, sec){
   // (plus sur les groupes du parcours) ; plus de rangée de pastilles des fiches voisines en haut.
   const ray=psRayon(slug), sib=ray?ray.r.pages:[slug]; const i=sib.indexOf(slug); const prev=sib[i-1], next=sib[i+1];
   const card=document.getElementById('psheetCard');
-  card.innerHTML=psOutils()+'<div class="ps-head">'+psBoutons()+psCrumb(slug)+'<h1>'+(p.i?p.i+' ':'')+esc(p.t)+' '+ffavBtn(slug)+'</h1></div>'+
+  card.innerHTML=psOutils()+'<div class="ps-head">'+psBoutons()+psCrumb(slug)+'<h1>'+(p.i?p.i+' ':'')+esc(p.t)+' '+ffavBtn(slug)+'</h1>'+(fichePreco(slug)?'<span class="ps-preco">⭐ '+esc(fichePreco(slug))+'</span>':'')+'</div>'+
     '<div class="ps-body">'+freshBanner(p)+'<div class="nc">'+p.h+'</div></div>'+
     '<div class="ps-foot"><span>'+(prev?'<a href="#p/'+prev+'">← '+esc(C.pages[prev].t)+'</a>':'<span class="kbd">Échap pour fermer</span>')+'</span><span>'+(next?'<a href="#p/'+next+'">'+esc(C.pages[next].t)+' →</a>':'')+'</span></div>';
   const sh=document.getElementById('psheet'); sh.classList.add('on'); sh.setAttribute('aria-hidden','false'); document.body.classList.add('ps-open');
@@ -6932,7 +6937,10 @@ function ancresFiger(html){
 function psCible(h){
   let r = String(h||'').replace(/^#p\//,''); try{ r = decodeURIComponent(r); }catch(_){}
   const i = r.indexOf('/');
-  return i < 0 ? { slug:r, sec:'' } : { slug:r.slice(0,i), sec:r.slice(i+1).replace(/^s-/,'') };
+  const c = i < 0 ? { slug:r, sec:'' } : { slug:r.slice(0,i), sec:r.slice(i+1).replace(/^s-/,'') };
+  const al = (((CONTENU && CONTENU.fiches_preco) || {}).alias || {})[c.slug];   // fiche renommée : l'ancienne adresse mène à la nouvelle
+  if(al && CONTENU.pages && CONTENU.pages[al]) c.slug = al;
+  return c;
 }
 // Fiche ouverte ET affichée en clair : une fiche rendue verrouillée au démarrage (droits pas encore chargés)
 // doit être redessinée quand routeHash() repasse une fois les données arrivées (régression du 17/11/2026)
@@ -7326,6 +7334,8 @@ function ffTexte(s){
 }
 // Résumé de quelques mots (contenu_blocs.fiches_resumes = {slug: texte}), sinon la 1re phrase utile
 const ficheResume = s => ((CONTENU && CONTENU.fiches_resumes) || {})[s] || ffTexte(s).d;
+// 26/11/2026 : fiches mises en avant. contenu_blocs.fiches_preco = { l:{ slug:'Préconisée par la lignée' }, alias:{ ancienne-adresse: slug } }
+const fichePreco = s => (((CONTENU && CONTENU.fiches_preco) || {}).l || {})[s] || '';
 // Fiches de la phase en cours (missions du parcours)
 function fichesPhase(){
   try{
@@ -7338,7 +7348,8 @@ function ffCarte(s, rayon){
   const p = CONTENU.pages[s], x = ffTexte(s), a = ficheAcces(s);
   if(!a.ok) return '<div class="ff-card ff-lock"><a href="#p/'+esc(s)+'" title="'+esc(a.raison)+'"><span class="ff-ic">🔒</span><span class="ff-tx"><b>'+esc(p.t)+'</b>'
     + (rayon ? '<span class="ff-ray">'+esc(rayon)+'</span>' : '') + '<span class="ff-d">'+esc(a.raison)+'</span></span></a></div>';
-  return '<div class="ff-card"><a href="#p/'+esc(s)+'"><span class="ff-ic">'+(p.i||'📄')+'</span><span class="ff-tx"><b>'+esc(p.t)+'</b>'
+  const pre = fichePreco(s);
+  return '<div class="ff-card'+(pre?' ff-preco':'')+'"><a href="#p/'+esc(s)+'"><span class="ff-ic">'+(p.i||'📄')+'</span><span class="ff-tx">'+(pre?'<span class="ff-pre">⭐ '+esc(pre)+'</span>':'')+'<b>'+esc(p.t)+'</b>'
     + (rayon ? '<span class="ff-ray">'+esc(rayon)+'</span>' : '') + '<span class="ff-d">'+esc(ficheResume(s))+'</span>'
     + (ficheOrigine(a) ? '<span class="ff-or">'+esc(ficheOrigine(a))+'</span>' : '') + '</span></a>'+ffavBtn(s)+'</div>';
 }
@@ -10800,7 +10811,7 @@ let SG_FORM = null;           // formulaire de nouvelle suggestion : { ancre } (
 let SG_EDIT = null;           // message en cours de modification
 let SG_NV = new Set();        // messages non lus au moment de l'ouverture (mis en évidence)
 let SG_ENVOI = false, SG_SEL_T = null, SG_SEL_ANCRE = null;
-const SG_NOMS = { fiches_resumes:'Résumés des fiches', fiches_acces:'Accès aux fiches' };
+const SG_NOMS = { fiches_resumes:'Résumés des fiches', fiches_acces:'Accès aux fiches', fiches_preco:'Fiches mises en avant' };
 const SG_ICO = { missions:'🧭', faq:'❓', objections:'🛡️', fiches:'🗂️', nav:'🧵', reflexes:'⚡', rituels:'🔁', dates_lignee:'⭐', ressources:'🔗', accueil:'🏠', fiches_resumes:'📝', fiches_acces:'🔐' };
 const SG_IGNORES = new Set(['pages','version','faqPubliee']);
 const sgT = x => x ? new Date(x).getTime() : 0;
